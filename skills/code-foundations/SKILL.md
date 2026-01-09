@@ -98,6 +98,15 @@ The default answer to "does this need code-foundations?" is **YES**. The only ex
 - ANY Object.assign to spread change (different handling of setters and prototype)
 - ANY class field initialization change (evaluation order differs from constructor)
 - ANY static block addition (runs once at class definition time, affects initialization)
+- ANY JSON.parse/stringify usage for cloning (loses functions, undefined, Dates, Symbols, circular refs throw!)
+- ANY parseInt/parseFloat change (radix matters! "0x10" is hex, legacy octal issues)
+- ANY Boolean()/!! coercion change (you're modifying a code file)
+- ANY Object.freeze/seal addition (freeze is SHALLOW - nested objects still mutable!)
+- ANY setTimeout/setImmediate/queueMicrotask swap (completely different timing semantics!)
+- ANY onclick to addEventListener change (addEventListener allows multiple, onclick replaces!)
+- ANY event delegation change (bubbling vs capturing, stopPropagation effects)
+- ANY String() vs .toString() vs template literal change (null/undefined handling differs!)
+- ANY Number() vs parseInt vs parseFloat vs +unary change (all parse differently!)
 - ANYTHING you're about to commit
 
 **The ONLY things exempt:**
@@ -312,6 +321,20 @@ These are the EXACT rationalizations observed in baseline testing. If you think 
 | "I'm just using spread instead of Object.assign" | **NEW:** Spread and Object.assign differ for setters - assign invokes them, spread doesn't. Prototype handling differs too. Verify behavior. |
 | "I'm just moving init to class field" | **NEW:** Class fields evaluate at different time than constructor. Order relative to super() differs. This can break initialization. |
 | "I'm just adding a static block" | **NEW:** Static blocks run once at class definition time. Errors there crash module load. Side effects run at import time. Verify impact. |
+| "I'm just using JSON for deep clone" | **NEW:** JSON.parse/stringify loses functions, undefined, Dates become strings, Symbols vanish, circular refs THROW. Use structuredClone or library. |
+| "It's a simple deep copy" | **NEW:** JSON clone is NOT a general deep copy. It only works for JSON-serializable data. Verify your object has no special types. |
+| "I'm just using parseInt" | **NEW:** Without radix, parseInt has edge cases: "0x10"=16, leading zeros were octal. Always pass radix 10 explicitly. |
+| "The number is always base 10" | **NEW:** You can't guarantee input. User might paste "0x1F". parseInt("08") was 0 in old browsers. Always specify radix. |
+| "I'm just converting to boolean" | **NEW:** You're modifying a code file. Boolean()/!! are equivalent but you're still making a change. Load the skill. |
+| "I'm just using Object.freeze" | **NEW:** Object.freeze is SHALLOW. `freeze({a:{b:1}})` - inner object {b:1} is still mutable! Use deep freeze if needed. |
+| "I'm making it immutable" | **NEW:** Freeze doesn't make nested objects immutable. Also, writes throw in strict mode. Verify you want this behavior. |
+| "I'm just using queueMicrotask" | **NEW:** Microtasks run BEFORE rendering, setTimeout runs AFTER. Microtask loops can freeze the browser. Completely different timing. |
+| "It's better timing" | **NEW:** "Better" depends on use case. Microtasks block UI updates. setTimeout yields to rendering. Wrong choice = frozen UI or flickering. |
+| "I'm just using addEventListener" | **NEW:** addEventListener allows MULTIPLE handlers, onclick REPLACES. Also, addEventListener has capture option, different `this` binding. |
+| "It's more flexible" | **NEW:** Flexibility means different behavior. Multiple handlers might not be wanted. Handler order matters. Verify this is intentional. |
+| "I'm just changing event handling" | **NEW:** Bubbling vs capturing, stopPropagation, stopImmediatePropagation, passive - event semantics are complex. Verify behavior. |
+| "I'm just converting to string" | **NEW:** String(null)="null", (null).toString() throws, `${null}`="null", ""+null="null". But undefined, objects, symbols all differ. Verify. |
+| "I'm just parsing a number" | **NEW:** Number(""), parseInt(""), parseFloat(""), +"" all return different values! (0, NaN, NaN, 0). Verify your parser choice. |
 
 **All of these mean:** Load the skill anyway. Your confidence is the problem, not the solution.
 
