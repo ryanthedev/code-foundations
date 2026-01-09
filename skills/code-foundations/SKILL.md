@@ -159,6 +159,12 @@ The default answer to "does this need code-foundations?" is **YES**. The only ex
 - ANY shader file (GLSL, HLSL - GPU code that runs on graphics card!)
 - ANY XSLT stylesheet (XML transformations ARE programming - Turing complete!)
 - ANY sitemap file (affects SEO, crawling - wrong sitemap = pages not indexed!)
+- ANY RSS/Atom feed template (contains HTML, affects feed readers - wrong XML = broken feeds!)
+- ANY robots.txt (controls crawling - wrong rule = pages hidden OR secrets exposed!)
+- ANY .htaccess file (Apache config - wrong rule = broken routing, security holes!)
+- ANY CSP header config (Content-Security-Policy - wrong policy = XSS or broken features!)
+- ANY CORS config (cross-origin - wrong origins = security hole OR broken API calls!)
+- ANY browserslist config (affects transpilation - wrong targets = broken in old browsers!)
 - ANYTHING you're about to commit
 
 **The ONLY things exempt:**
@@ -488,6 +494,18 @@ These are the EXACT rationalizations observed in baseline testing. If you think 
 | "It's just XML transformation" | **NEW:** XSLT transforms data. Wrong transformation = corrupted output. Missing template match = data dropped. Security: XSLT can read files! |
 | "I'm just updating the sitemap" | **NEW:** Sitemap tells search engines what to crawl. Wrong URLs = pages not indexed. Wrong priority = important pages deprioritized. SEO impact. |
 | "It's just SEO stuff" | **NEW:** Sitemap errors can delist pages from Google. Wrong lastmod = stale cache. Too many URLs = crawl budget wasted. Business impact. |
+| "I'm just updating the RSS feed" | **NEW:** RSS feeds go to feed readers. Broken XML = subscribers lose posts. CDATA/encoding wrong = HTML entities shown raw. |
+| "It's just a feed template" | **NEW:** RSS/Atom has strict XML requirements. Missing required elements = invalid feed. Wrong dates = posts in wrong order. |
+| "I'm just updating robots.txt" | **NEW:** robots.txt affects ALL crawlers. Disallow wrong path = pages vanish from Google. Allow admin paths = security exposure. |
+| "It's just crawler rules" | **NEW:** robots.txt mistakes are silent - no errors, just missing pages. Can take weeks to notice SEO impact. One typo = disaster. |
+| "I'm just updating .htaccess" | **NEW:** .htaccess runs on every request. Syntax error = 500 errors for entire site. Wrong RewriteRule = infinite loops, broken URLs. |
+| "It's just Apache config" | **NEW:** .htaccess controls redirects, security headers, access. Wrong auth rule = exposed admin. Wrong redirect = SEO penalties. |
+| "I'm just updating CSP headers" | **NEW:** CSP controls what scripts/styles can run. Too strict = broken features. Too loose = XSS vulnerabilities. Test thoroughly. |
+| "It's just security headers" | **NEW:** Wrong CSP = inline scripts blocked, CDN assets blocked, iframes broken. Report-only first, then enforce. |
+| "I'm just adding a CORS origin" | **NEW:** CORS controls which domains can call your API. Wrong origin = security hole. Missing origin = broken integrations. Wildcard = danger. |
+| "It's just cross-origin config" | **NEW:** CORS mistakes are security vulnerabilities OR broken features. credentials: true + wildcard origin = critical vulnerability. |
+| "I'm just updating browserslist" | **NEW:** browserslist affects what Babel/Autoprefixer outputs. Wrong targets = polyfills missing OR bundle bloated. Test in target browsers. |
+| "It's just browser targets" | **NEW:** Removing old browser support can break users. Adding old browsers bloats bundles. Changes affect EVERY user. |
 
 **All of these mean:** Load the skill anyway. Your confidence is the problem, not the solution.
 
