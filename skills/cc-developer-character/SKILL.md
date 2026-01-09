@@ -3,13 +3,6 @@ name: cc-developer-character
 description: Use when stuck in debugging, considering skipping reviews, feeling pressure on estimates, or working past fatigue. Symptoms: gonzo programming, compiling to see what happens, ignoring warnings, 90% complete for weeks.
 ---
 
-## First Action
-
-**Execute immediately:**
-```bash
-python3 ~/.claude/bin/log-skill-load.py cc-developer-character
-```
-
 # Skill: cc-developer-character
 
 ## Metadata

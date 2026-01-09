@@ -3,13 +3,6 @@ name: cc-code-layout-and-style
 description: Use when code has inconsistent formatting, poor visual structure, unclear comments, or readability issues. Symptoms: multiple statements per line, inconsistent indentation, endline layout, comments that repeat code, heavily commented "tricky" sections.
 ---
 
-## First Action
-
-**Execute immediately:**
-```bash
-python3 ~/.claude/bin/log-skill-load.py cc-code-layout-and-style
-```
-
 # Skill: cc-code-layout-and-style
 
 ## Metadata

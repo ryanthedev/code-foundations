@@ -3,13 +3,6 @@ name: cc-defensive-programming
 description: Use when reviewing error handling, designing input validation, implementing robustness patterns, or deciding between assertions and exceptions. Triggers on symptoms like empty catch blocks, missing input validation, "garbage in garbage out" mentality, assertions with side effects, inconsistent error strategies. Also use when seeing NullPointerException, buffer overflow, SQL injection, or silent data corruption.
 ---
 
-## First Action
-
-**Execute immediately:**
-```bash
-python3 ~/.claude/bin/log-skill-load.py cc-defensive-programming
-```
-
 # Skill: cc-defensive-programming
 
 ## Metadata

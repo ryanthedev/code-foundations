@@ -3,13 +3,6 @@ name: cc-routine-and-class-design
 description: Use when designing routines or classes, reviewing class interfaces, choosing between inheritance and containment, or evaluating routine cohesion. Also use when tempted to use inheritance as a "quick fix" under deadline pressure, or when rationalizing "but it works" for code with deep inheritance or many parameters. Symptoms include vague routine names, >7 parameters, deep inheritance, mixed abstraction levels, working code that violates design principles.
 ---
 
-## First Action
-
-**Execute immediately:**
-```bash
-python3 ~/.claude/bin/log-skill-load.py cc-routine-and-class-design
-```
-
 # Skill: cc-routine-and-class-design
 
 ## Metadata
