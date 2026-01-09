@@ -40,6 +40,19 @@ Do NOT:
 
 **After classifying:** State the task type, then INVOKE the indicated skill(s).
 
+### Ambiguous Requests
+
+When the task type is unclear (e.g., "take a look at this code"):
+
+1. **Load code-foundations FIRST** (you already did - you're reading this)
+2. **Then ask clarifying questions** - "Are you looking for a review, debugging help, or something else?"
+3. **After clarification, classify and continue the chain**
+
+**WRONG order:** Ask questions → then load skills
+**RIGHT order:** Load code-foundations → ask questions → classify → invoke chain
+
+The skill comes BEFORE clarification because the skill tells you HOW to clarify.
+
 ## cc-developer-character is NON-NEGOTIABLE
 
 For WRITE, DEBUG, and REFACTOR tasks, you MUST invoke cc-developer-character FIRST.
@@ -64,8 +77,21 @@ These are the EXACT rationalizations observed in baseline testing. If you think 
 | "I already know how to do this" | Knowing ≠ executing checklist. Experts make errors too. |
 | "Not worth loading for a 5-line function" | 5-line functions have bugs. Load the skill. |
 | "I'll just fix it directly" | Direct fixes without process have >50% error rate (Yourdon). |
+| "This is genuinely trivial" | **NEW:** You don't get to decide triviality. Load the skill. It decides. |
+| "The CRITICAL language is aspirational" | **NEW:** It's literal. "ANY code activity" means ANY. No interpretation. |
+| "I'm following the spirit without the letter" | **NEW:** Violating the letter IS violating the spirit. Load the skill. |
+| "Loading skills for this is cargo culting" | **NEW:** Process exists for edge cases you can't predict. Load anyway. |
+| "I've done this exact thing 1000 times" | **NEW:** Expertise creates blind spots. The 1001st time can fail. |
 
 **All of these mean:** Load the skill anyway. Your confidence is the problem, not the solution.
+
+**The "Trivial Task" Trap (Observed in Testing):**
+Agents rationalized skipping skills for "trivial" tasks like getters and variable renames. They said:
+- "The task is genuinely trivial"
+- "The 'CRITICAL' language is aspirational, not practical"
+- "Loading skills for every keystroke would be cargo-culting"
+
+These are the EXACT thoughts that precede bugs. A 2-line getter can have bugs. A variable rename can break tests. **You are not the judge of triviality - the skill is.**
 
 ## Crisis Minimum (Time Pressure)
 
