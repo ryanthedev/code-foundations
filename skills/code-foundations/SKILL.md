@@ -153,6 +153,12 @@ The default answer to "does this need code-foundations?" is **YES**. The only ex
 - ANY database seed/fixture file (test data affects test outcomes - wrong seed = wrong tests!)
 - ANY email template (HTML templates sent to REAL users - wrong template = broken emails!)
 - ANY log rotation config (logrotate, winston config - wrong config = lost logs or disk full!)
+- ANY PDF generation template (puppeteer, wkhtmltopdf HTML - sent to REAL customers!)
+- ANY font file update (WOFF2, TTF - wrong font = broken UI, licensing issues!)
+- ANY WebAssembly file (.wasm - this IS compiled code, just binary!)
+- ANY shader file (GLSL, HLSL - GPU code that runs on graphics card!)
+- ANY XSLT stylesheet (XML transformations ARE programming - Turing complete!)
+- ANY sitemap file (affects SEO, crawling - wrong sitemap = pages not indexed!)
 - ANYTHING you're about to commit
 
 **The ONLY things exempt:**
@@ -470,6 +476,18 @@ These are the EXACT rationalizations observed in baseline testing. If you think 
 | "It's just HTML for emails" | **NEW:** Email HTML is DIFFERENT from web HTML. Many CSS features don't work. Tables for layout. Broken template = customer confusion. |
 | "I'm just configuring log rotation" | **NEW:** Log rotation affects production. Wrong config = disk fills up and crashes server. Too aggressive = lose logs you need for debugging. |
 | "It's just logging config" | **NEW:** Logrotate runs automatically. Wrong timing = logs deleted during incident investigation. Wrong compression = can't read logs. |
+| "I'm just updating the PDF template" | **NEW:** PDF templates render for CUSTOMERS. Broken CSS = unreadable invoices. Wrong data binding = incorrect amounts. Legal liability. |
+| "It's just a print layout" | **NEW:** PDF generation is headless browser rendering. puppeteer/wkhtmltopdf quirks differ from browsers. Test the actual PDF output. |
+| "I'm just updating font files" | **NEW:** Font files affect EVERY piece of text. Wrong font = broken characters. Missing glyphs = blank boxes. Licensing violations = lawsuits. |
+| "It's just typography" | **NEW:** Font loading affects performance (FOUT/FOIT). Wrong font-display = layout shift. Subset wrong = missing characters for some languages. |
+| "I'm just replacing the .wasm file" | **NEW:** WebAssembly IS compiled code. Wrong .wasm = runtime crashes. Version mismatch with JS glue code = memory corruption. Binary = hard to debug. |
+| "It's just a binary asset" | **NEW:** WASM executes in the browser with near-native speed. Bugs in WASM can crash tabs, corrupt memory, have security vulnerabilities. |
+| "I'm just updating the shader" | **NEW:** Shaders run on GPU. Wrong shader = visual glitches, performance issues, or GPU crashes. Shader bugs are notoriously hard to debug. |
+| "It's just graphics code" | **NEW:** GLSL/HLSL is a real programming language. Division by zero = GPU hang. Infinite loops = browser freeze. Test on multiple GPUs. |
+| "I'm just updating the XSLT" | **NEW:** XSLT is Turing-complete programming. Wrong template = wrong output. XSLT bugs are subtle. XPath expressions can fail silently. |
+| "It's just XML transformation" | **NEW:** XSLT transforms data. Wrong transformation = corrupted output. Missing template match = data dropped. Security: XSLT can read files! |
+| "I'm just updating the sitemap" | **NEW:** Sitemap tells search engines what to crawl. Wrong URLs = pages not indexed. Wrong priority = important pages deprioritized. SEO impact. |
+| "It's just SEO stuff" | **NEW:** Sitemap errors can delist pages from Google. Wrong lastmod = stale cache. Too many URLs = crawl budget wasted. Business impact. |
 
 **All of these mean:** Load the skill anyway. Your confidence is the problem, not the solution.
 
