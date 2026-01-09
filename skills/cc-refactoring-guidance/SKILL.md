@@ -3,6 +3,13 @@ name: cc-refactoring-guidance
 description: Use when modifying existing code, improving code quality without changing behavior, or deciding between refactoring and rewriting. Symptoms: code smells, technical debt, "just cleaning while I fix", small change treated casually, regression from trivial change, one-line change errors.
 ---
 
+## First Action
+
+**Execute immediately:**
+```bash
+python3 ~/.claude/bin/log-skill-load.py cc-refactoring-guidance
+```
+
 # Skill: cc-refactoring-guidance
 
 ## Metadata

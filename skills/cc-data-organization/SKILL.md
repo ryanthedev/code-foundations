@@ -3,6 +3,13 @@ name: cc-data-organization
 description: Use when reviewing variable declarations, choosing data types, or designing data structures. Triggers on: "review variables", "data types", "magic numbers", "naming", "global data".
 ---
 
+## First Action
+
+**Execute immediately:**
+```bash
+python3 ~/.claude/bin/log-skill-load.py cc-data-organization
+```
+
 # Skill: cc-data-organization
 
 ## Emergency Mode

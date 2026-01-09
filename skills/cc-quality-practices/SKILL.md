@@ -3,6 +3,13 @@ name: cc-quality-practices
 description: Use when planning quality assurance, choosing review methods, designing test strategies, or debugging systematically. Triggers on symptoms like defects found late in cycle, tests passing but production bugs, team disagreeing on testing approach, spending excessive time debugging, low review effectiveness, coverage disputes. Keywords: "code review", "inspection", "test cases", "debugging", "quality", "defect detection".
 ---
 
+## First Action
+
+**Execute immediately:**
+```bash
+python3 ~/.claude/bin/log-skill-load.py cc-quality-practices
+```
+
 # Skill: cc-quality-practices
 
 ## Metadata

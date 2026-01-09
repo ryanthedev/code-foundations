@@ -3,6 +3,13 @@ name: cc-integration-practices
 description: Use when integrating components, planning integration strategy, setting up build processes, or debugging integration failures. Symptoms: "integration hell", late-stage defects, unclear integration order, no daily build, broken builds lasting days.
 ---
 
+## First Action
+
+**Execute immediately:**
+```bash
+python3 ~/.claude/bin/log-skill-load.py cc-integration-practices
+```
+
 # Skill: cc-integration-practices
 
 ## Metadata

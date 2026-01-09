@@ -5,6 +5,13 @@ description: CRITICAL - Invoke FIRST before ANY code activity. MUST load before
   Triggers on implement, build, fix, add, create, refactor, optimize, review, debug.
 ---
 
+## First Action
+
+**Execute immediately:**
+```bash
+python3 ~/.claude/bin/log-skill-load.py code-foundations
+```
+
 # Code Foundations
 
 ## STOP Before Action
