@@ -40,7 +40,13 @@ The default answer to "does this need code-foundations?" is **YES**. The only ex
 **The ONLY things exempt:**
 - Pure prose in documentation files (not code examples within them)
 - Whitespace-only formatting by automated tools (not manual formatting)
-- Git operations that don't touch code (branching, tagging)
+- Git operations that don't touch files (branching, tagging, viewing history)
+- Pure legal/administrative files (LICENSE, CODEOWNERS, CONTRIBUTING.md)
+
+**NOT exempt (these affect what code exists or how it's processed):**
+- `.gitignore` - wrong patterns exclude source files or include secrets
+- `.gitattributes` - affects line endings, merge drivers, diff behavior
+- Any file that affects what files are in the repo or how they're processed
 
 **When you rationalize, you violate.** The skill exists because your confidence is wrong.
 
