@@ -89,6 +89,15 @@ The default answer to "does this need code-foundations?" is **YES**. The only ex
 - ANY ternary operator change (ternary has different precedence and evaluation rules)
 - ANY Promise.all to Promise.allSettled change (different error handling semantics)
 - ANY array method chain modification (order and method choice affects behavior)
+- ANY object shorthand usage ({ name } instead of { name: name } - breaks if var renames)
+- ANY getter/setter conversion (getters called each access, different from property access)
+- ANY Map to WeakMap change (WeakMap can't iterate, keys must be objects, no size)
+- ANY Number to BigInt change (BigInt can't mix with Number! 123n + 1 throws TypeError!)
+- ANY private field (#) addition (truly private, breaks tests/debugging that accessed _fields)
+- ANY loose equality null check (!= null catches both null AND undefined via coercion)
+- ANY Object.assign to spread change (different handling of setters and prototype)
+- ANY class field initialization change (evaluation order differs from constructor)
+- ANY static block addition (runs once at class definition time, affects initialization)
 - ANYTHING you're about to commit
 
 **The ONLY things exempt:**
@@ -288,6 +297,21 @@ These are the EXACT rationalizations observed in baseline testing. If you think 
 | "I'm just using a ternary" | **NEW:** Ternary has different precedence than if/else. Nested ternaries are hard to parse. Ternary in JSX has gotchas. Verify carefully. |
 | "I'm just changing to Promise.allSettled" | **NEW:** Promise.all fails fast (one rejection = all fail). Promise.allSettled waits for all. This changes error handling semantics entirely. |
 | "I'm just chaining array methods" | **NEW:** Method chain order matters. filter→map vs map→filter differ in performance and sometimes results. Verify the chain is correct. |
+| "I'm just using object shorthand" | **NEW:** Shorthand { name } couples object key to variable name. Rename the var but forget the object = broken. Verify all usages. |
+| "It's cleaner ES6 syntax" | **NEW:** Shorthand syntax creates implicit coupling. Refactoring tools might miss it. Explicit { name: name } is more refactor-safe. |
+| "I'm just converting to a getter" | **NEW:** Getters are CALLED every access, properties are read once. Performance differs. Object.keys() excludes getters. Verify behavior. |
+| "It's the same value" | **NEW:** Getter vs property affects enumeration, JSON.stringify, spread, Object.assign. These behave differently. Verify all usages. |
+| "I'm just using WeakMap for memory" | **NEW:** WeakMap can't iterate (.keys/.values/.entries don't exist). Keys MUST be objects. No .size property. Verify you don't need these. |
+| "It's just a more efficient Map" | **NEW:** WeakMap is NOT a Map. Completely different API. If you need to iterate or check size, WeakMap breaks your code. |
+| "I'm just using BigInt for precision" | **NEW:** BigInt CANNOT mix with Number. `123n + 1` throws TypeError. ALL operations need BigInt operands. Verify entire calculation chain. |
+| "It's just a number type change" | **NEW:** BigInt is NOT a Number. typeof is different. JSON.stringify fails. Math functions don't work. This breaks many things. |
+| "I'm just making it truly private with #" | **NEW:** # fields are ACTUALLY private. Tests that accessed _fields will fail. Debugging can't inspect them. Serialization skips them. |
+| "It's just the modern private syntax" | **NEW:** _ convention was accessible for testing/debugging. # is truly private. This can break test suites and debugging workflows. |
+| "I'm just simplifying the null check" | **NEW:** `!= null` uses type coercion - it catches BOTH null AND undefined. If you only wanted null, this changes behavior. Verify intent. |
+| "It's the same check" | **NEW:** `!== null && !== undefined` vs `!= null` aren't always interchangeable. Edge cases with objects valueOf() can differ. |
+| "I'm just using spread instead of Object.assign" | **NEW:** Spread and Object.assign differ for setters - assign invokes them, spread doesn't. Prototype handling differs too. Verify behavior. |
+| "I'm just moving init to class field" | **NEW:** Class fields evaluate at different time than constructor. Order relative to super() differs. This can break initialization. |
+| "I'm just adding a static block" | **NEW:** Static blocks run once at class definition time. Errors there crash module load. Side effects run at import time. Verify impact. |
 
 **All of these mean:** Load the skill anyway. Your confidence is the problem, not the solution.
 
