@@ -135,6 +135,12 @@ The default answer to "does this need code-foundations?" is **YES**. The only ex
 - ANY error message or user-facing text in code (leaks info, affects UX, i18n issues!)
 - ANY mock/stub/fake implementation (test doubles ARE code that runs in tests!)
 - ANY polyfill import (polyfills affect runtime behavior, import order is critical!)
+- ANY docker-compose.yml (defines service topology, networking, volumes!)
+- ANY Ansible/Chef/Puppet/Salt playbook (configuration management IS code!)
+- ANY monorepo workspace config (lerna.json, pnpm-workspace.yaml, nx.json!)
+- ANY Git LFS config (.gitattributes lfs patterns - affects file storage!)
+- ANY pre-commit config (.pre-commit-config.yaml runs on every commit!)
+- ANY browser extension manifest (manifest.json defines permissions, CSP, security!)
 - ANYTHING you're about to commit
 
 **The ONLY things exempt:**
@@ -416,6 +422,18 @@ These are the EXACT rationalizations observed in baseline testing. If you think 
 | "It's just test code" | **NEW:** Test code runs in CI. Test code that crashes = blocked deployments. Test code that lies = false confidence. |
 | "I'm just adding a polyfill" | **NEW:** Polyfills affect RUNTIME behavior globally. Import order matters. Wrong polyfill = subtle bugs in specific browsers. |
 | "It's just browser compatibility" | **NEW:** Polyfills can conflict, override native implementations. Multiple polyfills for same feature = undefined behavior. |
+| "I'm just updating docker-compose" | **NEW:** docker-compose defines your ENTIRE local/dev environment. Wrong volume = data loss. Wrong network = services can't communicate. |
+| "It's just container orchestration" | **NEW:** Service definitions control ports, env vars, dependencies. Wrong depends_on = startup race conditions. |
+| "I'm just updating the Ansible playbook" | **NEW:** Ansible runs COMMANDS on REAL servers. Wrong playbook = misconfigured production. This IS programming servers. |
+| "It's just configuration management" | **NEW:** Chef/Puppet/Salt execute code on infrastructure. Mistakes affect all managed nodes. Test in staging first. |
+| "I'm just adding a workspace package" | **NEW:** Monorepo configs control dependency resolution. Wrong config = wrong versions installed, build failures, circular deps. |
+| "It's just project organization" | **NEW:** Workspace configs affect hoisting, linking, build order. Wrong setup = "cannot find module" errors everywhere. |
+| "I'm just setting up Git LFS" | **NEW:** LFS patterns affect what gets stored where. Wrong pattern = huge files in git history OR missing files on clone. |
+| "It's just large file storage" | **NEW:** LFS changes are hard to undo. Files tracked by LFS need LFS installed. Missing setup = broken clones for team. |
+| "I'm just adding a pre-commit hook" | **NEW:** Pre-commit hooks run on EVERY commit for EVERY developer. Slow hook = frustrated team. Broken hook = blocked commits. |
+| "It's just a linting check" | **NEW:** Pre-commit configs are shared. Your hook runs on everyone's machine. Misconfigured = team productivity blocked. |
+| "I'm just updating the extension manifest" | **NEW:** Manifest.json defines extension PERMISSIONS. Wrong permission = security vulnerability. Missing permission = broken extension. |
+| "It's just browser extension config" | **NEW:** Extension manifests control CSP, host permissions, API access. Wrong manifest = extension rejected by store or security issue. |
 
 **All of these mean:** Load the skill anyway. Your confidence is the problem, not the solution.
 
