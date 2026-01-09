@@ -2,19 +2,9 @@
   "name": "code-foundations",
   "version": "1.0.0",
   "description": "Code Complete-based software engineering skills for disciplined code construction",
-  "skills": [
-    "code-foundations",
-    "cc-code-layout-and-style",
-    "cc-construction-prerequisites",
-    "cc-control-flow-quality",
-    "cc-data-organization",
-    "cc-defensive-programming",
-    "cc-developer-character",
-    "cc-integration-practices",
-    "cc-performance-tuning",
-    "cc-pseudocode-programming",
-    "cc-quality-practices",
-    "cc-refactoring-guidance",
-    "cc-routine-and-class-design"
-  ]
+  "author": {
+    "name": "ryanthedev"
+  },
+  "license": "MIT",
+  "keywords": ["code-complete", "skills", "software-engineering", "best-practices"]
 }
