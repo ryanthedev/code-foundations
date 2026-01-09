@@ -150,6 +150,9 @@ These are the EXACT rationalizations observed in baseline testing. If you think 
 | "The symlink is a simple operation" | **NEW:** Symlinks affect file resolution at runtime. `config.json -> config.prod.json` means prod config loads. |
 | "I'm just creating an empty file" | **NEW:** Empty `.ts`/`.py`/`.js` files get compiled. They affect the build. They can be imported. Load the skill. |
 | "The file has no code yet" | **NEW:** An empty file IS part of the codebase. It may be imported, compiled, or cause module resolution issues. |
+| "It's just bumping a version number" | **NEW:** Version numbers affect npm publish, CI tagging, release artifacts. Wrong version = overwritten packages or broken releases. |
+| "It's a trivial single-field edit" | **NEW:** Single-field edits in config files break production. DATABASE_URL, API_KEY, VERSION - all "single fields" that cause incidents. |
+| "It's purely mechanical" | **NEW:** "Mechanical" changes need MORE verification, not less. Mechanical = easy to make typos. Load the skill. |
 
 **All of these mean:** Load the skill anyway. Your confidence is the problem, not the solution.
 
@@ -307,6 +310,20 @@ Agents rationalized skipping skills for creating empty files. They said:
 - "Placeholder" files often stay empty and cause issues later
 
 If the file could ever be executed, compiled, or imported, load the skill.
+
+**The "Just a Version Bump" Trap (Observed in Testing):**
+Agents rationalized skipping skills for version changes. They said:
+- "It's a trivial single-field edit"
+- "It's purely mechanical"
+- "No design decisions required"
+
+**Version changes ARE code activity:**
+- Wrong version in package.json = npm publish overwrites existing package
+- Version mismatch = CI/CD tagging fails or creates wrong tags
+- Semantic versioning violations = breaking changes shipped as patch
+- Users install wrong versions, report bugs against wrong releases
+
+"Single-field edit" is one of the most dangerous rationalizations. Single fields control database connections, API keys, feature flags, and versions. Load the skill.
 
 ## Crisis Minimum (Time Pressure)
 
