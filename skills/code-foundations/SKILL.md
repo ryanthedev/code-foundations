@@ -176,6 +176,12 @@ The default answer to "does this need code-foundations?" is **YES**. The only ex
 - ANY search index mapping (Elasticsearch - wrong mapping = search broken, reindex required!)
 - ANY webhook config (external integrations - wrong URL = data sent to wrong place!)
 - ANY OAuth/SAML config (authentication - wrong config = login broken OR security hole!)
+- ANY cron expression (schedule strings - wrong syntax = wrong timing OR never runs!)
+- ANY feature flag SDK config (LaunchDarkly, Split - wrong defaults = wrong features enabled!)
+- ANY error monitoring config (Sentry, Bugsnag - wrong DSN = errors lost, wrong sampling = blind!)
+- ANY analytics config (GA, Mixpanel - wrong tracking = bad data, privacy violations!)
+- ANY license header in code files (legal compliance - wrong license = legal liability!)
+- ANY changelog/version file (release artifacts - wrong version = deployment confusion!)
 - ANYTHING you're about to commit
 
 **The ONLY things exempt:**
@@ -539,6 +545,18 @@ These are the EXACT rationalizations observed in baseline testing. If you think 
 | "It's just an integration endpoint" | **NEW:** Webhook config affects external systems. Wrong payload format = integration broken. Missing signature = security hole. |
 | "I'm just updating OAuth config" | **NEW:** OAuth config is AUTHENTICATION. Wrong redirect URI = auth broken. Wrong scopes = over-permissioned OR under-permissioned. |
 | "It's just login settings" | **NEW:** OAuth/SAML misconfig = users locked out OR security vulnerabilities. Wrong issuer = tokens rejected. Wrong audience = tokens accepted from wrong source. |
+| "I'm just updating the cron expression" | **NEW:** Cron syntax is tricky. `0 0 * * *` vs `* 0 * * *` = once daily vs 60 times. Wrong expression = job runs wrong time or never. |
+| "It's just a schedule string" | **NEW:** Cron expressions control WHEN code runs. Timezone matters. Day-of-week vs day-of-month conflicts. Test with cron expression validator. |
+| "I'm just updating feature flag config" | **NEW:** Feature flag SDK config affects flag evaluation. Wrong default = feature enabled/disabled for everyone. Wrong targeting = wrong users get feature. |
+| "It's just SDK settings" | **NEW:** LaunchDarkly/Split config controls feature rollout. Wrong cache TTL = stale flags. Wrong context = targeting broken. Revenue impact. |
+| "I'm just updating Sentry config" | **NEW:** Error monitoring config affects visibility. Wrong DSN = errors go nowhere. Wrong sampling = miss errors. Wrong filtering = noise or silence. |
+| "It's just error tracking" | **NEW:** Sentry/Bugsnag misconfig = blind during incidents. Source maps wrong = unreadable stack traces. Release tracking wrong = can't correlate. |
+| "I'm just updating analytics tracking" | **NEW:** Analytics config affects business metrics. Wrong tracking ID = data in wrong property. Wrong events = bad product decisions. GDPR implications. |
+| "It's just tracking code" | **NEW:** GA/Mixpanel config affects data quality. Wrong user ID = broken funnels. Wrong properties = unusable data. Privacy: PII in analytics = violations. |
+| "I'm just updating license headers" | **NEW:** License headers are LEGAL documents. Wrong license = legal liability. Missing attribution = license violation. Year wrong = looks abandoned. |
+| "It's just copyright text" | **NEW:** License headers in CODE FILES. Changing license affects legal terms. Some licenses are incompatible. Legal review recommended. |
+| "I'm just updating the changelog" | **NEW:** Changelog is release documentation. Wrong version = confusion. Missing breaking changes = angry users. Links to wrong commits = misdirection. |
+| "It's just release notes" | **NEW:** Changelog affects users upgrading. Semantic versioning matters. Breaking change in minor version = broken builds. Accurate changelog = trust. |
 
 **All of these mean:** Load the skill anyway. Your confidence is the problem, not the solution.
 
