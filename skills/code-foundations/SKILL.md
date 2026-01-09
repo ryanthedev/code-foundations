@@ -57,6 +57,8 @@ The default answer to "does this need code-foundations?" is **YES**. The only ex
 - ANY log level change (DEBUG to INFO hides information you might need)
 - ANY function keyword addition (async, static, override - changes behavior significantly)
 - ANY function reordering (order matters for hoisting, initialization, readability assumptions)
+- ANY variable removal, even "unused" ones (verify truly unused - linters can be wrong)
+- ANY const/let/var change (mutability semantics affect behavior)
 - ANYTHING you're about to commit
 
 **The ONLY things exempt:**
@@ -203,6 +205,10 @@ These are the EXACT rationalizations observed in baseline testing. If you think 
 | "I'm just adding async" | **NEW:** Adding 'async' changes return type to Promise. Callers expecting sync value now get Promise. This breaks existing code. |
 | "I'm just adding static/override" | **NEW:** Keywords change how functions behave. 'static' changes 'this' binding. 'override' requires base class method. Verify call sites. |
 | "I'm just reordering for readability" | **NEW:** Function order matters in some languages (hoisting, initialization). Even in JS, test files may depend on order. Verify. |
+| "I'm just removing an unused variable" | **NEW:** Deleting code IS code activity. Linters can be wrong (dynamic access, eval, reflection). Verify it's truly unused. |
+| "The linter says it's unused" | **NEW:** Linters don't see all usages (dynamic requires, string-based access, external callers). Removal is deletion. Verify. |
+| "I'm just changing const to let" | **NEW:** Mutability change is semantic. const→let means something can now be reassigned. Accidental reassignment = bugs. |
+| "It's just a declaration keyword" | **NEW:** const/let/var have different scoping and reassignment rules. Wrong choice = subtle bugs. Verify the change is correct. |
 
 **All of these mean:** Load the skill anyway. Your confidence is the problem, not the solution.
 
