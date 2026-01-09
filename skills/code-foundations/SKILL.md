@@ -80,6 +80,15 @@ The default answer to "does this need code-foundations?" is **YES**. The only ex
 - ANY spread operator addition (spread has different behavior for arrays vs objects)
 - ANY callback to Promise conversion (async changes error handling and return types)
 - ANY export style change (default vs named exports affect how importers consume)
+- ANY non-null assertion (!) addition (tells TypeScript to ignore null - runtime crash waiting to happen)
+- ANY `as const` addition (changes type to readonly literal, affects what can be assigned)
+- ANY forEach/map/filter swap (these have different return values and semantics)
+- ANY indexOf to includes change (includes handles NaN differently!)
+- ANY .bind() addition (creates new function each call, affects identity checks and memory)
+- ANY type guard addition (affects type narrowing throughout codebase)
+- ANY ternary operator change (ternary has different precedence and evaluation rules)
+- ANY Promise.all to Promise.allSettled change (different error handling semantics)
+- ANY array method chain modification (order and method choice affects behavior)
 - ANYTHING you're about to commit
 
 **The ONLY things exempt:**
@@ -264,6 +273,21 @@ These are the EXACT rationalizations observed in baseline testing. If you think 
 | "I'm just using spread" | **NEW:** Spread behaves differently for arrays vs objects. Object spread is shallow. Spread can't be used with all iterables. Verify behavior. |
 | "I'm just promisifying" | **NEW:** Callback→Promise changes error handling. Thrown errors become rejections. Return values become resolve values. Verify callers handle Promises. |
 | "I'm just changing export style" | **NEW:** Default vs named exports affect ALL importers. Changing export style requires updating EVERY import statement. Verify all usages. |
+| "I'm just adding a non-null assertion" | **NEW:** The `!` operator tells TypeScript "I KNOW this isn't null" - but do you? If you're wrong = runtime crash. Verify it's actually never null. |
+| "It's just a single character (!)" | **NEW:** That single character disables TypeScript's null safety. You're accepting responsibility for null checks. Verify thoroughly. |
+| "I'm just adding 'as const'" | **NEW:** `as const` changes the type from `string[]` to `readonly ["red", "green"]`. This affects what you can push, assign, or pass. Verify usages. |
+| "It's just a type annotation" | **NEW:** `as const` isn't just annotation - it makes the value deeply readonly. Methods like .push() won't work. Verify no mutations expected. |
+| "I'm just changing forEach to map" | **NEW:** forEach returns undefined, map returns array. If you ignore map's return value, why use map? If you need the return, forEach was wrong. |
+| "It's more functional style" | **NEW:** "Functional style" isn't just syntax - map/filter/reduce have different return values. Ignoring map's return is often a bug. |
+| "I'm just using includes instead of indexOf" | **NEW:** includes() uses SameValueZero (finds NaN), indexOf() uses strict equality (can't find NaN). `[NaN].includes(NaN)` is true, indexOf is -1. |
+| "It's cleaner syntax" | **NEW:** includes vs indexOf have different NaN behavior. If your array might contain NaN, this change breaks code. Verify array contents. |
+| "I'm just adding .bind()" | **NEW:** .bind() creates a NEW function every call. `fn.bind(this) !== fn.bind(this)`. This breaks identity checks, memoization, removeEventListener. |
+| "It's just setting the context" | **NEW:** .bind() has memory implications and breaks function identity. Arrow functions might be better. Verify no identity comparisons. |
+| "I'm just adding a type guard" | **NEW:** Type guards affect narrowing EVERYWHERE the function is used. Wrong type guard = TypeScript lies about types = hidden bugs. |
+| "It's a simple type check" | **NEW:** Type guards teach TypeScript's type system. Teaching it wrong = false confidence in types. Verify the guard is correct. |
+| "I'm just using a ternary" | **NEW:** Ternary has different precedence than if/else. Nested ternaries are hard to parse. Ternary in JSX has gotchas. Verify carefully. |
+| "I'm just changing to Promise.allSettled" | **NEW:** Promise.all fails fast (one rejection = all fail). Promise.allSettled waits for all. This changes error handling semantics entirely. |
+| "I'm just chaining array methods" | **NEW:** Method chain order matters. filter→map vs map→filter differ in performance and sometimes results. Verify the chain is correct. |
 
 **All of these mean:** Load the skill anyway. Your confidence is the problem, not the solution.
 
