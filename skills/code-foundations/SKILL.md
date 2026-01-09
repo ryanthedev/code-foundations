@@ -129,6 +129,12 @@ The default answer to "does this need code-foundations?" is **YES**. The only ex
 - ANY Jupyter notebook (.ipynb - contains EXECUTABLE code cells!)
 - ANY IDE config (.vscode/launch.json, .idea/* - affects how code runs/debugs!)
 - ANY shell rc file (.bashrc, .zshrc, .profile - affects every terminal session!)
+- ANY cron/systemd/launchd file (scheduled tasks are AUTOMATED code execution!)
+- ANY git submodule update (.gitmodules, submodule refs control what code exists!)
+- ANY hardcoded URL, IP, or connection string (wrong endpoint = wrong environment!)
+- ANY error message or user-facing text in code (leaks info, affects UX, i18n issues!)
+- ANY mock/stub/fake implementation (test doubles ARE code that runs in tests!)
+- ANY polyfill import (polyfills affect runtime behavior, import order is critical!)
 - ANYTHING you're about to commit
 
 **The ONLY things exempt:**
@@ -398,6 +404,18 @@ These are the EXACT rationalizations observed in baseline testing. If you think 
 | "It's just IDE settings" | **NEW:** IDE configs affect builds, debugging, formatting. Committed .vscode/ affects entire team. Wrong settings = team-wide issues. |
 | "I'm just adding a shell alias" | **NEW:** .bashrc/.zshrc run on EVERY terminal. Syntax error = can't open new terminals. Wrong alias = wrong commands run. |
 | "It's just my personal config" | **NEW:** Shell configs define PATH, env vars, aliases. Wrong PATH = wrong binaries run. This affects ALL your work. |
+| "I'm just adding a cron job" | **NEW:** Cron jobs run AUTOMATICALLY on schedule. Wrong cron = wrong command runs every minute/hour/day. Untested automation. |
+| "It's just a scheduled task" | **NEW:** Scheduled tasks run without supervision. Syntax error = silent failure. Wrong timing = resource exhaustion or missed jobs. |
+| "I'm just updating the submodule" | **NEW:** Submodules control what CODE is pulled. Wrong commit = wrong dependency code. Can introduce breaking changes silently. |
+| "It's just a git reference" | **NEW:** Submodule refs determine exact code version. Pointing to wrong commit = different behavior, security vulnerabilities. |
+| "I'm just changing a URL" | **NEW:** URLs are CONNECTION STRINGS. Wrong URL = data sent to wrong server. Staging URL in prod = data loss or corruption. |
+| "It's just an endpoint" | **NEW:** Endpoints define where code talks. localhost vs prod, HTTP vs HTTPS, wrong port - all cause failures or security issues. |
+| "I'm just updating the error message" | **NEW:** Error messages are IN CODE FILES. Also: error messages can leak stack traces, paths, versions. Security and UX issue. |
+| "It's just text for users" | **NEW:** User-facing text affects UX, i18n, and security. Wrong format string = crash. Leaked info = security vulnerability. |
+| "I'm just writing a mock" | **NEW:** Mocks ARE code that executes in tests. Wrong mock = tests pass but production fails. Mock complexity hides bugs. |
+| "It's just test code" | **NEW:** Test code runs in CI. Test code that crashes = blocked deployments. Test code that lies = false confidence. |
+| "I'm just adding a polyfill" | **NEW:** Polyfills affect RUNTIME behavior globally. Import order matters. Wrong polyfill = subtle bugs in specific browsers. |
+| "It's just browser compatibility" | **NEW:** Polyfills can conflict, override native implementations. Multiple polyfills for same feature = undefined behavior. |
 
 **All of these mean:** Load the skill anyway. Your confidence is the problem, not the solution.
 
