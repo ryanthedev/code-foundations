@@ -48,6 +48,9 @@ The default answer to "does this need code-foundations?" is **YES**. The only ex
 - ANY feature flag toggle (enables/disables entire code paths)
 - ANY timeout/retry/cache value change (reliability-critical numbers)
 - ANY port number, rate limit, or threshold change (operational parameters)
+- ANY CSS/style class rename (must verify all usages across HTML/JSX/templates)
+- ANY @ts-ignore, eslint-disable, @suppress comment (hiding errors is dangerous)
+- ANY TODO/FIXME comment in code files (you're modifying a code file)
 - ANYTHING you're about to commit
 
 **The ONLY things exempt:**
@@ -180,6 +183,11 @@ These are the EXACT rationalizations observed in baseline testing. If you think 
 | "It's just toggling a feature flag" | **NEW:** Feature flags control entire code paths. Disabling wrong flag = broken features or enabled broken code. Verify impact. |
 | "I'm just changing a timeout value" | **NEW:** Timeout values are reliability-critical. Too high = users wait forever. Too low = false failures. These cause incidents. |
 | "It's just a config number" | **NEW:** Config numbers control behavior. Port numbers, retry counts, cache TTLs, rate limits - all "just numbers" that cause outages. |
+| "I'm just renaming a CSS class" | **NEW:** CSS class renames affect EVERY file using that class. Miss one = broken styling. Verify all usages. |
+| "It's just a style change" | **NEW:** Style changes in code files (CSS, SCSS, styled-components) affect UI. Broken UI = user-facing bugs. |
+| "I'm just adding @ts-ignore" | **NEW:** @ts-ignore HIDES a type error. You're telling the compiler to ignore a problem. That problem is now YOUR bug. |
+| "It's just suppressing a lint warning" | **NEW:** eslint-disable, @suppress, #pragma - all hide potential bugs. Suppression = accepting risk. Verify the risk is acceptable. |
+| "I'm just adding a TODO comment" | **NEW:** You're modifying a code file. The skill applies to ANY code file modification. Also: will you ever fix that TODO? |
 
 **All of these mean:** Load the skill anyway. Your confidence is the problem, not the solution.
 
