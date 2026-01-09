@@ -85,6 +85,8 @@ These are the EXACT rationalizations observed in baseline testing. If you think 
 | "The code already works / is battle-tested" | **NEW:** Your CHANGE can break what worked. 2 years of success doesn't protect today's edit. |
 | "Skills are for new/broken code, not working code" | **NEW:** You're MODIFYING it. The modification is new code. Load the skill. |
 | "Production validates correctness" | **NEW:** Production validates PAST code. Your change is FUTURE code. Load the skill. |
+| "It's config, not code" | **NEW:** Config that affects runtime behavior IS code activity. Feature flags, deps, env vars need verification. |
+| "Dependency version bump is just a number" | **NEW:** Version changes can introduce breaking changes, security patches, or behavior changes. Review it. |
 
 **All of these mean:** Load the skill anyway. Your confidence is the problem, not the solution.
 
@@ -103,6 +105,20 @@ Agents rationalized skipping skills when modifying production code. They said:
 - "Skills are for NEW code or BROKEN code. This is neither."
 
 **These rationalizations are dangerous because they're half-true.** Yes, the EXISTING code works. But you're not evaluating the existing code - you're ADDING to it. Your addition is new code. The 2 years of production success doesn't validate your new logging statement, your new parameter, your new error handler. **Every modification is new code that needs the skill chain.**
+
+**The "It's Just Config" Trap (Observed in Testing):**
+Agents rationalized skipping skills for configuration file changes. They said:
+- "It's a configuration file, not code"
+- "A version bump is just changing a number"
+- "Environment variables are data entry, not programming"
+
+**Configuration that affects runtime behavior IS a code activity:**
+- **Feature flags** enable/disable code paths - wrong value = production bug
+- **Dependency versions** can introduce breaking changes or security issues
+- **Environment variables** control database connections, API endpoints, secrets
+- **Build configs** affect what code gets compiled/bundled
+
+If a configuration change can cause your application to behave differently, it needs the same verification as a code change. At minimum, verify: What behavior changes? What could break? How will you test?
 
 ## Crisis Minimum (Time Pressure)
 
