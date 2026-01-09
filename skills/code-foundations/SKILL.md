@@ -107,6 +107,16 @@ The default answer to "does this need code-foundations?" is **YES**. The only ex
 - ANY event delegation change (bubbling vs capturing, stopPropagation effects)
 - ANY String() vs .toString() vs template literal change (null/undefined handling differs!)
 - ANY Number() vs parseInt vs parseFloat vs +unary change (all parse differently!)
+- ANY code example in documentation (users COPY these! Wrong example = production bugs!)
+- ANY CI/CD workflow file (GitHub Actions, GitLab CI, etc. - these ARE code that runs!)
+- ANY Dockerfile change (CMD, ENTRYPOINT, ENV all affect runtime behavior!)
+- ANY OpenAPI/Swagger/Proto spec (often generates code! Wrong spec = wrong generated clients!)
+- ANY i18n/translation file (format strings, HTML, placeholders can break UI!)
+- ANY webpack/vite/rollup/esbuild config (these ARE JavaScript/TypeScript files!)
+- ANY Kubernetes manifest (wrong config = wrong deployment, scaling, networking!)
+- ANY Terraform/Pulumi/CloudFormation (infrastructure as code IS code!)
+- ANY nginx/Apache/Caddy config (routing, SSL, headers affect application behavior!)
+- ANY database migration file (schema changes affect ALL code that uses that data!)
 - ANYTHING you're about to commit
 
 **The ONLY things exempt:**
@@ -335,6 +345,23 @@ These are the EXACT rationalizations observed in baseline testing. If you think 
 | "I'm just changing event handling" | **NEW:** Bubbling vs capturing, stopPropagation, stopImmediatePropagation, passive - event semantics are complex. Verify behavior. |
 | "I'm just converting to string" | **NEW:** String(null)="null", (null).toString() throws, `${null}`="null", ""+null="null". But undefined, objects, symbols all differ. Verify. |
 | "I'm just parsing a number" | **NEW:** Number(""), parseInt(""), parseFloat(""), +"" all return different values! (0, NaN, NaN, 0). Verify your parser choice. |
+| "I'm just updating code examples in docs" | **NEW:** Users COPY documentation examples into production! Wrong example = users write buggy code. Doc examples ARE production code. |
+| "It's just a README snippet" | **NEW:** README code is the FIRST thing developers copy. If your example has a bug, thousands of users inherit that bug. Verify it compiles. |
+| "I'm just updating CI workflow" | **NEW:** GitHub Actions, GitLab CI, etc. ARE code that executes. Wrong step = broken builds, failed deploys, security holes. |
+| "It's just YAML config for CI" | **NEW:** CI YAML runs commands, sets env vars, deploys code. A typo in CI config can deploy to wrong environment or leak secrets. |
+| "I'm just updating the Dockerfile" | **NEW:** Dockerfile changes affect what runs in production. Wrong CMD = container won't start. Wrong ENV = wrong behavior. |
+| "It's just container config" | **NEW:** ENTRYPOINT vs CMD, multi-stage builds, layer caching - Dockerfiles have complex semantics. Verify the container actually runs. |
+| "I'm just updating the API spec" | **NEW:** OpenAPI/Swagger/Proto specs often GENERATE client code. Wrong spec = wrong generated clients = production bugs. |
+| "It's just documentation of the API" | **NEW:** API specs are executable documentation. codegen tools, mock servers, validators all use them. Wrong spec = broken tooling. |
+| "I'm just updating translations" | **NEW:** i18n files contain format strings, HTML, placeholders. Wrong translation = broken UI, XSS vulnerabilities, crashed formatters. |
+| "It's just text in another language" | **NEW:** Translation files have syntax ({0}, %s, <b>). Wrong escaping = displayed HTML. Missing placeholder = crash. |
+| "I'm just updating webpack config" | **NEW:** webpack/vite/rollup/esbuild configs ARE JavaScript/TypeScript. They run at build time. Wrong config = broken bundle. |
+| "It's just build configuration" | **NEW:** Build configs control what code ships. Wrong entry point = wrong bundle. Wrong loader = failed compilation. These ARE code. |
+| "I'm just updating K8s manifest" | **NEW:** Kubernetes manifests control deployment, scaling, networking. Wrong replica count = outage. Wrong resource limit = OOM kills. |
+| "It's just infrastructure config" | **NEW:** Infrastructure as Code (Terraform/Pulumi/CloudFormation) creates REAL infrastructure. Wrong config = wrong servers, databases, networking. |
+| "I'm just updating nginx config" | **NEW:** Web server config controls routing, SSL, headers. Wrong config = security vulnerabilities, broken routes, CORS failures. |
+| "I'm just updating a migration file" | **NEW:** Database migrations change SCHEMA that ALL code depends on. Wrong migration = broken queries, data loss, rollback nightmares. |
+| "It's just database schema" | **NEW:** Schema changes affect every query. Adding NOT NULL to existing column = migration failure. Verify backwards compatibility. |
 
 **All of these mean:** Load the skill anyway. Your confidence is the problem, not the solution.
 
