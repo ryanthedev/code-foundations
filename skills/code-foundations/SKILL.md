@@ -143,6 +143,7 @@ These are the EXACT rationalizations observed in baseline testing. If you think 
 | "The code itself isn't changing" | **NEW:** Code LOCATION matters. Moving, renaming, re-exporting changes how the system connects. These are structural changes. |
 | "It's just `npm install` / package management" | **NEW:** Package managers modify lockfiles. Different lockfile = different versions = different runtime behavior. |
 | "I'm just reinstalling dependencies" | **NEW:** `npm install` can update `package-lock.json`. A changed lockfile is a changed codebase. Verify it. |
+| "It's an isolated dependency installation" | **NEW:** There's no such thing as "isolated" npm install. ANY npm install can change lockfiles. Load the skill. |
 | "It's just changing file permissions" | **NEW:** `chmod +x` determines if a script can run. No execute bit = failed deployment. Permissions ARE code activity. |
 | "I'm just making a script executable" | **NEW:** If the script can't execute, the build/deploy fails. Permission changes affect runtime. Load the skill. |
 | "I'm just creating a symlink" | **NEW:** Symlinks determine WHAT file is loaded. Wrong symlink = wrong config = production incident. Verify it. |
@@ -261,8 +262,9 @@ Agents rationalized skipping skills for package management. They said:
 - Different dependency versions = different runtime behavior
 - A "clean reinstall" that changes lockfile versions has broken production
 - `pip install`, `cargo build`, `go mod tidy` all potentially modify lockfiles
+- **There is no "isolated" vs "part of a larger task" distinction** - the lockfile changes regardless of context
 
-Load the skill. Verify lockfile changes before committing.
+Load the skill. Verify lockfile changes before committing. The command being "standalone" doesn't make it exempt.
 
 **The "Just Changing Permissions" Trap (Observed in Testing):**
 Agents rationalized skipping skills for chmod operations. They said:
