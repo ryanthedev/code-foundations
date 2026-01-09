@@ -89,6 +89,11 @@ These are the EXACT rationalizations observed in baseline testing. If you think 
 | "Dependency version bump is just a number" | **NEW:** Version changes can introduce breaking changes, security patches, or behavior changes. Review it. |
 | "I'm just resolving merge conflicts" | **NEW:** Combining code paths IS writing code. Conflicts often involve design decisions. Load the skill. |
 | "Both versions already work" | **NEW:** They work SEPARATELY. Merging them is NEW code that hasn't been tested together. |
+| "I'm just commenting out code temporarily" | **NEW:** Commenting out `processPayment()` can break checkout. Commented code IS modified code. Load the skill. |
+| "It's temporary for debugging" | **NEW:** "Temporary" changes that break production aren't temporary - they're incidents. Verify before committing. |
+| "Someone already reviewed/prescribed these changes" | **NEW:** Review validates the DESIGN. You can still IMPLEMENT it wrong. >50% error rate on ANY change applies. |
+| "I'm just implementing code review feedback" | **NEW:** Implementing prescribed changes still has error rate. The reviewer approved the design, not your keystrokes. |
+| "The senior developer said exactly what to do" | **NEW:** Authority doesn't prevent typos, wrong files, or missed edge cases. Skill chain catches implementation errors. |
 
 **All of these mean:** Load the skill anyway. Your confidence is the problem, not the solution.
 
@@ -135,6 +140,38 @@ Agents rationalized skipping skills for merge conflict resolution. They said:
 - Subtle incompatibilities between branches are common bug sources
 
 Classify as WRITE and load the skill chain.
+
+**The "Just Commenting Out Code" Trap (Observed in Testing):**
+Agents rationalized skipping skills for temporary code commenting. They said:
+- "It's a trivial, temporary debugging modification"
+- "The change is intentionally reversible"
+- "It's a mechanical, diagnostic action"
+
+**Commenting out code IS a code change:**
+- Commenting out `processPayment()` breaks the entire checkout flow
+- "Temporary" changes that get committed can reach production
+- Even debugging changes need verification: What depends on this code? What will break?
+- If you commit a "temporary" comment and deploy it, it's not temporary - it's an incident
+
+The distinction between "production code" and "debugging" is false when you're committing changes. Load the skill chain.
+
+**The "Already Reviewed/Prescribed" Trap (Observed in Testing):**
+Agents rationalized skipping skills when implementing changes someone else specified. They said:
+- "A senior developer already made the design decisions"
+- "I'm simply executing prescribed changes, not making choices"
+- "The review has already happened; I'm just implementing the approved feedback"
+
+**This conflates two different activities:**
+- **Design review** validates WHAT should change (the senior approved this)
+- **Implementation** is HOW you make the change (your keystrokes, your files)
+
+The >50% first-attempt error rate applies to implementation regardless of who designed it. You can:
+- Implement in the wrong file
+- Make a typo in the variable name
+- Miss one of the locations that needs changing
+- Misunderstand the prescribed change
+
+**Code review feedback validates the approach, not your execution.** Load the skill chain to verify your implementation.
 
 ## Crisis Minimum (Time Pressure)
 
