@@ -94,6 +94,10 @@ These are the EXACT rationalizations observed in baseline testing. If you think 
 | "Someone already reviewed/prescribed these changes" | **NEW:** Review validates the DESIGN. You can still IMPLEMENT it wrong. >50% error rate on ANY change applies. |
 | "I'm just implementing code review feedback" | **NEW:** Implementing prescribed changes still has error rate. The reviewer approved the design, not your keystrokes. |
 | "The senior developer said exactly what to do" | **NEW:** Authority doesn't prevent typos, wrong files, or missed edge cases. Skill chain catches implementation errors. |
+| "I'm just moving code between files" | **NEW:** Moving code affects imports, dependencies, initialization order. "No logic change" ≠ "no risk". Load the skill. |
+| "It's purely syntactic / mechanical" | **NEW:** "Syntactic" changes (imports, file moves, renames) break runtime when wrong. Verify all references. |
+| "I'm just updating an import path" | **NEW:** Wrong path = runtime crash. Missing one file = partial failure. Case sensitivity varies by OS. Load the skill. |
+| "The code itself isn't changing" | **NEW:** Code LOCATION matters. Moving, renaming, re-exporting changes how the system connects. These are structural changes. |
 
 **All of these mean:** Load the skill anyway. Your confidence is the problem, not the solution.
 
@@ -172,6 +176,23 @@ The >50% first-attempt error rate applies to implementation regardless of who de
 - Misunderstand the prescribed change
 
 **Code review feedback validates the approach, not your execution.** Load the skill chain to verify your implementation.
+
+**The "Just Moving/Renaming Code" Trap (Observed in Testing):**
+Agents rationalized skipping skills for structural changes. They said:
+- "It's a mechanical refactoring task, not design or implementation"
+- "The function's logic remains unchanged - just a cut-paste operation"
+- "This is purely syntactic, not conceptual"
+- "Updating an import path is a trivial mechanical edit"
+
+**Structural changes ARE code changes:**
+- **Moving a function** requires updating imports in EVERY file that uses it
+- **Renaming files** breaks all import paths referencing the old name
+- **Changing import paths** can introduce case sensitivity bugs across OSes
+- **Re-exporting from different locations** can break circular dependency assumptions
+
+The "logic stays the same" rationalization ignores that **code location IS part of the system**. A function that works in `utils.js` might fail if moved to a circular dependency, or if consumers have relative imports that break.
+
+Classify structural changes as REFACTOR and load the skill chain.
 
 ## Crisis Minimum (Time Pressure)
 
