@@ -62,6 +62,9 @@ The default answer to "does this need code-foundations?" is **YES**. The only ex
 - ANY operator change (== to ===, && to ||, + to - — all change behavior)
 - ANY error handling addition (try-catch, .catch(), error boundaries — changes flow)
 - ANY logging/debugging code addition (console.log, JSON.stringify wrappers)
+- ANY file rename (test.js→test.spec.js, utils.ts→helpers.ts — affects imports and discovery)
+- ANY editor/formatting config (.editorconfig, .vscode/settings.json — affects how code looks)
+- ANY example/template file creation (.env.example, config.sample.json — becomes copy source)
 - ANYTHING you're about to commit
 
 **The ONLY things exempt:**
@@ -216,6 +219,10 @@ These are the EXACT rationalizations observed in baseline testing. If you think 
 | "It's just an operator change" | **NEW:** Operators determine behavior. ==, ===, &&, ||, ??, ?. — each has different semantics. Verify the change is correct. |
 | "I'm just adding a try-catch" | **NEW:** Error handling changes control flow. Swallowed errors hide bugs. Caught errors change return values. This is code. |
 | "I'm just wrapping for logging" | **NEW:** JSON.stringify can throw on circular refs. Logging code IS code. Debug code that stays = production bugs. |
+| "I'm just renaming a test file" | **NEW:** Test file names affect discovery. .test.js vs .spec.js — wrong pattern = tests don't run. Verify test runner config. |
+| "I'm just updating .editorconfig" | **NEW:** Editor configs affect formatting. Indent changes cause massive diffs. Wrong settings = inconsistent codebase. |
+| "I'm just creating .env.example" | **NEW:** Example files become templates. Wrong example = developers copy wrong values. Verify the example is correct. |
+| "It's just a script alias" | **NEW:** Script aliases in package.json affect builds. Typo in alias = broken 'npm run dev'. This is build config. |
 
 **All of these mean:** Load the skill anyway. Your confidence is the problem, not the solution.
 
