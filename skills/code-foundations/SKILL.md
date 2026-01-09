@@ -123,6 +123,12 @@ The default answer to "does this need code-foundations?" is **YES**. The only ex
 - ANY SQL file (stored procedures, views, triggers - database IS code!)
 - ANY GraphQL schema (generates types! Affects frontend AND backend!)
 - ANY CSS/SCSS/Less file (styling affects UI - wrong CSS = broken user experience!)
+- ANY lockfile direct edit (package-lock.json, yarn.lock - manual edits can break resolution!)
+- ANY test snapshot file (Jest/Vitest snapshots - updating to pass can HIDE bugs!)
+- ANY SVG file (SVGs can contain JavaScript, CSS, onclick handlers - security risk!)
+- ANY Jupyter notebook (.ipynb - contains EXECUTABLE code cells!)
+- ANY IDE config (.vscode/launch.json, .idea/* - affects how code runs/debugs!)
+- ANY shell rc file (.bashrc, .zshrc, .profile - affects every terminal session!)
 - ANYTHING you're about to commit
 
 **The ONLY things exempt:**
@@ -380,6 +386,18 @@ These are the EXACT rationalizations observed in baseline testing. If you think 
 | "It's just an API type" | **NEW:** Schema changes affect code generation. Removing a field = all clients break. Adding required field = breaking change. |
 | "I'm just updating CSS" | **NEW:** CSS affects EVERYTHING users see. Wrong z-index = elements hidden. Wrong display = layout broken. |
 | "It's just styling" | **NEW:** CSS custom properties (--vars) cascade everywhere. One wrong value = wrong colors/spacing across entire app. |
+| "I'm just editing the lockfile directly" | **NEW:** Lockfiles have complex resolution graphs. Manual edits can break npm/yarn install. Let package manager regenerate. |
+| "It's just pinning a version" | **NEW:** Lockfile entries have integrity hashes, dependency trees. Wrong edit = "Cannot resolve" errors or silent version mismatch. |
+| "I'm just updating the snapshot" | **NEW:** Snapshots verify output. Updating to pass = accepting current output. If output is WRONG, you just enshrined a bug. |
+| "The snapshot test was failing" | **NEW:** Snapshot failures mean OUTPUT CHANGED. Ask: is the new output CORRECT? Don't blindly update to make green. |
+| "I'm just adding an onclick to SVG" | **NEW:** SVGs are XML that can contain JavaScript, CSS, external references. onclick in SVG = JavaScript execution. Security risk. |
+| "It's just an image file" | **NEW:** SVG is NOT just an image. It's a programmable vector format. SVGs from untrusted sources = XSS attacks. |
+| "I'm just updating a notebook cell" | **NEW:** Jupyter notebooks contain EXECUTABLE code. Cell outputs are cached. Wrong cell = wrong analysis shared with team. |
+| "It's just data exploration code" | **NEW:** Notebook code often becomes production code. Bad patterns in notebooks get copied. Notebooks ARE code. |
+| "I'm just adding a debug config" | **NEW:** launch.json controls debugger behavior. Wrong args = debugging wrong process. Wrong env = different behavior than prod. |
+| "It's just IDE settings" | **NEW:** IDE configs affect builds, debugging, formatting. Committed .vscode/ affects entire team. Wrong settings = team-wide issues. |
+| "I'm just adding a shell alias" | **NEW:** .bashrc/.zshrc run on EVERY terminal. Syntax error = can't open new terminals. Wrong alias = wrong commands run. |
+| "It's just my personal config" | **NEW:** Shell configs define PATH, env vars, aliases. Wrong PATH = wrong binaries run. This affects ALL your work. |
 
 **All of these mean:** Load the skill anyway. Your confidence is the problem, not the solution.
 
