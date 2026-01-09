@@ -182,6 +182,12 @@ The default answer to "does this need code-foundations?" is **YES**. The only ex
 - ANY analytics config (GA, Mixpanel - wrong tracking = bad data, privacy violations!)
 - ANY license header in code files (legal compliance - wrong license = legal liability!)
 - ANY changelog/version file (release artifacts - wrong version = deployment confusion!)
+- ANY Swagger/Redoc UI config (API docs - wrong config = broken docs, wrong examples!)
+- ANY VS Code snippets (.vscode/*.code-snippets - wrong snippet = wrong code generated!)
+- ANY Husky hooks (.husky/* - these are SHELL SCRIPTS that run on git operations!)
+- ANY lint-staged config (runs on commit - wrong glob = files skipped or broken commits!)
+- ANY release/deploy script (deployment automation - wrong script = failed or bad releases!)
+- ANY health check config (monitoring - wrong config = false alerts or missed outages!)
 - ANYTHING you're about to commit
 
 **The ONLY things exempt:**
@@ -557,6 +563,18 @@ These are the EXACT rationalizations observed in baseline testing. If you think 
 | "It's just copyright text" | **NEW:** License headers in CODE FILES. Changing license affects legal terms. Some licenses are incompatible. Legal review recommended. |
 | "I'm just updating the changelog" | **NEW:** Changelog is release documentation. Wrong version = confusion. Missing breaking changes = angry users. Links to wrong commits = misdirection. |
 | "It's just release notes" | **NEW:** Changelog affects users upgrading. Semantic versioning matters. Breaking change in minor version = broken builds. Accurate changelog = trust. |
+| "I'm just updating Swagger UI config" | **NEW:** Swagger/Redoc config controls API documentation. Wrong config = broken examples, wrong auth flows, misleading docs. Developers copy these examples! |
+| "It's just API documentation" | **NEW:** API docs that show wrong examples = wrong client code. Try-it-out with wrong config = failed requests. Broken docs = developer frustration. |
+| "I'm just adding a VS Code snippet" | **NEW:** Code snippets generate code that developers use. Wrong snippet = wrong code inserted everywhere. Tab stops wrong = frustrated developers. |
+| "It's just editor shortcuts" | **NEW:** .vscode/*.code-snippets become templates developers rely on. Wrong template = wrong patterns propagated across codebase. |
+| "I'm just updating a Husky hook" | **NEW:** Husky hooks are SHELL SCRIPTS that run on git operations. pre-commit hook broken = developers can't commit. post-merge broken = dev env corrupted. |
+| "It's just git hooks config" | **NEW:** .husky/* scripts execute automatically. Syntax error = blocked commits. Wrong command = wrong checks run or skipped. |
+| "I'm just updating lint-staged config" | **NEW:** lint-staged runs on commit. Wrong glob = files skipped. Wrong command = broken formatting or lint. Exit 1 = blocked commits. |
+| "It's just pre-commit formatting" | **NEW:** lint-staged config affects EVERY commit. Wrong pattern = some files never linted. Wrong formatter = inconsistent codebase. |
+| "I'm just updating the release script" | **NEW:** Release/deploy scripts are DEPLOYMENT AUTOMATION. Wrong script = failed releases, wrong artifacts published, broken production. |
+| "It's just deployment automation" | **NEW:** Release scripts control what gets deployed. Wrong version = overwritten packages. Missing step = incomplete release. Script bugs = outages. |
+| "I'm just updating health check config" | **NEW:** Health checks are MONITORING. Wrong endpoint = false positives. Wrong thresholds = missed outages OR alert fatigue. |
+| "It's just monitoring config" | **NEW:** Health check misconfiguration = blind to outages or paged constantly for nothing. Wrong path = 404 looks healthy. Wrong timeout = flaky alerts. |
 
 **All of these mean:** Load the skill anyway. Your confidence is the problem, not the solution.
 
