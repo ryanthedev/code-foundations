@@ -69,6 +69,17 @@ The default answer to "does this need code-foundations?" is **YES**. The only ex
 - ANY import reordering (import order matters for side effects in some modules)
 - ANY quote style change (single vs double affects escaping, template literals differ)
 - ANY whitespace change in code files (you're still modifying a code file)
+- ANY type annotation addition (TypeScript types affect compilation and can reveal bugs)
+- ANY default parameter addition (changes function signature, callers passing undefined now get default)
+- ANY optional chaining addition (?. has different semantics than && for edge cases)
+- ANY arrow function conversion (arrow functions change `this` binding - can break methods)
+- ANY || to ?? change (nullish coalescing has different semantics for 0, "", false)
+- ANY test fixture/mock data change (test data changes can mask or reveal bugs)
+- ANY regex modification (regex changes affect pattern matching - subtle bugs common)
+- ANY destructuring change (destructuring has default value and alias semantics)
+- ANY spread operator addition (spread has different behavior for arrays vs objects)
+- ANY callback to Promise conversion (async changes error handling and return types)
+- ANY export style change (default vs named exports affect how importers consume)
 - ANYTHING you're about to commit
 
 **The ONLY things exempt:**
@@ -235,6 +246,24 @@ These are the EXACT rationalizations observed in baseline testing. If you think 
 | "It's just a style preference" | **NEW:** Quote style affects what escapes are needed. Changing `"it's"` to `'it's'` breaks. Verify string contents. |
 | "I'm just adding whitespace" | **NEW:** You're modifying a code file. The skill applies to ANY code file modification. Load the skill. |
 | "It's just a blank line" | **NEW:** If you're editing a code file, you're doing code activity. Even "cosmetic" changes need the skill to verify no other changes slipped in. |
+| "I'm just adding type annotations" | **NEW:** Types affect compilation. TypeScript can reveal bugs, change inference, require additional changes. This IS code activity. |
+| "It's just documentation of existing types" | **NEW:** Type annotations aren't comments - they're compiled. Wrong types = compilation errors or hidden bugs. Verify the types are correct. |
+| "I'm just adding a default parameter" | **NEW:** Default params change function signature. Callers passing `undefined` now get the default. This can change behavior. |
+| "It's a simple default value" | **NEW:** Defaults affect ALL call sites passing undefined. `greet(undefined)` now returns "Hello World" not "Hello undefined". Verify callers. |
+| "I'm just adding optional chaining" | **NEW:** `?.` and `&&` have different semantics. `0?.foo` vs `0 && 0.foo` behave differently. Edge cases matter. Verify behavior. |
+| "It's just making it safer" | **NEW:** Optional chaining changes behavior for edge cases. It returns `undefined` instead of falsy values. Verify this is what you want. |
+| "I'm just converting to arrow function" | **NEW:** Arrow functions DON'T have their own `this`. Converting methods to arrows BREAKS `this` binding. Verify no `this` usage. |
+| "It's the same logic, different syntax" | **NEW:** Arrow functions change `this`, `arguments`, `super`, and `new.target` binding. "Same logic" is FALSE if any of these are used. |
+| "I'm just changing || to ??" | **NEW:** `||` returns right side for ALL falsy (0, "", false, null, undefined). `??` only for null/undefined. This CHANGES behavior for 0 and "". |
+| "It's safer for handling 0" | **NEW:** Yes, and that means DIFFERENT behavior. Code relying on `||` returning default for 0 will now get 0. Verify all usages. |
+| "I'm just updating test data" | **NEW:** Test data changes affect what tests verify. Wrong mock data = tests pass but production fails. Test data IS test code. |
+| "It's just a mock value" | **NEW:** Mock values determine test behavior. Changing "John" to "Jane" might pass a gender-based test or fail a name-length test. Verify test intent. |
+| "I'm just tweaking the regex" | **NEW:** Regex is notoriously subtle. One character change can completely alter matching. Test with edge cases before and after. |
+| "It's a simple regex change" | **NEW:** There are no simple regex changes. Catastrophic backtracking, capture group changes, flag changes - all cause bugs. Verify thoroughly. |
+| "I'm just using destructuring" | **NEW:** Destructuring has default values, aliases, and nested semantics. `const {a = 1} = obj` differs from `const a = obj.a || 1`. |
+| "I'm just using spread" | **NEW:** Spread behaves differently for arrays vs objects. Object spread is shallow. Spread can't be used with all iterables. Verify behavior. |
+| "I'm just promisifying" | **NEW:** Callback→Promise changes error handling. Thrown errors become rejections. Return values become resolve values. Verify callers handle Promises. |
+| "I'm just changing export style" | **NEW:** Default vs named exports affect ALL importers. Changing export style requires updating EVERY import statement. Verify all usages. |
 
 **All of these mean:** Load the skill anyway. Your confidence is the problem, not the solution.
 
