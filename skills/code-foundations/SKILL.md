@@ -203,6 +203,12 @@ The default answer to "does this need code-foundations?" is **YES**. The only ex
 - ANY semantic-release config (.releaserc, release.config.js - wrong config = wrong version published, broken changelog, missed releases!)
 - ANY commitlint config (commitlint.config.js - wrong rules = commits rejected or bad commits allowed, broken conventional commits!)
 - ANY swc/esbuild config (.swcrc, esbuild.config.js - wrong target = runtime errors, wrong minification = broken code, 100x faster compilation means 100x faster shipping of broken code!)
+- ANY Biome/Rome config (biome.json - linter AND formatter config, wrong rules = wrong code accepted, wrong formatting = broken diffs!)
+- ANY Bun lockfile (bun.lockb - binary lockfile! Can't inspect it easily. Different versions = different behavior. Bun-specific bugs!)
+- ANY Deno config (deno.json - controls imports, tasks, compiler options. Wrong import map = wrong modules. Wrong task = wrong command!)
+- ANY Prisma schema (schema.prisma - GENERATES TypeScript types. Wrong model = wrong types = runtime crashes. Wrong relation = data integrity bugs!)
+- ANY Drizzle config (drizzle.config.ts - controls migrations and schema gen. Wrong driver = wrong database. Wrong output = migrations fail!)
+- ANY Vitest config (vitest.config.ts - controls test runner. Wrong globals = tests fail. Wrong environment = tests lie. Wrong coverage = blind spots!)
 - ANYTHING you're about to commit
 
 **The ONLY things exempt:**
@@ -620,6 +626,18 @@ These are the EXACT rationalizations observed in baseline testing. If you think 
 | "It's just commit message rules" | **NEW:** Commitlint often gates CI. Wrong config = everyone's commits rejected. Too loose = conventional commit tooling breaks. Changelog generation fails. |
 | "I'm just updating .swcrc" | **NEW:** swc/esbuild compile 10-100x faster than Babel/tsc. Same speed for shipping broken code. Wrong target = runtime syntax errors. Wrong transforms = missing features. |
 | "It's just fast compiler config" | **NEW:** Fast compilers mean less time to catch problems. swc has different defaults than Babel. esbuild has different tree-shaking. Wrong config = wrong output, shipped fast. |
+| "I'm just updating biome.json" | **NEW:** Biome is linter AND formatter. Wrong rule = wrong code allowed. Wrong formatting = inconsistent codebase. Biome replaces ESLint+Prettier - double the impact. |
+| "It's just linter/formatter config" | **NEW:** Linter rules define code quality. Wrong config = bugs pass linting. Wrong ignores = files never linted. You're defining what "correct" means for your codebase. |
+| "I'm just updating bun.lockb" | **NEW:** Bun's lockfile is BINARY - you can't inspect it like package-lock.json. Wrong versions = wrong behavior. Bun-specific bugs are hard to debug. |
+| "It's just a lockfile" | **NEW:** Binary lockfiles are opaque. You don't know what changed. Bun resolution differs from npm/yarn. Different behavior, same file extension pattern. |
+| "I'm just updating deno.json" | **NEW:** Deno config controls import maps, tasks, AND compiler options. Wrong import map = loading wrong module. Wrong task = wrong command runs. Runtime differences. |
+| "It's just Deno configuration" | **NEW:** Deno has different defaults than Node. deno.json controls security permissions too. Wrong config = locked out features or security holes. |
+| "I'm just updating schema.prisma" | **NEW:** Prisma schema GENERATES TypeScript types. Wrong field type = runtime crash. Wrong relation = data integrity bugs. Missing index = slow queries. |
+| "It's just data modeling" | **NEW:** Prisma schema IS code - it generates code. Every model change affects every query using it. Missing nullable = crashes. Wrong cascade = data loss. |
+| "I'm just updating drizzle.config.ts" | **NEW:** Drizzle config is TypeScript that controls database operations. Wrong driver = wrong database connected. Wrong output = migrations fail. This IS code. |
+| "It's just ORM configuration" | **NEW:** ORM config files are executable. drizzle.config.ts runs during schema gen. Wrong config = wrong schema, wrong migrations, wrong types. |
+| "I'm just updating vitest.config.ts" | **NEW:** Vitest config is TypeScript code. Wrong globals = tests fail mysteriously. Wrong environment = jsdom vs node behavior differs. Wrong setupFiles = tests lie. |
+| "It's just test runner config" | **NEW:** Test config determines HOW tests run. Wrong coverage config = blind spots. Wrong reporters = lost results. Wrong threads = flaky tests. |
 
 **All of these mean:** Load the skill anyway. Your confidence is the problem, not the solution.
 
