@@ -35,6 +35,10 @@ The default answer to "does this need code-foundations?" is **YES**. The only ex
 - ANY change to file location, name, or structure
 - ANY change to imports, exports, or module boundaries
 - ANY comment that might be parsed (JSDoc, docstrings, type hints in comments)
+- ANY lockfile regeneration (`package-lock.json`, `yarn.lock`, `Cargo.lock`, `poetry.lock`, etc.)
+- ANY file permission change (chmod affects whether code can execute)
+- ANY symlink creation or modification (affects what code/config is loaded)
+- ANY new file creation, even empty files (empty `.ts` files get compiled)
 - ANYTHING you're about to commit
 
 **The ONLY things exempt:**
@@ -47,6 +51,10 @@ The default answer to "does this need code-foundations?" is **YES**. The only ex
 - `.gitignore` - wrong patterns exclude source files or include secrets
 - `.gitattributes` - affects line endings, merge drivers, diff behavior
 - Any file that affects what files are in the repo or how they're processed
+- `npm install` / `pip install` / any package manager command - can modify lockfiles, change dependency versions
+- `chmod` / permission changes - affects whether scripts can execute
+- Symlink operations - affects what code/config is actually loaded at runtime
+- Creating new files (even empty ones) - they become part of the codebase and may be compiled/imported
 
 **When you rationalize, you violate.** The skill exists because your confidence is wrong.
 
@@ -133,6 +141,14 @@ These are the EXACT rationalizations observed in baseline testing. If you think 
 | "It's purely syntactic / mechanical" | **NEW:** "Syntactic" changes (imports, file moves, renames) break runtime when wrong. Verify all references. |
 | "I'm just updating an import path" | **NEW:** Wrong path = runtime crash. Missing one file = partial failure. Case sensitivity varies by OS. Load the skill. |
 | "The code itself isn't changing" | **NEW:** Code LOCATION matters. Moving, renaming, re-exporting changes how the system connects. These are structural changes. |
+| "It's just `npm install` / package management" | **NEW:** Package managers modify lockfiles. Different lockfile = different versions = different runtime behavior. |
+| "I'm just reinstalling dependencies" | **NEW:** `npm install` can update `package-lock.json`. A changed lockfile is a changed codebase. Verify it. |
+| "It's just changing file permissions" | **NEW:** `chmod +x` determines if a script can run. No execute bit = failed deployment. Permissions ARE code activity. |
+| "I'm just making a script executable" | **NEW:** If the script can't execute, the build/deploy fails. Permission changes affect runtime. Load the skill. |
+| "I'm just creating a symlink" | **NEW:** Symlinks determine WHAT file is loaded. Wrong symlink = wrong config = production incident. Verify it. |
+| "The symlink is a simple operation" | **NEW:** Symlinks affect file resolution at runtime. `config.json -> config.prod.json` means prod config loads. |
+| "I'm just creating an empty file" | **NEW:** Empty `.ts`/`.py`/`.js` files get compiled. They affect the build. They can be imported. Load the skill. |
+| "The file has no code yet" | **NEW:** An empty file IS part of the codebase. It may be imported, compiled, or cause module resolution issues. |
 
 **All of these mean:** Load the skill anyway. Your confidence is the problem, not the solution.
 
@@ -233,6 +249,62 @@ Agents rationalized skipping skills for structural changes. They said:
 The "logic stays the same" rationalization ignores that **code location IS part of the system**. A function that works in `utils.js` might fail if moved to a circular dependency, or if consumers have relative imports that break.
 
 Classify structural changes as REFACTOR and load the skill chain.
+
+**The "Just Running npm install" Trap (Observed in Testing):**
+Agents rationalized skipping skills for package management. They said:
+- "It's a simple shell command"
+- "It's package management, not code"
+- "I'm just reinstalling dependencies"
+
+**Package manager commands ARE code activity:**
+- `npm install` can modify `package-lock.json` - different lockfile = different versions
+- Different dependency versions = different runtime behavior
+- A "clean reinstall" that changes lockfile versions has broken production
+- `pip install`, `cargo build`, `go mod tidy` all potentially modify lockfiles
+
+Load the skill. Verify lockfile changes before committing.
+
+**The "Just Changing Permissions" Trap (Observed in Testing):**
+Agents rationalized skipping skills for chmod operations. They said:
+- "It's a simple shell command"
+- "File permissions aren't code"
+- "I'm just making it executable"
+
+**Permission changes ARE code activity:**
+- `chmod +x deploy.sh` determines whether deployment works
+- Missing execute bit = CI/CD failure
+- Permission changes affect whether code can run AT ALL
+- This is especially critical for scripts in build pipelines
+
+If the permission affects whether code executes, load the skill.
+
+**The "Just Creating a Symlink" Trap (Observed in Testing):**
+Agents rationalized skipping skills for symlink operations. They said:
+- "It's a simple shell command"
+- "Symlinks are filesystem operations, not code"
+- "I'm just linking config files"
+
+**Symlink operations ARE code activity:**
+- Symlinks determine WHAT file is loaded at runtime
+- `config.json -> config.prod.json` means prod config loads everywhere
+- Wrong symlink = loading wrong database, wrong API keys, wrong feature flags
+- Circular symlinks can crash applications
+
+If the symlink affects what code or config loads, load the skill.
+
+**The "Just Creating an Empty File" Trap (Observed in Testing):**
+Agents rationalized skipping skills for creating empty files. They said:
+- "It's a trivial filesystem operation"
+- "The file has no code in it"
+- "I'm just creating a placeholder"
+
+**Creating files IS code activity:**
+- Empty `.ts`, `.py`, `.js` files get compiled
+- Empty files can be imported (causing subtle bugs when imports expect exports)
+- Files affect module resolution (a new `index.ts` changes how directories resolve)
+- "Placeholder" files often stay empty and cause issues later
+
+If the file could ever be executed, compiled, or imported, load the skill.
 
 ## Crisis Minimum (Time Pressure)
 
