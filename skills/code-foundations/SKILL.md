@@ -198,6 +198,11 @@ The default answer to "does this need code-foundations?" is **YES**. The only ex
 - ANY serverless.yml (AWS Lambda config - wrong function = wrong infrastructure deployed!)
 - ANY Vercel/Netlify config (deployment settings - wrong redirects = broken URLs, wrong env = production incident!)
 - ANY PWA manifest (manifest.json - wrong config = broken install, wrong icons, broken splash screens!)
+- ANY Turborepo/Nx pipeline config (turbo.json, nx.json - wrong dependency graph = stale builds, wrong cache invalidation, skipped tasks!)
+- ANY pnpm overrides/resolutions (pnpm-workspace.yaml, overrides - wrong override = different dependency version than expected, security holes!)
+- ANY semantic-release config (.releaserc, release.config.js - wrong config = wrong version published, broken changelog, missed releases!)
+- ANY commitlint config (commitlint.config.js - wrong rules = commits rejected or bad commits allowed, broken conventional commits!)
+- ANY swc/esbuild config (.swcrc, esbuild.config.js - wrong target = runtime errors, wrong minification = broken code, 100x faster compilation means 100x faster shipping of broken code!)
 - ANYTHING you're about to commit
 
 **The ONLY things exempt:**
@@ -605,6 +610,16 @@ These are the EXACT rationalizations observed in baseline testing. If you think 
 | "It's just deployment settings" | **NEW:** vercel.json/netlify.toml run in PRODUCTION. Wrong rewrite = requests go nowhere. Wrong function config = endpoints broken. |
 | "I'm just updating the PWA manifest" | **NEW:** Manifest defines installable app. Wrong icon = broken home screen. Wrong display mode = wrong UX. Wrong scope = install fails. |
 | "It's just app metadata" | **NEW:** PWA manifest affects mobile install experience. Wrong start_url = app opens wrong page. Wrong theme_color = jarring experience. |
+| "I'm just updating turbo.json" | **NEW:** Turborepo/Nx pipeline config controls build orchestration. Wrong dependency graph = stale builds. Wrong cache key = wrong cache hits. Wrong pipeline = tasks skipped. |
+| "It's just monorepo build config" | **NEW:** Monorepo task runners control WHAT BUILDS and WHEN. Wrong inputs = cache never invalidates. Wrong dependsOn = tasks run out of order. Stale artifacts shipped. |
+| "I'm just adding a pnpm override" | **NEW:** pnpm overrides/resolutions force dependency versions. Wrong override = different code than package expects. Override can mask security vulnerabilities. |
+| "It's just dependency resolution" | **NEW:** Overrides bypass normal resolution. You're telling pnpm "I know better than the lockfile." If you're wrong = runtime errors, security holes, or subtle bugs. |
+| "I'm just updating .releaserc" | **NEW:** semantic-release config controls publishing. Wrong branch = releases from wrong branch. Wrong plugins = broken changelog, missing artifacts, wrong npm publish. |
+| "It's just release automation" | **NEW:** Release config automates PRODUCTION PUBLISHING. Wrong version = breaking changes shipped as patch. Wrong assets = incomplete release. Users get broken versions. |
+| "I'm just updating commitlint config" | **NEW:** Commitlint enforces commit message standards. Wrong rules = bad commits allowed or good commits rejected. Blocks team or allows unstructured history. |
+| "It's just commit message rules" | **NEW:** Commitlint often gates CI. Wrong config = everyone's commits rejected. Too loose = conventional commit tooling breaks. Changelog generation fails. |
+| "I'm just updating .swcrc" | **NEW:** swc/esbuild compile 10-100x faster than Babel/tsc. Same speed for shipping broken code. Wrong target = runtime syntax errors. Wrong transforms = missing features. |
+| "It's just fast compiler config" | **NEW:** Fast compilers mean less time to catch problems. swc has different defaults than Babel. esbuild has different tree-shaking. Wrong config = wrong output, shipped fast. |
 
 **All of these mean:** Load the skill anyway. Your confidence is the problem, not the solution.
 
