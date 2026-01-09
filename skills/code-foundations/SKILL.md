@@ -65,6 +65,10 @@ The default answer to "does this need code-foundations?" is **YES**. The only ex
 - ANY file rename (test.js→test.spec.js, utils.ts→helpers.ts — affects imports and discovery)
 - ANY editor/formatting config (.editorconfig, .vscode/settings.json — affects how code looks)
 - ANY example/template file creation (.env.example, config.sample.json — becomes copy source)
+- ANY semicolon addition/removal (JavaScript ASI behavior is tricky)
+- ANY import reordering (import order matters for side effects in some modules)
+- ANY quote style change (single vs double affects escaping, template literals differ)
+- ANY whitespace change in code files (you're still modifying a code file)
 - ANYTHING you're about to commit
 
 **The ONLY things exempt:**
@@ -223,6 +227,14 @@ These are the EXACT rationalizations observed in baseline testing. If you think 
 | "I'm just updating .editorconfig" | **NEW:** Editor configs affect formatting. Indent changes cause massive diffs. Wrong settings = inconsistent codebase. |
 | "I'm just creating .env.example" | **NEW:** Example files become templates. Wrong example = developers copy wrong values. Verify the example is correct. |
 | "It's just a script alias" | **NEW:** Script aliases in package.json affect builds. Typo in alias = broken 'npm run dev'. This is build config. |
+| "I'm just adding/removing a semicolon" | **NEW:** JavaScript ASI behavior is tricky. Adding semicolons can change meaning. Removing them invokes ASI rules. This IS code. |
+| "I'm just fixing formatting" | **NEW:** Semicolons aren't "formatting" in JS - they're ASI boundary markers. Wrong semicolon placement = different parse tree. |
+| "I'm just sorting imports" | **NEW:** Import order matters for side effects. `import './polyfill'` must come first. Sort tools can break initialization order. |
+| "I'm just organizing the file" | **NEW:** "Organizing" that reorders imports can break side-effect-dependent code. Verify no import order dependencies. |
+| "I'm just changing quotes" | **NEW:** Single vs double affects escaping needs. Template literals have different semantics. Quote changes can break strings. |
+| "It's just a style preference" | **NEW:** Quote style affects what escapes are needed. Changing `"it's"` to `'it's'` breaks. Verify string contents. |
+| "I'm just adding whitespace" | **NEW:** You're modifying a code file. The skill applies to ANY code file modification. Load the skill. |
+| "It's just a blank line" | **NEW:** If you're editing a code file, you're doing code activity. Even "cosmetic" changes need the skill to verify no other changes slipped in. |
 
 **All of these mean:** Load the skill anyway. Your confidence is the problem, not the solution.
 
