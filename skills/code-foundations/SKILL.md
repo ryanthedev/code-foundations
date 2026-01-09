@@ -117,6 +117,12 @@ The default answer to "does this need code-foundations?" is **YES**. The only ex
 - ANY Terraform/Pulumi/CloudFormation (infrastructure as code IS code!)
 - ANY nginx/Apache/Caddy config (routing, SSL, headers affect application behavior!)
 - ANY database migration file (schema changes affect ALL code that uses that data!)
+- ANY git hook script (.git/hooks/* - these EXECUTE on git operations!)
+- ANY Makefile/CMakeLists/build.gradle (build systems ARE code!)
+- ANY shell script (.sh, .bash, .zsh - these are EXECUTABLE code!)
+- ANY SQL file (stored procedures, views, triggers - database IS code!)
+- ANY GraphQL schema (generates types! Affects frontend AND backend!)
+- ANY CSS/SCSS/Less file (styling affects UI - wrong CSS = broken user experience!)
 - ANYTHING you're about to commit
 
 **The ONLY things exempt:**
@@ -362,6 +368,18 @@ These are the EXACT rationalizations observed in baseline testing. If you think 
 | "I'm just updating nginx config" | **NEW:** Web server config controls routing, SSL, headers. Wrong config = security vulnerabilities, broken routes, CORS failures. |
 | "I'm just updating a migration file" | **NEW:** Database migrations change SCHEMA that ALL code depends on. Wrong migration = broken queries, data loss, rollback nightmares. |
 | "It's just database schema" | **NEW:** Schema changes affect every query. Adding NOT NULL to existing column = migration failure. Verify backwards compatibility. |
+| "I'm just updating a git hook" | **NEW:** Git hooks are EXECUTABLE scripts. pre-commit runs on EVERY commit. Wrong hook = broken workflow, blocked commits. |
+| "It's just a pre-commit check" | **NEW:** Hooks can prevent commits, modify files, run linters. Wrong hook = developers can't commit or commits silently modified. |
+| "I'm just updating the Makefile" | **NEW:** Makefiles are BUILD CODE. Wrong target = wrong build. Missing dependency = stale artifacts. These cause CI failures. |
+| "It's just a build target" | **NEW:** Make targets control compilation, testing, deployment. Wrong command = wrong binary. This IS programming. |
+| "I'm just updating a shell script" | **NEW:** Shell scripts are EXECUTABLE code. deploy.sh wrong = production broken. Syntax error = script aborts midway. |
+| "It's just a bash script" | **NEW:** Shell scripts run with REAL permissions. `rm -rf` typos are legendary. Missing quotes = word splitting bugs. |
+| "I'm just writing a SQL procedure" | **NEW:** Stored procedures run IN THE DATABASE. Wrong logic = corrupted data. No rollback for logic errors. |
+| "It's just database code" | **NEW:** SQL procedures affect ALL applications hitting that database. One bug = all consumers affected. |
+| "I'm just updating the GraphQL schema" | **NEW:** GraphQL schemas GENERATE types for frontend and backend. Wrong field = type errors in multiple codebases. |
+| "It's just an API type" | **NEW:** Schema changes affect code generation. Removing a field = all clients break. Adding required field = breaking change. |
+| "I'm just updating CSS" | **NEW:** CSS affects EVERYTHING users see. Wrong z-index = elements hidden. Wrong display = layout broken. |
+| "It's just styling" | **NEW:** CSS custom properties (--vars) cascade everywhere. One wrong value = wrong colors/spacing across entire app. |
 
 **All of these mean:** Load the skill anyway. Your confidence is the problem, not the solution.
 
