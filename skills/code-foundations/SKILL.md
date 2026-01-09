@@ -43,6 +43,11 @@ The default answer to "does this need code-foundations?" is **YES**. The only ex
 - ANY file copy that creates code or config files
 - ANY vendored code update (vendored code IS code)
 - ANY patch application (patches modify code)
+- ANY debug statement added (console.log, print, logger - they must be removed before commit)
+- ANY environment variable change (NODE_ENV, DATABASE_URL, API_KEY - controls runtime behavior)
+- ANY feature flag toggle (enables/disables entire code paths)
+- ANY timeout/retry/cache value change (reliability-critical numbers)
+- ANY port number, rate limit, or threshold change (operational parameters)
 - ANYTHING you're about to commit
 
 **The ONLY things exempt:**
