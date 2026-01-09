@@ -216,6 +216,12 @@ The default answer to "does this need code-foundations?" is **YES**. The only ex
 - ANY Metro config (metro.config.js - React Native bundler. Wrong resolver = modules not found. Wrong transformer = code not processed. App crashes on device!)
 - ANY Expo config (app.json, app.config.js - mobile app config. Wrong splash = ugly first impression. Wrong permissions = rejected from store. Wrong updates = users get stale app!)
 - ANY RedwoodJS config (redwood.toml - defines API and web paths, auth provider, bundler. Wrong path = broken routing. Wrong auth = security holes. Wrong bundler = build failures!)
+- ANY rust-toolchain.toml (Rust version pinning. Wrong version = code won't compile. Missing features = build breaks. Different behavior across team = works on my machine!)
+- ANY .cargo/config.toml (Cargo build config. Wrong target = cross-compile fails. Wrong linker = build crashes. Wrong registry = wrong crates installed!)
+- ANY pyproject.toml (Python project definition. Wrong deps = import fails. Wrong Python version = runtime errors. Wrong entry points = CLI broken!)
+- ANY setup.cfg (Python packaging. Wrong metadata = PyPI upload fails. Wrong classifiers = wrong search results. Wrong entry points = broken installs!)
+- ANY tox.ini (Python test environments. Wrong Python version = tests skip. Wrong deps = import errors. Wrong envdir = cached state causes flaky tests!)
+- ANY .tool-versions (asdf version manager. Wrong Node = different behavior. Wrong Python = import fails. Team uses different versions = chaos!)
 - ANYTHING you're about to commit
 
 **The ONLY things exempt:**
@@ -659,6 +665,18 @@ These are the EXACT rationalizations observed in baseline testing. If you think 
 | "It's just Expo configuration" | **NEW:** Expo config is your app's DNA. Wrong updates config = users stuck on old version. Wrong splash = bad first impression. Wrong orientation = broken UI. |
 | "I'm just updating redwood.toml" | **NEW:** RedwoodJS config controls API/web paths, auth provider, bundler choice. Wrong path = 404s everywhere. Wrong auth = broken login. Wrong bundler = build failures. |
 | "It's just editing settings/configuration values" | **NEW:** TOML/YAML "settings" ARE runtime configuration. Framework configs control routing, auth, builds. "Settings" is a rationalization for "code activity". |
+| "I'm just changing the Rust version" | **NEW:** rust-toolchain.toml controls what compiler runs. Wrong version = won't compile. Missing features = build fails. Team version mismatch = "works on my machine". |
+| "It's just a version string" | **NEW:** Version strings control what RUNS. Rust 1.74 vs 1.75 have different features. Python 3.11 vs 3.12 have different syntax. Version IS behavior. |
+| "I'm just updating .cargo/config" | **NEW:** Cargo config controls build targets, linkers, registries. Wrong linker = binary won't link. Wrong target = cross-compile fails. Wrong registry = wrong crates. |
+| "It's just build configuration" | **NEW:** Build config determines WHAT gets built. Wrong build config = wrong binary. Linker config = native code behavior. This IS code activity. |
+| "I'm just updating pyproject.toml" | **NEW:** pyproject.toml defines deps, Python version, entry points, build system. Wrong dep = import fails. Wrong Python = syntax errors. Wrong entry = CLI broken. |
+| "It's just project metadata" | **NEW:** "Metadata" includes DEPENDENCIES, VERSIONS, ENTRY POINTS. These directly control runtime behavior. Metadata IS runtime configuration. |
+| "I'm just updating setup.cfg" | **NEW:** setup.cfg controls Python packaging. Wrong classifier = bad search ranking. Wrong entry point = `pip install` doesn't create CLI. Wrong dep = broken installs. |
+| "It's administrative work, not code" | **NEW:** Administrative files that affect WHAT CODE RUNS are code activity. Entry points, dependencies, version pins - all "administrative" and all break things when wrong. |
+| "I'm just updating tox.ini" | **NEW:** tox.ini defines test environments. Wrong Python = tests skip your production version. Wrong deps = tests use different libs than prod. CI blindness. |
+| "It's just test environment config" | **NEW:** Test environment config determines WHAT TESTS RUN. Wrong config = tests pass locally, fail in CI. Or worse: tests pass everywhere, app broken in prod. |
+| "I'm just updating .tool-versions" | **NEW:** asdf .tool-versions pins ALL runtime versions. Node, Python, Ruby, Go - wrong version = different behavior, different bugs, different features available. |
+| "It's a tooling/configuration change" | **NEW:** Tooling changes affect EVERYTHING. Tool version determines compiler behavior, available APIs, performance. Every tool version is a code dependency. |
 
 **All of these mean:** Load the skill anyway. Your confidence is the problem, not the solution.
 
