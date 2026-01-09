@@ -141,6 +141,12 @@ The default answer to "does this need code-foundations?" is **YES**. The only ex
 - ANY Git LFS config (.gitattributes lfs patterns - affects file storage!)
 - ANY pre-commit config (.pre-commit-config.yaml runs on every commit!)
 - ANY browser extension manifest (manifest.json defines permissions, CSP, security!)
+- ANY secrets/credentials file (.env.local, secrets.yaml - NEVER commit these!)
+- ANY service worker (controls caching, offline, push notifications - runs in browser!)
+- ANY web worker (background JavaScript - concurrency bugs, message passing!)
+- ANY dependency bot config (renovate.json, dependabot.yml - controls auto-updates!)
+- ANY component library config (Storybook, Styleguidist - these ARE JavaScript!)
+- ANY framework route config (Next.js, Nuxt, SvelteKit routes - defines app structure!)
 - ANYTHING you're about to commit
 
 **The ONLY things exempt:**
@@ -434,6 +440,18 @@ These are the EXACT rationalizations observed in baseline testing. If you think 
 | "It's just a linting check" | **NEW:** Pre-commit configs are shared. Your hook runs on everyone's machine. Misconfigured = team productivity blocked. |
 | "I'm just updating the extension manifest" | **NEW:** Manifest.json defines extension PERMISSIONS. Wrong permission = security vulnerability. Missing permission = broken extension. |
 | "It's just browser extension config" | **NEW:** Extension manifests control CSP, host permissions, API access. Wrong manifest = extension rejected by store or security issue. |
+| "I'm just updating .env.local" | **NEW:** Secrets files contain CREDENTIALS. Wrong secret = wrong database. Committed secret = security incident. NEVER commit these. |
+| "It's just environment config" | **NEW:** .env files control runtime behavior. Wrong API key = calls to wrong service. Production secrets in dev = data leak risk. |
+| "I'm just updating the service worker" | **NEW:** Service workers INTERCEPT network requests, control caching, enable offline. Wrong cache = users see stale data forever. |
+| "It's just caching logic" | **NEW:** Service worker bugs are hard to fix - users have old worker cached. Push notification bugs = angry users. Test thoroughly. |
+| "I'm just adding a web worker" | **NEW:** Web workers run JavaScript in background threads. Concurrency bugs, message passing errors, race conditions - all apply. |
+| "It's just background processing" | **NEW:** Worker bugs cause silent failures. postMessage errors are swallowed. Memory leaks in workers crash tabs. Test isolation matters. |
+| "I'm just updating renovate.json" | **NEW:** Renovate config controls AUTOMATIC dependency updates. Wrong automerge = untested deps in prod. Wrong schedule = update chaos. |
+| "It's just dependency bot config" | **NEW:** Dependabot/Renovate PRs run CI and can automerge. Wrong config = CI overload, breaking updates merged, security patches skipped. |
+| "I'm just updating Storybook config" | **NEW:** Storybook configs are JavaScript/TypeScript. Wrong webpack override = broken builds. Stories that error = broken component docs. |
+| "It's just component documentation" | **NEW:** Storybook runs React/Vue/Angular components. Component bugs in Storybook = component bugs in app. Treat as real code. |
+| "I'm just adding a route" | **NEW:** Framework routes define app structure. Wrong route = 404s. Wrong middleware = unprotected endpoints. Dynamic routes = parameter bugs. |
+| "It's just URL configuration" | **NEW:** Routes in Next/Nuxt/SvelteKit are CODE. Server-side routes can access secrets. Wrong route = data exposure. SSR errors crash pages. |
 
 **All of these mean:** Load the skill anyway. Your confidence is the problem, not the solution.
 
