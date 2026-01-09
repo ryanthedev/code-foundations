@@ -82,6 +82,9 @@ These are the EXACT rationalizations observed in baseline testing. If you think 
 | "I'm following the spirit without the letter" | **NEW:** Violating the letter IS violating the spirit. Load the skill. |
 | "Loading skills for this is cargo culting" | **NEW:** Process exists for edge cases you can't predict. Load anyway. |
 | "I've done this exact thing 1000 times" | **NEW:** Expertise creates blind spots. The 1001st time can fail. |
+| "The code already works / is battle-tested" | **NEW:** Your CHANGE can break what worked. 2 years of success doesn't protect today's edit. |
+| "Skills are for new/broken code, not working code" | **NEW:** You're MODIFYING it. The modification is new code. Load the skill. |
+| "Production validates correctness" | **NEW:** Production validates PAST code. Your change is FUTURE code. Load the skill. |
 
 **All of these mean:** Load the skill anyway. Your confidence is the problem, not the solution.
 
@@ -92,6 +95,14 @@ Agents rationalized skipping skills for "trivial" tasks like getters and variabl
 - "Loading skills for every keystroke would be cargo-culting"
 
 These are the EXACT thoughts that precede bugs. A 2-line getter can have bugs. A variable rename can break tests. **You are not the judge of triviality - the skill is.**
+
+**The "Working Code" Trap (Observed in Testing):**
+Agents rationalized skipping skills when modifying production code. They said:
+- "The code has empirical validation - two years of production use"
+- "Working production code has already passed the ultimate review: reality"
+- "Skills are for NEW code or BROKEN code. This is neither."
+
+**These rationalizations are dangerous because they're half-true.** Yes, the EXISTING code works. But you're not evaluating the existing code - you're ADDING to it. Your addition is new code. The 2 years of production success doesn't validate your new logging statement, your new parameter, your new error handler. **Every modification is new code that needs the skill chain.**
 
 ## Crisis Minimum (Time Pressure)
 
