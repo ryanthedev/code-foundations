@@ -59,6 +59,9 @@ The default answer to "does this need code-foundations?" is **YES**. The only ex
 - ANY function reordering (order matters for hoisting, initialization, readability assumptions)
 - ANY variable removal, even "unused" ones (verify truly unused - linters can be wrong)
 - ANY const/let/var change (mutability semantics affect behavior)
+- ANY operator change (== to ===, && to ||, + to - — all change behavior)
+- ANY error handling addition (try-catch, .catch(), error boundaries — changes flow)
+- ANY logging/debugging code addition (console.log, JSON.stringify wrappers)
 - ANYTHING you're about to commit
 
 **The ONLY things exempt:**
@@ -209,6 +212,10 @@ These are the EXACT rationalizations observed in baseline testing. If you think 
 | "The linter says it's unused" | **NEW:** Linters don't see all usages (dynamic requires, string-based access, external callers). Removal is deletion. Verify. |
 | "I'm just changing const to let" | **NEW:** Mutability change is semantic. const→let means something can now be reassigned. Accidental reassignment = bugs. |
 | "It's just a declaration keyword" | **NEW:** const/let/var have different scoping and reassignment rules. Wrong choice = subtle bugs. Verify the change is correct. |
+| "I'm just changing == to ===" | **NEW:** Strict vs loose equality is a semantic change. Code relying on type coercion will break. Verify all comparison values. |
+| "It's just an operator change" | **NEW:** Operators determine behavior. ==, ===, &&, ||, ??, ?. — each has different semantics. Verify the change is correct. |
+| "I'm just adding a try-catch" | **NEW:** Error handling changes control flow. Swallowed errors hide bugs. Caught errors change return values. This is code. |
+| "I'm just wrapping for logging" | **NEW:** JSON.stringify can throw on circular refs. Logging code IS code. Debug code that stays = production bugs. |
 
 **All of these mean:** Load the skill anyway. Your confidence is the problem, not the solution.
 
