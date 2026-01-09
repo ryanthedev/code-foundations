@@ -169,6 +169,12 @@ These are the EXACT rationalizations observed in baseline testing. If you think 
 | "It's just applying a patch" | **NEW:** Patches MODIFY code. Patches can have bugs, incompatibilities, or unintended changes. Verify the patch. |
 | "I'm just updating vendored code" | **NEW:** Vendored code IS code. Version changes can break things. Treat vendored updates like dependency updates. |
 | "It's a file replacement, not code" | **NEW:** Replacing files IS code activity. The old behavior is gone, new behavior is introduced. Load the skill. |
+| "I'm just adding a console.log" | **NEW:** Debug statements are code. Debug statements that get committed break production. Verify removal before commit. |
+| "It's just a debug statement" | **NEW:** Debug code modifies behavior. Forgot to remove it? Now production logs sensitive data or crashes. Load the skill. |
+| "I'm just changing NODE_ENV" | **NEW:** Environment variables control EVERYTHING - logging, error handling, optimizations, APIs. Wrong env = production incident. |
+| "It's just toggling a feature flag" | **NEW:** Feature flags control entire code paths. Disabling wrong flag = broken features or enabled broken code. Verify impact. |
+| "I'm just changing a timeout value" | **NEW:** Timeout values are reliability-critical. Too high = users wait forever. Too low = false failures. These cause incidents. |
+| "It's just a config number" | **NEW:** Config numbers control behavior. Port numbers, retry counts, cache TTLs, rate limits - all "just numbers" that cause outages. |
 
 **All of these mean:** Load the skill anyway. Your confidence is the problem, not the solution.
 
