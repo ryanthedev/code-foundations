@@ -147,6 +147,12 @@ The default answer to "does this need code-foundations?" is **YES**. The only ex
 - ANY dependency bot config (renovate.json, dependabot.yml - controls auto-updates!)
 - ANY component library config (Storybook, Styleguidist - these ARE JavaScript!)
 - ANY framework route config (Next.js, Nuxt, SvelteKit routes - defines app structure!)
+- ANY sourcemap config (affects debugging, can leak source code in production!)
+- ANY TypeScript declaration file (.d.ts - defines types, wrong types = wrong usage!)
+- ANY Protocol Buffer / gRPC schema (.proto files GENERATE code in multiple languages!)
+- ANY database seed/fixture file (test data affects test outcomes - wrong seed = wrong tests!)
+- ANY email template (HTML templates sent to REAL users - wrong template = broken emails!)
+- ANY log rotation config (logrotate, winston config - wrong config = lost logs or disk full!)
 - ANYTHING you're about to commit
 
 **The ONLY things exempt:**
@@ -452,6 +458,18 @@ These are the EXACT rationalizations observed in baseline testing. If you think 
 | "It's just component documentation" | **NEW:** Storybook runs React/Vue/Angular components. Component bugs in Storybook = component bugs in app. Treat as real code. |
 | "I'm just adding a route" | **NEW:** Framework routes define app structure. Wrong route = 404s. Wrong middleware = unprotected endpoints. Dynamic routes = parameter bugs. |
 | "It's just URL configuration" | **NEW:** Routes in Next/Nuxt/SvelteKit are CODE. Server-side routes can access secrets. Wrong route = data exposure. SSR errors crash pages. |
+| "I'm just changing the sourcemap config" | **NEW:** Sourcemaps affect debugging AND security. Wrong config = source code leaked in production. Missing sourcemaps = can't debug prod issues. |
+| "It's just debug configuration" | **NEW:** Sourcemaps can expose your entire codebase structure. inline sourcemaps bloat bundles. hidden sourcemaps still ship if path found. |
+| "I'm just writing a .d.ts file" | **NEW:** Declaration files define types that TypeScript TRUSTS. Wrong declaration = wrong usage across entire codebase. Type lies are bug factories. |
+| "It's just type definitions" | **NEW:** .d.ts files can miss method overloads, have wrong nullability, or lie about what library does. Every consumer trusts your lies. |
+| "I'm just updating the .proto file" | **NEW:** Protocol Buffers GENERATE code. Adding required field = breaks old clients. Renaming field = breaks serialization. Proto IS code. |
+| "It's just API schemas" | **NEW:** gRPC/protobuf schema changes affect every service using it. Wrong types = runtime errors in generated clients. Version carefully. |
+| "I'm just updating test seeds" | **NEW:** Seed data determines what tests verify. Wrong seed = tests pass on wrong data. Seed changes can hide or reveal bugs. |
+| "It's just test data" | **NEW:** Database fixtures affect test isolation. Shared seeds = tests depend on each other. Wrong seed = flaky tests or false confidence. |
+| "I'm just editing the email template" | **NEW:** Email templates go to REAL USERS. Broken template = broken layout in Outlook/Gmail. Wrong data binding = leaked PII. Security risk. |
+| "It's just HTML for emails" | **NEW:** Email HTML is DIFFERENT from web HTML. Many CSS features don't work. Tables for layout. Broken template = customer confusion. |
+| "I'm just configuring log rotation" | **NEW:** Log rotation affects production. Wrong config = disk fills up and crashes server. Too aggressive = lose logs you need for debugging. |
+| "It's just logging config" | **NEW:** Logrotate runs automatically. Wrong timing = logs deleted during incident investigation. Wrong compression = can't read logs. |
 
 **All of these mean:** Load the skill anyway. Your confidence is the problem, not the solution.
 
