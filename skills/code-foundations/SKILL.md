@@ -54,6 +54,9 @@ The default answer to "does this need code-foundations?" is **YES**. The only ex
 - ANY linter auto-fix (eslint --fix, prettier --write - these CHANGE code, not just check it)
 - ANY tooling config file creation (.nvmrc, .prettierrc, .eslintrc - affects how code is processed)
 - ANY compiler/transpiler config change (tsconfig.json, babel.config.js - affects what code becomes)
+- ANY log level change (DEBUG to INFO hides information you might need)
+- ANY function keyword addition (async, static, override - changes behavior significantly)
+- ANY function reordering (order matters for hoisting, initialization, readability assumptions)
 - ANYTHING you're about to commit
 
 **The ONLY things exempt:**
@@ -196,6 +199,10 @@ These are the EXACT rationalizations observed in baseline testing. If you think 
 | "I'm just creating .nvmrc" | **NEW:** .nvmrc determines Node version. Wrong version = different behavior, broken builds, missing features. |
 | "It's just a tooling config" | **NEW:** Tooling configs (.prettierrc, .eslintrc) affect how code is processed. Wrong config = wrong output. |
 | "I'm just changing tsconfig" | **NEW:** tsconfig.json affects compilation. Wrong target = runtime errors. Wrong paths = broken imports. Verify build still works. |
+| "I'm just changing log level" | **NEW:** Log level changes hide information. DEBUG→INFO means you won't see debug logs when debugging. Verify this is intentional. |
+| "I'm just adding async" | **NEW:** Adding 'async' changes return type to Promise. Callers expecting sync value now get Promise. This breaks existing code. |
+| "I'm just adding static/override" | **NEW:** Keywords change how functions behave. 'static' changes 'this' binding. 'override' requires base class method. Verify call sites. |
+| "I'm just reordering for readability" | **NEW:** Function order matters in some languages (hoisting, initialization). Even in JS, test files may depend on order. Verify. |
 
 **All of these mean:** Load the skill anyway. Your confidence is the problem, not the solution.
 
