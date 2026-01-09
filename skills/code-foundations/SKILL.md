@@ -39,6 +39,7 @@ The default answer to "does this need code-foundations?" is **YES**. The only ex
 - ANY file permission change (chmod affects whether code can execute)
 - ANY symlink creation or modification (affects what code/config is loaded)
 - ANY new file creation, even empty files (empty `.ts` files get compiled)
+- ANY file deletion (verify it's actually unused before deleting)
 - ANYTHING you're about to commit
 
 **The ONLY things exempt:**
@@ -153,6 +154,10 @@ These are the EXACT rationalizations observed in baseline testing. If you think 
 | "It's just bumping a version number" | **NEW:** Version numbers affect npm publish, CI tagging, release artifacts. Wrong version = overwritten packages or broken releases. |
 | "It's a trivial single-field edit" | **NEW:** Single-field edits in config files break production. DATABASE_URL, API_KEY, VERSION - all "single fields" that cause incidents. |
 | "It's purely mechanical" | **NEW:** "Mechanical" changes need MORE verification, not less. Mechanical = easy to make typos. Load the skill. |
+| "I'm just adding an npm script" | **NEW:** npm scripts in package.json affect builds, tests, and deployments. A typo in a script breaks CI. Load the skill. |
+| "It's just a script entry in package.json" | **NEW:** package.json IS a build file. Script changes are code changes. The skill explicitly lists package.json. |
+| "I'm just deleting an unused file" | **NEW:** How do you KNOW it's unused? Verify all imports first. Deletion is irreversible. Load the skill. |
+| "It's a simple file deletion" | **NEW:** Deleting code files IS a structural change. The skill says "ANY change to file location, name, or structure" applies. |
 
 **All of these mean:** Load the skill anyway. Your confidence is the problem, not the solution.
 
