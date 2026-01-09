@@ -222,6 +222,12 @@ The default answer to "does this need code-foundations?" is **YES**. The only ex
 - ANY setup.cfg (Python packaging. Wrong metadata = PyPI upload fails. Wrong classifiers = wrong search results. Wrong entry points = broken installs!)
 - ANY tox.ini (Python test environments. Wrong Python version = tests skip. Wrong deps = import errors. Wrong envdir = cached state causes flaky tests!)
 - ANY .tool-versions (asdf version manager. Wrong Node = different behavior. Wrong Python = import fails. Team uses different versions = chaos!)
+- ANY go.mod (Go module definition. Wrong Go version = syntax errors. Wrong deps = import fails. Wrong replace = loading wrong code!)
+- ANY go.sum (Go checksum database. Wrong checksums = build fails. Manual edits break security verification. NEVER edit by hand!)
+- ANY .air.toml (Go hot-reload config. Wrong patterns = changes not detected. Wrong build command = wrong binary. Dev vs prod divergence!)
+- ANY Gemfile (Ruby dependencies. Wrong gem = runtime errors. Wrong version = security vulnerabilities. Wrong source = compromised gems!)
+- ANY .ruby-version (Ruby version pinning. Wrong version = syntax errors. Different gems available. Different behavior = production bugs!)
+- ANY composer.json (PHP dependencies. Wrong autoload = classes not found. Wrong dep = fatal errors. Wrong scripts = build fails!)
 - ANYTHING you're about to commit
 
 **The ONLY things exempt:**
@@ -677,6 +683,18 @@ These are the EXACT rationalizations observed in baseline testing. If you think 
 | "It's just test environment config" | **NEW:** Test environment config determines WHAT TESTS RUN. Wrong config = tests pass locally, fail in CI. Or worse: tests pass everywhere, app broken in prod. |
 | "I'm just updating .tool-versions" | **NEW:** asdf .tool-versions pins ALL runtime versions. Node, Python, Ruby, Go - wrong version = different behavior, different bugs, different features available. |
 | "It's a tooling/configuration change" | **NEW:** Tooling changes affect EVERYTHING. Tool version determines compiler behavior, available APIs, performance. Every tool version is a code dependency. |
+| "I'm just editing go.mod" | **NEW:** go.mod defines Go version AND all dependencies. Wrong version = syntax errors. Wrong require = import fails. Wrong replace = loading wrong code entirely! |
+| "It's a simple configuration file edit" | **NEW:** "Simple configuration" that defines language version and dependencies is NOT simple. go.mod controls what code RUNS. Every module path, every version. |
+| "I'm just editing go.sum to fix a checksum" | **NEW:** go.sum is a SECURITY file. Checksums verify downloaded code hasn't been tampered with. Manual edits break security verification. Let `go mod tidy` regenerate. |
+| "It's a manual file edit to fix checksum" | **NEW:** If checksums don't match, the CORRECT fix is investigating WHY, not editing go.sum. You might be loading tampered code. NEVER manually edit go.sum. |
+| "I'm just editing .air.toml" | **NEW:** Air hot-reloads Go code. Wrong patterns = changes not detected. Wrong build command = wrong binary. dev vs prod config divergence causes "works on my machine". |
+| "It's a configuration file edit" | **NEW:** Dev tooling config affects YOUR development experience and can mask prod issues. Wrong hot-reload config = you don't see the bugs you should be seeing. |
+| "I'm just editing Gemfile" | **NEW:** Gemfile defines Ruby dependencies. Wrong gem = runtime errors. Wrong version = security vulnerabilities. Wrong source = compromised gems from untrusted registries! |
+| "It's configuration/dependency management" | **NEW:** Dependency management IS code activity. Dependencies ARE the code that runs. A Gemfile change changes what code executes in production. |
+| "I'm just editing .ruby-version" | **NEW:** Ruby version controls syntax, available gems, behavior. Wrong version = syntax errors. Different gems compiled for different versions = crashes. Team divergence = chaos. |
+| "It's a simple text edit" | **NEW:** "Simple text" that defines language version is NOT simple. Ruby 3.0 vs 3.2 have different features, different gems, different behavior. This IS code dependency. |
+| "I'm just editing composer.json" | **NEW:** composer.json defines PHP deps AND autoloading. Wrong autoload = classes not found. Wrong dep = fatal errors. Wrong scripts = build fails. Production crashes. |
+| "It's updating package dependencies and autoload" | **NEW:** Autoload paths determine what PHP can FIND. Wrong PSR-4 mapping = "Class not found" everywhere. Dependencies and autoload ARE your runtime code structure. |
 
 **All of these mean:** Load the skill anyway. Your confidence is the problem, not the solution.
 
