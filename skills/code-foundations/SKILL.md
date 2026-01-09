@@ -188,6 +188,10 @@ The default answer to "does this need code-foundations?" is **YES**. The only ex
 - ANY lint-staged config (runs on commit - wrong glob = files skipped or broken commits!)
 - ANY release/deploy script (deployment automation - wrong script = failed or bad releases!)
 - ANY health check config (monitoring - wrong config = false alerts or missed outages!)
+- ANY npm postinstall/preinstall script (these EXECUTE on npm install! Wrong script = compromised dev machines!)
+- ANY GraphQL codegen config (codegen.yml/codegen.ts GENERATES types - wrong config = wrong types everywhere!)
+- ANY test reporter config (Jest/Vitest reporters - wrong config = CI reporting broken, results lost!)
+- ANY editor config file (.vimrc, .dir-locals.el - shared editor configs affect how TEAM writes code!)
 - ANYTHING you're about to commit
 
 **The ONLY things exempt:**
@@ -575,6 +579,14 @@ These are the EXACT rationalizations observed in baseline testing. If you think 
 | "It's just deployment automation" | **NEW:** Release scripts control what gets deployed. Wrong version = overwritten packages. Missing step = incomplete release. Script bugs = outages. |
 | "I'm just updating health check config" | **NEW:** Health checks are MONITORING. Wrong endpoint = false positives. Wrong thresholds = missed outages OR alert fatigue. |
 | "It's just monitoring config" | **NEW:** Health check misconfiguration = blind to outages or paged constantly for nothing. Wrong path = 404 looks healthy. Wrong timeout = flaky alerts. |
+| "I'm just adding a postinstall script" | **NEW:** postinstall runs on EVERY npm install. Wrong script = security vulnerabilities, corrupted node_modules, broken dev setup for entire team. |
+| "It's just a lifecycle hook" | **NEW:** npm lifecycle scripts EXECUTE code. postinstall can run arbitrary commands. This is code that runs on every developer's machine. |
+| "I'm just updating codegen config" | **NEW:** GraphQL codegen GENERATES types. Wrong output path = types not found. Wrong plugin = wrong generated code. Types affect entire codebase. |
+| "It's just code generation config" | **NEW:** Codegen config determines what code gets created. Wrong config = wrong types, wrong resolvers, wrong clients. Generated code IS code. |
+| "I'm just configuring test reporters" | **NEW:** Test reporters affect CI output. Wrong reporter = results not uploaded, broken dashboards, lost test history. JUnit XML wrong = CI can't parse. |
+| "It's just output formatting" | **NEW:** Reporter config affects what CI sees. Missing junit = PR checks incomplete. Wrong format = results lost. CI systems depend on correct output. |
+| "I'm just updating .vimrc" | **NEW:** Shared editor configs affect team. Wrong indent setting = inconsistent formatting. Wrong tab = tabs vs spaces wars. Affects every file touched. |
+| "It's just editor preferences" | **NEW:** .vimrc, .dir-locals.el in repo affect TEAM. Wrong setting = everyone's editor misbehaves. Syntax file wrong = broken highlighting team-wide. |
 
 **All of these mean:** Load the skill anyway. Your confidence is the problem, not the solution.
 
