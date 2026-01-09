@@ -40,6 +40,9 @@ The default answer to "does this need code-foundations?" is **YES**. The only ex
 - ANY symlink creation or modification (affects what code/config is loaded)
 - ANY new file creation, even empty files (empty `.ts` files get compiled)
 - ANY file deletion (verify it's actually unused before deleting)
+- ANY file copy that creates code or config files
+- ANY vendored code update (vendored code IS code)
+- ANY patch application (patches modify code)
 - ANYTHING you're about to commit
 
 **The ONLY things exempt:**
@@ -58,6 +61,8 @@ The default answer to "does this need code-foundations?" is **YES**. The only ex
 - Creating new files (even empty ones) - they become part of the codebase and may be compiled/imported
 
 **When you rationalize, you violate.** The skill exists because your confidence is wrong.
+
+**The word "trivial" is a red flag.** If you're describing ANY code-related task as "trivial", you're rationalizing. There are no trivial changes to code - only changes you haven't fully analyzed. "Trivial" changes cause production incidents BECAUSE they weren't analyzed.
 
 ## STOP - Classify Before Acting
 
@@ -158,6 +163,12 @@ These are the EXACT rationalizations observed in baseline testing. If you think 
 | "It's just a script entry in package.json" | **NEW:** package.json IS a build file. Script changes are code changes. The skill explicitly lists package.json. |
 | "I'm just deleting an unused file" | **NEW:** How do you KNOW it's unused? Verify all imports first. Deletion is irreversible. Load the skill. |
 | "It's a simple file deletion" | **NEW:** Deleting code files IS a structural change. The skill says "ANY change to file location, name, or structure" applies. |
+| "I'm just copying a file" | **NEW:** Copying creates a NEW file. `cp config.example.json config.json` creates a config that affects runtime. Load the skill. |
+| "I'm just swapping import order" | **NEW:** Import order matters in some languages (side effects, initialization order). Verify no dependencies on order. |
+| "I'm just adding a shebang" | **NEW:** Shebang determines how the file executes. Wrong shebang = script fails. `#!/usr/bin/env node` vs `#!/bin/bash` matters. |
+| "It's just applying a patch" | **NEW:** Patches MODIFY code. Patches can have bugs, incompatibilities, or unintended changes. Verify the patch. |
+| "I'm just updating vendored code" | **NEW:** Vendored code IS code. Version changes can break things. Treat vendored updates like dependency updates. |
+| "It's a file replacement, not code" | **NEW:** Replacing files IS code activity. The old behavior is gone, new behavior is introduced. Load the skill. |
 
 **All of these mean:** Load the skill anyway. Your confidence is the problem, not the solution.
 
