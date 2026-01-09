@@ -209,6 +209,12 @@ The default answer to "does this need code-foundations?" is **YES**. The only ex
 - ANY Prisma schema (schema.prisma - GENERATES TypeScript types. Wrong model = wrong types = runtime crashes. Wrong relation = data integrity bugs!)
 - ANY Drizzle config (drizzle.config.ts - controls migrations and schema gen. Wrong driver = wrong database. Wrong output = migrations fail!)
 - ANY Vitest config (vitest.config.ts - controls test runner. Wrong globals = tests fail. Wrong environment = tests lie. Wrong coverage = blind spots!)
+- ANY Wrangler config (wrangler.toml - Cloudflare Workers deployment. Wrong route = wrong traffic. Wrong binding = wrong KV/R2/D1. Wrong worker = production down!)
+- ANY Capacitor config (capacitor.config.ts - mobile app config. Wrong server = app points to wrong URL. Wrong plugin = native crashes. Wrong webDir = broken app!)
+- ANY Tauri config (tauri.conf.json - desktop app config. Wrong window = broken UI. Wrong allowlist = security holes. Wrong bundle = app won't install!)
+- ANY Electron config (electron-builder.yml, forge.config.js - Wrong target = app won't run on OS. Wrong signing = security warnings. Wrong auto-update = users stuck on old version!)
+- ANY Metro config (metro.config.js - React Native bundler. Wrong resolver = modules not found. Wrong transformer = code not processed. App crashes on device!)
+- ANY Expo config (app.json, app.config.js - mobile app config. Wrong splash = ugly first impression. Wrong permissions = rejected from store. Wrong updates = users get stale app!)
 - ANYTHING you're about to commit
 
 **The ONLY things exempt:**
@@ -638,6 +644,18 @@ These are the EXACT rationalizations observed in baseline testing. If you think 
 | "It's just ORM configuration" | **NEW:** ORM config files are executable. drizzle.config.ts runs during schema gen. Wrong config = wrong schema, wrong migrations, wrong types. |
 | "I'm just updating vitest.config.ts" | **NEW:** Vitest config is TypeScript code. Wrong globals = tests fail mysteriously. Wrong environment = jsdom vs node behavior differs. Wrong setupFiles = tests lie. |
 | "It's just test runner config" | **NEW:** Test config determines HOW tests run. Wrong coverage config = blind spots. Wrong reporters = lost results. Wrong threads = flaky tests. |
+| "I'm just updating wrangler.toml" | **NEW:** Wrangler deploys to Cloudflare's edge network. Wrong route = traffic goes nowhere. Wrong binding = wrong database, KV, R2. Production traffic affected. |
+| "It's just Worker deployment config" | **NEW:** Workers run in production on every request. Wrong config = every user affected. Wrong environment = production uses dev secrets. |
+| "I'm just updating capacitor.config.ts" | **NEW:** Capacitor bridges web and native. Wrong server URL = app calls wrong API. Wrong plugin config = native crashes. Wrong webDir = blank app. |
+| "It's just mobile app config" | **NEW:** Mobile config affects every device install. Wrong splash = ugly. Wrong scheme = deep links break. Wrong plugins = app rejected from store. |
+| "I'm just updating tauri.conf.json" | **NEW:** Tauri controls desktop app permissions. Wrong allowlist = security vulnerability OR broken features. Wrong window = unusable UI. |
+| "It's just desktop app config" | **NEW:** Tauri's allowlist is security-critical. Wrong CSP = XSS risk. Wrong bundle = app won't install on user machines. |
+| "I'm just updating electron-builder.yml" | **NEW:** Electron builder controls app distribution. Wrong target = users can't install. Wrong signing = security warnings. Wrong notarization = macOS blocks app. |
+| "It's just app packaging config" | **NEW:** Packaging config affects every user install. Wrong auto-update URL = users stuck forever. Wrong permissions = OS blocks app. |
+| "I'm just updating metro.config.js" | **NEW:** Metro bundles React Native code. Wrong resolver = import errors on device. Wrong transformer = code not processed. Wrong blacklist = modules missing. |
+| "It's just RN bundler config" | **NEW:** Metro config affects what runs on phones. Wrong asset handling = broken images. Wrong source maps = undebuggable crashes. |
+| "I'm just updating app.json" | **NEW:** Expo app.json controls app identity, permissions, behavior. Wrong SDK version = builds fail. Wrong permissions = store rejection. |
+| "It's just Expo configuration" | **NEW:** Expo config is your app's DNA. Wrong updates config = users stuck on old version. Wrong splash = bad first impression. Wrong orientation = broken UI. |
 
 **All of these mean:** Load the skill anyway. Your confidence is the problem, not the solution.
 
