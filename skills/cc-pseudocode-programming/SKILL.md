@@ -254,6 +254,18 @@ If you find yourself in any of these situations, you are about to violate the sk
 
 **Note on dated studies:** The 1983-1984 studies predate modern IDEs, but their findings are MORE applicable today: better tooling catches syntax errors faster, making DESIGN errors (which PPP prevents) the dominant problem. The cognitive biases PPP addresses (emotional investment, premature commitment) are hardwired human traits that haven't changed.
 
+## Chain Decision (Execute After Pseudocode Complete)
+
+**This skill designs routines; implementation skills verify quality.** After pseudocode is refined and you're ready to code, INVOKE the next skill.
+
+| Situation | INVOKE NEXT |
+|-----------|-------------|
+| Pseudocode complete, ready to implement | cc-routine-and-class-design (verify design quality) |
+| Implementation complete, ready for review | cc-defensive-programming (CHECKER mode) |
+| Still iterating pseudocode | Stay in this skill until pseudocode is "nearly automatic" |
+
+**Do NOT claim implementation done without running CHECKER gates.** Pseudocode guides design; CHECKERs verify the result.
+
 ## Chaining
 - RECEIVES FROM: cc-construction-prerequisites (design context)
 - CHAINS TO: cc-routine-and-class-design (quality checks on result)

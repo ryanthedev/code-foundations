@@ -234,10 +234,19 @@ Iteration improves quality. Requirements iterate, design iterates, code iterates
 - You read more code before writing
 - You're comfortable saying "I don't know"
 
-## Chaining
-- Prerequisites: None (foundational character skill - apply before any construction)
-- Follow-ons: cc-construction-prerequisites, cc-routine-and-class-design, cc-defensive-programming
-- Cross-refs: cc-quality-practices (Chapter 20-23), cc-refactoring-guidance (Chapter 24)
+## Chain Decision (Execute After Mindset Check)
+
+**This skill is a gateway, not a destination.** After completing the mindset check, you MUST chain to the next skill based on task type.
+
+| Task Type (from code-foundations) | INVOKE NEXT |
+|-----------------------------------|-------------|
+| WRITE | cc-construction-prerequisites |
+| DEBUG | cc-quality-practices (Scientific Debugging Method) |
+| REFACTOR | cc-refactoring-guidance |
+
+**Do NOT stop after this skill.** The mindset check prepares you; the next skill guides the actual work.
+
+**If task type wasn't set:** You skipped code-foundations classification. Go back and classify first.
 
 ## References
 - Checklists: [checklists.md](./checklists.md)

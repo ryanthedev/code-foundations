@@ -370,6 +370,21 @@ If you find yourself thinking any of these, you are about to violate the skill:
 | "This skill is for new code, not existing code" | The skill applies whenever code hasn't been verified by these techniques—regardless of when written. |
 | "Adding tests to working code is overkill" | If you believe coverage is 95% but it's actually 50%, half your code is untested. Measure, don't assume. |
 
+## Chain Decision (Execute After Quality Analysis)
+
+**This skill identifies defects; other skills guide the fix.** After completing quality analysis, INVOKE the next skill based on findings.
+
+| Situation | INVOKE NEXT |
+|-----------|-------------|
+| Defect identified, ready to fix | cc-refactoring-guidance (safe fix process) |
+| Code review found design issues | cc-routine-and-class-design (CHECKER mode) |
+| Debugging complete, fix verified | Done - but SEARCH for similar defects first |
+| Review passed, no issues | Done |
+
+**Do NOT fix defects without cc-refactoring-guidance.** Scientific debugging identifies the problem; safe refactoring fixes it without introducing new defects.
+
+**After DEBUG:** Always complete step 7 (SEARCH) - check same file, same developer, same pattern for similar defects before claiming done.
+
 ## Chaining
 - Prerequisites: `cc-routine-and-class-design` (design quality first)
 - Follow-ons: `cc-refactoring-guidance` (fix quality issues found)

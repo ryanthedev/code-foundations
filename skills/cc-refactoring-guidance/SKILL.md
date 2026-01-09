@@ -222,6 +222,22 @@ If you skipped review on a small change:
 | "No one's available to review" | Use 24h self-delay, rubber duck, or AI review. Something > nothing. |
 | "We don't have tests" | Write characterization tests first, or document manual verification. Can't verify "behavior-preserving" blind. |
 
+## Chain Decision (Execute After Refactoring Complete)
+
+**This skill guides safe changes; CHECKER skills verify quality wasn't degraded.** After completing refactoring, INVOKE verification skills.
+
+| Situation | INVOKE NEXT |
+|-----------|-------------|
+| Refactoring complete | cc-control-flow-quality (CHECKER) + cc-routine-and-class-design (CHECKER) |
+| Bug fix applied | cc-quality-practices (verify fix, then SEARCH for similar) |
+| Structure significantly changed | cc-data-organization (CHECKER) as well |
+
+**Do NOT claim refactoring done without CHECKER gates.** Behavior-preserving changes can still degrade design quality. Verify.
+
+**Both CHECKERs are mandatory for REFACTOR tasks:**
+1. cc-control-flow-quality - verify nesting, complexity, loop structure
+2. cc-routine-and-class-design - verify cohesion, coupling, abstraction levels
+
 ## Chaining
 - Prerequisites: `cc-quality-practices` (Ch 21-23 defect fixing context)
 - Follow-ons: `cc-control-flow-quality`, `cc-routine-and-class-design`

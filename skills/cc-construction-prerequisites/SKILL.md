@@ -275,8 +275,20 @@ This skill applies to existing code, not just new projects. Use CHECKER mode as 
 - **Evidence:** [hard-data.md](./hard-data.md)
 - **Language notes:** [language-notes.md](./language-notes.md) - includes technology wave assessment, "programming into vs in" guidance, language expressiveness ratios
 
+## Chain Decision (Execute After Prerequisites Verified)
+
+**This skill verifies readiness, then hands off to design skills.** After completing prerequisites check, you MUST chain to the next skill.
+
+| Situation | INVOKE NEXT |
+|-----------|-------------|
+| New routine/function to implement | cc-pseudocode-programming |
+| New class/module to design | cc-routine-and-class-design |
+| Architecture questions remain | Stay in this skill, resolve first |
+
+**Do NOT start coding without invoking a design skill.** Prerequisites verification prepares you; design skills guide the actual implementation.
+
 ## Chaining
 
 - **Prerequisites:** None (this is the starting point)
-- **Follow-ons:** cc-routine-and-class-design, cc-defensive-programming
+- **Follow-ons:** cc-pseudocode-programming, cc-routine-and-class-design, cc-defensive-programming
 - **Related:** cc-control-flow-quality (Chapter 5 Section 5.2 on Managing Complexity)
