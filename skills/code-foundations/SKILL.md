@@ -170,6 +170,12 @@ The default answer to "does this need code-foundations?" is **YES**. The only ex
 - ANY SSL/TLS config (certificates, ciphers - wrong config = security vulnerabilities or broken HTTPS!)
 - ANY rate limiting config (throttling - wrong limits = DoS vulnerability or blocked legitimate users!)
 - ANY A/B test config (experiments - wrong percentages = skewed data, wrong features for users!)
+- ANY tracing/OpenTelemetry config (sampling, exporters - wrong config = missing observability!)
+- ANY cache config (Redis, CDN - wrong TTL = stale data OR cache stampede!)
+- ANY message queue config (RabbitMQ, Kafka - wrong config = lost messages, dead letters!)
+- ANY search index mapping (Elasticsearch - wrong mapping = search broken, reindex required!)
+- ANY webhook config (external integrations - wrong URL = data sent to wrong place!)
+- ANY OAuth/SAML config (authentication - wrong config = login broken OR security hole!)
 - ANYTHING you're about to commit
 
 **The ONLY things exempt:**
@@ -521,6 +527,18 @@ These are the EXACT rationalizations observed in baseline testing. If you think 
 | "It's just throttling config" | **NEW:** Rate limit mistakes cause outages or attacks. Wrong key (IP vs user) = shared limits. Wrong window = burst issues. |
 | "I'm just updating A/B test percentages" | **NEW:** A/B config affects REAL USERS. Wrong percentage = skewed experiment data. Wrong assignment = users see wrong features. |
 | "It's just experiment config" | **NEW:** A/B test bugs affect business metrics. Sticky assignment matters. Wrong control group = invalid conclusions. Revenue impact. |
+| "I'm just updating tracing config" | **NEW:** Tracing config affects observability. Wrong sampling = missing data when debugging. Wrong exporter = traces sent nowhere. |
+| "It's just observability" | **NEW:** OpenTelemetry config affects debugging production issues. Missing traces = blind during incidents. Wrong context propagation = broken traces. |
+| "I'm just updating cache config" | **NEW:** Cache config affects performance AND correctness. Wrong TTL = stale data served. Cache key wrong = data leaks between users. |
+| "It's just caching settings" | **NEW:** Cache invalidation is one of the hardest problems. Wrong config = stale data for hours. CDN cache mistakes affect all users. |
+| "I'm just updating queue config" | **NEW:** Message queue config affects reliability. Wrong ACK = lost messages. Wrong exchange = messages routed wrong. Dead letter config matters. |
+| "It's just messaging setup" | **NEW:** Kafka/RabbitMQ misconfig can lose data. Wrong partition key = ordering broken. Consumer group wrong = duplicate processing. |
+| "I'm just updating the index mapping" | **NEW:** Elasticsearch mappings can't be changed after creation. Wrong analyzer = search broken. Wrong type = reindex entire dataset. |
+| "It's just search config" | **NEW:** Index mapping mistakes require full reindex. Dynamic mapping can explode field count. Wrong mapping = queries fail or return wrong results. |
+| "I'm just adding a webhook" | **NEW:** Webhooks send data EXTERNALLY. Wrong URL = data sent to wrong service. Missing auth = data exposed. Retry config = duplicate events. |
+| "It's just an integration endpoint" | **NEW:** Webhook config affects external systems. Wrong payload format = integration broken. Missing signature = security hole. |
+| "I'm just updating OAuth config" | **NEW:** OAuth config is AUTHENTICATION. Wrong redirect URI = auth broken. Wrong scopes = over-permissioned OR under-permissioned. |
+| "It's just login settings" | **NEW:** OAuth/SAML misconfig = users locked out OR security vulnerabilities. Wrong issuer = tokens rejected. Wrong audience = tokens accepted from wrong source. |
 
 **All of these mean:** Load the skill anyway. Your confidence is the problem, not the solution.
 
