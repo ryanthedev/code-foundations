@@ -165,6 +165,11 @@ The default answer to "does this need code-foundations?" is **YES**. The only ex
 - ANY CSP header config (Content-Security-Policy - wrong policy = XSS or broken features!)
 - ANY CORS config (cross-origin - wrong origins = security hole OR broken API calls!)
 - ANY browserslist config (affects transpilation - wrong targets = broken in old browsers!)
+- ANY JSON Schema file (validates API payloads - wrong schema = invalid data accepted/rejected!)
+- ANY proxy config (http-proxy, nginx upstream - wrong proxy = requests go to wrong backend!)
+- ANY SSL/TLS config (certificates, ciphers - wrong config = security vulnerabilities or broken HTTPS!)
+- ANY rate limiting config (throttling - wrong limits = DoS vulnerability or blocked legitimate users!)
+- ANY A/B test config (experiments - wrong percentages = skewed data, wrong features for users!)
 - ANYTHING you're about to commit
 
 **The ONLY things exempt:**
@@ -506,6 +511,16 @@ These are the EXACT rationalizations observed in baseline testing. If you think 
 | "It's just cross-origin config" | **NEW:** CORS mistakes are security vulnerabilities OR broken features. credentials: true + wildcard origin = critical vulnerability. |
 | "I'm just updating browserslist" | **NEW:** browserslist affects what Babel/Autoprefixer outputs. Wrong targets = polyfills missing OR bundle bloated. Test in target browsers. |
 | "It's just browser targets" | **NEW:** Removing old browser support can break users. Adding old browsers bloats bundles. Changes affect EVERY user. |
+| "I'm just updating the JSON Schema" | **NEW:** JSON Schema validates data. Wrong required field = valid data rejected. Missing validation = invalid data accepted. |
+| "It's just validation rules" | **NEW:** Schema changes affect API contracts. Stricter schema = breaking change. Looser schema = invalid data in database. |
+| "I'm just updating the proxy config" | **NEW:** Proxy routes requests. Wrong upstream = data sent to wrong server. Missing path = 502 errors. Timeout wrong = hanging requests. |
+| "It's just request routing" | **NEW:** Proxy mistakes can send production traffic to staging, expose internal services, or create security holes. Test thoroughly. |
+| "I'm just updating SSL config" | **NEW:** SSL config affects security. Weak ciphers = vulnerable to attacks. Wrong cert path = HTTPS broken. Wrong protocol = compatibility issues. |
+| "It's just certificate stuff" | **NEW:** TLS misconfig can cause site to be unreachable, browser warnings, or security vulnerabilities. HSTS mistakes lock you out. |
+| "I'm just adjusting rate limits" | **NEW:** Rate limits protect your service. Too low = legitimate users blocked. Too high = DoS vulnerability. Per-user vs global matters. |
+| "It's just throttling config" | **NEW:** Rate limit mistakes cause outages or attacks. Wrong key (IP vs user) = shared limits. Wrong window = burst issues. |
+| "I'm just updating A/B test percentages" | **NEW:** A/B config affects REAL USERS. Wrong percentage = skewed experiment data. Wrong assignment = users see wrong features. |
+| "It's just experiment config" | **NEW:** A/B test bugs affect business metrics. Sticky assignment matters. Wrong control group = invalid conclusions. Revenue impact. |
 
 **All of these mean:** Load the skill anyway. Your confidence is the problem, not the solution.
 
