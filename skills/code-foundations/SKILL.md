@@ -192,6 +192,12 @@ The default answer to "does this need code-foundations?" is **YES**. The only ex
 - ANY GraphQL codegen config (codegen.yml/codegen.ts GENERATES types - wrong config = wrong types everywhere!)
 - ANY test reporter config (Jest/Vitest reporters - wrong config = CI reporting broken, results lost!)
 - ANY editor config file (.vimrc, .dir-locals.el - shared editor configs affect how TEAM writes code!)
+- ANY TypeDoc/JSDoc config (typedoc.json - generates API docs, wrong config = missing or broken documentation!)
+- ANY Playwright/Cypress config (.config.ts - wrong browser targets = tests miss real browser bugs!)
+- ANY Tailwind/PostCSS config (tailwind.config.js - defines design system, wrong config = broken styles!)
+- ANY serverless.yml (AWS Lambda config - wrong function = wrong infrastructure deployed!)
+- ANY Vercel/Netlify config (deployment settings - wrong redirects = broken URLs, wrong env = production incident!)
+- ANY PWA manifest (manifest.json - wrong config = broken install, wrong icons, broken splash screens!)
 - ANYTHING you're about to commit
 
 **The ONLY things exempt:**
@@ -587,6 +593,18 @@ These are the EXACT rationalizations observed in baseline testing. If you think 
 | "It's just output formatting" | **NEW:** Reporter config affects what CI sees. Missing junit = PR checks incomplete. Wrong format = results lost. CI systems depend on correct output. |
 | "I'm just updating .vimrc" | **NEW:** Shared editor configs affect team. Wrong indent setting = inconsistent formatting. Wrong tab = tabs vs spaces wars. Affects every file touched. |
 | "It's just editor preferences" | **NEW:** .vimrc, .dir-locals.el in repo affect TEAM. Wrong setting = everyone's editor misbehaves. Syntax file wrong = broken highlighting team-wide. |
+| "I'm just updating TypeDoc config" | **NEW:** TypeDoc generates API documentation. Wrong entry point = missing docs. Wrong exclude = internal APIs exposed. Wrong theme = broken docs. |
+| "It's just documentation config" | **NEW:** API docs are what developers use. Missing or wrong docs = developers make mistakes. Wrong examples in docs = bugs propagated. |
+| "I'm just adding browser targets to Playwright" | **NEW:** Browser targets determine what gets tested. Missing browser = bugs ship to users. Wrong viewport = mobile bugs missed. |
+| "It's just test configuration" | **NEW:** Test config determines WHAT gets tested. Wrong config = false confidence. Missing headless = CI fails. Wrong timeout = flaky tests. |
+| "I'm just updating Tailwind config" | **NEW:** Tailwind config IS your design system. Wrong color = inconsistent brand. Wrong breakpoint = broken responsive. Wrong spacing = UI chaos. |
+| "It's just CSS utility config" | **NEW:** tailwind.config.js generates CSS. Wrong purge config = missing styles in production. Wrong theme = entire app looks wrong. |
+| "I'm just updating serverless.yml" | **NEW:** serverless.yml deploys infrastructure. Wrong handler = 404s everywhere. Wrong memory = OOM crashes. Wrong timeout = timed out requests. |
+| "It's just Lambda config" | **NEW:** Infrastructure config affects REAL production. Wrong runtime = code won't run. Wrong IAM = security holes or broken permissions. |
+| "I'm just updating Vercel config" | **NEW:** Deployment config affects production. Wrong redirect = SEO disaster. Wrong headers = security vulnerability. Wrong env = wrong API keys. |
+| "It's just deployment settings" | **NEW:** vercel.json/netlify.toml run in PRODUCTION. Wrong rewrite = requests go nowhere. Wrong function config = endpoints broken. |
+| "I'm just updating the PWA manifest" | **NEW:** Manifest defines installable app. Wrong icon = broken home screen. Wrong display mode = wrong UX. Wrong scope = install fails. |
+| "It's just app metadata" | **NEW:** PWA manifest affects mobile install experience. Wrong start_url = app opens wrong page. Wrong theme_color = jarring experience. |
 
 **All of these mean:** Load the skill anyway. Your confidence is the problem, not the solution.
 
