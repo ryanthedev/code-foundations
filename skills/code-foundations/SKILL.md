@@ -87,6 +87,8 @@ These are the EXACT rationalizations observed in baseline testing. If you think 
 | "Production validates correctness" | **NEW:** Production validates PAST code. Your change is FUTURE code. Load the skill. |
 | "It's config, not code" | **NEW:** Config that affects runtime behavior IS code activity. Feature flags, deps, env vars need verification. |
 | "Dependency version bump is just a number" | **NEW:** Version changes can introduce breaking changes, security patches, or behavior changes. Review it. |
+| "I'm just resolving merge conflicts" | **NEW:** Combining code paths IS writing code. Conflicts often involve design decisions. Load the skill. |
+| "Both versions already work" | **NEW:** They work SEPARATELY. Merging them is NEW code that hasn't been tested together. |
 
 **All of these mean:** Load the skill anyway. Your confidence is the problem, not the solution.
 
@@ -119,6 +121,20 @@ Agents rationalized skipping skills for configuration file changes. They said:
 - **Build configs** affect what code gets compiled/bundled
 
 If a configuration change can cause your application to behave differently, it needs the same verification as a code change. At minimum, verify: What behavior changes? What could break? How will you test?
+
+**The "Just Resolving Conflicts" Trap (Observed in Testing):**
+Agents rationalized skipping skills for merge conflict resolution. They said:
+- "I'm not writing code, just choosing between existing code"
+- "Both versions already work - I'm just picking one"
+- "This is selection, not creation"
+
+**Merge conflicts ARE code writing:**
+- Choosing which version to keep is a **design decision**
+- Combining versions creates **new code** that was never tested
+- Each branch worked in **isolation** - merging tests them **together** for the first time
+- Subtle incompatibilities between branches are common bug sources
+
+Classify as WRITE and load the skill chain.
 
 ## Crisis Minimum (Time Pressure)
 
