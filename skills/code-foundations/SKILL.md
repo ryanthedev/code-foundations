@@ -51,6 +51,9 @@ The default answer to "does this need code-foundations?" is **YES**. The only ex
 - ANY CSS/style class rename (must verify all usages across HTML/JSX/templates)
 - ANY @ts-ignore, eslint-disable, @suppress comment (hiding errors is dangerous)
 - ANY TODO/FIXME comment in code files (you're modifying a code file)
+- ANY linter auto-fix (eslint --fix, prettier --write - these CHANGE code, not just check it)
+- ANY tooling config file creation (.nvmrc, .prettierrc, .eslintrc - affects how code is processed)
+- ANY compiler/transpiler config change (tsconfig.json, babel.config.js - affects what code becomes)
 - ANYTHING you're about to commit
 
 **The ONLY things exempt:**
@@ -188,6 +191,11 @@ These are the EXACT rationalizations observed in baseline testing. If you think 
 | "I'm just adding @ts-ignore" | **NEW:** @ts-ignore HIDES a type error. You're telling the compiler to ignore a problem. That problem is now YOUR bug. |
 | "It's just suppressing a lint warning" | **NEW:** eslint-disable, @suppress, #pragma - all hide potential bugs. Suppression = accepting risk. Verify the risk is acceptable. |
 | "I'm just adding a TODO comment" | **NEW:** You're modifying a code file. The skill applies to ANY code file modification. Also: will you ever fix that TODO? |
+| "I'm just running eslint --fix" | **NEW:** Auto-fix CHANGES code. It's not just checking - it's modifying. Review the diff before committing. |
+| "It's automated formatting" | **NEW:** Automated tools can change more than whitespace. ESLint --fix changes code structure. Review what changed. |
+| "I'm just creating .nvmrc" | **NEW:** .nvmrc determines Node version. Wrong version = different behavior, broken builds, missing features. |
+| "It's just a tooling config" | **NEW:** Tooling configs (.prettierrc, .eslintrc) affect how code is processed. Wrong config = wrong output. |
+| "I'm just changing tsconfig" | **NEW:** tsconfig.json affects compilation. Wrong target = runtime errors. Wrong paths = broken imports. Verify build still works. |
 
 **All of these mean:** Load the skill anyway. Your confidence is the problem, not the solution.
 
