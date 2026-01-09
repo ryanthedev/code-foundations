@@ -15,6 +15,35 @@ python3 ~/.claude/bin/log-skill-load.py code-foundations
 
 # Code Foundations
 
+## DEFAULT: YES - Load This Skill
+
+**When in doubt, load this skill. When NOT in doubt, load it anyway.**
+
+The default answer to "does this need code-foundations?" is **YES**. The only exceptions are activities that:
+1. Touch ZERO files that could ever be executed, compiled, or imported
+2. Have ZERO chance of affecting runtime behavior, build, or tests
+3. Are PURE prose (README content, not code comments)
+
+**If you're asking yourself "does this need the skill?"** — the answer is YES. The question itself proves you're touching something that could matter.
+
+**If you think "this is obviously exempt"** — you're rationalizing. Load the skill. Let IT decide if it's exempt.
+
+**The skill applies to:**
+- ANY file with code (`.js`, `.ts`, `.py`, `.go`, `.rs`, `.java`, `.c`, `.cpp`, `.rb`, `.swift`, `.kt`, etc.)
+- ANY config file that affects runtime (`.json`, `.yaml`, `.toml`, `.env`, `.xml`, `Dockerfile`, etc.)
+- ANY build/package file (`package.json`, `Cargo.toml`, `requirements.txt`, `pom.xml`, etc.)
+- ANY change to file location, name, or structure
+- ANY change to imports, exports, or module boundaries
+- ANY comment that might be parsed (JSDoc, docstrings, type hints in comments)
+- ANYTHING you're about to commit
+
+**The ONLY things exempt:**
+- Pure prose in documentation files (not code examples within them)
+- Whitespace-only formatting by automated tools (not manual formatting)
+- Git operations that don't touch code (branching, tagging)
+
+**When you rationalize, you violate.** The skill exists because your confidence is wrong.
+
 ## STOP - Classify Before Acting
 
 **You MUST classify the task before ANY other action.**
@@ -100,6 +129,11 @@ These are the EXACT rationalizations observed in baseline testing. If you think 
 | "The code itself isn't changing" | **NEW:** Code LOCATION matters. Moving, renaming, re-exporting changes how the system connects. These are structural changes. |
 
 **All of these mean:** Load the skill anyway. Your confidence is the problem, not the solution.
+
+**The Rationalization Death Spiral:**
+Every loophole in this list was discovered because an agent said NO when they should have said YES. They weren't lying - they genuinely believed their reasoning. That's why your belief doesn't matter. **If you can construct ANY argument for why this task is exempt, that argument is the rationalization.**
+
+The skill doesn't ask "are you sure?" It asks "did you load it?" Load first. Decide after.
 
 **The "Trivial Task" Trap (Observed in Testing):**
 Agents rationalized skipping skills for "trivial" tasks like getters and variable renames. They said:
