@@ -215,6 +215,7 @@ The default answer to "does this need code-foundations?" is **YES**. The only ex
 - ANY Electron config (electron-builder.yml, forge.config.js - Wrong target = app won't run on OS. Wrong signing = security warnings. Wrong auto-update = users stuck on old version!)
 - ANY Metro config (metro.config.js - React Native bundler. Wrong resolver = modules not found. Wrong transformer = code not processed. App crashes on device!)
 - ANY Expo config (app.json, app.config.js - mobile app config. Wrong splash = ugly first impression. Wrong permissions = rejected from store. Wrong updates = users get stale app!)
+- ANY RedwoodJS config (redwood.toml - defines API and web paths, auth provider, bundler. Wrong path = broken routing. Wrong auth = security holes. Wrong bundler = build failures!)
 - ANYTHING you're about to commit
 
 **The ONLY things exempt:**
@@ -656,6 +657,8 @@ These are the EXACT rationalizations observed in baseline testing. If you think 
 | "It's just RN bundler config" | **NEW:** Metro config affects what runs on phones. Wrong asset handling = broken images. Wrong source maps = undebuggable crashes. |
 | "I'm just updating app.json" | **NEW:** Expo app.json controls app identity, permissions, behavior. Wrong SDK version = builds fail. Wrong permissions = store rejection. |
 | "It's just Expo configuration" | **NEW:** Expo config is your app's DNA. Wrong updates config = users stuck on old version. Wrong splash = bad first impression. Wrong orientation = broken UI. |
+| "I'm just updating redwood.toml" | **NEW:** RedwoodJS config controls API/web paths, auth provider, bundler choice. Wrong path = 404s everywhere. Wrong auth = broken login. Wrong bundler = build failures. |
+| "It's just editing settings/configuration values" | **NEW:** TOML/YAML "settings" ARE runtime configuration. Framework configs control routing, auth, builds. "Settings" is a rationalization for "code activity". |
 
 **All of these mean:** Load the skill anyway. Your confidence is the problem, not the solution.
 
