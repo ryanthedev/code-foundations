@@ -40,6 +40,8 @@ Recognize your brain's limitations. You can't hold an entire program in your hea
 ### Curiosity (p.822-825)
 Actively seek new knowledge. Build your awareness of development processes. Experiment with programming, read, affiliate with professionals. Reading 35 pages/week = 1 book every 2 months = substantial professional development.
 
+**In AI-assisted development:** Use WebSearch and WebFetch to research unfamiliar patterns, technologies, and conventions before implementing. "I'll figure it out" is not curiosity - it's avoidance. Genuine curiosity means searching for official documentation, implementation examples, and best practices BEFORE writing code.
+
 ### Intellectual Honesty (p.826-828)
 - Refuse to pretend you're an expert when you're not
 - Readily admit mistakes

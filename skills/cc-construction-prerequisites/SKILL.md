@@ -252,6 +252,41 @@ This skill applies to existing code, not just new projects. Use CHECKER mode as 
 - "Working code is evidence of satisfied prerequisites"
 - "I've already invested X hours, don't waste more" (sunk cost fallacy)
 
+## Research Resources - When to Search Online
+
+**Studying patterns requires more than local codebase review.** When you identify patterns, technologies, or architectures that need study, use web research tools (WebSearch, WebFetch) to supplement your understanding.
+
+**MUST search online when:**
+- Working with an unfamiliar framework, library, or technology
+- Implementing a pattern you haven't used before (e.g., "Telescope-style fuzzy picker")
+- Architecture involves external services or protocols you don't know well
+- Existing codebase uses conventions you don't recognize
+- Error handling or security patterns need domain-specific knowledge
+
+**What to search for:**
+| Need | Search Query Examples |
+|------|----------------------|
+| Framework patterns | "[framework] [component type] best practices", "[framework] official documentation [feature]" |
+| Implementation examples | "[pattern name] implementation example", "how to build [component] in [language]" |
+| Architecture guidance | "[technology] architecture patterns", "[service type] design patterns" |
+| Conventions | "[language/framework] coding conventions", "[project type] project structure" |
+| Error handling | "[technology] error handling best practices", "[API] error codes documentation" |
+
+**Research workflow:**
+1. Identify what you need to learn (from PENDING items in prerequisites check)
+2. Search for official documentation first (most authoritative)
+3. Search for implementation examples (practical guidance)
+4. Search for best practices and common pitfalls (learn from others' mistakes)
+5. Document findings before proceeding to implementation
+
+**This aligns with McConnell's Curiosity principle:** "Actively seek new knowledge. Build your awareness of development processes." (p.822-825) - The best programmers don't rely solely on existing knowledge; they research before implementing unfamiliar patterns.
+
+**Red Flags - Skipping Research:**
+- "I'll figure it out as I go" - Exploring by coding is expensive
+- "The pattern is self-explanatory" - Patterns have nuances that documentation reveals
+- "I've done something similar" - Similar isn't identical; verify assumptions
+- "No time for research" - Research prevents debugging time; it's never "no time"
+
 ## Quick Reference
 
 | Decision | Guideline |
