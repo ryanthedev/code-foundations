@@ -1,9 +1,6 @@
 ---
 name: code-foundations
-description: Use when doing ANY code task - writing, debugging, reviewing, fixing,
-  implementing, optimizing, or refactoring. Symptoms that trigger this skill include
-  seeing code, being asked to implement something, fix a bug, review code, or improve
-  performance. This skill dispatches to specific skills based on task type.
+description: "Use when doing ANY code task - writing, debugging, reviewing, fixing, implementing, optimizing, or refactoring. Symptoms that trigger this skill include seeing code, being asked to implement something, fix a bug, review code, or improve performance. This skill dispatches to specific skills based on task type."
 ---
 
 # Code Foundations

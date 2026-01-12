@@ -1,6 +1,6 @@
 ---
 name: cc-integration-practices
-description: Use when integrating components, planning integration strategy, setting up build processes, or debugging integration failures. Symptoms: "integration hell", late-stage defects, unclear integration order, no daily build, broken builds lasting days.
+description: "Use when integrating components, planning integration strategy, setting up build processes, or debugging integration failures. Symptoms: integration hell, late-stage defects, unclear integration order, no daily build, broken builds lasting days."
 ---
 
 # Skill: cc-integration-practices

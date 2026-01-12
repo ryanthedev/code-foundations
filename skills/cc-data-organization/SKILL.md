@@ -1,6 +1,6 @@
 ---
 name: cc-data-organization
-description: Use when reviewing variable declarations, choosing data types, or designing data structures. Triggers on: "review variables", "data types", "magic numbers", "naming", "global data".
+description: "Use when reviewing variable declarations, choosing data types, or designing data structures. Triggers on: review variables, data types, magic numbers, naming, global data."
 ---
 
 # Skill: cc-data-organization

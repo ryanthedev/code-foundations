@@ -1,6 +1,6 @@
 ---
 name: cc-control-flow-quality
-description: Use when code has deep nesting (3+ levels), complex conditionals needing simplification, loop design questions, or high cyclomatic complexity. Symptoms: arrow-shaped code, repeated conditions, confusing loop exits, lengthy if-else chains.
+description: "Use when code has deep nesting (3+ levels), complex conditionals needing simplification, loop design questions, or high cyclomatic complexity. Symptoms: arrow-shaped code, repeated conditions, confusing loop exits, lengthy if-else chains."
 ---
 
 # Control Flow Quality

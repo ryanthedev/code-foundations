@@ -1,6 +1,6 @@
 ---
 name: cc-performance-tuning
-description: Use when code is "too slow", needs optimization, has performance issues, timeouts, OOM errors, high CPU/memory, or "doesn't scale". Symptoms: profiler shows hot spots, latency complaints, unresponsive UI, memory allocation slow.
+description: "Use when code is too slow, needs optimization, has performance issues, timeouts, OOM errors, high CPU/memory, or doesn't scale. Symptoms: profiler shows hot spots, latency complaints, unresponsive UI, memory allocation slow."
 ---
 
 # Skill: cc-performance-tuning

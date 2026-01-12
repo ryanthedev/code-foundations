@@ -1,6 +1,6 @@
 ---
 name: cc-construction-prerequisites
-description: Use when unsure if project is ready to code, requirements feel incomplete, architecture unclear, no coding conventions defined, team asking "are we ready to start?", reviewing upstream prerequisites, or noticing urge to skip planning.
+description: "Use when unsure if project is ready to code, requirements feel incomplete, architecture unclear, no coding conventions defined, team asking are we ready to start, reviewing upstream prerequisites, or noticing urge to skip planning."
 ---
 
 # Construction Prerequisites

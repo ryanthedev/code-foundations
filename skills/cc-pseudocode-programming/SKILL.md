@@ -1,6 +1,6 @@
 ---
 name: cc-pseudocode-programming
-description: Use when designing routines, stuck on where to start coding, caught in compile-debug loops, or code works but you don't know why. Symptoms include "Just One More Compile" syndrome, can't think of a good name, keep hacking but it's still broken, staring at screen not knowing where to start, coded into a corner, too many compiler warnings.
+description: "Use when designing routines, stuck on where to start coding, caught in compile-debug loops, or code works but you don't know why. Symptoms include Just One More Compile syndrome, can't think of a good name, keep hacking but it's still broken, staring at screen not knowing where to start, coded into a corner, too many compiler warnings."
 ---
 
 # Skill: cc-pseudocode-programming
