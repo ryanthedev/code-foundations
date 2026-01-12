@@ -28,21 +28,21 @@ Real-world examples showing how the skills guide debugging and development.
 
 ## Skills
 
-| Skill | Purpose |
-|-------|---------|
-| [**code-foundations**](skills/code-foundations/SKILL.md) | Master dispatcher - invokes appropriate skills based on activity |
-| [**cc-developer-character**](skills/cc-developer-character/SKILL.md) | Mindset and discipline foundations |
-| [**cc-construction-prerequisites**](skills/cc-construction-prerequisites/SKILL.md) | Requirements and design before coding |
-| [**cc-pseudocode-programming**](skills/cc-pseudocode-programming/SKILL.md) | Design routines with pseudocode first |
-| [**cc-routine-and-class-design**](skills/cc-routine-and-class-design/SKILL.md) | High-quality routine and class interfaces |
-| [**cc-control-flow-quality**](skills/cc-control-flow-quality/SKILL.md) | Clean control structures and logic |
-| [**cc-data-organization**](skills/cc-data-organization/SKILL.md) | Variable naming, scope, and data types |
-| [**cc-defensive-programming**](skills/cc-defensive-programming/SKILL.md) | Error handling and robustness |
-| [**cc-code-layout-and-style**](skills/cc-code-layout-and-style/SKILL.md) | Formatting and self-documenting code |
-| [**cc-quality-practices**](skills/cc-quality-practices/SKILL.md) | Code reviews, testing, debugging |
-| [**cc-refactoring-guidance**](skills/cc-refactoring-guidance/SKILL.md) | Safe refactoring strategies |
-| [**cc-integration-practices**](skills/cc-integration-practices/SKILL.md) | Integration and build processes |
-| [**cc-performance-tuning**](skills/cc-performance-tuning/SKILL.md) | Measure-first optimization |
+| Skill | Purpose | Example Prompt |
+|-------|---------|----------------|
+| [**code-foundations**](skills/code-foundations/SKILL.md) | Master dispatcher | "Use code-foundations to help me fix this bug" |
+| [**cc-developer-character**](skills/cc-developer-character/SKILL.md) | Mindset and discipline | "I'm stuck debugging for hours, check my developer-character" |
+| [**cc-construction-prerequisites**](skills/cc-construction-prerequisites/SKILL.md) | Requirements and planning | "Check our construction-prerequisites before we start coding" |
+| [**cc-pseudocode-programming**](skills/cc-pseudocode-programming/SKILL.md) | Design routines first | "Use pseudocode-programming to design this function" |
+| [**cc-routine-and-class-design**](skills/cc-routine-and-class-design/SKILL.md) | High-quality interfaces | "Review this class using routine-and-class-design" |
+| [**cc-control-flow-quality**](skills/cc-control-flow-quality/SKILL.md) | Clean control structures | "Check the control-flow-quality of this nested logic" |
+| [**cc-data-organization**](skills/cc-data-organization/SKILL.md) | Variables, naming, types | "Review data-organization for these variables" |
+| [**cc-defensive-programming**](skills/cc-defensive-programming/SKILL.md) | Error handling | "Check defensive-programming for this input validation" |
+| [**cc-code-layout-and-style**](skills/cc-code-layout-and-style/SKILL.md) | Formatting and comments | "Review code-layout-and-style for this file" |
+| [**cc-quality-practices**](skills/cc-quality-practices/SKILL.md) | Reviews, testing, debugging | "Use quality-practices to debug this issue" |
+| [**cc-refactoring-guidance**](skills/cc-refactoring-guidance/SKILL.md) | Safe refactoring | "Should I refactor or rewrite? Check refactoring-guidance" |
+| [**cc-integration-practices**](skills/cc-integration-practices/SKILL.md) | Integration and builds | "Review our integration-practices for this merge" |
+| [**cc-performance-tuning**](skills/cc-performance-tuning/SKILL.md) | Measure-first optimization | "This is too slow, use performance-tuning to optimize" |
 
 ## Source
 
