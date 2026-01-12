@@ -22,6 +22,7 @@ Real-world examples showing how the skills guide debugging and development.
 
 | Case Study | Skill | Description |
 |------------|-------|-------------|
+| [Picker History Review](docs/review-example-picker-history-plan.md) | cc-quality-practices | REVIEW task: Multi-skill chaining found ID collision risk, missing dirty tests, and naming issues. 4 violations, 3 warnings with actionable fixes. |
 | [Picker Text Overflow](docs/debug-flow-example-picker-overflow.md) | code-foundations | DEBUG task: Root cause analysis revealed the codebase already had the correct pattern—the fix was applying it consistently. |
 | [Picker Focus Bug](docs/debug-flow-example-picker-focus.md) | code-foundations | DEBUG task: Scientific Debugging Method—hypothesis formation, verification via code search, then targeted fix. |
 | [Window Picker Plan](docs/prerequisites-example-window-picker-plan.md) | cc-construction-prerequisites | PLAN task: Phased implementation plan with checkpoint gates, risk register, and explicit inputs/outputs for each phase. |
