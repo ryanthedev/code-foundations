@@ -12,6 +12,20 @@ Code Complete-based software engineering skills for Claude Code.
 /plugin install code-foundations@rtd
 ```
 
+## Documentation
+
+For guides, examples, and detailed documentation, visit the **[Wiki](https://github.com/ryanthedev/code-foundations/wiki)**.
+
+## Case Studies
+
+Real-world examples showing how the skills guide debugging and development.
+
+| Case Study | Skill | Description |
+|------------|-------|-------------|
+| [Picker Text Overflow](docs/debug-flow-example-picker-overflow.md) | code-foundations | DEBUG task: Root cause analysis revealed the codebase already had the correct pattern—the fix was applying it consistently. |
+| [Picker Focus Bug](docs/debug-flow-example-picker-focus.md) | code-foundations | DEBUG task: Scientific Debugging Method—hypothesis formation, verification via code search, then targeted fix. |
+| [Window Picker Plan](docs/prerequisites-example-window-picker-plan.md) | cc-construction-prerequisites | PLAN task: Phased implementation plan with checkpoint gates, risk register, and explicit inputs/outputs for each phase. |
+
 ## Skills
 
 | Skill | Purpose |
@@ -29,20 +43,6 @@ Code Complete-based software engineering skills for Claude Code.
 | **cc-refactoring-guidance** | Safe refactoring strategies |
 | **cc-integration-practices** | Integration and build processes |
 | **cc-performance-tuning** | Measure-first optimization |
-
-## Usage
-
-The `code-foundations` skill acts as a dispatcher. Invoke it before any code activity and it will guide you to the appropriate phase-specific skills.
-
-## Case Studies
-
-Real-world examples showing how the skills guide debugging and development.
-
-| Case Study | Skill | Description |
-|------------|-------|-------------|
-| [Picker Text Overflow](docs/debug-flow-example-picker-overflow.md) | code-foundations | DEBUG task: Root cause analysis revealed the codebase already had the correct pattern—the fix was applying it consistently. |
-| [Picker Focus Bug](docs/debug-flow-example-picker-focus.md) | code-foundations | DEBUG task: Scientific Debugging Method—hypothesis formation, verification via code search, then targeted fix. |
-| [Window Picker Plan](docs/prerequisites-example-window-picker-plan.md) | cc-construction-prerequisites | PLAN task: Phased implementation plan with checkpoint gates, risk register, and explicit inputs/outputs for each phase. |
 
 ## Source
 
