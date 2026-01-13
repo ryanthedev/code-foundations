@@ -6,7 +6,7 @@ Code Complete-based software engineering skills for Claude Code.
 
 ### DEBUG
 ```
-User: "X isn't working, use code-foundations to debug it"
+User: "X isn't working, use foundations to debug it"
   → code-foundations classifies as DEBUG
   → cc-developer-character checks mindset
   → cc-quality-practices: hypothesis → verify → fix
@@ -14,7 +14,7 @@ User: "X isn't working, use code-foundations to debug it"
 
 ### WRITE
 ```
-User: "I need to build feature X, invoke code-foundations"
+User: "Build feature X with foundations"
   → code-foundations classifies as WRITE
   → cc-construction-prerequisites: requirements check
   → cc-pseudocode-programming: design first
@@ -31,7 +31,7 @@ User: "Use foundations to review this code"
 
 ### REFACTOR
 ```
-User: "Clean up this code with code-foundations"
+User: "Clean this up with foundations"
   → cc-refactoring-guidance: plan steps
   → Execute one change at a time
   → CHECKER gates verify quality preserved
