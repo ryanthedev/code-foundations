@@ -43,7 +43,7 @@ User: "Clean this up with foundations"
 
 | Skill | Purpose | Example |
 |-------|---------|---------|
-| **code-foundations** | Master dispatcher | "use foundations to debug this" |
+| **code-foundations** | Master dispatcher | "use foundations to [anything]" |
 | **cc-developer-character** | Mindset and discipline | "use dev character to write a commit message" |
 | **cc-construction-prerequisites** | Requirements and planning | "use prereqs to review this plan" |
 | **cc-pseudocode-programming** | Design routines first | "use pseudocode to design this function" |
