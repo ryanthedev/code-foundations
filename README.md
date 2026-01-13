@@ -41,21 +41,21 @@ User: "Clean this up with foundations"
 
 ## Skills
 
-| Skill | Purpose | Triggers |
-|-------|---------|----------|
-| **code-foundations** | Master dispatcher | any code task |
-| **cc-developer-character** | Mindset and discipline | stuck debugging, tempted to skip steps |
-| **cc-construction-prerequisites** | Requirements and planning | new project, "are we ready?" |
-| **cc-pseudocode-programming** | Design routines first | new function, where to start |
-| **cc-quality-practices** | Reviews, testing, debugging | review, debug, test |
-| **cc-routine-and-class-design** | High-quality interfaces | new class, parameter counts |
-| **cc-control-flow-quality** | Clean control structures | nested logic, complexity |
-| **cc-data-organization** | Variables, naming, types | naming, variable scope |
-| **cc-defensive-programming** | Error handling | validation, exceptions |
-| **cc-code-layout-and-style** | Formatting and comments | style, readability |
-| **cc-refactoring-guidance** | Safe refactoring | refactor, clean up |
-| **cc-integration-practices** | Integration and builds | merge, integration |
-| **cc-performance-tuning** | Measure-first optimization | slow, performance |
+| Skill | Purpose | Example |
+|-------|---------|---------|
+| **code-foundations** | Master dispatcher | "use foundations to debug this" |
+| **cc-developer-character** | Mindset and discipline | "use dev character to write a commit message" |
+| **cc-construction-prerequisites** | Requirements and planning | "use prereqs to review this plan" |
+| **cc-pseudocode-programming** | Design routines first | "use pseudocode to design this function" |
+| **cc-quality-practices** | Reviews, testing, debugging | "use quality practices to review this PR" |
+| **cc-routine-and-class-design** | High-quality interfaces | "use routine design to check this class" |
+| **cc-control-flow-quality** | Clean control structures | "use control flow to simplify this logic" |
+| **cc-data-organization** | Variables, naming, types | "use data org to review these variables" |
+| **cc-defensive-programming** | Error handling | "use defensive programming on this input" |
+| **cc-code-layout-and-style** | Formatting and comments | "use layout style to clean up this file" |
+| **cc-refactoring-guidance** | Safe refactoring | "use refactoring to clean this up" |
+| **cc-integration-practices** | Integration and builds | "use integration practices for this merge" |
+| **cc-performance-tuning** | Measure-first optimization | "use perf tuning, this is too slow" |
 
 ---
 
