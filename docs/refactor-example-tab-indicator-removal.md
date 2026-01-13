@@ -75,6 +75,40 @@ cc-refactoring-guidance produced this systematic plan:
 
 ---
 
+## CHECKER Gates (Post-Refactoring)
+
+After all changes and tests passed, CHECKER gates verified quality:
+
+### cc-control-flow-quality
+
+| Check | Result |
+|-------|--------|
+| Nesting depth | Max 2 levels (PASS) |
+| Boolean expressions | No complex expressions |
+| Switch statements | Simple stack modes |
+| Loop structures | Clean |
+
+### cc-routine-and-class-design
+
+| Check | Result |
+|-------|--------|
+| Parameter count | 9 parameters (was 11) - within acceptable range |
+| Cohesion | Functional - each function does one thing |
+| Abstractions | Clear |
+
+### Change Scope
+
+```
+grid-cli/internal/config/config.go       |  13 --
+grid-cli/internal/config/types.go        |   1 -
+grid-cli/internal/layout/apply.go        |  31 +---
+grid-cli/internal/layout/windows.go      |  20 +--
+grid-cli/internal/layout/windows_test.go |   6 +-
+grid-cli/internal/window/move.go         |   4 +-
+```
+
+---
+
 ## What the Skill Prevented
 
 | Without Skill | With Skill |
@@ -93,3 +127,4 @@ cc-refactoring-guidance produced this systematic plan:
 3. **Feature removal needs a plan** - Multiple files means systematic approach
 4. **Verification gates** - Build after each step catches errors early
 5. **Human-AI collaboration** - User intervention triggered proper methodology
+6. **Quantified improvement** - Parameter count reduced from 11 → 9, verified by CHECKER
