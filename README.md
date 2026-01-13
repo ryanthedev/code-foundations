@@ -14,7 +14,7 @@ User: "X isn't working, use code-foundations to debug it"
 
 ### WRITE
 ```
-User: "Use code-foundations to build feature X"
+User: "I need to build feature X, invoke code-foundations"
   → code-foundations classifies as WRITE
   → cc-construction-prerequisites: requirements check
   → cc-pseudocode-programming: design first
@@ -23,7 +23,7 @@ User: "Use code-foundations to build feature X"
 
 ### REVIEW
 ```
-User: "Use code-foundations to review this code"
+User: "Use foundations to review this code"
   → cc-quality-practices (CHECKER mode)
   → cc-routine-and-class-design (CHECKER mode)
   → Output: violations, warnings, fixes
@@ -31,7 +31,7 @@ User: "Use code-foundations to review this code"
 
 ### REFACTOR
 ```
-User: "Use code-foundations to clean up this code"
+User: "Clean up this code with code-foundations"
   → cc-refactoring-guidance: plan steps
   → Execute one change at a time
   → CHECKER gates verify quality preserved
