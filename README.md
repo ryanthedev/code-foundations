@@ -2,6 +2,81 @@
 
 Code Complete-based software engineering skills for Claude Code.
 
+## Quick Example
+
+**Question:**
+> "The picker text is overflowing into the icons on the right side"
+
+**Result with code-foundations:**
+```
+Step 1: Task Classification
+  → DEBUG (signals: "overflowing", visual bug)
+
+Step 2: Developer Character Check ✓
+
+Step 3: Root Cause Analysis
+  | Location        | Uses maxWidth? |
+  |-----------------|----------------|
+  | ResultRow       | ✓ maxWidth set |
+  | PickerTextField | ✗ No maxWidth  |
+
+  Root cause: PickerTextField missing the pattern already used elsewhere.
+
+Step 4: Surgical Fix
+  → Add maxWidth: "calc(100% - iconSpace)" to PickerTextField
+  → Done in 57 seconds
+```
+
+Each skill follows this pattern: **classify task → check mindset → apply methodology → verify**.
+
+---
+
+## Skills
+
+| Skill | Purpose | Triggers |
+|-------|---------|----------|
+| **code-foundations** | Master dispatcher | any code task |
+| **cc-developer-character** | Mindset and discipline | stuck debugging, tempted to skip steps |
+| **cc-construction-prerequisites** | Requirements and planning | new project, "are we ready?" |
+| **cc-pseudocode-programming** | Design routines first | new function, where to start |
+| **cc-quality-practices** | Reviews, testing, debugging | review, debug, test |
+| **cc-routine-and-class-design** | High-quality interfaces | new class, parameter counts |
+| **cc-control-flow-quality** | Clean control structures | nested logic, complexity |
+| **cc-data-organization** | Variables, naming, types | naming, variable scope |
+| **cc-defensive-programming** | Error handling | validation, exceptions |
+| **cc-code-layout-and-style** | Formatting and comments | style, readability |
+| **cc-refactoring-guidance** | Safe refactoring | refactor, clean up |
+| **cc-integration-practices** | Integration and builds | merge, integration |
+| **cc-performance-tuning** | Measure-first optimization | slow, performance |
+
+## Skill Chain
+
+The skills chain together based on task type:
+
+```
+code-foundations (dispatcher)
+       │
+       ├── DEBUG ──→ cc-developer-character ──→ cc-quality-practices
+       │                                              │
+       │                                              └── Scientific Method
+       │                                                  (hypothesis → verify → fix)
+       │
+       ├── WRITE ──→ cc-developer-character ──→ cc-construction-prerequisites
+       │                                              │
+       │                                              └── cc-pseudocode-programming
+       │                                                  (design before code)
+       │
+       ├── REVIEW ─→ cc-quality-practices ──→ cc-routine-and-class-design
+       │                                              │
+       │                                              └── CHECKER mode
+       │                                                  (violations, warnings)
+       │
+       └── REFACTOR → cc-developer-character ──→ cc-refactoring-guidance
+                                                      │
+                                                      └── cc-control-flow-quality (CHECKER)
+                                                          cc-routine-and-class-design (CHECKER)
+```
+
 ## Installation
 
 ```bash
@@ -10,43 +85,67 @@ Code Complete-based software engineering skills for Claude Code.
 
 # Install plugin
 /plugin install code-foundations@rtd
+
+# Update to latest
+/plugin update code-foundations@rtd
 ```
 
 ## Documentation
 
-For guides, examples, and detailed documentation, visit the **[Wiki](https://github.com/ryanthedev/code-foundations/wiki)**.
+For guides and detailed documentation, visit the **[Wiki](https://github.com/ryanthedev/code-foundations/wiki)**.
 
-## Case Studies
+## Examples
 
-Real-world examples showing how the skills guide debugging and development.
+Each task type has real-world examples showing the skills in action:
 
-| Case Study | Skill | Description |
-|------------|-------|-------------|
-| [Picker History Review](docs/review-example-picker-history-plan.md) | cc-quality-practices | REVIEW task: Multi-skill chaining found ID collision risk, missing dirty tests, and naming issues. 4 violations, 3 warnings with actionable fixes. |
-| [Border Window Cleanup](docs/refactor-example-border-cleanup.md) | cc-refactoring-guidance | REFACTOR task: Post-refactoring CHECKER gates verify McCabe complexity, cohesion, and design compliance. |
-| [Tab Indicator Removal](docs/refactor-example-tab-indicator-removal.md) | cc-developer-character | REFACTOR task: Discipline recovery—user intervention triggered honest self-assessment and systematic feature removal plan. |
-| [Picker Text Overflow](docs/debug-flow-example-picker-overflow.md) | code-foundations | DEBUG task: Root cause analysis revealed the codebase already had the correct pattern—the fix was applying it consistently. |
-| [Picker Focus Bug](docs/debug-flow-example-picker-focus.md) | code-foundations | DEBUG task: Scientific Debugging Method—hypothesis formation, verification via code search, then targeted fix. |
-| [Window Picker Plan](docs/prerequisites-example-window-picker-plan.md) | cc-construction-prerequisites | PLAN task: Phased implementation plan with checkpoint gates, risk register, and explicit inputs/outputs for each phase. |
+| Example | Type | Shows |
+|---------|------|-------|
+| [Picker History Review](docs/review-example-picker-history-plan.md) ⭐ | REVIEW | Multi-skill chaining, 4 violations, 3 warnings |
+| [Border Window Cleanup](docs/refactor-example-border-cleanup.md) | REFACTOR | CHECKER gates, McCabe complexity |
+| [Tab Indicator Removal](docs/refactor-example-tab-indicator-removal.md) | REFACTOR | Discipline recovery, systematic removal |
+| [Picker Text Overflow](docs/debug-flow-example-picker-overflow.md) | DEBUG | Root cause analysis, pattern matching |
+| [Picker Focus Bug](docs/debug-flow-example-picker-focus.md) | DEBUG | Scientific debugging method |
+| [Window Picker Plan](docs/prerequisites-example-window-picker-plan.md) | PLAN | Phased plan with checkpoints |
 
-## Skills
+## How It Works
 
-| Skill | Purpose | Example Prompt |
-|-------|---------|----------------|
-| [**code-foundations**](skills/code-foundations/SKILL.md) | Master dispatcher | "Use code-foundations to help me fix this bug" |
-| [**cc-developer-character**](skills/cc-developer-character/SKILL.md) | Mindset and discipline | "I'm stuck debugging for hours, check my developer-character" |
-| [**cc-construction-prerequisites**](skills/cc-construction-prerequisites/SKILL.md) | Requirements and planning | "Check our construction-prerequisites before we start coding" |
-| [**cc-pseudocode-programming**](skills/cc-pseudocode-programming/SKILL.md) | Design routines first | "Use pseudocode-programming to design this function" |
-| [**cc-routine-and-class-design**](skills/cc-routine-and-class-design/SKILL.md) | High-quality interfaces | "Review this class using routine-and-class-design" |
-| [**cc-control-flow-quality**](skills/cc-control-flow-quality/SKILL.md) | Clean control structures | "Check the control-flow-quality of this nested logic" |
-| [**cc-data-organization**](skills/cc-data-organization/SKILL.md) | Variables, naming, types | "Review data-organization for these variables" |
-| [**cc-defensive-programming**](skills/cc-defensive-programming/SKILL.md) | Error handling | "Check defensive-programming for this input validation" |
-| [**cc-code-layout-and-style**](skills/cc-code-layout-and-style/SKILL.md) | Formatting and comments | "Review code-layout-and-style for this file" |
-| [**cc-quality-practices**](skills/cc-quality-practices/SKILL.md) | Reviews, testing, debugging | "Use quality-practices to debug this issue" |
-| [**cc-refactoring-guidance**](skills/cc-refactoring-guidance/SKILL.md) | Safe refactoring | "Should I refactor or rewrite? Check refactoring-guidance" |
-| [**cc-integration-practices**](skills/cc-integration-practices/SKILL.md) | Integration and builds | "Review our integration-practices for this merge" |
-| [**cc-performance-tuning**](skills/cc-performance-tuning/SKILL.md) | Measure-first optimization | "This is too slow, use performance-tuning to optimize" |
+### DEBUG
+```
+User: "X isn't working"
+  → code-foundations classifies as DEBUG
+  → cc-developer-character checks mindset
+  → cc-quality-practices: hypothesis → verify → fix
+```
+
+### WRITE
+```
+User: "Build feature X"
+  → code-foundations classifies as WRITE
+  → cc-construction-prerequisites: requirements check
+  → cc-pseudocode-programming: design first
+  → CHECKER gates before done
+```
+
+### REVIEW
+```
+User: "Review this code"
+  → cc-quality-practices (CHECKER mode)
+  → cc-routine-and-class-design (CHECKER mode)
+  → Output: violations, warnings, fixes
+```
+
+### REFACTOR
+```
+User: "Clean up this code"
+  → cc-refactoring-guidance: plan steps
+  → Execute one change at a time
+  → CHECKER gates verify quality preserved
+```
 
 ## Source
 
 Based on *Code Complete, 2nd Edition* by Steve McConnell.
+
+## License
+
+MIT
