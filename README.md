@@ -44,18 +44,18 @@ User: "Clean this up with foundations"
 | Skill | Purpose | Example |
 |-------|---------|---------|
 | **code-foundations** | Master dispatcher | "use foundations to [anything]" |
-| **cc-developer-character** | Mindset and discipline | "use dev character to write a commit message" |
+| **cc-developer-character** | Mindset and discipline | "use dev character to check my approach" |
 | **cc-construction-prerequisites** | Requirements and planning | "use prereqs to review this plan" |
-| **cc-pseudocode-programming** | Design routines first | "use pseudocode to design this function" |
-| **cc-quality-practices** | Reviews, testing, debugging | "use quality practices to review this PR" |
-| **cc-routine-and-class-design** | High-quality interfaces | "use routine design to check this class" |
-| **cc-control-flow-quality** | Clean control structures | "use control flow to simplify this logic" |
-| **cc-data-organization** | Variables, naming, types | "use data org to review these variables" |
-| **cc-defensive-programming** | Error handling | "use defensive programming on this input" |
-| **cc-code-layout-and-style** | Formatting and comments | "use layout style to clean up this file" |
+| **cc-pseudocode-programming** | Design routines first | "use pseudocode to design this feature" |
+| **cc-quality-practices** | Reviews, testing, debugging | "use quality practices to review this code" |
+| **cc-routine-and-class-design** | High-quality interfaces | "use routine design to review this code" |
+| **cc-control-flow-quality** | Clean control structures | "use control flow to review this code" |
+| **cc-data-organization** | Variables, naming, types | "use data org to review this code" |
+| **cc-defensive-programming** | Error handling | "use defensive programming to review this code" |
+| **cc-code-layout-and-style** | Formatting and comments | "use layout style to review this code" |
 | **cc-refactoring-guidance** | Safe refactoring | "use refactoring to clean this up" |
-| **cc-integration-practices** | Integration and builds | "use integration practices for this merge" |
-| **cc-performance-tuning** | Measure-first optimization | "use perf tuning, this is too slow" |
+| **cc-integration-practices** | Integration and builds | "use integration to review this merge" |
+| **cc-performance-tuning** | Measure-first optimization | "use perf tuning, this is slow" |
 
 ---
 
