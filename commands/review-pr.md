@@ -10,15 +10,17 @@ allowed-tools: ["Bash", "Glob", "Grep", "Read", "Task", "Skill"]
 
 ---
 
-## Phase 1: Invoke oberagent
+## Phase 1: Invoke oberagent (if available)
 
-**YOU MUST INVOKE THE OBERAGENT SKILL FIRST.**
+**If oberskills plugin is installed, invoke oberagent first:**
 
 ```
 Skill(oberskills:oberagent)
 ```
 
 This ensures proper agent dispatch with validated prompts.
+
+**If oberskills is NOT installed:** Skip to Phase 2. The review will still work - oberagent adds validation but isn't required.
 
 ---
 
@@ -216,14 +218,13 @@ After ALL agents complete, combine their findings:
 
 ## MANDATORY STEPS (DO NOT SKIP)
 
-1. **Invoke oberagent skill** - Validates agent dispatch
+1. **Invoke oberagent skill** - If oberskills installed (validates agent dispatch)
 2. **Get PR diff** - Content for agents to review
-3. **Validate prompts** - Check against oberagent checklist
+3. **Validate prompts** - Check against oberagent checklist (if oberagent loaded)
 4. **Dispatch ALL 6 agents in parallel** - Use Task tool
 5. **Aggregate results** - Combine into unified report
 
 **DO NOT:**
-- Skip oberagent invocation
 - Skip agent dispatch and review code yourself
 - Launch agents sequentially
 - Omit skill invocation from agent prompts
