@@ -1,274 +1,273 @@
 ---
-description: "Comprehensive multi-dimensional PR review. Dispatches parallel agents for security, performance, maintainability, error handling, clarity, correctness, tests, types, and comments. Use before merging."
+description: "Comprehensive multi-dimensional PR review. Dispatches parallel agents for security, performance, maintainability, error handling, clarity, and correctness. Use before merging."
 argument-hint: "[aspects...] [--parallel]"
 allowed-tools: ["Bash", "Glob", "Grep", "Read", "Task"]
 ---
 
 # Review PR (Level 3 - Full Review)
 
-Comprehensive multi-dimensional review using parallel specialized agents. Each agent uses code-foundations skills as evaluation lenses.
+**MANDATORY:** This command MUST dispatch specialized review agents using the Task tool. DO NOT perform the review yourself. DO NOT skip agent dispatch.
 
-**Arguments:** "$ARGUMENTS"
-- Aspects: `security`, `performance`, `maintainability`, `errors`, `clarity`, `correctness`, `tests`, `types`, `comments`, `all`
-- Flags: `--parallel` (launch all agents simultaneously)
+## Phase 1: Get PR Diff
 
----
-
-## Execution Checklist
-
-### Phase 1: Determine Scope
-
-- [ ] **1.1** Identify PR scope:
-  ```bash
-  # Check if PR exists
-  gh pr view --json number,title,baseRefName,headRefName 2>/dev/null
-
-  # Get changed files
-  git diff --name-only $(git merge-base HEAD main)..HEAD
-
-  # Get full diff for review
-  git diff $(git merge-base HEAD main)..HEAD
-  ```
-
-- [ ] **1.2** Parse arguments for requested aspects (default: `all`)
-
-- [ ] **1.3** Identify file types to determine applicable reviews:
-  - Test files present? → Include test-reviewer
-  - Type definitions present? → Include type-reviewer
-  - Significant comments? → Include comment-reviewer
-
----
-
-### Phase 2: Launch Review Agents
-
-**Use oberagent skill for agent dispatch.**
-
-**IMPORTANT:** When launching agents, invoke oberagent first to ensure proper orchestration.
-
-#### Core Agents (Always Run)
-
-- [ ] **2.1** Launch **security-reviewer**:
-  ```
-  Focus: Input validation, injection, auth, secrets, OWASP top 10
-  Skills: cc-defensive-programming
-  Priority: CRITICAL findings block merge
-  ```
-
-- [ ] **2.2** Launch **performance-reviewer**:
-  ```
-  Focus: Big-O complexity, algorithms, scaling, resource usage
-  Skills: cc-performance-tuning, aposd-optimizing-critical-paths
-  Priority: Hot path issues are CRITICAL
-  ```
-
-- [ ] **2.3** Launch **maintainability-reviewer**:
-  ```
-  Focus: Complexity symptoms, module depth, cohesion, coupling
-  Skills: aposd-reviewing-module-design, cc-routine-and-class-design
-  Priority: Design issues are IMPORTANT
-  ```
-
-- [ ] **2.4** Launch **error-handling-reviewer**:
-  ```
-  Focus: Silent failures, catch blocks, error propagation
-  Skills: cc-defensive-programming, aposd-simplifying-complexity
-  Priority: Silent failures are CRITICAL
-  ```
-
-- [ ] **2.5** Launch **clarity-reviewer**:
-  ```
-  Focus: Naming precision, comment quality, formatting, readability
-  Skills: aposd-improving-code-clarity, cc-code-layout-and-style
-  Priority: Most are SUGGESTION unless severely unclear
-  ```
-
-- [ ] **2.6** Launch **correctness-reviewer**:
-  ```
-  Focus: Requirements, concurrency, boundaries, edge cases, resources
-  Skills: aposd-verifying-correctness
-  Priority: Correctness issues are CRITICAL
-  ```
-
-#### Conditional Agents (If Applicable)
-
-- [ ] **2.7** If test files changed, launch **test-reviewer**:
-  ```
-  Focus: Test coverage, test quality, missing edge cases
-  Priority: Coverage gaps are IMPORTANT
-  ```
-
-- [ ] **2.8** If types added/modified, launch **type-reviewer**:
-  ```
-  Focus: Type design, encapsulation, invariants
-  Priority: Type design issues are IMPORTANT
-  ```
-
-- [ ] **2.9** Launch **comment-reviewer**:
-  ```
-  Focus: Comment accuracy, staleness, completeness
-  Priority: Stale comments are IMPORTANT
-  ```
-
----
-
-### Phase 3: Monitor Agent Progress
-
-- [ ] **3.1** Track agent completion status
-
-- [ ] **3.2** If `--parallel` not specified, show progress:
-  ```
-  [1/6] security-reviewer: Running...
-  [2/6] performance-reviewer: Running...
-  ...
-  ```
-
----
-
-### Phase 4: Aggregate Results
-
-- [ ] **4.1** Collect all agent reports
-
-- [ ] **4.2** Deduplicate overlapping findings
-
-- [ ] **4.3** Sort by severity (CRITICAL → IMPORTANT → SUGGESTION)
-
-- [ ] **4.4** Produce unified report:
-  ```markdown
-  # PR Review Report
-
-  ## Summary
-  - **PR:** [title]
-  - **Branch:** [head] → [base]
-  - **Files Changed:** [count]
-  - **Agents Run:** [list]
-
-  ## Overall Verdict: [APPROVE / REQUEST CHANGES / BLOCKED]
-
-  ---
-
-  ## Critical Issues ([count]) - Must Fix Before Merge
-
-  ### Security
-  - [file:line] - [issue]
-
-  ### Correctness
-  - [file:line] - [issue]
-
-  ### Error Handling
-  - [file:line] - [issue]
-
-  ---
-
-  ## Important Issues ([count]) - Should Fix
-
-  ### Performance
-  - [file:line] - [issue]
-
-  ### Maintainability
-  - [file:line] - [issue]
-
-  ### Tests
-  - [file:line] - [issue]
-
-  ---
-
-  ## Suggestions ([count]) - Consider
-
-  ### Clarity
-  - [file:line] - [suggestion]
-
-  ### Comments
-  - [file:line] - [suggestion]
-
-  ---
-
-  ## Positive Patterns
-  - [what's good about this PR]
-
-  ---
-
-  ## Action Plan
-
-  1. **Critical (blocking):**
-     - [ ] [specific fix]
-
-  2. **Important:**
-     - [ ] [specific fix]
-
-  3. **After fixes:**
-     - [ ] Re-run: `/review-pr security errors correctness`
-  ```
-
----
-
-### Phase 5: Verdict Logic
-
-- [ ] **5.1** Determine verdict:
-
-  | Condition | Verdict |
-  |-----------|---------|
-  | Any CRITICAL issues | **BLOCKED** |
-  | IMPORTANT issues only | **REQUEST CHANGES** |
-  | SUGGESTIONS only | **APPROVE** (with comments) |
-  | No issues | **APPROVE** |
-
-- [ ] **5.2** If BLOCKED, highlight what must be fixed
-
-- [ ] **5.3** If REQUEST CHANGES, explain impact of not fixing
-
----
-
-## Review Dimensions Reference
-
-| Dimension | Agent | Skills Used | Critical If... |
-|-----------|-------|-------------|----------------|
-| Security | security-reviewer | cc-defensive-programming | Any vulnerability |
-| Performance | performance-reviewer | cc-performance-tuning, aposd-optimizing-critical-paths | O(n²)+ in hot path |
-| Maintainability | maintainability-reviewer | aposd-reviewing-module-design, cc-routine-and-class-design | Severe complexity |
-| Error Handling | error-handling-reviewer | cc-defensive-programming, aposd-simplifying-complexity | Silent failure |
-| Clarity | clarity-reviewer | aposd-improving-code-clarity, cc-code-layout-and-style | Rarely critical |
-| Correctness | correctness-reviewer | aposd-verifying-correctness | Any correctness bug |
-| Tests | test-reviewer | cc-quality-practices | Missing critical coverage |
-| Types | type-reviewer | cc-routine-and-class-design | Broken invariants |
-| Comments | comment-reviewer | aposd-improving-code-clarity | Dangerous staleness |
-
----
-
-## Usage Examples
+First, get the diff content that will be passed to agents:
 
 ```bash
-# Full review (all dimensions)
-/review-pr
+# Get PR info
+gh pr view --json number,title,baseRefName,headRefName 2>/dev/null || echo "No PR - reviewing branch changes"
 
-# Full review, all agents in parallel
-/review-pr --parallel
+# Get changed files
+git diff --name-only $(git merge-base HEAD main)..HEAD
 
-# Specific dimensions only
-/review-pr security errors
-/review-pr performance maintainability
-/review-pr tests comments
+# Save diff to variable for agents
+DIFF=$(git diff $(git merge-base HEAD main)..HEAD)
+```
 
-# After fixing critical issues, re-check specific areas
-/review-pr security correctness errors
+Store the diff output - you will pass it to each agent.
+
+---
+
+## Phase 2: Dispatch Review Agents
+
+**YOU MUST USE THE TASK TOOL TO DISPATCH THESE AGENTS IN PARALLEL.**
+
+Launch ALL of the following agents simultaneously in a SINGLE message with multiple Task tool calls:
+
+### Agent 1: security-reviewer
+
+```
+Task tool call:
+- subagent_type: "general-purpose"
+- description: "Security review"
+- prompt: |
+    You are a security reviewer. Review this git diff for security vulnerabilities.
+
+    Use the security-reviewer agent prompt from agents/security-reviewer.md as your guide.
+
+    Check for:
+    - Input validation issues
+    - Injection vulnerabilities (SQL, command, XSS)
+    - Auth/authz bypasses
+    - Secrets exposure
+    - Path traversal
+
+    GIT DIFF TO REVIEW:
+    [paste the diff here]
+
+    Output format:
+    ## Security Review
+    ### Critical: [list or "None"]
+    ### Important: [list or "None"]
+    ### Suggestions: [list or "None"]
+    ### Verdict: SECURE / CONCERNS / VULNERABLE
+```
+
+### Agent 2: performance-reviewer
+
+```
+Task tool call:
+- subagent_type: "general-purpose"
+- description: "Performance review"
+- prompt: |
+    You are a performance reviewer. Review this git diff for performance issues.
+
+    Use the performance-reviewer agent prompt from agents/performance-reviewer.md as your guide.
+
+    Check for:
+    - O(n²) or worse algorithms
+    - Nested loops
+    - Database/API calls inside loops
+    - Missing caching opportunities
+    - Resource-intensive operations in hot paths
+
+    GIT DIFF TO REVIEW:
+    [paste the diff here]
+
+    Output format:
+    ## Performance Review
+    ### Critical: [list or "None"]
+    ### Important: [list or "None"]
+    ### Suggestions: [list or "None"]
+    ### Verdict: OPTIMAL / ACCEPTABLE / CONCERNING / SLOW
+```
+
+### Agent 3: maintainability-reviewer
+
+```
+Task tool call:
+- subagent_type: "general-purpose"
+- description: "Maintainability review"
+- prompt: |
+    You are a maintainability reviewer. Review this git diff for design quality.
+
+    Use the maintainability-reviewer agent prompt from agents/maintainability-reviewer.md as your guide.
+
+    Check for:
+    - Complexity symptoms (change amplification, cognitive load, unknown unknowns)
+    - Shallow modules (interface ≈ implementation)
+    - Information leakage
+    - Cohesion/coupling issues
+    - Parameters > 7
+    - Inheritance depth > 3
+
+    GIT DIFF TO REVIEW:
+    [paste the diff here]
+
+    Output format:
+    ## Maintainability Review
+    ### Critical: [list or "None"]
+    ### Important: [list or "None"]
+    ### Suggestions: [list or "None"]
+    ### Verdict: EXCELLENT / GOOD / CONCERNING / POOR
+```
+
+### Agent 4: error-handling-reviewer
+
+```
+Task tool call:
+- subagent_type: "general-purpose"
+- description: "Error handling review"
+- prompt: |
+    You are an error handling reviewer. Review this git diff for error handling issues.
+
+    Use the error-handling-reviewer agent prompt from agents/error-handling-reviewer.md as your guide.
+
+    Check for:
+    - Empty catch blocks
+    - Silent failures (errors swallowed)
+    - Broad exception catching
+    - Missing error context
+    - Inconsistent error strategies
+
+    GIT DIFF TO REVIEW:
+    [paste the diff here]
+
+    Output format:
+    ## Error Handling Review
+    ### Critical: [list or "None"]
+    ### Important: [list or "None"]
+    ### Suggestions: [list or "None"]
+    ### Verdict: ROBUST / ADEQUATE / FRAGILE / BROKEN
+```
+
+### Agent 5: clarity-reviewer
+
+```
+Task tool call:
+- subagent_type: "general-purpose"
+- description: "Clarity review"
+- prompt: |
+    You are a clarity reviewer. Review this git diff for readability issues.
+
+    Use the clarity-reviewer agent prompt from agents/clarity-reviewer.md as your guide.
+
+    Check for:
+    - Unclear variable/function names
+    - Missing or stale comments
+    - Inconsistent formatting
+    - Complex expressions needing explanation
+
+    GIT DIFF TO REVIEW:
+    [paste the diff here]
+
+    Output format:
+    ## Clarity Review
+    ### Critical: [list or "None"]
+    ### Important: [list or "None"]
+    ### Suggestions: [list or "None"]
+    ### Verdict: CLEAR / READABLE / CONFUSING / OBSCURE
+```
+
+### Agent 6: correctness-reviewer
+
+```
+Task tool call:
+- subagent_type: "general-purpose"
+- description: "Correctness review"
+- prompt: |
+    You are a correctness reviewer. Review this git diff for bugs and logic errors.
+
+    Use the correctness-reviewer agent prompt from agents/correctness-reviewer.md as your guide.
+
+    Check for:
+    - Boundary conditions (empty, null, max size)
+    - Off-by-one errors
+    - Race conditions
+    - Resource leaks
+    - Null/undefined safety
+
+    GIT DIFF TO REVIEW:
+    [paste the diff here]
+
+    Output format:
+    ## Correctness Review
+    ### Critical: [list or "None"]
+    ### Important: [list or "None"]
+    ### Suggestions: [list or "None"]
+    ### Verdict: VERIFIED / LIKELY CORRECT / UNCERTAIN / BUGGY
 ```
 
 ---
 
-## Integration with Workflow
+## Phase 3: Aggregate Results
 
-**Before creating PR:**
-```
-1. /check-commit          # Quick sanity check
-2. /review-changes        # Medium review of all changes
-3. /review-pr            # Full comprehensive review
-4. Fix any issues found
-5. Create PR
+After ALL agents complete, combine their findings into a unified report:
+
+```markdown
+# PR Review Report
+
+## Summary
+- **PR:** [title]
+- **Branch:** [head] → [base]
+- **Files Changed:** [count]
+- **Agents Run:** security, performance, maintainability, errors, clarity, correctness
+
+## Overall Verdict: [APPROVE / REQUEST CHANGES / BLOCKED]
+
+---
+
+## Critical Issues - Must Fix Before Merge
+[Combine all CRITICAL findings from all agents]
+
+## Important Issues - Should Fix
+[Combine all IMPORTANT findings from all agents]
+
+## Suggestions - Consider
+[Combine all SUGGESTIONS from all agents]
+
+## Positive Patterns
+[Note good patterns observed]
+
+---
+
+## Action Plan
+1. Fix critical issues
+2. Address important issues
+3. Re-run: `/review-pr` to verify fixes
 ```
 
-**After PR feedback:**
-```
-1. Make requested changes
-2. /review-changes --staged  # Review just the fixes
-3. /review-pr [specific-aspects]  # Re-check problem areas
-4. Push updates
-```
+---
+
+## Verdict Logic
+
+| Condition | Verdict |
+|-----------|---------|
+| Any CRITICAL from any agent | **BLOCKED** |
+| IMPORTANT only, no CRITICAL | **REQUEST CHANGES** |
+| SUGGESTIONS only | **APPROVE** with comments |
+| No issues | **APPROVE** |
+
+---
+
+## REMINDER
+
+**DO NOT:**
+- Skip agent dispatch and review the code yourself
+- Launch agents sequentially - use parallel dispatch
+- Summarize without actually running agents
+
+**YOU MUST:**
+- Use the Task tool to dispatch all 6 agents
+- Pass the actual git diff content to each agent
+- Wait for all agents to complete
+- Aggregate their findings into the unified report

@@ -155,3 +155,13 @@ Based on *Code Complete, 2nd Edition* by Steve McConnell.
 ## License
 
 MIT
+
+---
+
+## Beta
+
+Features in development:
+
+- **Three-level code review system** - Tiered review depth for different code change scopes
+- **APOSD skills** - A Philosophy of Software Design integration
+- **Checklist-based dispatcher** - Systematic task routing with verification checklists

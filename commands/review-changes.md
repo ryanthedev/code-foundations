@@ -1,185 +1,193 @@
 ---
-description: "Medium-depth review of staged or unstaged changes. Checks design, quality, error handling, clarity, and correctness. Use before committing or creating PR."
+description: "Medium-depth review of staged or unstaged changes. Dispatches parallel agents for maintainability, error handling, and correctness. Use before committing or creating PR."
 argument-hint: "[--staged | files...]"
 allowed-tools: ["Bash", "Glob", "Grep", "Read", "Task"]
 ---
 
 # Review Changes (Level 2 - Medium Review)
 
-Medium-depth review of current changes. Dispatches 2-3 focused agents for parallel analysis.
+**MANDATORY:** This command MUST dispatch specialized review agents using the Task tool. DO NOT perform the review yourself. DO NOT skip agent dispatch.
 
-**Scope:** "$ARGUMENTS" (default: unstaged changes via `git diff`)
+## Phase 1: Get Changes
 
----
+First, get the diff content that will be passed to agents:
 
-## Execution Checklist
+```bash
+# Determine scope based on arguments
+if [[ "$ARGUMENTS" == "--staged" ]]; then
+  # Staged changes only
+  git diff --cached
+elif [[ -n "$ARGUMENTS" ]]; then
+  # Specific files
+  git diff $ARGUMENTS
+else
+  # Default: unstaged changes
+  git diff
+fi
+```
 
-### Phase 1: Determine Scope
-
-- [ ] **1.1** Identify what to review:
-  ```bash
-  # Check arguments
-  if [[ "$ARGUMENTS" == "--staged" ]]; then
-    git diff --cached --name-only
-  elif [[ -n "$ARGUMENTS" ]]; then
-    # Specific files provided
-    echo "$ARGUMENTS"
-  else
-    # Default: unstaged changes
-    git diff --name-only
-  fi
-  ```
-
-- [ ] **1.2** Get the actual diff content for review
-
-- [ ] **1.3** Identify file types and languages
+Store the diff output - you will pass it to each agent.
 
 ---
 
-### Phase 2: Launch Review Agents
+## Phase 2: Dispatch Review Agents
 
-**Use oberagent skill if available for agent dispatch.**
+**YOU MUST USE THE TASK TOOL TO DISPATCH THESE AGENTS IN PARALLEL.**
 
-Launch these agents in parallel:
+Launch ALL 3 agents simultaneously in a SINGLE message with multiple Task tool calls:
 
-- [ ] **2.1** Launch **maintainability-reviewer** agent:
-  ```
-  Focus: Design depth, complexity symptoms, cohesion/coupling
-  Skills: aposd-reviewing-module-design, cc-routine-and-class-design
-  ```
+### Agent 1: maintainability-reviewer
 
-- [ ] **2.2** Launch **error-handling-reviewer** agent:
-  ```
-  Focus: Silent failures, catch blocks, error propagation
-  Skills: cc-defensive-programming, aposd-simplifying-complexity
-  ```
+```
+Task tool call:
+- subagent_type: "general-purpose"
+- description: "Maintainability review"
+- prompt: |
+    You are a maintainability reviewer. Review this git diff for design quality.
 
-- [ ] **2.3** Launch **correctness-reviewer** agent:
-  ```
-  Focus: Requirements coverage, boundaries, edge cases
-  Skills: aposd-verifying-correctness
-  ```
+    Check for:
+    - Complexity symptoms (change amplification, cognitive load, unknown unknowns)
+    - Shallow modules (interface ≈ implementation)
+    - Information leakage
+    - Cohesion/coupling issues
+    - Parameters > 7
+    - Inheritance depth > 3
 
----
+    GIT DIFF TO REVIEW:
+    [paste the diff here]
 
-### Phase 3: Quick Local Checks (While Agents Run)
+    Output format:
+    ## Maintainability Review
+    ### Critical: [list or "None"]
+    ### Important: [list or "None"]
+    ### Suggestions: [list or "None"]
+    ### Verdict: EXCELLENT / GOOD / CONCERNING / POOR
+```
 
-Run these checks directly (no agent needed):
+### Agent 2: error-handling-reviewer
 
-- [ ] **3.1** Clarity quick check:
-  - Variable names precise?
-  - Comments present for non-obvious code?
-  - Formatting consistent?
+```
+Task tool call:
+- subagent_type: "general-purpose"
+- description: "Error handling review"
+- prompt: |
+    You are an error handling reviewer. Review this git diff for error handling issues.
 
-- [ ] **3.2** Style quick check:
-  - Follows project conventions?
-  - No obvious violations?
+    Check for:
+    - Empty catch blocks
+    - Silent failures (errors swallowed)
+    - Broad exception catching
+    - Missing error context
+    - Inconsistent error strategies
 
----
+    GIT DIFF TO REVIEW:
+    [paste the diff here]
 
-### Phase 4: Aggregate Results
+    Output format:
+    ## Error Handling Review
+    ### Critical: [list or "None"]
+    ### Important: [list or "None"]
+    ### Suggestions: [list or "None"]
+    ### Verdict: ROBUST / ADEQUATE / FRAGILE / BROKEN
+```
 
-- [ ] **4.1** Collect agent results
+### Agent 3: correctness-reviewer
 
-- [ ] **4.2** Merge into unified report:
-  ```markdown
-  # Review Changes Report
+```
+Task tool call:
+- subagent_type: "general-purpose"
+- description: "Correctness review"
+- prompt: |
+    You are a correctness reviewer. Review this git diff for bugs and logic errors.
 
-  ## Scope
-  [files reviewed]
+    Check for:
+    - Boundary conditions (empty, null, max size)
+    - Off-by-one errors
+    - Race conditions
+    - Resource leaks
+    - Null/undefined safety
 
-  ## Critical Issues (Must Fix)
-  - [agent]: [issue] at [file:line]
+    GIT DIFF TO REVIEW:
+    [paste the diff here]
 
-  ## Important Issues (Should Fix)
-  - [agent]: [issue] at [file:line]
-
-  ## Suggestions
-  - [agent]: [suggestion] at [file:line]
-
-  ## Positive Patterns
-  - [what's good]
-
-  ## Verdict
-  [READY / NEEDS WORK / BLOCKED]
-  ```
-
----
-
-### Phase 5: Provide Action Plan
-
-- [ ] **5.1** If issues found:
-  ```markdown
-  ## Recommended Actions
-
-  1. **Fix Critical Issues First:**
-     - [specific action items]
-
-  2. **Address Important Issues:**
-     - [specific action items]
-
-  3. **Consider Suggestions:**
-     - [optional improvements]
-
-  4. **Re-run Review:**
-     After fixes, run `/review-changes` again to verify.
-  ```
-
-- [ ] **5.2** If clean:
-  ```markdown
-  ## Ready to Commit
-
-  Changes look good. Proceed with:
-  1. Stage changes: `git add [files]`
-  2. Commit with descriptive message
-  3. Consider `/review-pr` before creating PR
-  ```
+    Output format:
+    ## Correctness Review
+    ### Critical: [list or "None"]
+    ### Important: [list or "None"]
+    ### Suggestions: [list or "None"]
+    ### Verdict: VERIFIED / LIKELY CORRECT / UNCERTAIN / BUGGY
+```
 
 ---
 
-## Dimension Checklist (What Agents Check)
+## Phase 3: Quick Local Checks (While Agents Run)
 
-### Maintainability (maintainability-reviewer)
-
-| Check | Skill | Severity |
-|-------|-------|----------|
-| Shallow modules | aposd-reviewing-module-design | IMPORTANT |
-| Information leakage | aposd-reviewing-module-design | IMPORTANT |
-| Pass-through methods | aposd-reviewing-module-design | SUGGESTION |
-| Cohesion issues | cc-routine-and-class-design | IMPORTANT |
-| High coupling | cc-routine-and-class-design | IMPORTANT |
-| Deep inheritance (>3) | cc-routine-and-class-design | IMPORTANT |
-| Too many parameters (>7) | cc-routine-and-class-design | CRITICAL |
-
-### Error Handling (error-handling-reviewer)
-
-| Check | Skill | Severity |
-|-------|-------|----------|
-| Empty catch blocks | cc-defensive-programming | CRITICAL |
-| Silent failures | aposd-simplifying-complexity | CRITICAL |
-| Broad exception catching | cc-defensive-programming | IMPORTANT |
-| Missing error context | cc-defensive-programming | IMPORTANT |
-| Swallowed errors | aposd-simplifying-complexity | CRITICAL |
-
-### Correctness (correctness-reviewer)
-
-| Check | Skill | Severity |
-|-------|-------|----------|
-| Boundary conditions | aposd-verifying-correctness | CRITICAL |
-| Null/undefined handling | aposd-verifying-correctness | CRITICAL |
-| Concurrency issues | aposd-verifying-correctness | CRITICAL |
-| Resource leaks | aposd-verifying-correctness | IMPORTANT |
-| Edge cases unhandled | aposd-verifying-correctness | IMPORTANT |
+While waiting for agents, do a quick scan for:
+- Variable names unclear?
+- Comments present for complex code?
+- Formatting consistent?
 
 ---
 
-## Verdict Criteria
+## Phase 4: Aggregate Results
 
-| Verdict | Criteria |
-|---------|----------|
-| **READY** | No critical or important issues |
-| **NEEDS WORK** | Important issues found, no critical |
-| **BLOCKED** | Critical issues found |
+After ALL agents complete, combine their findings:
+
+```markdown
+# Review Changes Report
+
+## Scope
+[files reviewed]
+
+## Overall Verdict: [READY / NEEDS WORK / BLOCKED]
+
+---
+
+## Critical Issues - Must Fix
+[Combine all CRITICAL findings]
+
+## Important Issues - Should Fix
+[Combine all IMPORTANT findings]
+
+## Suggestions
+[Combine all SUGGESTIONS]
+
+## Positive Patterns
+[Note good patterns]
+
+---
+
+## Action Plan
+1. Fix critical issues
+2. Address important issues
+3. Re-run: `/review-changes` to verify
+```
+
+---
+
+## Verdict Logic
+
+| Condition | Verdict |
+|-----------|---------|
+| Any CRITICAL | **BLOCKED** |
+| IMPORTANT only | **NEEDS WORK** |
+| SUGGESTIONS only | **READY** |
+| No issues | **READY** |
+
+---
+
+## REMINDER
+
+**DO NOT:**
+- Skip agent dispatch and review the code yourself
+- Launch agents sequentially - use parallel dispatch
+- Summarize without actually running agents
+
+**YOU MUST:**
+- Use the Task tool to dispatch all 3 agents
+- Pass the actual git diff content to each agent
+- Wait for all agents to complete
+- Aggregate their findings into the unified report
 
 ---
 
