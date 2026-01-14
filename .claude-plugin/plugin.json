@@ -1,10 +1,10 @@
 {
   "name": "code-foundations",
-  "version": "1.6.0",
-  "description": "Software engineering skills from Code Complete and A Philosophy of Software Design for disciplined code construction",
+  "version": "1.7.0",
+  "description": "Software engineering skills from Code Complete and A Philosophy of Software Design. Includes three-level code review system (check-commit, review-changes, review-pr) with specialized agents for security, performance, maintainability, error handling, clarity, and correctness.",
   "author": {
     "name": "ryanthedev"
   },
   "license": "MIT",
-  "keywords": ["code-complete", "aposd", "skills", "software-engineering", "best-practices", "design-philosophy"]
+  "keywords": ["code-complete", "aposd", "skills", "software-engineering", "best-practices", "design-philosophy", "code-review", "pr-review"]
 }
