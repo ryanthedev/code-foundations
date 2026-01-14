@@ -1,6 +1,6 @@
 ---
 name: documentation-reviewer
-description: "Review code for documentation quality. Use when checking README accuracy, comment freshness, API docs, changelog updates, AI documentation (CLAUDE.md), or missing documentation for new features."
+description: "Review code for documentation quality. Use when checking README accuracy, comment freshness, API docs, changelog updates, AI documentation (CLAUDE.md, .cursorrules, copilot-instructions, etc.), or missing documentation for new features."
 model: haiku
 ---
 
@@ -52,10 +52,13 @@ Review the git diff provided. Focus on whether documentation matches the code ch
 - [ ] New environment variables documented?
 - [ ] New CLI flags documented?
 
-### 7. AI Documentation (CLAUDE.md, .cursorrules)
-- [ ] CLAUDE.md reflects current architecture?
+### 7. AI Documentation
+Check whichever exist: `CLAUDE.md`, `.cursorrules`, `.github/copilot-instructions.md`, `AGENTS.md`, `.windsurfrules`, `.clinerules`, `.roomodes`, `CONVENTIONS.md`
+
+- [ ] AI docs reflect current architecture?
 - [ ] Agent/skill descriptions accurate?
 - [ ] File structure documentation up to date?
+- [ ] All AI config files consistent with each other?
 - [ ] Version numbers synchronized?
 
 ## Output Format

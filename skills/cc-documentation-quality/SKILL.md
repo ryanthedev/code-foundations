@@ -1,6 +1,6 @@
 ---
 name: cc-documentation-quality
-description: "Review documentation quality including README, comments, API docs, changelog, and AI documentation (CLAUDE.md). Use when checking if documentation matches code, comments are fresh, or new features lack documentation. Based on Code Complete Ch. 32 and APOSD comments philosophy."
+description: "Review documentation quality including README, comments, API docs, changelog, and AI documentation (CLAUDE.md, .cursorrules, copilot-instructions, etc.). Use when checking if documentation matches code, comments are fresh, or new features lack documentation. Based on Code Complete Ch. 32 and APOSD comments philosophy."
 ---
 
 # Documentation Quality
@@ -65,12 +65,26 @@ Documentation rots faster than code. Stale docs are worse than no docs.
 - [ ] New environment variables documented?
 - [ ] New CLI flags documented?
 
-### 7. AI Documentation (CLAUDE.md, .cursorrules, etc.)
-- [ ] CLAUDE.md reflects current architecture?
+### 7. AI Documentation
+Check all AI config files that exist in the project:
+
+| File | Tool |
+|------|------|
+| `CLAUDE.md` | Claude Code |
+| `.cursorrules` / `.cursorignore` | Cursor |
+| `.github/copilot-instructions.md` | GitHub Copilot |
+| `AGENTS.md` | Copilot Workspace |
+| `.windsurfrules` | Windsurf |
+| `.aider.conf.yml` | Aider |
+| `.continue/config.json` | Continue.dev |
+| `.clinerules` | Cline |
+| `.roomodes` | Roo Code |
+| `CONVENTIONS.md` | Various |
+
+- [ ] AI docs reflect current architecture?
 - [ ] Agent/skill descriptions accurate?
-- [ ] Tool permissions and restrictions current?
 - [ ] File structure documentation up to date?
-- [ ] Workflow instructions still valid?
+- [ ] All AI config files consistent with each other?
 - [ ] Version numbers synchronized?
 
 ---

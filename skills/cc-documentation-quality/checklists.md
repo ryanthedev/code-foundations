@@ -32,12 +32,15 @@ Before committing, verify:
 - [ ] Bug fixes listed
 - [ ] Migration steps for breaking changes
 
-### AI Documentation Review (CLAUDE.md, .cursorrules)
+### AI Documentation Review
+Check whichever files exist: `CLAUDE.md`, `.cursorrules`, `.github/copilot-instructions.md`, `AGENTS.md`, `.windsurfrules`, `.aider.conf.yml`, `.continue/config.json`, `.clinerules`, `.roomodes`, `CONVENTIONS.md`
+
 - [ ] Architecture description matches code
 - [ ] File structure section accurate
 - [ ] Agent/skill lists complete
 - [ ] Tool permissions correct
 - [ ] Workflow instructions valid
+- [ ] All AI config files consistent with each other
 - [ ] Version synchronized with plugin.json
 
 ## Documentation Debt Indicators
