@@ -1,7 +1,7 @@
 {
   "name": "code-foundations",
-  "version": "2.0.0",
-  "description": "Software engineering skills from Code Complete and A Philosophy of Software Design. Includes three-level code review system (check-commit, review-changes, review-pr) with 7 specialized agents for security, performance, maintainability, error handling, clarity, correctness, and test coverage.",
+  "version": "2.1.0",
+  "description": "Software engineering skills from Code Complete and A Philosophy of Software Design. Includes three-level code review system (check-commit, review-changes, review-pr) with 5 consolidated agents: defensive (security+errors), quality (maintainability+clarity), correctness (bugs+tests), performance, and documentation.",
   "author": {
     "name": "ryanthedev"
   },

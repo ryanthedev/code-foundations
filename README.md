@@ -56,6 +56,42 @@ User: "Clean this up with foundations"
 | **cc-refactoring-guidance** | Safe refactoring | "use refactoring to clean this up" |
 | **cc-integration-practices** | Integration and builds | "use integration to review this merge" |
 | **cc-performance-tuning** | Measure-first optimization | "use perf tuning, this is slow" |
+| **cc-documentation-quality** | README, comments, API docs | "use doc quality to review this" |
+
+---
+
+## Three-Level Code Review System
+
+| Level | Command | Agents | Use Case |
+|-------|---------|--------|----------|
+| 1 | `/check-commit` | 1 (quick) | Pre-commit sanity check |
+| 2 | `/review-changes` | 3 (parallel) | Medium review for changes |
+| 3 | `/review-pr` | 5 (parallel) | Full PR review |
+
+### 5 Consolidated Agents (Dual Roles)
+
+| Agent | Combines | Skills |
+|-------|----------|--------|
+| **defensive-reviewer** | security + error-handling | cc-defensive-programming, aposd-simplifying-complexity |
+| **quality-reviewer** | maintainability + clarity | aposd-reviewing-module-design, cc-code-layout-and-style |
+| **correctness-reviewer** | bugs + test coverage | aposd-verifying-correctness, cc-quality-practices |
+| **performance-reviewer** | algorithms + hot paths | cc-performance-tuning, aposd-optimizing-critical-paths |
+| **documentation-reviewer** | docs + comments | cc-documentation-quality |
+
+### Output Format
+
+Issues are grouped by file with effort estimates:
+```markdown
+### src/middleware/Handler.cs
+
+1. 🔴 [CRITICAL] Line 84 - Memory amplification (defensive)
+   Fix: Add max expansion check
+   Effort: 🟢 Quick
+
+2. 🟡 [IMPORTANT] Line 58 - Silent failure (defensive)
+   Fix: Add logging
+   Effort: 🟢 Quick
+```
 
 ---
 
@@ -156,12 +192,3 @@ Based on *Code Complete, 2nd Edition* by Steve McConnell.
 
 MIT
 
----
-
-## Beta
-
-Features in development:
-
-- **Three-level code review system** - Tiered review depth for different code change scopes
-- **APOSD skills** - A Philosophy of Software Design integration
-- **Checklist-based dispatcher** - Systematic task routing with verification checklists

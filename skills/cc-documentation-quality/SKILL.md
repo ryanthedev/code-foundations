@@ -1,0 +1,114 @@
+---
+name: cc-documentation-quality
+description: "Review documentation quality including README, comments, API docs, and changelog. Use when checking if documentation matches code, comments are fresh, or new features lack documentation. Based on Code Complete Ch. 32 and APOSD comments philosophy."
+---
+
+# Documentation Quality
+
+**Source:** Code Complete Ch. 32 (Self-Documenting Code) + APOSD (Comments-First)
+
+Documentation rots faster than code. Stale docs are worse than no docs.
+
+---
+
+## Core Principle
+
+> "The purpose of comments is to explain things that aren't obvious from the code."
+> — Ousterhout, APOSD
+
+**Good documentation:**
+- Explains WHY, not WHAT
+- Uses different words than the code
+- Stays synchronized with implementation
+- Describes the non-obvious
+
+---
+
+## Documentation Checklist
+
+### 1. README Accuracy
+- [ ] Does README describe current behavior?
+- [ ] Are setup instructions still valid?
+- [ ] Do examples still work?
+- [ ] Are dependencies current?
+- [ ] Is the feature list accurate?
+
+### 2. Comment Freshness
+- [ ] Do comments match the code they describe?
+- [ ] Are TODOs still relevant or stale?
+- [ ] Do function comments match signatures?
+- [ ] Are "temporary" comments actually temporary?
+
+### 3. API Documentation
+- [ ] Public interfaces have doc comments?
+- [ ] Parameters documented with types and constraints?
+- [ ] Return values documented?
+- [ ] Exceptions/errors documented?
+- [ ] Examples provided for complex APIs?
+
+### 4. Changelog Updates
+- [ ] Breaking changes documented?
+- [ ] New features listed?
+- [ ] Bug fixes noted?
+- [ ] Migration instructions for breaking changes?
+
+### 5. Comment Quality (APOSD)
+- [ ] Comments describe non-obvious things?
+- [ ] Comments use different words than code?
+- [ ] Interface comments present (before implementation)?
+- [ ] Comments explain "why", not "what"?
+- [ ] No comments that repeat the code?
+
+### 6. Missing Documentation
+- [ ] New public APIs documented?
+- [ ] New configuration options documented?
+- [ ] New environment variables documented?
+- [ ] New CLI flags documented?
+
+---
+
+## Comment Anti-Patterns
+
+| Anti-Pattern | Example | Problem |
+|--------------|---------|---------|
+| Repeat the code | `i++ // increment i` | Zero value |
+| State the obvious | `// loop through users` | Noise |
+| Stale comment | Comment says X, code does Y | Dangerous |
+| TODO forever | `// TODO: fix this` from 2019 | Clutter |
+| Commented-out code | Dead code masquerading as comment | Confusion |
+
+---
+
+## Comment Patterns That Add Value
+
+| Pattern | Example | Value |
+|---------|---------|-------|
+| Explain rationale | `// Use insertion sort: n < 10 always` | Design decision |
+| Warn about non-obvious | `// Must call before X, else crash` | Prevent bugs |
+| Summarize algorithm | `// Binary search on sorted timestamps` | Quick understanding |
+| Document edge case | `// Empty list returns -1, not null` | Clarify behavior |
+| Reference external | `// Per RFC 7231 section 6.5.4` | Authority |
+
+---
+
+## Severity Guide
+
+| Finding | Severity |
+|---------|----------|
+| README contradicts actual behavior | CRITICAL |
+| API doc says wrong return type | CRITICAL |
+| Stale comment causes bug risk | CRITICAL |
+| New public API undocumented | IMPORTANT |
+| Breaking change not in changelog | IMPORTANT |
+| Stale TODO from distant past | SUGGESTION |
+| Could add clarifying comment | SUGGESTION |
+| Minor README improvement | SUGGESTION |
+
+---
+
+## Questions to Ask
+
+1. "If someone reads only the docs, will they use this correctly?"
+2. "If the code changes, which docs need updating?"
+3. "Does this comment tell me something the code doesn't?"
+4. "Is this TODO actionable or just noise?"

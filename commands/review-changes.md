@@ -1,126 +1,100 @@
 ---
-description: "Medium-depth review of staged or unstaged changes. Dispatches parallel agents for maintainability, error handling, and correctness. Use before committing or creating PR."
+description: "Medium-depth review with 3 parallel agents: defensive (security+errors), quality (maintainability+clarity), and correctness (bugs+tests)."
 argument-hint: "[--staged | files...]"
 allowed-tools: ["Bash", "Glob", "Grep", "Read", "Task", "Skill"]
 ---
 
 # Review Changes (Level 2 - Medium Review)
 
-**MANDATORY:** This command MUST invoke oberagent and dispatch specialized review agents. DO NOT perform the review yourself. DO NOT skip these steps.
+**MANDATORY:** Dispatch 3 specialized review agents. DO NOT review code yourself.
 
 ---
 
 ## Phase 1: Invoke oberagent (if available)
 
-**If oberskills plugin is installed, invoke oberagent first:**
-
 ```
 Skill(oberskills:oberagent)
 ```
 
-This ensures proper agent dispatch with validated prompts.
-
-**If oberskills is NOT installed:** Skip to Phase 2. The review will still work - oberagent adds validation but isn't required.
+Skip if oberskills not installed.
 
 ---
 
 ## Phase 2: Get Changes
 
-Get the diff content that will be passed to agents:
-
 ```bash
-# Determine scope based on arguments
+# Staged, specific files, or unstaged (default)
 if [[ "$ARGUMENTS" == "--staged" ]]; then
-  # Staged changes only
   git diff --cached
 elif [[ -n "$ARGUMENTS" ]]; then
-  # Specific files
   git diff $ARGUMENTS
 else
-  # Default: unstaged changes
   git diff
 fi
 ```
 
-Store the diff output - you will pass it to each agent.
+Store the diff - pass it to each agent.
 
 ---
 
-## Phase 3: Validate Agent Prompts (oberagent checklist)
+## Phase 3: Dispatch 3 Agents in Parallel
 
-Before dispatching, validate each agent prompt against oberagent checklist:
+**USE TASK TOOL - ALL 3 AGENTS IN SINGLE MESSAGE**
 
-| # | Check | Requirement |
-|---|-------|-------------|
-| 1 | Purpose is OUTCOME | What to find, not how to find it |
-| 2 | Agent type matches | general-purpose for code review |
-| 3 | Skills specified | "First invoke [skill]" in prompt |
-| 4 | Prompt ≤3 sentences | Or justified if longer |
-| 5 | No step-by-step HOW | Trust agent capability |
-| 6 | Scope provided | Diff content included |
-
----
-
-## Phase 4: Dispatch Review Agents
-
-**YOU MUST USE THE TASK TOOL TO DISPATCH ALL 3 AGENTS IN PARALLEL (single message, multiple Task calls).**
-
-### Agent 1: maintainability-reviewer
+### Agent 1: defensive-reviewer
 
 ```
-Task tool call:
+Task tool:
 - subagent_type: "general-purpose"
-- description: "Maintainability review"
+- description: "Defensive review"
 - prompt: |
-    First invoke the code-foundations skill, then read agents/maintainability-reviewer.md for your review checklist.
+    First invoke code-foundations skill, then read agents/defensive-reviewer.md.
 
-    Review this diff for design quality. Focus on: complexity symptoms, shallow modules, information leakage, cohesion/coupling, parameters >7.
+    Review for security AND error handling: input validation, injection, auth, catch blocks, silent failures.
 
     GIT DIFF:
-    [paste diff here]
+    [paste diff]
 
-    Return: VERDICT (EXCELLENT/GOOD/CONCERNING/POOR) with specific file:line references for any issues.
+    Return: VERDICT + file:line issues with Fix and Effort (🟢/🟡/🔴)
 ```
 
-### Agent 2: error-handling-reviewer
+### Agent 2: quality-reviewer
 
 ```
-Task tool call:
+Task tool:
 - subagent_type: "general-purpose"
-- description: "Error handling review"
+- description: "Quality review"
 - prompt: |
-    First invoke the code-foundations skill, then read agents/error-handling-reviewer.md for your review checklist.
+    First invoke code-foundations skill, then read agents/quality-reviewer.md.
 
-    Review this diff for error handling issues. Focus on: empty catch blocks, silent failures, broad exception catching, missing error context.
+    Review for design AND readability: complexity, cohesion, naming, comments, style, trailing newlines.
 
     GIT DIFF:
-    [paste diff here]
+    [paste diff]
 
-    Return: VERDICT (ROBUST/ADEQUATE/FRAGILE/BROKEN) with specific file:line references for any issues.
+    Return: VERDICT + file:line issues with Fix and Effort (🟢/🟡/🔴)
 ```
 
 ### Agent 3: correctness-reviewer
 
 ```
-Task tool call:
+Task tool:
 - subagent_type: "general-purpose"
 - description: "Correctness review"
 - prompt: |
-    First invoke the code-foundations skill, then read agents/correctness-reviewer.md for your review checklist.
+    First invoke code-foundations skill, then read agents/correctness-reviewer.md.
 
-    Review this diff for bugs. Focus on: boundary conditions, off-by-one errors, race conditions, resource leaks, null safety.
+    Review for bugs AND test coverage: boundaries, logic flow, duplicates, test gaps.
 
     GIT DIFF:
-    [paste diff here]
+    [paste diff]
 
-    Return: VERDICT (VERIFIED/LIKELY CORRECT/UNCERTAIN/BUGGY) with specific file:line references for any issues.
+    Return: VERDICT + file:line issues with Fix and Effort (🟢/🟡/🔴)
 ```
 
 ---
 
-## Phase 5: Aggregate Results
-
-After ALL agents complete, combine their findings:
+## Phase 4: Aggregate Results (GROUP BY FILE)
 
 ```markdown
 # Review Changes Report
@@ -128,28 +102,35 @@ After ALL agents complete, combine their findings:
 ## Scope
 [files reviewed]
 
-## Overall Verdict: [READY / NEEDS WORK / BLOCKED]
+## Verdict: [READY / NEEDS WORK / BLOCKED]
 
 ---
 
-## Critical Issues - Must Fix
-[Combine all CRITICAL findings]
+## Issues by File
 
-## Important Issues - Should Fix
-[Combine all IMPORTANT findings]
+### [filename]
 
-## Suggestions
-[Combine all SUGGESTIONS]
+1. 🔴 [CRITICAL] Line X - [issue] (agent)
+   Fix: [specific fix]
+   Effort: 🟢/🟡/🔴
 
-## Positive Patterns
-[Note good patterns]
+2. 🟡 [IMPORTANT] Line Y - [issue] (agent)
+   Fix: [suggestion]
+   Effort: 🟢/🟡/🔴
 
 ---
 
 ## Action Plan
+
+| Priority | Count |
+|----------|-------|
+| 🔴 Critical | [n] |
+| 🟡 Important | [n] |
+| 🟢 Suggestions | [n] |
+
 1. Fix critical issues
 2. Address important issues
-3. Re-run: `/review-changes` to verify
+3. Re-run: `/review-changes`
 ```
 
 ---
@@ -165,30 +146,10 @@ After ALL agents complete, combine their findings:
 
 ---
 
-## MANDATORY STEPS (DO NOT SKIP)
-
-1. **Invoke oberagent skill** - If oberskills installed (validates agent dispatch)
-2. **Get diff content** - Content for agents to review
-3. **Validate prompts** - Check against oberagent checklist (if oberagent loaded)
-4. **Dispatch ALL 3 agents in parallel** - Use Task tool
-5. **Aggregate results** - Combine into unified report
-
-**DO NOT:**
-- Skip agent dispatch and review code yourself
-- Launch agents sequentially
-- Omit skill invocation from agent prompts
-
----
-
-## Usage Examples
+## Usage
 
 ```bash
-# Review unstaged changes (default)
-/review-changes
-
-# Review staged changes only
-/review-changes --staged
-
-# Review specific files
-/review-changes src/api/handler.ts src/utils/validate.ts
+/review-changes           # Unstaged changes
+/review-changes --staged  # Staged only
+/review-changes file.ts   # Specific files
 ```

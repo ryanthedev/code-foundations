@@ -1,191 +1,131 @@
 ---
-description: "Comprehensive multi-dimensional PR review. Dispatches 7 parallel agents for security, performance, maintainability, error handling, clarity, correctness, and test coverage. Use before merging."
-argument-hint: "[aspects...] [--parallel]"
+description: "Comprehensive PR review with 5 parallel agents: defensive (security+errors), quality (maintainability+clarity), correctness (bugs+tests), performance, and documentation."
+argument-hint: "[--parallel]"
 allowed-tools: ["Bash", "Glob", "Grep", "Read", "Task", "Skill"]
 ---
 
 # Review PR (Level 3 - Full Review)
 
-**MANDATORY:** This command MUST invoke oberagent and dispatch specialized review agents. DO NOT perform the review yourself. DO NOT skip these steps.
+**MANDATORY:** Dispatch 5 specialized review agents. DO NOT review code yourself.
 
 ---
 
 ## Phase 1: Invoke oberagent (if available)
 
-**If oberskills plugin is installed, invoke oberagent first:**
-
 ```
 Skill(oberskills:oberagent)
 ```
 
-This ensures proper agent dispatch with validated prompts.
-
-**If oberskills is NOT installed:** Skip to Phase 2. The review will still work - oberagent adds validation but isn't required.
+Skip if oberskills not installed.
 
 ---
 
 ## Phase 2: Get PR Diff
 
-Get the diff content that will be passed to agents:
-
 ```bash
-# Get PR info
-gh pr view --json number,title,baseRefName,headRefName 2>/dev/null || echo "No PR - reviewing branch changes"
-
-# Get changed files list
+gh pr view --json number,title,baseRefName,headRefName 2>/dev/null || echo "No PR"
 git diff --name-only $(git merge-base HEAD main)..HEAD
-
-# Get full diff for agents
 git diff $(git merge-base HEAD main)..HEAD
 ```
 
-Store the diff output - you will pass it to each agent.
+Store the diff - pass it to each agent.
 
 ---
 
-## Phase 3: Validate Agent Prompts (oberagent checklist)
+## Phase 3: Dispatch 5 Agents in Parallel
 
-Before dispatching, validate each agent prompt against oberagent checklist:
+**USE TASK TOOL - ALL 5 AGENTS IN SINGLE MESSAGE**
 
-| # | Check | Requirement |
-|---|-------|-------------|
-| 1 | Purpose is OUTCOME | What to find, not how to find it |
-| 2 | Agent type matches | general-purpose for code review |
-| 3 | Skills specified | "First invoke [skill]" in prompt |
-| 4 | Prompt ≤3 sentences | Or justified if longer |
-| 5 | No step-by-step HOW | Trust agent capability |
-| 6 | Scope provided | Diff content included |
-
----
-
-## Phase 4: Dispatch Review Agents
-
-**YOU MUST USE THE TASK TOOL TO DISPATCH ALL 7 AGENTS IN PARALLEL (single message, multiple Task calls).**
-
-### Agent 1: security-reviewer
+### Agent 1: defensive-reviewer
 
 ```
-Task tool call:
+Task tool:
 - subagent_type: "general-purpose"
-- description: "Security review"
+- description: "Defensive review"
 - prompt: |
-    First invoke the code-foundations skill, then read agents/security-reviewer.md for your review checklist.
+    First invoke code-foundations skill, then read agents/defensive-reviewer.md.
 
-    Review this PR diff for security vulnerabilities. Focus on: input validation, injection flaws, auth bypasses, secrets exposure, path traversal.
+    Review for security AND error handling: input validation, injection, auth, catch blocks, silent failures.
 
     GIT DIFF:
-    [paste diff here]
+    [paste diff]
 
-    Return: VERDICT (SECURE/CONCERNS/VULNERABLE) with specific file:line references for any issues.
+    Return: VERDICT + file:line issues with Fix and Effort (🟢/🟡/🔴)
 ```
 
-### Agent 2: performance-reviewer
+### Agent 2: quality-reviewer
 
 ```
-Task tool call:
+Task tool:
 - subagent_type: "general-purpose"
-- description: "Performance review"
+- description: "Quality review"
 - prompt: |
-    First invoke the code-foundations skill, then read agents/performance-reviewer.md for your review checklist.
+    First invoke code-foundations skill, then read agents/quality-reviewer.md.
 
-    Review this PR diff for performance issues. Focus on: O(n²)+ algorithms, nested loops, I/O in loops, missing caching, hot path inefficiencies.
+    Review for design AND readability: complexity, cohesion, naming, comments, style, trailing newlines.
 
     GIT DIFF:
-    [paste diff here]
+    [paste diff]
 
-    Return: VERDICT (OPTIMAL/ACCEPTABLE/CONCERNING/SLOW) with specific file:line references for any issues.
+    Return: VERDICT + file:line issues with Fix and Effort (🟢/🟡/🔴)
 ```
 
-### Agent 3: maintainability-reviewer
+### Agent 3: correctness-reviewer
 
 ```
-Task tool call:
-- subagent_type: "general-purpose"
-- description: "Maintainability review"
-- prompt: |
-    First invoke the code-foundations skill, then read agents/maintainability-reviewer.md for your review checklist.
-
-    Review this PR diff for design quality. Focus on: complexity symptoms, shallow modules, information leakage, cohesion/coupling, parameters >7.
-
-    GIT DIFF:
-    [paste diff here]
-
-    Return: VERDICT (EXCELLENT/GOOD/CONCERNING/POOR) with specific file:line references for any issues.
-```
-
-### Agent 4: error-handling-reviewer
-
-```
-Task tool call:
-- subagent_type: "general-purpose"
-- description: "Error handling review"
-- prompt: |
-    First invoke the code-foundations skill, then read agents/error-handling-reviewer.md for your review checklist.
-
-    Review this PR diff for error handling issues. Focus on: empty catch blocks, silent failures, broad exception catching, missing error context.
-
-    GIT DIFF:
-    [paste diff here]
-
-    Return: VERDICT (ROBUST/ADEQUATE/FRAGILE/BROKEN) with specific file:line references for any issues.
-```
-
-### Agent 5: clarity-reviewer
-
-```
-Task tool call:
-- subagent_type: "general-purpose"
-- description: "Clarity review"
-- prompt: |
-    First invoke the code-foundations skill, then read agents/clarity-reviewer.md for your review checklist.
-
-    Review this PR diff for readability and style. Focus on: unclear naming, missing/stale comments, inconsistent formatting, trailing newlines, style consistency, complex unexplained expressions.
-
-    GIT DIFF:
-    [paste diff here]
-
-    Return: VERDICT (CLEAR/READABLE/CONFUSING/OBSCURE) with specific file:line references for any issues.
-```
-
-### Agent 6: correctness-reviewer
-
-```
-Task tool call:
+Task tool:
 - subagent_type: "general-purpose"
 - description: "Correctness review"
 - prompt: |
-    First invoke the code-foundations skill, then read agents/correctness-reviewer.md for your review checklist.
+    First invoke code-foundations skill, then read agents/correctness-reviewer.md.
 
-    Review this PR diff for bugs. Focus on: boundary conditions, off-by-one errors, race conditions, resource leaks, null safety, duplicate handling, override behavior.
+    Review for bugs AND test coverage: boundaries, logic flow, duplicates, test gaps.
 
     GIT DIFF:
-    [paste diff here]
+    [paste diff]
 
-    Return: VERDICT (VERIFIED/LIKELY CORRECT/UNCERTAIN/BUGGY) with specific file:line references for any issues.
+    Return: VERDICT + file:line issues with Fix and Effort (🟢/🟡/🔴)
 ```
 
-### Agent 7: test-reviewer
+### Agent 4: performance-reviewer
 
 ```
-Task tool call:
+Task tool:
 - subagent_type: "general-purpose"
-- description: "Test coverage review"
+- description: "Performance review"
 - prompt: |
-    First invoke the code-foundations skill, then read agents/test-reviewer.md for your review checklist.
+    First invoke code-foundations skill, then read agents/performance-reviewer.md.
 
-    Review this PR diff for test coverage. Focus on: untested new code, missing edge case tests, test quality, coverage gaps for error paths.
+    Review for performance: O(n²), I/O in loops, resource usage, hot paths.
 
     GIT DIFF:
-    [paste diff here]
+    [paste diff]
 
-    Return: VERDICT (COMPREHENSIVE/ADEQUATE/GAPS/INADEQUATE) with specific file:line references for any coverage gaps.
+    Return: VERDICT + file:line issues with Fix and Effort (🟢/🟡/🔴)
+```
+
+### Agent 5: documentation-reviewer
+
+```
+Task tool:
+- subagent_type: "general-purpose"
+- description: "Documentation review"
+- prompt: |
+    First invoke code-foundations skill, then read agents/documentation-reviewer.md.
+
+    Review documentation: README accuracy, comment freshness, API docs, changelog.
+
+    GIT DIFF:
+    [paste diff]
+
+    Return: VERDICT + file:line issues with Fix and Effort (🟢/🟡/🔴)
 ```
 
 ---
 
-## Phase 5: Aggregate Results
+## Phase 4: Aggregate Results (GROUP BY FILE)
 
-After ALL agents complete, combine their findings:
+Combine findings **grouped by file**, not by dimension:
 
 ```markdown
 # PR Review Report
@@ -194,30 +134,55 @@ After ALL agents complete, combine their findings:
 - **PR:** [title]
 - **Branch:** [head] → [base]
 - **Files Changed:** [count]
-- **Agents Run:** security, performance, maintainability, errors, clarity, correctness, tests
+- **Agents:** defensive, quality, correctness, performance, documentation
 
-## Overall Verdict: [APPROVE / REQUEST CHANGES / BLOCKED]
+## Verdict: [APPROVE / REQUEST CHANGES / BLOCKED]
 
 ---
 
-## Critical Issues - Must Fix Before Merge
-[Combine all CRITICAL findings from all agents]
+## Issues by File
 
-## Important Issues - Should Fix
-[Combine all IMPORTANT findings from all agents]
+### src/middleware/FeatureHeader.cs
 
-## Suggestions - Consider
-[Combine all SUGGESTIONS from all agents]
+1. 🔴 [CRITICAL] Line 84 - Base64 memory amplification (defensive)
+   Fix: Add max expansion check
+   ```csharp
+   if (encoded.Length > MaxDecodedSize / 1.34) return null;
+   ```
+   Effort: 🟢 Quick
+
+2. 🟡 [IMPORTANT] Line 58 - Silent JSON failure (defensive)
+   Fix: Add telemetry logging
+   Effort: 🟢 Quick
+
+3. 🟡 [IMPORTANT] Line 134 - Missing trailing newline (quality)
+   Fix: Add newline at EOF
+   Effort: 🟢 Quick
+
+### src/services/FeatureToggle.cs
+
+1. 🟡 [IMPORTANT] Line 45 - New public API undocumented (documentation)
+   Fix: Add XML doc comment
+   Effort: 🟢 Quick
+
+---
 
 ## Positive Patterns
-[Note good patterns observed]
+- [good things observed]
 
 ---
 
 ## Action Plan
-1. Fix critical issues
+
+| Priority | Count | Effort |
+|----------|-------|--------|
+| 🔴 Critical | [n] | [total] |
+| 🟡 Important | [n] | [total] |
+| 🟢 Suggestions | [n] | [total] |
+
+1. Fix critical issues first
 2. Address important issues
-3. Re-run: `/review-pr` to verify fixes
+3. Re-run: `/review-pr` to verify
 ```
 
 ---
@@ -226,22 +191,28 @@ After ALL agents complete, combine their findings:
 
 | Condition | Verdict |
 |-----------|---------|
-| Any CRITICAL from any agent | **BLOCKED** |
-| IMPORTANT only, no CRITICAL | **REQUEST CHANGES** |
+| Any CRITICAL | **BLOCKED** |
+| IMPORTANT only | **REQUEST CHANGES** |
 | SUGGESTIONS only | **APPROVE** with comments |
 | No issues | **APPROVE** |
 
 ---
 
-## MANDATORY STEPS (DO NOT SKIP)
+## Agent Summary Table
 
-1. **Invoke oberagent skill** - If oberskills installed (validates agent dispatch)
-2. **Get PR diff** - Content for agents to review
-3. **Validate prompts** - Check against oberagent checklist (if oberagent loaded)
-4. **Dispatch ALL 7 agents in parallel** - Use Task tool
-5. **Aggregate results** - Combine into unified report
+| Agent | Combines | Skills |
+|-------|----------|--------|
+| defensive-reviewer | security + errors | cc-defensive-programming, aposd-simplifying-complexity |
+| quality-reviewer | maintainability + clarity | aposd-reviewing-module-design, cc-code-layout-and-style |
+| correctness-reviewer | bugs + tests | aposd-verifying-correctness, cc-quality-practices |
+| performance-reviewer | algorithms + hot paths | cc-performance-tuning, aposd-optimizing-critical-paths |
+| documentation-reviewer | docs + comments | cc-documentation-quality |
 
-**DO NOT:**
-- Skip agent dispatch and review code yourself
-- Launch agents sequentially
-- Omit skill invocation from agent prompts
+---
+
+## MANDATORY
+
+1. Dispatch ALL 5 agents in parallel
+2. Group output by FILE, not dimension
+3. Include effort estimates (🟢/🟡/🔴)
+4. Include code fix snippets where possible
