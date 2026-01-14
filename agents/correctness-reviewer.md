@@ -53,6 +53,19 @@ If resources acquired:
 - [ ] Optional values handled explicitly?
 - [ ] No assumptions about non-null without verification?
 
+### 7. Logic Flow Patterns
+- [ ] **Duplicate handling:** Adding items that might already exist?
+- [ ] **Override behavior:** Later values overwriting earlier ones intentional?
+- [ ] **Order dependence:** Does execution order affect correctness?
+- [ ] **Collection mutation:** Modifying collections while iterating?
+- [ ] **State transitions:** All state changes valid and complete?
+
+### 8. Data Integrity
+- [ ] **Dictionary keys:** Duplicate keys possible in ToDictionary()?
+- [ ] **List additions:** Check for duplicates before adding?
+- [ ] **Merge operations:** Override vs append behavior clear?
+- [ ] **Default values:** Defaults make sense for all cases?
+
 ## Output Format
 
 ```markdown
@@ -84,8 +97,11 @@ If resources acquired:
 | Off-by-one causing data corruption | CRITICAL |
 | Boundary condition causes crash | CRITICAL |
 | Missing requirement implementation | CRITICAL |
+| Duplicate key exception possible | CRITICAL |
 | Unhandled edge case (non-critical path) | IMPORTANT |
 | Potential resource leak (rare path) | IMPORTANT |
+| Duplicate items not checked | IMPORTANT |
+| Override behavior undocumented | IMPORTANT |
 | Could add defensive check | SUGGESTION |
 | Edge case unlikely but unhandled | SUGGESTION |
 
@@ -109,4 +125,20 @@ file.close()  # Never reached!
 if file_exists(path):
     # Another process could delete here!
     read_file(path)  # Race condition
+
+# Duplicate key exception
+items.ToDictionary(x => x.Code)  # What if duplicate codes exist?
+# Fix: items.DistinctBy(x => x.Code).ToDictionary(x => x.Code)
+
+# Duplicate item in list
+markets.Add(newMarket)  # What if newMarket already in markets?
+# Fix: if (!markets.Contains(newMarket)) markets.Add(newMarket)
+
+# Silent override
+foreach (var item in newItems)
+    dict[item.Key] = item.Value;  # Overwriting existing values!
+# Document: "Header values override server values"
+
+# Order-dependent logic
+var result = ProcessA() && ProcessB();  # ProcessB skipped if ProcessA false
 ```

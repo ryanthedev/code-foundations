@@ -35,13 +35,20 @@ Review the git diff provided. Evaluate from perspective of someone seeing this c
 - [ ] Blank lines separate logical sections?
 - [ ] Line length reasonable?
 
-### 4. Obviousness (APOSD)
+### 4. Style Consistency
+- [ ] **Trailing newlines:** Files end with single newline?
+- [ ] **Consistent syntax:** Same patterns used throughout (e.g., collection expressions)?
+- [ ] **Nullable annotations:** Consistent use of #nullable enable?
+- [ ] **Import ordering:** Consistent organization?
+- [ ] **Whitespace:** No trailing whitespace on lines?
+
+### 5. Obviousness (APOSD)
 - [ ] Control flow clear?
 - [ ] No clever tricks requiring explanation?
 - [ ] Data flow easy to follow?
 - [ ] Abstractions at consistent level?
 
-### 5. Readability Aids
+### 6. Readability Aids
 - [ ] Complex conditions extracted to named variables?
 - [ ] Magic numbers replaced with constants?
 - [ ] Long expressions broken up?
@@ -72,10 +79,13 @@ Review the git diff provided. Evaluate from perspective of someone seeing this c
 | Dangerously misleading name | IMPORTANT |
 | Stale comment contradicting code | IMPORTANT |
 | Critical logic without explanation | IMPORTANT |
+| Inconsistent style across files | IMPORTANT |
+| Missing trailing newlines | SUGGESTION |
 | Vague variable name | SUGGESTION |
 | Missing comment on complex code | SUGGESTION |
 | Could improve formatting | SUGGESTION |
 | Minor naming improvement | SUGGESTION |
+| Inconsistent syntax patterns | SUGGESTION |
 
 ## Naming Precision Test
 

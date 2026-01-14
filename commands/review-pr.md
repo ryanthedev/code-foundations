@@ -1,5 +1,5 @@
 ---
-description: "Comprehensive multi-dimensional PR review. Dispatches parallel agents for security, performance, maintainability, error handling, clarity, and correctness. Use before merging."
+description: "Comprehensive multi-dimensional PR review. Dispatches 7 parallel agents for security, performance, maintainability, error handling, clarity, correctness, and test coverage. Use before merging."
 argument-hint: "[aspects...] [--parallel]"
 allowed-tools: ["Bash", "Glob", "Grep", "Read", "Task", "Skill"]
 ---
@@ -60,7 +60,7 @@ Before dispatching, validate each agent prompt against oberagent checklist:
 
 ## Phase 4: Dispatch Review Agents
 
-**YOU MUST USE THE TASK TOOL TO DISPATCH ALL 6 AGENTS IN PARALLEL (single message, multiple Task calls).**
+**YOU MUST USE THE TASK TOOL TO DISPATCH ALL 7 AGENTS IN PARALLEL (single message, multiple Task calls).**
 
 ### Agent 1: security-reviewer
 
@@ -139,7 +139,7 @@ Task tool call:
 - prompt: |
     First invoke the code-foundations skill, then read agents/clarity-reviewer.md for your review checklist.
 
-    Review this PR diff for readability. Focus on: unclear naming, missing/stale comments, inconsistent formatting, complex unexplained expressions.
+    Review this PR diff for readability and style. Focus on: unclear naming, missing/stale comments, inconsistent formatting, trailing newlines, style consistency, complex unexplained expressions.
 
     GIT DIFF:
     [paste diff here]
@@ -156,12 +156,29 @@ Task tool call:
 - prompt: |
     First invoke the code-foundations skill, then read agents/correctness-reviewer.md for your review checklist.
 
-    Review this PR diff for bugs. Focus on: boundary conditions, off-by-one errors, race conditions, resource leaks, null safety.
+    Review this PR diff for bugs. Focus on: boundary conditions, off-by-one errors, race conditions, resource leaks, null safety, duplicate handling, override behavior.
 
     GIT DIFF:
     [paste diff here]
 
     Return: VERDICT (VERIFIED/LIKELY CORRECT/UNCERTAIN/BUGGY) with specific file:line references for any issues.
+```
+
+### Agent 7: test-reviewer
+
+```
+Task tool call:
+- subagent_type: "general-purpose"
+- description: "Test coverage review"
+- prompt: |
+    First invoke the code-foundations skill, then read agents/test-reviewer.md for your review checklist.
+
+    Review this PR diff for test coverage. Focus on: untested new code, missing edge case tests, test quality, coverage gaps for error paths.
+
+    GIT DIFF:
+    [paste diff here]
+
+    Return: VERDICT (COMPREHENSIVE/ADEQUATE/GAPS/INADEQUATE) with specific file:line references for any coverage gaps.
 ```
 
 ---
@@ -177,7 +194,7 @@ After ALL agents complete, combine their findings:
 - **PR:** [title]
 - **Branch:** [head] → [base]
 - **Files Changed:** [count]
-- **Agents Run:** security, performance, maintainability, errors, clarity, correctness
+- **Agents Run:** security, performance, maintainability, errors, clarity, correctness, tests
 
 ## Overall Verdict: [APPROVE / REQUEST CHANGES / BLOCKED]
 
@@ -221,7 +238,7 @@ After ALL agents complete, combine their findings:
 1. **Invoke oberagent skill** - If oberskills installed (validates agent dispatch)
 2. **Get PR diff** - Content for agents to review
 3. **Validate prompts** - Check against oberagent checklist (if oberagent loaded)
-4. **Dispatch ALL 6 agents in parallel** - Use Task tool
+4. **Dispatch ALL 7 agents in parallel** - Use Task tool
 5. **Aggregate results** - Combine into unified report
 
 **DO NOT:**
