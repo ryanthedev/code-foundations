@@ -1,6 +1,6 @@
 ---
 name: cc-documentation-quality
-description: "Review documentation quality including README, comments, API docs, and changelog. Use when checking if documentation matches code, comments are fresh, or new features lack documentation. Based on Code Complete Ch. 32 and APOSD comments philosophy."
+description: "Review documentation quality including README, comments, API docs, changelog, and AI documentation (CLAUDE.md). Use when checking if documentation matches code, comments are fresh, or new features lack documentation. Based on Code Complete Ch. 32 and APOSD comments philosophy."
 ---
 
 # Documentation Quality
@@ -65,6 +65,14 @@ Documentation rots faster than code. Stale docs are worse than no docs.
 - [ ] New environment variables documented?
 - [ ] New CLI flags documented?
 
+### 7. AI Documentation (CLAUDE.md, .cursorrules, etc.)
+- [ ] CLAUDE.md reflects current architecture?
+- [ ] Agent/skill descriptions accurate?
+- [ ] Tool permissions and restrictions current?
+- [ ] File structure documentation up to date?
+- [ ] Workflow instructions still valid?
+- [ ] Version numbers synchronized?
+
 ---
 
 ## Comment Anti-Patterns
@@ -98,8 +106,11 @@ Documentation rots faster than code. Stale docs are worse than no docs.
 | README contradicts actual behavior | CRITICAL |
 | API doc says wrong return type | CRITICAL |
 | Stale comment causes bug risk | CRITICAL |
+| CLAUDE.md describes deleted/renamed files | CRITICAL |
 | New public API undocumented | IMPORTANT |
 | Breaking change not in changelog | IMPORTANT |
+| CLAUDE.md missing new features/agents | IMPORTANT |
+| AI doc version mismatch | IMPORTANT |
 | Stale TODO from distant past | SUGGESTION |
 | Could add clarifying comment | SUGGESTION |
 | Minor README improvement | SUGGESTION |

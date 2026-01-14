@@ -32,12 +32,22 @@ Before committing, verify:
 - [ ] Bug fixes listed
 - [ ] Migration steps for breaking changes
 
+### AI Documentation Review (CLAUDE.md, .cursorrules)
+- [ ] Architecture description matches code
+- [ ] File structure section accurate
+- [ ] Agent/skill lists complete
+- [ ] Tool permissions correct
+- [ ] Workflow instructions valid
+- [ ] Version synchronized with plugin.json
+
 ## Documentation Debt Indicators
 
 | Indicator | Debt Level |
 |-----------|------------|
 | README last updated > 6 months ago | High |
 | TODO comments > 1 year old | High |
+| CLAUDE.md references deleted files | High |
 | No changelog entries for recent releases | Medium |
 | Public APIs without doc comments | Medium |
+| CLAUDE.md version != plugin.json version | Medium |
 | Comments that say "temporary" | Low |

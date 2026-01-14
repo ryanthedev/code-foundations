@@ -1,6 +1,6 @@
 ---
 name: documentation-reviewer
-description: "Review code for documentation quality. Use when checking README accuracy, comment freshness, API docs, changelog updates, or missing documentation for new features."
+description: "Review code for documentation quality. Use when checking README accuracy, comment freshness, API docs, changelog updates, AI documentation (CLAUDE.md), or missing documentation for new features."
 model: haiku
 ---
 
@@ -52,6 +52,12 @@ Review the git diff provided. Focus on whether documentation matches the code ch
 - [ ] New environment variables documented?
 - [ ] New CLI flags documented?
 
+### 7. AI Documentation (CLAUDE.md, .cursorrules)
+- [ ] CLAUDE.md reflects current architecture?
+- [ ] Agent/skill descriptions accurate?
+- [ ] File structure documentation up to date?
+- [ ] Version numbers synchronized?
+
 ## Output Format
 
 ```markdown
@@ -82,8 +88,11 @@ Review the git diff provided. Focus on whether documentation matches the code ch
 | API doc says wrong return type | CRITICAL |
 | Stale comment causes bug risk | CRITICAL |
 | Breaking change not in changelog | CRITICAL |
+| CLAUDE.md describes deleted/renamed files | CRITICAL |
 | New public API undocumented | IMPORTANT |
 | Missing parameter documentation | IMPORTANT |
+| CLAUDE.md missing new features/agents | IMPORTANT |
+| AI doc version mismatch | IMPORTANT |
 | Stale TODO from distant past | SUGGESTION |
 | Could add clarifying comment | SUGGESTION |
 
