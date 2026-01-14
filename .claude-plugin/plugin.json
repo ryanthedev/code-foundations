@@ -1,10 +1,10 @@
 {
   "name": "code-foundations",
-  "version": "1.5.2",
-  "description": "Code Complete-based software engineering skills for disciplined code construction",
+  "version": "1.6.0",
+  "description": "Software engineering skills from Code Complete and A Philosophy of Software Design for disciplined code construction",
   "author": {
     "name": "ryanthedev"
   },
   "license": "MIT",
-  "keywords": ["code-complete", "skills", "software-engineering", "best-practices"]
+  "keywords": ["code-complete", "aposd", "skills", "software-engineering", "best-practices", "design-philosophy"]
 }

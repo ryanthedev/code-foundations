@@ -1,123 +1,387 @@
 ---
 name: code-foundations
-description: "Use when doing ANY code task - writing, debugging, reviewing, fixing, implementing, optimizing, or refactoring. Symptoms that trigger this skill include seeing code, being asked to implement something, fix a bug, review code, or improve performance. This skill dispatches to specific skills based on task type."
+description: "Use when doing ANY code task - writing, debugging, reviewing, fixing, implementing, optimizing, or refactoring. Symptoms that trigger this skill include seeing code, being asked to implement something, fix a bug, review code, or improve performance. This skill dispatches to specific skills based on task type. Includes both Code Complete (cc-*) and APOSD (aposd-*) skill families."
 ---
 
 # Code Foundations
 
-## DEFAULT: YES - Load This Skill
-
 **When in doubt, load this skill. When NOT in doubt, load it anyway.**
 
-The default answer to "does this need code-foundations?" is **YES**. The only exceptions are activities that:
-1. Touch ZERO files that could ever be executed, compiled, or imported
-2. Have ZERO chance of affecting runtime behavior, build, or tests
-3. Are PURE prose (README content, not code comments)
+---
 
-## What This Skill Applies To
+## Master Checklist: Execute In Order
 
-**Any file or change that affects runtime, build, or test behavior:**
+### Phase 1: Classification (MANDATORY - Do First)
 
-| Category | Examples |
-|----------|----------|
-| **Code files** | `.js`, `.ts`, `.py`, `.go`, `.rs`, `.java`, `.c`, `.cpp`, `.rb`, `.swift`, `.kt`, `.sh`, `.sql` |
-| **Config that affects runtime** | `.json`, `.yaml`, `.toml`, `.env`, `Dockerfile`, K8s manifests, nginx/Apache config |
-| **Build/package files** | `package.json`, `Cargo.toml`, `requirements.txt`, `go.mod`, `Gemfile`, lockfiles |
-| **Type definitions** | `.d.ts`, `.proto`, GraphQL schemas, OpenAPI specs |
-| **Infrastructure as Code** | Terraform, Pulumi, CloudFormation, Ansible, docker-compose |
-| **CI/CD** | GitHub Actions, GitLab CI, deployment scripts, git hooks |
-| **Test artifacts** | Test files, fixtures, mocks, snapshots |
-| **Any structural change** | File moves, renames, import changes, permission changes, symlinks |
+- [ ] **1.1** Identify task type from user signals:
+  | Signal | Task Type |
+  |--------|-----------|
+  | "implement", "write", "build", "add", "create" | → WRITE |
+  | "debug", "fix bug", "failing", "broken", "error" | → DEBUG |
+  | "review", "check", "audit", "is this good?" | → REVIEW |
+  | "optimize", "slow", "performance", "faster" | → OPTIMIZE |
+  | "refactor", "clean up", "improve structure" | → REFACTOR |
+  | "simplify", "too complex", "confusing" | → SIMPLIFY |
+  | "secure", "vulnerability", "validate input" | → SECURE |
 
-**The ONLY things exempt:**
-- Pure prose in documentation files (not code examples within them)
-- Whitespace-only formatting by automated tools
-- Git operations that don't touch files (branching, tagging, viewing history)
-- Pure legal/administrative files (LICENSE, CODEOWNERS)
+- [ ] **1.2** State classification: "This is a [TASK TYPE] task"
 
-## STOP - Classify Before Acting
+- [ ] **1.3** If ambiguous, ask: "Are you looking for [option A], [option B], or something else?"
 
-**You MUST classify the task before ANY other action.**
+---
 
-### Task Classification
+### Phase 2: Mindset Check (For WRITE, DEBUG, REFACTOR)
 
-| User Intent Signals | Task Type | INVOKE NEXT |
-|---------------------|-----------|-------------|
-| "implement", "write", "build", "add", "create" | WRITE | cc-developer-character → cc-construction-prerequisites |
-| "debug", "fix bug", "failing", "broken", "error" | DEBUG | cc-developer-character → cc-quality-practices |
-| "review", "check", "audit", "evaluate quality" | REVIEW | cc-quality-practices (CHECKER mode) |
-| "optimize", "slow", "performance", "faster" | OPTIMIZE | cc-performance-tuning |
-| "refactor", "clean up", "improve structure" | REFACTOR | cc-developer-character → cc-refactoring-guidance |
-| "secure", "vulnerability", "validate input" | SECURE | cc-defensive-programming (CHECKER mode) |
+- [ ] **2.1** INVOKE cc-developer-character
+- [ ] **2.2** Verify: Am I thinking strategically, not tactically?
+- [ ] **2.3** Check for rationalization red flags (see below)
 
-**After classifying:** State the task type, then INVOKE the indicated skill(s).
+---
 
-### Ambiguous Requests
+### Phase 3: Execute Task-Specific Checklist
 
-When the task type is unclear (e.g., "take a look at this code"):
-1. **Ask clarifying questions** - "Are you looking for a review, debugging help, or something else?"
-2. **After clarification, classify and continue the chain**
+**Go to the checklist for your task type:**
 
-## cc-developer-character is NON-NEGOTIABLE
+- WRITE → [Write Checklist](#write-checklist)
+- DEBUG → [Debug Checklist](#debug-checklist)
+- REVIEW → [Review Checklist](#review-checklist)
+- OPTIMIZE → [Optimize Checklist](#optimize-checklist)
+- REFACTOR → [Refactor Checklist](#refactor-checklist)
+- SIMPLIFY → [Simplify Checklist](#simplify-checklist)
+- SECURE → [Secure Checklist](#secure-checklist)
 
-For WRITE, DEBUG, and REFACTOR tasks, you MUST invoke cc-developer-character FIRST.
+---
 
-**No exceptions for:**
-- "Simple" tasks
-- Tasks you've "done before"
-- Time pressure
-- Small codebases
+### Phase 4: Pre-Commit Gate (MANDATORY - Before "Done")
 
-## Red Flags - STOP If You Think This
+- [ ] **4.1** INVOKE aposd-verifying-correctness
+- [ ] **4.2** Requirements: Each requirement mapped to code?
+- [ ] **4.3** Concurrency: Shared state protected?
+- [ ] **4.4** Errors: All failure points handled?
+- [ ] **4.5** Resources: All acquired resources released?
+- [ ] **4.6** Boundaries: Edge cases (empty, null, huge) handled?
+- [ ] **4.7** Security: Untrusted input validated?
+- [ ] **4.8** State verdict: DONE or NOT DONE (list blockers)
 
-These thoughts precede bugs. If you think any of these, load the skill anyway:
+---
 
-| Rationalization | Reality |
-|-----------------|---------|
-| "This is simple/trivial" | Simple tasks have HIGHEST error rates. "Trivial" changes cause production incidents. |
-| "I can already see the issue" | Seeing ≠ systematic verification. |
-| "I already know how to do this" | Knowing ≠ executing checklist. Experts make errors too. |
-| "It's just config, not code" | Config that affects runtime IS code activity. |
-| "The code already works" | Your CHANGE can break what worked. |
-| "It's just a version bump/number change" | Single-field edits control database connections, API keys, versions. |
-| "I'm just moving/renaming code" | Structural changes require updating ALL references. |
-| "I'm just resolving merge conflicts" | Combining code paths IS writing new code. |
-| "Someone already reviewed this" | Review validates design, not your implementation keystrokes. |
-| "It's temporary for debugging" | "Temporary" changes that get committed become incidents. |
-| "I'm just running npm install" | Package managers can modify lockfiles = different versions = different behavior. |
-| "I'm just creating an empty file" | Empty files get compiled, can be imported, affect module resolution. |
+## WRITE Checklist
 
-**The pattern:** If you're constructing ANY argument for why this task is exempt, that argument IS the rationalization. Load the skill.
+**Goal:** Create new code with good design
 
-## Crisis Minimum (Time Pressure)
+### Prerequisites
+- [ ] INVOKE cc-developer-character (mindset)
+- [ ] INVOKE cc-construction-prerequisites (architecture ready?)
 
-Production down? You STILL must:
+### Design Phase
+- [ ] INVOKE aposd-designing-deep-modules
+- [ ] Sketch 2-3 radically different approaches (not just "think through")
+- [ ] Compare approaches: Which has simplest interface?
+- [ ] Choose approach and document rationale
+- [ ] Verify depth: Interface much simpler than implementation?
 
-1. **Classify the task** (5 seconds)
-2. **State what you're skipping and why** (explicit)
-3. **After crisis:** Return within 24 hours to apply full skill chain
+### Implementation Phase
+- [ ] INVOKE aposd-improving-code-clarity
+- [ ] Write interface comments BEFORE implementation
+- [ ] INVOKE cc-pseudocode-programming
+- [ ] Write pseudocode, then translate to real code
+- [ ] Names precise? (Can someone guess meaning in isolation?)
+- [ ] Names consistent? (Same name = same thing everywhere?)
 
-**What you may NOT skip even in crisis:**
+### Verification Phase
+- [ ] INVOKE cc-routine-and-class-design (CHECKER)
+- [ ] Cohesion: Does each routine do ONE thing?
+- [ ] Parameters: ≤7 per routine?
+- [ ] Inheritance: "Is-a" literally true? (If not, use containment)
+- [ ] INVOKE cc-defensive-programming (CHECKER)
+- [ ] External input validated?
+- [ ] No empty catch blocks?
+- [ ] Error handling consistent with architecture?
+
+### Pre-Commit
+- [ ] Run Phase 4 checklist
+
+---
+
+## DEBUG Checklist
+
+**Goal:** Find and fix bug without making design worse
+
+### Investigation Phase
+- [ ] INVOKE cc-developer-character (mindset)
+- [ ] INVOKE cc-quality-practices (Scientific Method)
+- [ ] Stabilize error: Can you reproduce reliably?
+- [ ] Locate error: Use binary search / divide-and-conquer
+- [ ] Understand root cause (not just symptoms)
+
+### Fix Phase
+- [ ] INVOKE aposd-maintaining-design-quality
+- [ ] Ask: "Is current design still optimal given this fix?"
+- [ ] If NO: Refactor first, then fix
+- [ ] If YES: Make fix within existing design
+- [ ] INVOKE cc-refactoring-guidance
+- [ ] Fix ONLY the bug (don't mix fix + refactor in one commit)
+- [ ] Commit fix separately from any cleanup
+
+### Verification Phase
+- [ ] Verify fix actually works
+- [ ] Check for similar bugs elsewhere (same pattern?)
+- [ ] INVOKE cc-quality-practices: Search for similar defects
+
+### Pre-Commit
+- [ ] Run Phase 4 checklist
+
+---
+
+## REVIEW Checklist
+
+**Goal:** Detect design problems and complexity
+
+### Setup
+- [ ] INVOKE cc-quality-practices (review mode)
+- [ ] INVOKE aposd-reviewing-module-design
+
+### Complexity Symptoms (Check All)
+- [ ] Change amplification? (Simple change = many modifications?)
+- [ ] Cognitive load? (Must know too much to work here?)
+- [ ] Unknown unknowns? (Unclear what code/info is needed?) **← Worst**
+
+### Module Depth (Check All)
+- [ ] Interface simpler than implementation?
+- [ ] Few methods (not many small ones)?
+- [ ] Information hidden (not leaked across modules)?
+- [ ] Common case simple to use?
+
+### Red Flags (Flag If Present)
+- [ ] Shallow module (interface ≈ implementation)
+- [ ] Classitis (many tiny classes)
+- [ ] Information leakage (same knowledge in multiple places)
+- [ ] Pass-through methods (just delegates to another)
+- [ ] Conjoined methods (can't understand one without the other)
+
+### CC Metrics
+- [ ] INVOKE cc-routine-and-class-design (CHECKER)
+- [ ] Cohesion adequate?
+- [ ] Coupling minimized?
+- [ ] Inheritance depth < 3?
+- [ ] Parameters ≤ 7?
+
+### Output
+- [ ] List Critical issues (must fix)
+- [ ] List Moderate issues (should fix)
+- [ ] List Observations (consider)
+- [ ] Note Positive patterns
+
+---
+
+## OPTIMIZE Checklist
+
+**Goal:** Improve performance based on measurement, not intuition
+
+### Measurement Gate (MANDATORY)
+- [ ] INVOKE cc-performance-tuning
+- [ ] INVOKE aposd-optimizing-critical-paths
+- [ ] **STOP: Have you measured?** (No measurement = no optimization)
+- [ ] Profile data collected? (timing, call counts, memory)
+- [ ] Specific hotspot identified? (not just "it's slow")
+- [ ] Baseline established?
+- [ ] Which dimension? (throughput / latency / memory / CPU)
+
+### Fundamental Fixes (Try First)
+- [ ] Can you add a cache?
+- [ ] Can you use a better algorithm?
+- [ ] Can you bypass layers?
+- [ ] If YES to any → implement and re-measure
+
+### Critical Path Redesign (Last Resort)
+- [ ] What's minimum code for common case?
+- [ ] Disregard existing structure—what's ideal?
+- [ ] Define "the ideal" even if not fully achievable
+
+### Verification
+- [ ] Re-measure with same methodology
+- [ ] Faster with data? → Keep
+- [ ] Simpler AND at least as fast? → Keep
+- [ ] Neither? → **BACK OUT changes**
+
+### Pre-Commit
+- [ ] Run Phase 4 checklist
+
+---
+
+## REFACTOR Checklist
+
+**Goal:** Improve structure without changing behavior
+
+### Prerequisites
+- [ ] INVOKE cc-developer-character (mindset)
+- [ ] Code currently WORKS? (All tests pass?)
+- [ ] If NO → This is FIXING, not refactoring. Go to DEBUG checklist.
+
+### Planning
+- [ ] INVOKE cc-refactoring-guidance
+- [ ] INVOKE aposd-maintaining-design-quality
+- [ ] Design fundamentally sound? (If NO → consider rewrite)
+- [ ] Changes touch >30% of module? (If YES → consider rewrite)
+- [ ] Make list of specific refactoring steps
+
+### Execution (One At A Time)
+- [ ] Save starting code (version control checkpoint)
+- [ ] Do ONE refactoring
+- [ ] Recompile and retest
+- [ ] State: "Tests pass after [change]"
+- [ ] Commit if tests pass
+- [ ] Repeat for next refactoring
+
+### Verification
+- [ ] INVOKE cc-control-flow-quality (CHECKER)
+- [ ] INVOKE cc-routine-and-class-design (CHECKER)
+- [ ] Behavior preserved? (Same tests pass)
+- [ ] Design improved? (Simpler interfaces, less duplication)
+
+### Pre-Commit
+- [ ] Run Phase 4 checklist
+
+---
+
+## SIMPLIFY Checklist
+
+**Goal:** Reduce complexity, not just relocate it
+
+### Analysis
+- [ ] INVOKE aposd-simplifying-complexity
+- [ ] Identify complexity symptoms present
+- [ ] Identify what makes it complex (dependencies? obscurity?)
+
+### Error Reduction Hierarchy (Apply In Order)
+For each error condition:
+- [ ] **Level 1 - Define out:** Can semantics eliminate this error?
+- [ ] **Level 2 - Mask:** Can low-level code handle without exposing?
+- [ ] **Level 3 - Aggregate:** Can multiple errors share one handler?
+- [ ] **Level 4 - Crash:** Rare, unrecoverable, app-level only?
+- [ ] Document which level applied and why
+
+### Pull Complexity Down (Check All Three)
+- [ ] Is complexity related to module's existing functionality?
+- [ ] Will pulling down simplify code elsewhere?
+- [ ] Will pulling down simplify module's interface?
+- [ ] All three YES? → Pull down. Otherwise → Leave.
+
+### Verification
+- [ ] Interfaces simpler than before?
+- [ ] Callers do less work than before?
+- [ ] Error handling consolidated or eliminated?
+- [ ] Complexity REDUCED (not just relocated)?
+
+### Pre-Commit
+- [ ] Run Phase 4 checklist
+
+---
+
+## SECURE Checklist
+
+**Goal:** Protect against malicious or malformed input
+
+### Analysis
+- [ ] INVOKE cc-defensive-programming (CHECKER)
+- [ ] INVOKE aposd-simplifying-complexity (error reduction)
+- [ ] Identify all external input sources
+- [ ] Identify trust boundaries
+
+### Validation (For Each External Input)
+- [ ] Input validated before use?
+- [ ] No string concatenation for SQL/shell/HTML?
+- [ ] Path traversal prevented?
+- [ ] Secrets not logged or exposed in errors?
+- [ ] Auth/authz checked BEFORE action?
+
+### Error Handling
+- [ ] No empty catch blocks?
+- [ ] Error messages don't leak security info?
+- [ ] Assertions used for bugs only (not expected errors)?
+
+### Pre-Commit
+- [ ] Run Phase 4 checklist
+
+---
+
+## Rationalization Red Flags
+
+**If you think any of these, STOP and apply the checklist anyway:**
+
+| Thought | Reality |
+|---------|---------|
+| "This is simple/trivial" | Simple tasks have HIGHEST error rates |
+| "I can already see the issue" | Seeing ≠ systematic verification |
+| "I already know how to do this" | Knowing ≠ executing checklist |
+| "It's just config, not code" | Config that affects runtime IS code |
+| "The code already works" | Your CHANGE can break what worked |
+| "I'll refactor later" | Later = never |
+| "Just make it work" | Tactical thinking → permanent slowdown |
+| "I don't have time" | Checklist takes minutes; debugging takes hours |
+| "It's just one line" | One-line changes have highest error rate |
+| "Tests pass, so it's done" | Tests check behavior, not design quality |
+
+---
+
+## Crisis Mode (Production Down)
+
+**You STILL must:**
+1. [ ] Classify the task (5 seconds)
+2. [ ] State what you're skipping and why
+3. [ ] Fix ONLY—no refactoring, no cleanup
+4. [ ] Verify fix works
+5. [ ] Commit to returning within 24 hours for full checklist
+
+**What you may NOT skip:**
 - Input validation on external data
 - Verifying fix actually works
 - One sentence explaining WHY the fix works
 
-## Phase Skills (Chain After Classification)
+---
 
-| Task Type | Primary Skills | Follow-up Skills |
-|-----------|----------------|------------------|
-| WRITE | cc-construction-prerequisites → cc-pseudocode-programming | cc-routine-and-class-design (CHECKER), cc-defensive-programming (CHECKER) |
-| DEBUG | cc-quality-practices (Scientific Method) | cc-refactoring-guidance (for the fix) |
-| REVIEW | cc-quality-practices, cc-routine-and-class-design | cc-refactoring-guidance (if issues found) |
-| OPTIMIZE | cc-performance-tuning | cc-refactoring-guidance (if structure degraded) |
-| REFACTOR | cc-refactoring-guidance | cc-control-flow-quality (CHECKER), cc-routine-and-class-design (CHECKER) |
-| SECURE | cc-defensive-programming | cc-data-organization (input validation) |
+## Two Skill Families
 
-## Chain Completion
+| Family | Source | Focus | Prefix |
+|--------|--------|-------|--------|
+| **Code Complete** | McConnell | Process rigor, metrics, checklists | `cc-*` |
+| **APOSD** | Ousterhout | Design philosophy, complexity reduction | `aposd-*` |
 
-After completing primary skill work, invoke follow-up skills as CHECKER gates:
+**Use both.** CC provides tactical rigor; APOSD provides strategic philosophy.
 
-- **WRITE:** Before claiming "done", run cc-routine-and-class-design CHECKER and cc-defensive-programming CHECKER
-- **DEBUG:** After identifying fix, invoke cc-refactoring-guidance for safe fix process
-- **REVIEW:** If violations found, invoke cc-refactoring-guidance for fix recommendations
-- **OPTIMIZE:** After changes, verify with cc-control-flow-quality that structure wasn't degraded
+---
+
+## Quick Reference: All Skills
+
+### CC Skills (Process & Metrics)
+| Skill | Use For |
+|-------|---------|
+| cc-developer-character | Mindset check before WRITE/DEBUG/REFACTOR |
+| cc-construction-prerequisites | Architecture ready before coding |
+| cc-pseudocode-programming | Design-before-code |
+| cc-routine-and-class-design | Cohesion, coupling, inheritance |
+| cc-defensive-programming | Error handling, validation |
+| cc-refactoring-guidance | Safe refactoring process |
+| cc-quality-practices | Testing, debugging, reviews |
+| cc-control-flow-quality | Nesting, complexity, loops |
+| cc-data-organization | Variables, types, data structures |
+| cc-code-layout-and-style | Formatting, visual structure |
+| cc-performance-tuning | Optimization process |
+| cc-integration-practices | Build, integration |
+
+### APOSD Skills (Design Philosophy)
+| Skill | Use For |
+|-------|---------|
+| aposd-designing-deep-modules | Interface design, design-it-twice |
+| aposd-simplifying-complexity | Error reduction, pull-down technique |
+| aposd-improving-code-clarity | Comments-first, naming |
+| aposd-maintaining-design-quality | Strategic vs tactical mindset |
+| aposd-reviewing-module-design | Complexity symptoms detection |
+| aposd-optimizing-critical-paths | Measure-first optimization |
+| aposd-verifying-correctness | Pre-commit verification |
+
+---
+
+## Shared Reference
+
+- [aposd-foundations.md](../../references/aposd-foundations.md) - Complexity vocabulary
