@@ -50,6 +50,17 @@ Review the git diff provided. Evaluate from perspective of a maintainer seeing t
 - [ ] Consistent formatting?
 - [ ] No trailing whitespace?
 
+### 7. Dead Code
+- [ ] No unused variables/constants?
+- [ ] No unused functions/methods?
+- [ ] No unused imports/requires?
+- [ ] No unreachable code (after return/throw/break)?
+- [ ] No commented-out code?
+- [ ] No dead conditional branches (if false, always-true flags)?
+- [ ] No unused parameters?
+- [ ] No orphaned files (not imported anywhere)?
+- [ ] No unused exports?
+
 ## Output Format
 
 ```markdown
@@ -82,11 +93,17 @@ Review the git diff provided. Evaluate from perspective of a maintainer seeing t
 | Unknown unknowns (unclear dependencies) | CRITICAL |
 | Parameters > 10 | CRITICAL |
 | God class/function | CRITICAL |
+| Unreachable code (indicates logic bug) | CRITICAL |
 | Dangerously misleading name | IMPORTANT |
 | Stale comment contradicting code | IMPORTANT |
 | High cognitive load | IMPORTANT |
 | Shallow modules | IMPORTANT |
 | Information leakage | IMPORTANT |
+| Unused function/method | IMPORTANT |
+| Orphaned file | IMPORTANT |
+| Dead conditional branch | IMPORTANT |
+| Commented-out code | SUGGESTION |
+| Unused variable/import | SUGGESTION |
 | Missing trailing newlines | SUGGESTION |
 | Vague variable name | SUGGESTION |
 | Inconsistent style | SUGGESTION |
