@@ -18,73 +18,62 @@ Skill(code-foundations:prototype)
 
 ---
 
-## Execution Flow
+## Master Checklist - Execute In Order
 
-### 1. SCOPE (One Question)
+**YOU MUST complete each step. No skipping.**
 
-Ask: "What ONE thing are you trying to prove?"
+### Phase 1: SCOPE
+- [ ] **1.1** Ask: "What ONE thing are you trying to prove?"
+- [ ] **1.2** Narrow until atomic ("Can I...")
+- [ ] **1.3** State: `SCOPE: [question]`
 
-Narrow until atomic:
-- "Can I show a system notification?"
-- "Can I read from this database?"
-- "Can I render a window?"
+### Phase 2: CONTEXT
+- [ ] **2.1** `git branch --show-current`
+- [ ] **2.2** If main → `git checkout -b prototype/<slug>`
+- [ ] **2.3** Run `Skill(code-foundations:aposd-reviewing-module-design)`
+- [ ] **2.4** State: `CONTEXT: [summary]`
 
-**Not:** "Can I build the feature?" (too broad)
+### Phase 3: MINIMUM
+- [ ] **3.1** Run `Skill(code-foundations:cc-pseudocode-programming)` - 3-5 lines
+- [ ] **3.2** Verify: happy path only, no error handling
+- [ ] **3.3** Verify: <50 lines (re-scope if not)
+- [ ] **3.4** State: `MINIMUM PATH: [pseudocode]`
 
-### 2. CONTEXT (Quick Check)
+### Phase 4: EXECUTE
+- [ ] **4.1** Write code from pseudocode
+- [ ] **4.2** Add header: `// PROTOTYPE: [scope] // NOT PRODUCTION`
+- [ ] **4.3** Run the code
+- [ ] **4.4** State: `RESULT: [what happened]`
 
-```bash
-# Where are we?
-git branch --show-current
-ls -la
-```
+### Phase 5: VERIFY
+- [ ] **5.1** Answer: YES / NO / PARTIAL
+- [ ] **5.2** If PARTIAL → specify what worked/didn't
 
-- Existing repo or new?
-- What APIs/libraries available?
-- Constraints?
+### Phase 6: CAPTURE
+- [ ] **6.1** `mkdir -p docs/prototypes`
+- [ ] **6.2** Write `docs/prototypes/YYYY-MM-DD-<slug>.md`
+- [ ] **6.3** Commit: `git commit -m "prototype: [scope] - [result]"`
 
-### 3. MINIMUM (Shortest Path)
+---
 
-**INVOKE cc-pseudocode-programming** (3-5 lines only):
-- Happy path ONLY
-- Hardcode values
-- Skip validation
+## Mandatory Skill Invocations
 
-**Target: ~50 lines max.** If more, re-scope.
+**These are NOT optional:**
 
-### 4. EXECUTE (Surgical Code)
+1. `Skill(code-foundations:aposd-reviewing-module-design)` - Step 2.3
+2. `Skill(code-foundations:cc-pseudocode-programming)` - Step 3.1
 
-```bash
-git checkout -b prototype/<scope-slug>
-```
+---
 
-Write clean minimum:
-```javascript
-// PROTOTYPE: [scope question]
-// NOT PRODUCTION: no error handling
-[minimal code that proves concept]
-// Result: [what happened]
-```
+## Gates
 
-### 5. VERIFY (Binary Answer)
-
-| Result | Action |
-|--------|--------|
-| YES | Capture what worked |
-| NO | Capture the blocker |
-| PARTIAL | Narrow scope, retry |
-
-### 6. CAPTURE (Prototype Log)
-
-```bash
-mkdir -p docs/prototypes
-```
-
-Write to `docs/prototypes/YYYY-MM-DD-<scope>.md`:
-- What we proved
-- Minimum working code
-- Key learnings
-- Production considerations
+| Gate | Blocks |
+|------|--------|
+| Scope not atomic | Phase 2 |
+| On main/master | Phase 4 |
+| No pseudocode | Phase 4 |
+| >50 lines | Phase 4 (re-scope) |
+| No prototype log | Completion |
 
 ---
 
@@ -93,17 +82,7 @@ Write to `docs/prototypes/YYYY-MM-DD-<scope>.md`:
 ```
 /prototype succeeds
      ↓
-/whiteboarding (informed by prototype)
+/whiteboarding (informed by learnings)
      ↓
-/building (production implementation)
+/building (production code)
 ```
-
----
-
-## Key Rules
-
-- **One thing** - Multiple goals = nothing proven
-- **Minimum code** - Extra code obscures learnings
-- **Clean over fast** - Messy POC = unclear learnings
-- **Always branch** - Even POC doesn't go on main
-- **Always capture** - Undocumented = forgotten

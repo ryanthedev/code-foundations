@@ -1,6 +1,6 @@
 {
   "name": "code-foundations",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "description": "Software engineering skills from Code Complete and A Philosophy of Software Design. Includes three-level code review system with 5 specialized agents, plus prototype→whiteboarding→building workflow for feature development with quality gates.",
   "author": {
     "name": "ryanthedev"

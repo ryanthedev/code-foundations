@@ -9,227 +9,222 @@ description: "Quick proof-of-concept to validate an idea with minimum code. Use 
 
 ---
 
-## Quick Reference
+## Master Checklist - Execute In Order
 
-| Phase | Goal | Output |
-|-------|------|--------|
-| SCOPE | One thing to prove | Single question |
-| CONTEXT | Environment check | Available APIs/tools |
-| MINIMUM | Shortest path | Surgical approach |
-| EXECUTE | Write clean POC code | Working prototype |
-| VERIFY | Did it work? | Yes/No + learnings |
-| CAPTURE | Document for production | Prototype log |
+**YOU MUST complete each checkbox before proceeding to the next phase.**
 
----
+### Phase 1: SCOPE
+- [ ] **1.1** Ask user: "What ONE thing are you trying to prove?"
+- [ ] **1.2** Narrow until atomic (starts with "Can I...")
+- [ ] **1.3** State the scope: "SCOPE: [single question]"
 
-## Philosophy
+### Phase 2: CONTEXT
+- [ ] **2.1** Check current branch: `git branch --show-current`
+- [ ] **2.2** If on main/master → Create branch: `git checkout -b prototype/<scope-slug>`
+- [ ] **2.3** Run `Skill(code-foundations:aposd-reviewing-module-design)` to survey existing code
+- [ ] **2.4** State: "CONTEXT: [environment summary]"
 
-**This is NOT production code. This code INFORMS production code.**
+### Phase 3: MINIMUM
+- [ ] **3.1** Run `Skill(code-foundations:cc-pseudocode-programming)` - write 3-5 lines of pseudocode
+- [ ] **3.2** Verify pseudocode is ONLY happy path (no error handling)
+- [ ] **3.3** Verify code will be <50 lines (if not, re-scope)
+- [ ] **3.4** State: "MINIMUM PATH: [pseudocode]"
 
-| Prototype IS | Prototype is NOT |
-|--------------|------------------|
-| Proving feasibility | Building the feature |
-| Finding the minimum path | Over-engineering |
-| Learning constraints | Handling all edge cases |
-| Surgical and focused | Comprehensive |
-| Disposable but informative | Throwaway spaghetti |
+### Phase 4: EXECUTE
+- [ ] **4.1** Write code from pseudocode
+- [ ] **4.2** Add header comment: `// PROTOTYPE: [scope] // NOT PRODUCTION`
+- [ ] **4.3** Run the code
+- [ ] **4.4** State: "RESULT: [what happened]"
 
-**Key insight:** Write the cleanest minimum. Messy prototypes teach nothing because you can't tell if the mess is the problem or the approach.
+### Phase 5: VERIFY
+- [ ] **5.1** Answer: YES / NO / PARTIAL
+- [ ] **5.2** If PARTIAL → identify what specifically worked/didn't
 
----
-
-## Crisis Invariants - NEVER SKIP
-
-| Check | Why Non-Negotiable |
-|-------|-------------------|
-| **One thing to prove** | Multiple goals = nothing proven |
-| **Minimum code only** | Extra code obscures what actually matters |
-| **Clean over fast** | Messy prototype = unclear learnings |
-| **Capture learnings** | Prototype without documentation = wasted effort |
-| **Stay on branch** | Even POC code shouldn't pollute main |
+### Phase 6: CAPTURE
+- [ ] **6.1** Create `docs/prototypes/` if needed
+- [ ] **6.2** Write prototype log to `docs/prototypes/YYYY-MM-DD-<scope>.md`
+- [ ] **6.3** Commit: `git add . && git commit -m "prototype: [scope] - [YES/NO/PARTIAL]"`
 
 ---
 
 ## Phase 1: SCOPE (One Question Only)
 
-### The Single Question
+**YOU MUST get a single atomic question before any code.**
 
-Ask: **"What ONE thing are you trying to prove?"**
+### Step 1.1 - Ask the Question
 
-Good scope:
-- "Can I show a system notification using this API?"
-- "Can I read from this database with these credentials?"
-- "Can I render a window with this framework?"
+Ask user: **"What ONE thing are you trying to prove?"**
 
-Bad scope (too broad):
-- "Can I build a notification system?" → Too much
-- "Can I integrate with the backend?" → Too vague
-- "Can I make it work?" → What is "it"?
+### Step 1.2 - Narrow Until Atomic
 
-### Narrow Until Atomic
+| Scope | Problem | Fix |
+|-------|---------|-----|
+| "Can I build a notification system?" | Too broad | "Can I show ONE notification?" |
+| "Can I integrate with the backend?" | Too vague | "Can I call ONE endpoint?" |
+| "Can I make it work?" | Undefined | "Can I [specific thing]?" |
 
-If scope is too broad, ask:
-- "What's the FIRST thing that needs to work for this to be possible?"
-- "If you could only prove ONE capability, which one?"
-- "What's the smallest thing that would give you confidence to proceed?"
+**Keep asking:** "What's the FIRST thing that needs to work?"
 
-**Output:** One sentence starting with "Can I..."
+### Step 1.3 - State the Scope
+
+```
+SCOPE: Can I [specific atomic thing]?
+```
+
+**GATE:** Do not proceed until scope is ONE atomic question.
 
 ---
 
 ## Phase 2: CONTEXT (Environment Check)
 
-### Quick Assessment
+**YOU MUST check branch and survey existing code.**
 
-```
-1. Where does this code live?
-   - [ ] Existing repo (which one?)
-   - [ ] New repo/scratch
-   - [ ] Standalone script
-
-2. What's already available?
-   - [ ] Existing APIs/libraries in the codebase
-   - [ ] External dependencies to install
-   - [ ] Nothing - starting fresh
-
-3. What constraints exist?
-   - [ ] Must use specific language/framework
-   - [ ] Must integrate with existing code
-   - [ ] No constraints - pure exploration
-```
-
-### Reconnaissance (If Existing Repo)
+### Step 2.1 - Branch Check
 
 ```bash
-# What's here?
-ls -la
-cat package.json  # or equivalent
+git branch --show-current
 ```
 
-**INVOKE aposd-reviewing-module-design** (light touch):
-- What modules exist that might help?
-- What patterns does this codebase use?
-- What's the simplest integration point?
+### Step 2.2 - Create Prototype Branch
 
-**Output:** 2-3 sentences on environment and available tools.
-
----
-
-## Phase 3: MINIMUM (Shortest Path)
-
-### The Minimum Path Question
-
-Ask yourself: **"What is the absolute minimum code to answer the SCOPE question?"**
-
-**INVOKE cc-pseudocode-programming** (abbreviated):
-1. Write 3-5 lines of pseudocode for the happy path ONLY
-2. No error handling in pseudocode (this is POC)
-3. No edge cases (prove the concept first)
-
-### Minimum Path Checklist
-
-- [ ] Can I use an existing function/API? (Don't write what exists)
-- [ ] Can I hardcode values? (Don't parameterize yet)
-- [ ] Can I skip validation? (Trust input for POC)
-- [ ] Can I use the simplest approach? (Not the "right" approach)
-- [ ] What can I delete from my mental plan?
-
-### Anti-Scope-Creep Gate
-
-Before proceeding, verify:
-- Does this code ONLY answer the SCOPE question?
-- Am I adding anything "while I'm here"?
-- Is there anything I can remove and still prove the concept?
-
-**If you're writing more than ~50 lines, STOP.** Re-scope or break into smaller POC.
-
----
-
-## Phase 4: EXECUTE (Surgical Code)
-
-### Branch First
+**If on main/master, YOU MUST create a branch:**
 
 ```bash
 git checkout -b prototype/<scope-slug>
 ```
 
-### Write with Discipline
+**GATE:** Do not write code on main/master.
 
-Even though this is POC, use skills to keep it clean:
+### Step 2.3 - Survey Existing Code (MANDATORY)
 
-**INVOKE cc-pseudocode-programming:**
-- Pseudocode → Code (even for 20 lines)
-- Clear names (you'll read this later)
-- One file if possible
-
-**Light quality checks (NOT full gates):**
-- Does the code match the pseudocode?
-- Could someone else understand what this proves?
-- Is there any code that doesn't serve the SCOPE?
-
-### What Clean POC Looks Like
-
-```javascript
-// PROTOTYPE: Can I show a system notification?
-// SCOPE: Prove notification API works on macOS
-// NOT PRODUCTION: No error handling, hardcoded values
-
-const { Notification } = require('electron');
-
-// Minimum: just show it works
-const notification = new Notification({
-  title: 'POC Test',
-  body: 'If you see this, notifications work'
-});
-
-notification.show();
-// Result: [describe what happened]
+**Run this skill:**
+```
+Skill(code-foundations:aposd-reviewing-module-design)
 ```
 
-**Notice:**
-- Comment states what this proves
-- Explicit "NOT PRODUCTION" marker
-- No error handling (intentional for POC)
-- Space for result annotation
+Answer these questions:
+- What modules/APIs exist that might help?
+- What patterns does this codebase use?
+- What's the simplest integration point?
+
+### Step 2.4 - State Context
+
+```
+CONTEXT: [repo/scratch], [available APIs], [constraints]
+```
 
 ---
 
-## Phase 5: VERIFY (Did It Work?)
+## Phase 3: MINIMUM (Shortest Path)
 
-### Binary Answer
+**YOU MUST write pseudocode before any real code.**
 
-The SCOPE question must have a YES or NO answer:
+### Step 3.1 - Write Pseudocode (MANDATORY)
 
-| Result | Meaning |
-|--------|---------|
-| **YES** | Concept is feasible. Proceed to learnings. |
-| **NO** | Concept blocked. Document why. |
-| **PARTIAL** | Refine scope. What specifically worked/didn't? |
+**Run this skill:**
+```
+Skill(code-foundations:cc-pseudocode-programming)
+```
 
-### If YES - Capture What Worked
+Write 3-5 lines of pseudocode:
+- Happy path ONLY
+- NO error handling
+- NO edge cases
+- NO validation
 
-- What was the minimum code that worked?
-- Any surprises in the API/behavior?
-- What would production version need to handle?
+### Step 3.2 - Verify Happy Path Only
 
-### If NO - Capture the Blocker
+Check your pseudocode:
+- [ ] No try/catch or error handling?
+- [ ] No input validation?
+- [ ] No edge case handling?
+- [ ] Hardcoded values where possible?
 
-- What specifically failed?
-- Is it a fundamental blocker or solvable?
-- Alternative approaches to try?
+**If any are checked NO → Remove them. This is POC.**
 
-### If PARTIAL - Narrow Scope
+### Step 3.3 - Verify Size
 
-- Split into smaller SCOPE questions
-- Run another prototype for the unclear part
+**If pseudocode suggests >50 lines of code → STOP and re-scope.**
+
+### Step 3.4 - State Minimum Path
+
+```
+MINIMUM PATH:
+1. [pseudocode line 1]
+2. [pseudocode line 2]
+3. [pseudocode line 3]
+```
+
+**GATE:** Do not write code until pseudocode is approved.
+
+---
+
+## Phase 4: EXECUTE (Surgical Code)
+
+**YOU MUST translate pseudocode to code with prototype header.**
+
+### Step 4.1 - Write Code From Pseudocode
+
+Translate each pseudocode line to real code. **Add nothing extra.**
+
+### Step 4.2 - Add Prototype Header (MANDATORY)
+
+Every prototype file MUST start with:
+
+```javascript
+// PROTOTYPE: [scope question]
+// NOT PRODUCTION: No error handling, hardcoded values
+// DATE: YYYY-MM-DD
+```
+
+### Step 4.3 - Run the Code
+
+Execute and observe what happens.
+
+### Step 4.4 - State Result
+
+```
+RESULT: [exactly what happened when code ran]
+```
+
+---
+
+## Phase 5: VERIFY (Binary Answer)
+
+**YOU MUST give a definitive answer.**
+
+### Step 5.1 - Answer YES / NO / PARTIAL
+
+| Answer | Meaning | Next Action |
+|--------|---------|-------------|
+| **YES** | It works as expected | Proceed to CAPTURE |
+| **NO** | Blocked, doesn't work | Document blocker in CAPTURE |
+| **PARTIAL** | Some parts work | Identify what specifically, then CAPTURE |
+
+### Step 5.2 - If PARTIAL, Specify
+
+```
+PARTIAL:
+- WORKS: [what succeeded]
+- BLOCKED: [what failed]
+- UNCLEAR: [what needs more investigation]
+```
 
 ---
 
 ## Phase 6: CAPTURE (Document for Production)
 
-### Prototype Log
+**YOU MUST document learnings. Undocumented prototypes are wasted.**
 
-Create or append to `docs/prototypes/YYYY-MM-DD-<scope>.md`:
+### Step 6.1 - Create Directory
+
+```bash
+mkdir -p docs/prototypes
+```
+
+### Step 6.2 - Write Prototype Log (MANDATORY)
+
+**Create `docs/prototypes/YYYY-MM-DD-<scope-slug>.md`:**
 
 ```markdown
 # Prototype: [Scope Question]
@@ -240,40 +235,52 @@ Create or append to `docs/prototypes/YYYY-MM-DD-<scope>.md`:
 
 ## What We Proved
 
-[1-2 sentences on what was demonstrated]
+[1-2 sentences]
 
 ## Minimum Working Code
 
 ```[language]
-[the actual working code - keep it minimal]
+[the code that worked]
 ```
 
 ## Key Learnings
 
-- [API behavior discovered]
-- [Constraints found]
-- [Surprises]
+- [learning 1]
+- [learning 2]
 
 ## Production Considerations
 
 - [ ] Error handling needed for: [list]
-- [ ] Edge cases to handle: [list]
-- [ ] Integration points: [list]
-- [ ] Estimated complexity: [simple/medium/complex]
+- [ ] Edge cases: [list]
+- [ ] Estimated complexity: simple / medium / complex
 
 ## Next Steps
 
-- [ ] If proceeding: `/whiteboarding` with these learnings
-- [ ] If blocked: [alternative to explore]
-- [ ] If more POC needed: [next scope question]
+- [ ] Proceed to `/whiteboarding` with these learnings
+- [ ] OR: More prototyping needed for [specific question]
+- [ ] OR: Blocked by [blocker], need [alternative]
 ```
 
-### Link to Future Work
+### Step 6.3 - Commit
 
-The prototype log becomes input for `/whiteboarding`:
-- Proven: What we know works
-- Constraints: What we discovered
-- Complexity: Informed estimate
+```bash
+git add .
+git commit -m "prototype: [scope] - [YES/NO/PARTIAL]
+
+Co-Authored-By: Claude Code <noreply@anthropic.com>"
+```
+
+---
+
+## Crisis Invariants - NEVER SKIP
+
+| Check | Why Non-Negotiable |
+|-------|-------------------|
+| **Atomic scope first** | Multiple goals = nothing proven |
+| **Branch before code** | POC on main = pollution |
+| **Pseudocode before code** | No pseudocode = scope creep |
+| **<50 lines** | More = not a prototype |
+| **Prototype log written** | Undocumented = forgotten |
 
 ---
 
@@ -281,75 +288,29 @@ The prototype log becomes input for `/whiteboarding`:
 
 | Rationalization | Reality |
 |-----------------|---------|
-| "I'll just add error handling quick" | Error handling is production work. Prove concept first. |
-| "Let me make it configurable" | Hardcode for POC. Configuration is production work. |
-| "I should handle this edge case" | Edge cases are production work. Happy path only. |
-| "This is messy but it works" | Messy POC = unclear learnings. Clean it. |
-| "I'll remember what I learned" | You won't. Write the prototype log. |
-| "It mostly works, close enough" | PARTIAL is not YES. Be precise about what worked. |
-| "Let me refactor this prototype" | If it proves the concept, STOP. Refactoring is production. |
-| "I need more features to really prove it" | Scope creep. One thing. Prove that one thing. |
-| "I'll document later" | You won't. Capture learnings while they're fresh. |
-| "This is throwaway, doesn't need a branch" | Prototypes on main = pollution. Branch always. |
+| "I already know what to build" | Then pseudocode takes 30 seconds. Do it. |
+| "Pseudocode is overkill for POC" | Pseudocode PREVENTS scope creep. Do it. |
+| "I'll document after" | You won't. Write the log now. |
+| "This is throwaway, skip the branch" | Prototypes on main = pollution. Branch. |
+| "Let me add error handling quick" | That's production work. Happy path only. |
+| "It mostly works" | PARTIAL is not YES. Be precise. |
+| "I'll remember what I learned" | You won't. Write it down. |
 
 ---
 
-## Pressure Testing Scenarios
+## Skill Dependencies
 
-### Scenario 1: Scope Creep
+This skill REQUIRES invoking:
 
-**Situation:** You're proving notification works, and think "let me also test if I can customize the icon."
+1. **`Skill(code-foundations:aposd-reviewing-module-design)`** - Phase 2.3 (survey existing code)
+2. **`Skill(code-foundations:cc-pseudocode-programming)`** - Phase 3.1 (write pseudocode)
 
-**Response:** STOP. That's a second SCOPE question. Finish current POC, capture learnings, then start new prototype for icon customization.
-
-### Scenario 2: It Works But It's Ugly
-
-**Situation:** The prototype works but the code is hard to follow.
-
-**Response:** Clean it. Ugly POC = unclear learnings. You're not optimizing for speed, you're optimizing for learning. Take 5 minutes to make it readable.
-
-### Scenario 3: Rabbit Hole
-
-**Situation:** The API doesn't work as expected. You've spent 30 minutes debugging.
-
-**Response:** STOP. Capture what you learned. The POC answer might be "NO - blocked by [issue]". That's valuable information. Don't turn POC into full investigation.
-
-### Scenario 4: It Works, Now What?
-
-**Situation:** Prototype succeeds. You're tempted to keep building.
-
-**Response:** STOP. Capture learnings in prototype log. If you want to build the full feature, use `/whiteboarding` with the prototype learnings as input. Don't evolve POC into production.
-
----
-
-## Workflow Integration
-
-```
-/prototype "can I show a notification?"
-  ↓
-[Prove concept - minimum code]
-[Capture learnings]
-  ↓
-/whiteboarding "build notification system"
-  ↓
-[Discovery questions - informed by prototype]
-[Approaches - knowing what works]
-  ↓
-/building
-  ↓
-[Production implementation]
-```
-
-**Prototype feeds whiteboarding:**
-- Proven capabilities
-- Known constraints
-- Realistic complexity estimates
+These are NOT optional. They are mandatory steps in the checklist.
 
 ---
 
 ## Chaining
 
 - **RECEIVES FROM:** User question, feature idea, technical uncertainty
-- **CHAINS TO:** whiteboarding (with prototype learnings), or another prototype
-- **SKILLS USED:** cc-pseudocode-programming (light), aposd-reviewing-module-design (reconnaissance)
-- **RELATED:** oberhack, spike, technical investigation
+- **CHAINS TO:** `/whiteboarding` (with prototype learnings)
+- **SKILLS INVOKED:** aposd-reviewing-module-design, cc-pseudocode-programming
