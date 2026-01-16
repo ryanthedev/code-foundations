@@ -51,37 +51,48 @@ The `code-foundations` skill (`skills/code-foundations/SKILL.md`) is the entry p
 3. Executes task-specific checklist
 4. Runs pre-commit gate via `aposd-verifying-correctness`
 
-### Whiteboarding/Building Workflow
+### Prototype → Whiteboarding → Building Workflow
 
-Plan-then-execute pattern for feature development:
+Three-stage pattern for feature development:
 
 | Command | Purpose | Output |
 |---------|---------|--------|
+| `/prototype` | Prove feasibility with minimum code | Prototype log in `docs/prototypes/` |
 | `/whiteboarding` | Discovery-oriented brainstorming | Plan file in `docs/plans/` |
 | `/building` | Checklist-based execution | Working code + tests |
 
-**Flow:**
+**Full Flow:**
 ```
-/whiteboarding "user story"
-  → Discovery questions (one at a time)
+/prototype "can I show a notification?"
+  → One question to prove
+  → Minimum code (~50 lines max)
+  → Binary answer: YES/NO/PARTIAL
+  → Capture learnings to docs/prototypes/
+
+        ↓ (if feasible)
+
+/whiteboarding "build notification system"
+  → Discovery questions (informed by prototype)
   → 2-3 approaches with trade-offs
   → Implementation-ready plan
   → Save to docs/plans/YYYY-MM-DD-<topic>.md
 
-[Optional: Refresh context window]
+        ↓ (after plan approval)
 
 /building docs/plans/<plan>.md
-  → Load plan → TodoWrite checklist
+  → Feature branch required
   → Execute phases with quality gates
-  → Per-phase commits
+  → Per-phase commits + reviewer agent
   → Final verification + report
 ```
 
-**Key features:**
-- Adaptive question depth (simple: 3-4, complex: 8-12)
-- Plan file enables context refresh between planning and execution
-- Checklist tracking prevents forgotten tasks
-- Scope discipline (no unplanned features)
+**When to use each:**
+
+| Situation | Command |
+|-----------|---------|
+| "Can I do X?" / technical uncertainty | `/prototype` |
+| Ready to plan full feature | `/whiteboarding` |
+| Plan exists, ready to implement | `/building` |
 
 **Quality Gates (per phase during /building):**
 ```
