@@ -51,6 +51,48 @@ The `code-foundations` skill (`skills/code-foundations/SKILL.md`) is the entry p
 3. Executes task-specific checklist
 4. Runs pre-commit gate via `aposd-verifying-correctness`
 
+### Whiteboarding/Building Workflow
+
+Plan-then-execute pattern for feature development:
+
+| Command | Purpose | Output |
+|---------|---------|--------|
+| `/whiteboarding` | Discovery-oriented brainstorming | Plan file in `docs/plans/` |
+| `/building` | Checklist-based execution | Working code + tests |
+
+**Flow:**
+```
+/whiteboarding "user story"
+  → Discovery questions (one at a time)
+  → 2-3 approaches with trade-offs
+  → Implementation-ready plan
+  → Save to docs/plans/YYYY-MM-DD-<topic>.md
+
+[Optional: Refresh context window]
+
+/building docs/plans/<plan>.md
+  → Load plan → TodoWrite checklist
+  → Execute phases with quality gates
+  → Per-phase commits
+  → Final verification + report
+```
+
+**Key features:**
+- Adaptive question depth (simple: 3-4, complex: 8-12)
+- Plan file enables context refresh between planning and execution
+- Checklist tracking prevents forgotten tasks
+- Scope discipline (no unplanned features)
+
+**Quality Gates (per phase during /building):**
+```
+PRE-GATE:  cc-pseudocode-programming + aposd-designing-deep-modules
+IMPLEMENT: Write code, run tests
+POST-GATE: aposd-verifying-correctness + cc-defensive-programming + reviewer agent
+CHECKPOINT: Commit only after all gates pass
+```
+
+Cannot proceed to next phase until current phase passes all gates including reviewer agent PASS.
+
 ## Skill File Structure
 
 ```
