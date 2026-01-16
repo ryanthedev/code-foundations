@@ -25,6 +25,7 @@ description: "Execute whiteboard plans with checklist-based tracking. Use after 
 
 | Check | Why Non-Negotiable |
 |-------|-------------------|
+| **Feature branch required** | Multi-phase commits on main = no rollback, polluted history |
 | **Load plan before coding** | No plan = no checklist = forgotten tasks |
 | **One section at a time** | Parallel sections = merge conflicts + lost context |
 | **PRE-GATE before implementation** | No pseudocode = coding without design = rework |
@@ -36,6 +37,39 @@ description: "Execute whiteboard plans with checklist-based tracking. Use after 
 ---
 
 ## Phase 1: LOAD (Read Plan File)
+
+### Branch Gate (MANDATORY - First Check)
+
+**Before anything else, verify branch status:**
+
+```bash
+git branch --show-current
+git status
+```
+
+| Current Branch | Action |
+|----------------|--------|
+| `main` or `master` | **STOP.** Create feature branch first. |
+| Feature branch, clean | Proceed |
+| Feature branch, dirty | Ask: "Uncommitted changes. Stash, commit, or abort?" |
+
+**If on main/master:**
+```
+You're on [main]. Building requires a feature branch for safe multi-phase commits.
+
+Create branch now?
+- [ ] Yes, create: feature/<plan-topic>
+- [ ] Yes, create: <custom-name>
+- [ ] No, abort building
+```
+
+```bash
+git checkout -b feature/<plan-topic>
+```
+
+**This gate is NON-NEGOTIABLE.** Do not proceed on main/master under any circumstances.
+
+---
 
 ### Locate Plan
 
@@ -383,6 +417,8 @@ When resuming blocked plan:
 | "POST-GATE is slowing me down" | POST-GATE catches issues BEFORE they propagate. Fix now = faster than fix later. |
 | "Reviewer agent is redundant" | You implemented the code; reviewer agent has fresh perspective. Different context = different bugs caught. |
 | "Gates passed last phase, skip this one" | Each phase is independent. Past gates don't predict current quality. |
+| "I'll just commit to main, it's faster" | Multi-phase builds on main = no rollback. Feature branch is mandatory. |
+| "It's a small change, main is fine" | Small changes grow. Branch now or regret later. |
 
 ---
 

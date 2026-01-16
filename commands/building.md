@@ -20,6 +20,19 @@ Skill(code-foundations:building)
 
 ## Execution Flow
 
+### 0. Branch Gate (FIRST CHECK)
+
+```bash
+git branch --show-current
+```
+
+| Branch | Action |
+|--------|--------|
+| `main`/`master` | **STOP.** Create `feature/<topic>` first |
+| Feature branch | Proceed |
+
+**Non-negotiable.** No building on main.
+
 ### 1. Load Plan
 
 If path provided:
