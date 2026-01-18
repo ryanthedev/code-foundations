@@ -211,6 +211,12 @@ field[fieldType].ReadAndPrint(fieldName, fileStatus);
 | "Tables are harder to debug" | Tables separate data from logic, making each easier to verify independently. |
 | "I need different behavior per type" | Can behavior be encoded as data? (action codes, routine references) |
 | "But the table needs setup code" | Setup code runs once; if-chains execute every call. |
+| "It's only N branches now" | The threshold keeps moving. "Just 5" becomes 20. Act at 4+. |
+| "Tables are premature optimization" | YAGNI to justify never refactoring. Pattern is already here. |
+| "We need the type safety of subclasses" | Modern pattern matching provides type safety without explosion. |
+| "This behavior might diverge later" | Speculative polymorphism. Add complexity when needed, not before. |
+| "The team doesn't know tables" | Teach the pattern. Don't lock team into suboptimal approaches. |
+| "OOP version is more testable" | Tables are testable via lookup function with boundary cases. |
 
 ---
 

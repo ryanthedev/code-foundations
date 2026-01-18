@@ -282,6 +282,11 @@ digraph hypothesis_formation {
 | "I'll make several changes at once to save time" | Multiple changes = can't know which one mattered |
 | "The debugger is a crutch" | Good thinking + good debugger = most effective |
 | "I verified it works once" | Test the triangulation cases too. Add regression test. |
+| "I'm just adding observability" | Logging without hypothesis is aimless exploration, not debugging. |
+| "Reproduction is good enough (7/10)" | Partial reproduction = missing variable in hypothesis. 100% or keep searching. |
+| "Tests pass so it's verified" | If tests passed WITH the bug, they don't test the bug. Add new test. |
+| "I've seen this pattern before" | Familiarity breeds overconfidence. Form hypothesis from THIS data, not memory. |
+| "I'll understand after deployment" | Production monitoring is not verification. Fix must be proven BEFORE commit. |
 
 ---
 
