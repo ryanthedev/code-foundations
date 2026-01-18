@@ -9,7 +9,7 @@ Code Complete-based software engineering skills for Claude Code.
 User: "X isn't working, use foundations to debug it"
   → code-foundations classifies as DEBUG
   → cc-developer-character checks mindset
-  → cc-quality-practices: hypothesis → verify → fix
+  → cc-debugging: stabilize → hypothesize → experiment → fix
 ```
 
 ### WRITE
@@ -57,6 +57,8 @@ User: "Clean this up with foundations"
 | **cc-integration-practices** | Integration and builds | "use integration to review this merge" |
 | **cc-performance-tuning** | Measure-first optimization | "use perf tuning, this is slow" |
 | **cc-documentation-quality** | README, comments, API docs | "use doc quality to review this" |
+| **cc-debugging** | Scientific debugging method | "debug this", "figure out why this fails" |
+| **cc-table-driven-methods** | Replace if/else with tables | "too many if statements", "switch growing" |
 
 ---
 
@@ -129,10 +131,10 @@ The skills chain together based on task type:
 ```
 code-foundations (dispatcher)
        │
-       ├── DEBUG ──→ cc-developer-character ──→ cc-quality-practices
+       ├── DEBUG ──→ cc-developer-character ──→ cc-debugging
        │                                              │
        │                                              └── Scientific Method
-       │                                                  (hypothesis → verify → fix)
+       │                                                  (stabilize → hypothesize → experiment → fix)
        │
        ├── WRITE ──→ cc-developer-character ──→ cc-construction-prerequisites
        │                                              │

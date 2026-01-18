@@ -20,7 +20,7 @@ Code-foundations is a Claude Code plugin providing software engineering skills b
 - `skills/` - Individual skill definitions (SKILL.md + supporting markdown)
 - `commands/` - User-invocable commands (slash commands)
 - `agents/` - 5 consolidated review agents with dual roles
-- `references/` - Shared reference materials
+- `references/` - Shared reference materials (including `cc-foundations.md` for shared CC vocabulary)
 - `docs/` - Case study examples
 
 ### Three-Level Code Review System
@@ -48,8 +48,9 @@ Each agent invokes 2 skills: one from CC (process) + one from APOSD (philosophy)
 The `code-foundations` skill (`skills/code-foundations/SKILL.md`) is the entry point:
 1. Classifies task type (WRITE, DEBUG, REVIEW, OPTIMIZE, REFACTOR, SIMPLIFY, SECURE)
 2. Runs mindset check via `cc-developer-character`
-3. Executes task-specific checklist
-4. Runs pre-commit gate via `aposd-verifying-correctness`
+3. Routes DEBUG tasks to `cc-debugging` (scientific method)
+4. Executes task-specific checklist
+5. Runs pre-commit gate via `aposd-verifying-correctness`
 
 ### Prototype → Whiteboarding → Building Workflow
 
@@ -143,3 +144,10 @@ Reviews are **grouped by file** with effort estimates:
 - Cohesion (routine does ONE thing)
 - Coupling (minimized dependencies)
 - Parameters ≤7, Inheritance depth < 3
+
+**CC Skills (15 total):**
+All CC skills reference `references/cc-foundations.md` for shared vocabulary (cohesion spectrum, coupling criteria, key metrics).
+
+New skills added:
+- `cc-debugging` - Scientific debugging (Chapter 23): STABILIZE → LOCATE → HYPOTHESIZE → EXPERIMENT → FIX → TEST → SEARCH
+- `cc-table-driven-methods` - Replace complex logic with tables (Chapter 18): direct access, indexed access, stair-step access
