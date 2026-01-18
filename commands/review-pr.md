@@ -80,6 +80,7 @@ Task tool:
     First invoke code-foundations skill, then read agents/correctness-reviewer.md.
 
     Review for bugs AND test coverage: boundaries, logic flow, duplicates, test gaps.
+    For bug-fix PRs, reference cc-debugging skill for debugging methodology verification.
 
     GIT DIFF:
     [paste diff]

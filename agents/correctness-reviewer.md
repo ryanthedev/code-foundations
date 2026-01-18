@@ -85,6 +85,12 @@ Review the git diff provided. Focus on whether code works correctly AND whether 
 
 ### Correctness Assessment: [VERIFIED / LIKELY CORRECT / UNCERTAIN / BUGGY]
 ### Coverage Assessment: [COMPREHENSIVE / ADEQUATE / GAPS / INADEQUATE]
+
+### Debugging Reference
+For systematic debugging of identified issues, reference cc-debugging skill which provides:
+- Scientific debugging flowchart
+- Hypothesis formation techniques
+- Common debugging anti-patterns to avoid
 ```
 
 ## Severity Guide

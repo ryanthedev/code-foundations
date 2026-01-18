@@ -2,7 +2,7 @@
 
 Source: Code Complete 2nd Edition, Chapters 20-23
 
-## Key Points (Author's Emphasis)
+## Key Points (Author-Marked)
 
 | Key Point | Page | Implication |
 |-----------|------|-------------|
@@ -11,6 +11,11 @@ Source: Code Complete 2nd Edition, Chapters 20-23
 | "Writing test cases before the code takes the same amount of time and effort as writing the test cases after the code, but it shortens defect-detection-debug-correction cycles." | p.506 | Test-first is free; only the sequence changes |
 | "Debugging performance varies 20-to-1 between programmers." | p.536 | Systematic debugging is a learnable, high-leverage skill |
 | "Errors tend to cluster in a few error-prone classes and routines." | p.512 | Focus quality efforts on the troubled 20% |
+| "Testing is a means of detecting errors. Debugging is a means of diagnosing and correcting the root causes of errors that have already been detected." | p.499 | Distinguish testing (detection) from debugging (diagnosis/correction) |
+| "Defects creep into software at all stages. Consequently, you should emphasize quality-assurance work in the early stages AND throughout the rest of the project." | p.499-500 | QA is not just end-of-cycle; it's continuous |
+| "Testing by itself does not improve software quality. Test results are an indicator of quality, but in and of themselves they don't improve it." | p.500 | Testing measures quality; it doesn't create it |
+| "Test cases are often as likely or more likely to contain errors than the code being tested." | p.522 | Develop test cases with same rigor as production code |
+| "The only practical way to manage regression testing is to automate it." | p.528 | Manual regression testing is error-prone and numbing |
 
 ---
 
@@ -81,12 +86,12 @@ XP achieves ~90% through combination of practices, not special synergy. Other co
 | One-line changes | Freedman/Weinberg 1990 | Error rate reduced from 55% to 2% |
 | ROI comparison | Collofello/Woodfield 1989 | Code reviews: 1.38 ROI vs testing: 0.17 ROI |
 
-### 99% Defect Removal Correlation [Jones 2000]
+### 99% Defect Removal Correlation [Jones 2000, p.474]
 
 - **All** projects achieving 99%+ defect removal used formal inspections
 - **None** achieving <75% removal used formal inspections
 
-### Where Defects Are Found [Votta 1991, AT&T]
+### Where Defects Are Found [Votta 1991, AT&T, p.489]
 
 | Phase | Defects Found |
 |-------|---------------|
@@ -94,6 +99,23 @@ XP achieves ~90% through combination of practices, not special synergy. Other co
 | Meeting | 10% |
 
 **Implication:** Emphasize preparation time; the meeting itself is less critical.
+
+### Reviews Find Different Errors Than Testing [Myers 1978; Basili, Selby, Hutchens 1986, p.485]
+
+Human reviewers spot issues testing cannot find:
+- Unclear error messages
+- Inadequate comments
+- Hard-coded values
+- Repeated code patterns
+
+**Implication:** Use BOTH reviews and testing - they find different error types.
+
+### Code Reading vs Functional Testing [Basili, Selby, Hutchens 1986, p.473]
+
+| Technique | Best At Finding |
+|-----------|-----------------|
+| Code reading | Interface defects |
+| Functional testing | Control defects |
 
 ---
 
@@ -171,7 +193,7 @@ XP achieves ~90% through combination of practices, not special synergy. Other co
 | 18-36% of errors are clerical (typos) | Weiss 1975, Card 1987 |
 | 16-19% from misunderstood design | Beizer 1990, Weiss 1975 |
 
-### Most Expensive Single-Character Errors [Weinberg 1983]
+### Most Expensive Single-Character Errors [Weinberg 1983, p.519]
 
 | Cost | Description |
 |------|-------------|
@@ -180,6 +202,23 @@ XP achieves ~90% through combination of practices, not special synergy. Other co
 | $245 million | Single character change in previously correct program |
 
 **Implication:** Clerical errors are not "minor." Treat typos seriously.
+
+### Three Most Common Error Sources [Curtis, Krasner, Iscoe 1988, p.519]
+
+From 97 interviews, the top error sources (outside construction):
+1. Thin application-domain knowledge
+2. Fluctuating and conflicting requirements
+3. Communication and coordination breakdown
+
+### Construction Errors by Project Size [Jones 1986a, Beizer 1990, Jones 2000, p.520-521]
+
+| Project Size | Construction Defects |
+|--------------|---------------------|
+| Small (1 KLOC) | 75% of all defects |
+| Large projects | At least 35% of all defects |
+| Very large (some studies) | Up to 75% |
+
+**Implication:** Construction defects are significant regardless of project size.
 
 ---
 
@@ -261,7 +300,7 @@ XP achieves ~90% through combination of practices, not special synergy. Other co
 
 ---
 
-## Clean vs Dirty Test Ratio [Beizer]
+## Clean vs Dirty Test Ratio [Beizer, p.504]
 
 | Organization Maturity | Clean:Dirty Ratio |
 |----------------------|-------------------|
@@ -279,7 +318,69 @@ Dirty tests check:
 
 ---
 
-## Anti-Patterns (Documented Failures)
+## Additional Empirical Evidence
+
+### Myers Classic Study [Myers 1978b, p.471]
+
+- Experienced programmers (min 7 years, avg 11 years) tested a program with 15 known defects
+- Average found only 5.1 defects (about 1/3)
+- Best found only 9 defects
+- **Main source of undetected errors:** Erroneous output not examined carefully enough
+
+**Implication:** Even experienced testers miss the majority of defects.
+
+### Combining Techniques Doubles Detection [Myers 1978b, p.472]
+
+- When used individually, no technique had statistically significant advantage
+- **Any combination of two methods** (including two groups using the same method) increased total defects found by factor of almost 2
+
+### Multiple Inspectors Find Different Defects [p.472]
+
+Sources: NASA SEL, Boeing - Kouchakdjian, Green, Basili 1989; Tripp, Struck, Pflug 1991; Schneider, Martin, Tsai 1992
+
+- Different people tend to find different defects
+- Only about **20%** of errors found by inspections were found by more than one inspector
+
+**Implication:** Use multiple reviewers; overlap is low.
+
+### Prototyping Effectiveness [Gordon and Bieman 1991, p.468]
+
+- Survey of 16 published and 8 unpublished case studies
+- Prototyping compared to traditional specification-development methods
+- Prototyping **can lead to:** better designs, better matches with user needs, improved maintainability
+
+[QUALIFIER: "can lead to" - not guaranteed]
+
+### Programmer Goal Achievement [Weinberg and Schulman 1974, p.466]
+
+- Five teams worked on same program, each told to optimize different objective
+- Four of five teams finished **first** in their assigned objective; fifth finished second
+- **None** of the teams did consistently well in all objectives
+
+**Implication 1:** Programmers will work to achieve explicit objectives if told what they are
+**Implication 2:** Objectives conflict; generally not possible to do well on all of them
+
+### Defect Fix Success Rate [Yourdon 1986b, p.545]
+
+- Defect corrections have **>50% chance of being wrong** the first time
+
+**Implication:** Always verify fixes; expect initial failure.
+
+### Program Understanding and Fix Success [Littman et al. 1986, p.546]
+
+- Programmers with **global understanding** of program behavior modify code more successfully
+- Study with 280-line programs
+- "Vicinity" of understanding = few hundred lines, not just the bug site
+
+### Debugging Blindness [Basili, Selby, Hutchens 1986, p.547]
+
+- Effective debuggers mentally "slice away" irrelevant code
+- Risk: Sometimes the defect is in the sliced-away portion
+- Good practices (formatting, comments, naming) help anomalies stand out
+
+---
+
+## Anti-Patterns (CODING HORROR)
 
 ### Special-Case Fix [CODING HORROR, p.553]
 
@@ -310,6 +411,52 @@ Making random changes until something seems to work.
 
 **Reality:** You learn nothing. The more different you make it without understanding, the less confidence you'll have that it works.
 
+### Test Overkill with Clean Tests [p.504]
+
+Running many "clean tests" (tests that verify code works) but few "dirty tests" (tests that try to break code).
+
+**Reality:** Immature organizations have 5 clean tests per dirty test. Mature organizations have 5 dirty tests per clean test. The ratio isn't improved by reducing clean tests but by creating 25x more dirty tests.
+
+### Coverage by Intuition [p.504]
+
+Believing test coverage is adequate based on intuition rather than measurement.
+
+**Reality:** Developers typically believe they achieve 95% coverage but actually achieve 30-80% (average 50-60%). Always use coverage monitors.
+
+### Testing-Only Quality [p.500]
+
+Relying on testing as the primary method for both quality assessment AND quality improvement.
+
+**Reality:** Testing is an indicator of quality, not an improver. "Trying to improve software quality by increasing the amount of testing is like trying to lose weight by weighing yourself more often."
+
+### Single-Technique Reliance [p.470-472]
+
+Relying on any single defect-detection technique.
+
+**Reality:** No single technique exceeds 75% modal detection rate. Typical test-heavy organizations achieve only 85% removal. Leading organizations use multiple techniques for 95%+.
+
+---
+
+## Qualifiers and Scope
+
+### What the Evidence Does NOT Apply To
+
+| Qualifier | Context | Source |
+|-----------|---------|--------|
+| "Typical organization" | Detection rate comparisons assume average process maturity | Jones 2000 |
+| "Certain kinds of projects" | Space shuttle, medical life-support may have different cost/quality tradeoffs | p.520 |
+| "Can lead to" | Prototyping benefits are potential, not guaranteed | Gordon and Bieman 1991 |
+| "Tend to be" | Human processes better at finding certain errors; relationship is typical, not absolute | Myers 1979 |
+| "Typical relationship" | Correctness vs robustness tradeoff may differ on specific projects | p.466 |
+
+### Study Limitations
+
+| Study Type | Limitation | Mitigation |
+|------------|------------|------------|
+| Detection rate studies | Different studies report wildly different results (50%+ variance) | Use as rough guidance, not precise targets |
+| Error type classification | Beizer's percentages reported to 2 decimal places but research is inconclusive | Treat categories as approximate |
+| Single-company studies | IBM, Microsoft, HP data may not generalize to all contexts | Look for patterns across multiple studies |
+
 ---
 
 ## Quality and Schedule Relationship
@@ -334,10 +481,49 @@ Making random changes until something seems to work.
 
 ---
 
-## Relevant Standards
+## Cross-References
+
+### Code Complete Internal References
+
+| Section | Topic | Relevance |
+|---------|-------|-----------|
+| Section 3.1 | Debugging time in traditional cycles | Supports 50% rework claim |
+| Chapter 20 | Software-Quality Landscape | Primary source for detection rates |
+| Chapter 21 | Collaborative Construction | Inspection procedures, pair programming |
+| Chapter 22 | Developer Testing | Testing limitations, error clustering |
+| Chapter 23 | Debugging | 20:1 programmer variation, fix success rates |
+
+### Related CC Skills
+
+| Skill | Connection |
+|-------|------------|
+| cc-defensive-programming | Error prevention techniques complement detection |
+| cc-code-layout-and-style | Good formatting helps anomalies stand out during debugging |
+| cc-documentation-quality | Documentation reviewed during inspections |
+| cc-routine-and-class-design | Error clustering relates to design quality |
+| cc-construction-prerequisites | Upstream QA more cost-effective than downstream |
+
+### Related APOSD Skills
+
+| Skill | Connection |
+|-------|------------|
+| aposd-verifying-correctness | Verification before claiming "done" |
+| aposd-reviewing-module-design | Module review during inspections |
+
+### External References (Standards)
 
 - IEEE Std 730-2002, Standard for Software Quality Assurance Plans
 - IEEE Std 1061-1998, Standard for Software Quality Metrics Methodology
 - IEEE Std 1028-1997, Standard for Software Reviews
 - IEEE Std 1008-1987 (R1993), Standard for Software Unit Testing
 - IEEE Std 829-1998, Standard for Software Test Documentation
+
+### Recommended Reading (from source)
+
+| Book | Author | Focus |
+|------|--------|-------|
+| Testing Computer Software, 2d ed. | Kaner, Falk, Nguyen 1999 | Comprehensive testing |
+| Lessons Learned in Software Testing | Kaner, Bach, Pettichord 2002 | Practical testing wisdom |
+| How to Break Software | Whittaker 2002 | Dirty testing techniques |
+| The Art of Software Testing | Myers 1979 | Classic testing reference |
+| Test-Driven Development: By Example | Beck 2003 | Test-first practices |

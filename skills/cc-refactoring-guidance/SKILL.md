@@ -237,5 +237,6 @@ If you skipped review on a small change:
 - Cross-refs: Ch 5 (design), Ch 21 (collaborative construction), Ch 22 (developer testing), Ch 23 (debugging)
 
 ## References
+- Foundation: [cc-foundations.md](../../references/cc-foundations.md)
 - Checklist: [checklists.md](./checklists.md)
 - Evidence: [hard-data.md](./hard-data.md)

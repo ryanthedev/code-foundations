@@ -137,3 +137,8 @@ Check all AI config files that exist in the project:
 2. "If the code changes, which docs need updating?"
 3. "Does this comment tell me something the code doesn't?"
 4. "Is this TODO actionable or just noise?"
+
+---
+
+## References
+- Foundation: [cc-foundations.md](../../references/cc-foundations.md)

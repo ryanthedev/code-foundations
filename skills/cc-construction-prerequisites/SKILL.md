@@ -299,6 +299,7 @@ This skill applies to existing code, not just new projects. Use CHECKER mode as 
 
 ## References
 
+- **Foundation:** [cc-foundations.md](../../references/cc-foundations.md)
 - **Checklists:** [checklists.md](./checklists.md) (66 items from pp. 55-60, 69-70)
 - **Evidence:** [hard-data.md](./hard-data.md)
 - **Language notes:** [language-notes.md](./language-notes.md) - includes technology wave assessment, "programming into vs in" guidance, language expressiveness ratios

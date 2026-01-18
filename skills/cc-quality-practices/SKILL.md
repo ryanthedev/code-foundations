@@ -384,6 +384,7 @@ If you find yourself thinking any of these, you are about to violate the skill:
 - Cross-refs: §3.1 (rework costs), §20.5 (General Principle)
 
 ## References
+- Foundation: [cc-foundations.md](../../references/cc-foundations.md)
 - Checklists: [checklists.md](./checklists.md)
 - Evidence: [hard-data.md](./hard-data.md)
 - Language-specific: [language-notes.md](./language-notes.md)

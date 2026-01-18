@@ -186,6 +186,7 @@ Secrets, tokens, API keys require special handling:
 - Cross-refs: Ch 6 (classes), Ch 8 (defensive programming), Ch 16 (loops), Ch 32 (self-documenting code)
 
 ## References
+- Foundation: [cc-foundations.md](../../references/cc-foundations.md)
 - Checklists: [checklists.md](./checklists.md)
 - Evidence: [hard-data.md](./hard-data.md)
 - Language-specific: [language-notes.md](./language-notes.md)

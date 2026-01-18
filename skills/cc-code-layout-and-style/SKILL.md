@@ -247,6 +247,7 @@ Constraints: Consistency trumps any specific choice (p.735), avoid comment densi
 - Cross-refs: Ch 11 (Variable Names), Ch 7 (Routine Names), Ch 19 (General Control Issues)
 
 ## References
+- Foundation: [cc-foundations.md](../../references/cc-foundations.md)
 - Checklists: [checklists.md](./checklists.md)
 - Evidence: [hard-data.md](./hard-data.md)
 - Language-specific: [language-notes.md](./language-notes.md)

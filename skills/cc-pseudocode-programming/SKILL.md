@@ -265,6 +265,7 @@ If you find yourself in any of these situations, you are about to violate the sk
 - RELATED: Test-First Development (Section 22.2), Refactoring (Chapter 24)
 
 ## References
+- Foundation: [cc-foundations.md](../../references/cc-foundations.md)
 - Checklists: [checklists.md](./checklists.md)
 - Code Complete 2nd Edition, Chapter 9: The Pseudocode Programming Process
 - Design by Contract: Section 8.2

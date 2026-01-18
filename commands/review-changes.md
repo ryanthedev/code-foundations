@@ -146,6 +146,20 @@ Task tool:
 
 ---
 
+## Phase 5: Debugging Guidance (Optional)
+
+If correctness-reviewer reports CRITICAL bugs:
+
+1. Suggest: "For systematic debugging, invoke cc-debugging skill"
+2. Add to Action Plan:
+   ```
+   ## Debugging Resources
+   For systematic investigation of bugs found above, consider:
+   - `/skill cc-debugging` - Scientific debugging methodology
+   ```
+
+---
+
 ## Usage
 
 ```bash

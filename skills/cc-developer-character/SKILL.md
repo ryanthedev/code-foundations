@@ -244,5 +244,6 @@ Iteration improves quality. Requirements iterate, design iterates, code iterates
 **If task type wasn't set:** You skipped code-foundations classification. Go back and classify first.
 
 ## References
+- Foundation: [cc-foundations.md](../../references/cc-foundations.md)
 - Checklists: [checklists.md](./checklists.md)
 - Evidence: [hard-data.md](./hard-data.md)

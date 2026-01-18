@@ -393,6 +393,7 @@ Prefer over explicit loops when: operations are independent, no early exit neede
 - **Cross-references:** Ch 5 (Managing Complexity), Ch 24 (Refactoring), Ch 8 (Defensive Programming)
 
 ## References
+- Foundation: [cc-foundations.md](../../references/cc-foundations.md)
 - Checklists: [checklists.md](./checklists.md)
 - Evidence: [hard-data.md](./hard-data.md)
 - Language-specific: [language-notes.md](./language-notes.md)

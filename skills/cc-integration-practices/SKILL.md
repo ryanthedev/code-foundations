@@ -225,5 +225,6 @@ Building separately is fine. Combining all at once means ALL interface bugs surf
   - Section 5.4: Top-Down/Bottom-Up Design
 
 ## References
+- Foundation: [cc-foundations.md](../../references/cc-foundations.md)
 - Checklists: [checklists.md](./checklists.md)
 - Evidence: [hard-data.md](./hard-data.md)

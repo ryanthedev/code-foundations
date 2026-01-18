@@ -235,4 +235,9 @@ Severity:
 | **Success streak:** "I've been right 5 times" | Past success doesn't change physics. Calibration illusion: 5 wins don't predict win 6. |
 
 ---
-**Related:** [hard-data.md](./hard-data.md) (evidence) • [language-notes.md](./language-notes.md) (per-language benchmarks) • cc-refactoring-guidance (if structure degraded)
+
+## References
+- Foundation: [cc-foundations.md](../../references/cc-foundations.md)
+- Evidence: [hard-data.md](./hard-data.md)
+- Language-specific: [language-notes.md](./language-notes.md) (per-language benchmarks)
+- Related: cc-refactoring-guidance (if structure degraded)

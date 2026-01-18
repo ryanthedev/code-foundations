@@ -451,6 +451,7 @@ When full checklist review is impractical, these 7 items are MANDATORY:
 - Cross-refs: Ch 8 (defensive programming), Ch 9 (pseudocode programming), Ch 24 (refactoring)
 
 ## References
+- Foundation: [cc-foundations.md](../../references/cc-foundations.md)
 - Checklists: [checklists.md](./checklists.md)
 - Evidence: [hard-data.md](./hard-data.md)
 - Language-specific: [language-notes.md](./language-notes.md)
