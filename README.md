@@ -82,18 +82,22 @@ User: "Clean this up with foundations"
 
 ### Output Format
 
-Issues are grouped by file with effort estimates:
+Issues are grouped by file with 4-dimension assessments:
 ```markdown
 ### src/middleware/Handler.cs
 
 1. 🔴 [CRITICAL] Line 84 - Memory amplification (defensive)
    Fix: Add max expansion check
-   Effort: 🟢 Quick
+   Assessment: `[S:L R:H C:H V:T]` - Localized, High risk, High confidence, needs Test
+   **Unknown**: What's the expected max input size?
 
 2. 🟡 [IMPORTANT] Line 58 - Silent failure (defensive)
    Fix: Add logging
-   Effort: 🟢 Quick
+   Assessment: `[S:L R:M C:H V:C]`
 ```
+
+**Assessment Key**: `[S:Scope R:Risk C:Confidence V:Verification]`
+- Low confidence (`C:L`) or needs review (`V:R`) → human validation required
 
 ---
 

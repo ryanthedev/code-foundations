@@ -61,6 +61,8 @@ Review the git diff provided. Focus on whether code works correctly AND whether 
 
 ## Output Format
 
+See `references/assessment-framework.md` for dimension definitions.
+
 ```markdown
 ## Correctness Review
 
@@ -69,19 +71,29 @@ Review the git diff provided. Focus on whether code works correctly AND whether 
   Scenario: [when this fails]
   Impact: [what goes wrong]
   Fix: [specific code change]
-  Effort: 🟢 Quick / 🟡 Medium / 🔴 Large
+
+  | Dimension | Level | Rationale |
+  |-----------|-------|-----------|
+  | Scope | [S:L/B/S] | [why] |
+  | Risk | [R:L/M/H] | [why] |
+  | Confidence | [C:L/M/H] | [why] |
+  | Verification | [V:C/T/R] | [why] |
+
+  **Unknown**: [what would change this assessment?]
 
 ### Important Issues
 - [IMPORTANT] [file:line] - [issue]
   Fix: [suggestion]
-  Effort: 🟢/🟡/🔴
+  Assessment: [S:_ R:_ C:_ V:_]
 
 ### Test Coverage Gaps
 - [IMPORTANT] [file:line] - [untested code]
   Needed: [test to add]
+  Assessment: [S:_ R:_ C:_ V:_]
 
 ### Suggestions
 - [SUGGESTION] [file:line] - [potential edge case]
+  Assessment: [S:_ R:_ C:_ V:_]
 
 ### Correctness Assessment: [VERIFIED / LIKELY CORRECT / UNCERTAIN / BUGGY]
 ### Coverage Assessment: [COMPREHENSIVE / ADEQUATE / GAPS / INADEQUATE]

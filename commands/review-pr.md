@@ -50,7 +50,7 @@ Task tool:
     GIT DIFF:
     [paste diff]
 
-    Return: VERDICT + file:line issues with Fix and Effort (🟢/🟡/🔴)
+    Return: VERDICT + file:line issues with Fix and Assessment [S:_ R:_ C:_ V:_]
 ```
 
 ### Agent 2: quality-reviewer
@@ -67,7 +67,7 @@ Task tool:
     GIT DIFF:
     [paste diff]
 
-    Return: VERDICT + file:line issues with Fix and Effort (🟢/🟡/🔴)
+    Return: VERDICT + file:line issues with Fix and Assessment [S:_ R:_ C:_ V:_]
 ```
 
 ### Agent 3: correctness-reviewer
@@ -85,7 +85,7 @@ Task tool:
     GIT DIFF:
     [paste diff]
 
-    Return: VERDICT + file:line issues with Fix and Effort (🟢/🟡/🔴)
+    Return: VERDICT + file:line issues with Fix and Assessment [S:_ R:_ C:_ V:_]
 ```
 
 ### Agent 4: performance-reviewer
@@ -102,7 +102,7 @@ Task tool:
     GIT DIFF:
     [paste diff]
 
-    Return: VERDICT + file:line issues with Fix and Effort (🟢/🟡/🔴)
+    Return: VERDICT + file:line issues with Fix and Assessment [S:_ R:_ C:_ V:_]
 ```
 
 ### Agent 5: documentation-reviewer
@@ -119,7 +119,7 @@ Task tool:
     GIT DIFF:
     [paste diff]
 
-    Return: VERDICT + file:line issues with Fix and Effort (🟢/🟡/🔴)
+    Return: VERDICT + file:line issues with Fix and Assessment [S:_ R:_ C:_ V:_]
 ```
 
 ---
@@ -150,21 +150,22 @@ Combine findings **grouped by file**, not by dimension:
    ```csharp
    if (encoded.Length > MaxDecodedSize / 1.34) return null;
    ```
-   Effort: 🟢 Quick
+   Assessment: `[S:L R:H C:H V:T]` - Localized fix, high risk (DoS), high confidence, needs test
+   **Unknown**: What's the expected max input size in production?
 
 2. 🟡 [IMPORTANT] Line 58 - Silent JSON failure (defensive)
    Fix: Add telemetry logging
-   Effort: 🟢 Quick
+   Assessment: `[S:L R:M C:H V:C]`
 
 3. 🟡 [IMPORTANT] Line 134 - Missing trailing newline (quality)
    Fix: Add newline at EOF
-   Effort: 🟢 Quick
+   Assessment: `[S:L R:L C:H V:C]`
 
 ### src/services/FeatureToggle.cs
 
 1. 🟡 [IMPORTANT] Line 45 - New public API undocumented (documentation)
    Fix: Add XML doc comment
-   Effort: 🟢 Quick
+   Assessment: `[S:L R:L C:H V:C]`
 
 ---
 
@@ -175,14 +176,20 @@ Combine findings **grouped by file**, not by dimension:
 
 ## Action Plan
 
-| Priority | Count | Effort |
-|----------|-------|--------|
-| 🔴 Critical | [n] | [total] |
-| 🟡 Important | [n] | [total] |
-| 🟢 Suggestions | [n] | [total] |
+| Priority | Count | High Risk | Low Confidence | Needs Review |
+|----------|-------|-----------|----------------|--------------|
+| 🔴 Critical | [n] | [count R:H] | [count C:L] | [count V:R] |
+| 🟡 Important | [n] | [count R:H] | [count C:L] | [count V:R] |
+| 🟢 Suggestions | [n] | [count R:H] | [count C:L] | [count V:R] |
 
-1. Fix critical issues first
-2. Address important issues
+**Assessment Legend**: `[S:Scope R:Risk C:Confidence V:Verification]`
+- Scope: L=Localized, B=Bounded, S=Systemic
+- Risk: L=Low, M=Medium, H=High
+- Confidence: L=Low (speculative), M=Medium, H=High (pattern-matched)
+- Verification: C=Compile, T=Test, R=Review (human required)
+
+1. Fix critical issues first (especially `R:H` high-risk)
+2. Human review required for any `C:L` or `V:R` items
 3. Re-run: `/review-pr` to verify
 ```
 
@@ -215,5 +222,7 @@ Combine findings **grouped by file**, not by dimension:
 
 1. Dispatch ALL 5 agents in parallel
 2. Group output by FILE, not dimension
-3. Include effort estimates (🟢/🟡/🔴)
+3. Include 4-dimension assessment `[S:_ R:_ C:_ V:_]` for each issue
 4. Include code fix snippets where possible
+5. State unknowns for critical issues (epistemic humility)
+6. Flag any `C:L` (low confidence) items for human review

@@ -56,6 +56,8 @@ For each error condition, apply hierarchy:
 
 ## Output Format
 
+See `references/assessment-framework.md` for dimension definitions.
+
 ```markdown
 ## Defensive Review
 
@@ -63,15 +65,24 @@ For each error condition, apply hierarchy:
 - [CRITICAL] [file:line] - [issue]
   Risk: [what could go wrong]
   Fix: [specific code change]
-  Effort: 🟢 Quick / 🟡 Medium / 🔴 Large
+
+  | Dimension | Level | Rationale |
+  |-----------|-------|-----------|
+  | Scope | [S:L/B/S] | [why] |
+  | Risk | [R:L/M/H] | [why] |
+  | Confidence | [C:L/M/H] | [why] |
+  | Verification | [V:C/T/R] | [why] |
+
+  **Unknown**: [what would change this assessment?]
 
 ### Important Issues
 - [IMPORTANT] [file:line] - [issue]
   Fix: [suggestion]
-  Effort: 🟢/🟡/🔴
+  Assessment: [S:_ R:_ C:_ V:_]
 
 ### Suggestions
 - [SUGGESTION] [file:line] - [improvement]
+  Assessment: [S:_ R:_ C:_ V:_]
 
 ### Defensive Assessment: [HARDENED / ADEQUATE / FRAGILE / VULNERABLE]
 ```

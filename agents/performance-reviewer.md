@@ -45,6 +45,8 @@ Review the git diff provided. Focus on algorithmic complexity and hot path effic
 
 ## Output Format
 
+See `references/assessment-framework.md` for dimension definitions.
+
 ```markdown
 ## Performance Review
 
@@ -53,15 +55,24 @@ Review the git diff provided. Focus on algorithmic complexity and hot path effic
   Complexity: O(n²) / O(n³) / etc.
   Impact: [when this matters]
   Fix: [specific optimization]
-  Effort: 🟢 Quick / 🟡 Medium / 🔴 Large
+
+  | Dimension | Level | Rationale |
+  |-----------|-------|-----------|
+  | Scope | [S:L/B/S] | [why] |
+  | Risk | [R:L/M/H] | [why - perf degradation severity] |
+  | Confidence | [C:L/M/H] | [why - need profiling?] |
+  | Verification | [V:C/T/R] | [why - need benchmark?] |
+
+  **Unknown**: [what data size makes this critical?]
 
 ### Important Issues
 - [IMPORTANT] [file:line] - [issue]
   Fix: [suggestion]
-  Effort: 🟢/🟡/🔴
+  Assessment: [S:_ R:_ C:_ V:_]
 
 ### Suggestions
 - [SUGGESTION] [file:line] - [optimization opportunity]
+  Assessment: [S:_ R:_ C:_ V:_]
 
 ### Positive Patterns
 - [efficient code observed]

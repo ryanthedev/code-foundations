@@ -117,15 +117,31 @@ skills/<skill-name>/
 
 ## Review Output Format
 
-Reviews are **grouped by file** with effort estimates:
+Reviews are **grouped by file** with multi-dimensional assessments:
 
 ```markdown
 ### src/file.cs
 
 1. 🔴 [CRITICAL] Line 84 - Issue (agent)
    Fix: [specific code]
-   Effort: 🟢 Quick / 🟡 Medium / 🔴 Large
+   Assessment: `[S:L R:H C:H V:T]`
+   **Unknown**: [what would change this assessment?]
 ```
+
+### Assessment Framework (4 Dimensions)
+
+See `references/assessment-framework.md` for full definitions.
+
+| Dimension | Levels | Meaning |
+|-----------|--------|---------|
+| **S**cope | L/B/S | Localized (<10 lines) / Bounded (<50 lines) / Systemic |
+| **R**isk | L/M/H | Low (reversible) / Medium (state changes) / High (security, data loss) |
+| **C**onfidence | L/M/H | Low (speculative) / Medium (inference) / High (pattern-matched) |
+| **V**erification | C/T/R | Compile / Test / Review (human required) |
+
+**Key principle**: Always state what you DON'T know (epistemic humility).
+
+**Auto-escalation**: Any `C:L` (low confidence) or `V:R` (needs review) requires human validation.
 
 ## Severity Levels
 

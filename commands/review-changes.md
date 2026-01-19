@@ -55,7 +55,7 @@ Task tool:
     GIT DIFF:
     [paste diff]
 
-    Return: VERDICT + file:line issues with Fix and Effort (🟢/🟡/🔴)
+    Return: VERDICT + file:line issues with Fix and Assessment [S:_ R:_ C:_ V:_]
 ```
 
 ### Agent 2: quality-reviewer
@@ -72,7 +72,7 @@ Task tool:
     GIT DIFF:
     [paste diff]
 
-    Return: VERDICT + file:line issues with Fix and Effort (🟢/🟡/🔴)
+    Return: VERDICT + file:line issues with Fix and Assessment [S:_ R:_ C:_ V:_]
 ```
 
 ### Agent 3: correctness-reviewer
@@ -89,7 +89,7 @@ Task tool:
     GIT DIFF:
     [paste diff]
 
-    Return: VERDICT + file:line issues with Fix and Effort (🟢/🟡/🔴)
+    Return: VERDICT + file:line issues with Fix and Assessment [S:_ R:_ C:_ V:_]
 ```
 
 ---
@@ -112,24 +112,28 @@ Task tool:
 
 1. 🔴 [CRITICAL] Line X - [issue] (agent)
    Fix: [specific fix]
-   Effort: 🟢/🟡/🔴
+   Assessment: `[S:_ R:_ C:_ V:_]`
+   **Unknown**: [what would change this assessment?]
 
 2. 🟡 [IMPORTANT] Line Y - [issue] (agent)
    Fix: [suggestion]
-   Effort: 🟢/🟡/🔴
+   Assessment: `[S:_ R:_ C:_ V:_]`
 
 ---
 
 ## Action Plan
 
-| Priority | Count |
-|----------|-------|
-| 🔴 Critical | [n] |
-| 🟡 Important | [n] |
-| 🟢 Suggestions | [n] |
+| Priority | Count | High Risk | Low Confidence | Needs Review |
+|----------|-------|-----------|----------------|--------------|
+| 🔴 Critical | [n] | [count R:H] | [count C:L] | [count V:R] |
+| 🟡 Important | [n] | [count R:H] | [count C:L] | [count V:R] |
+| 🟢 Suggestions | [n] | [count R:H] | [count C:L] | [count V:R] |
 
-1. Fix critical issues
-2. Address important issues
+**Assessment Legend**: `[S:Scope R:Risk C:Confidence V:Verification]`
+See `references/assessment-framework.md` for full definitions.
+
+1. Fix critical issues (especially `R:H` high-risk)
+2. Human review required for any `C:L` or `V:R` items
 3. Re-run: `/review-changes`
 ```
 

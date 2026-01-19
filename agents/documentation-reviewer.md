@@ -63,6 +63,8 @@ Check whichever exist: `CLAUDE.md`, `.cursorrules`, `.github/copilot-instruction
 
 ## Output Format
 
+See `references/assessment-framework.md` for dimension definitions.
+
 ```markdown
 ## Documentation Review
 
@@ -70,15 +72,24 @@ Check whichever exist: `CLAUDE.md`, `.cursorrules`, `.github/copilot-instruction
 - [CRITICAL] [file:line] - [issue]
   Problem: [what's wrong or missing]
   Fix: [specific documentation to add/update]
-  Effort: 🟢 Quick / 🟡 Medium / 🔴 Large
+
+  | Dimension | Level | Rationale |
+  |-----------|-------|-----------|
+  | Scope | [S:L/B/S] | [why] |
+  | Risk | [R:L/M/H] | [why - misleading docs are risky] |
+  | Confidence | [C:L/M/H] | [why] |
+  | Verification | [V:C/T/R] | [why] |
+
+  **Unknown**: [what context is missing?]
 
 ### Important Issues
 - [IMPORTANT] [file:line] - [issue]
   Fix: [suggestion]
-  Effort: 🟢/🟡/🔴
+  Assessment: [S:_ R:_ C:_ V:_]
 
 ### Suggestions
 - [SUGGESTION] [file:line] - [improvement]
+  Assessment: [S:_ R:_ C:_ V:_]
 
 ### Documentation Assessment: [COMPLETE / ADEQUATE / GAPS / OUTDATED]
 ```
