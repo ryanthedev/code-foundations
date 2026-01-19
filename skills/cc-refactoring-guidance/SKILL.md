@@ -40,6 +40,36 @@ Guides safe refactoring decisions and execution following McConnell's empiricall
 - **working code** = all tests pass AND no known behavior bugs. Code that compiles but has failing tests is NOT working.
 - **then** (as in "fix first, then refactor") = with COMMIT BOUNDARY between activities. Not same session, same commit.
 
+---
+
+## Pattern Reuse Gate
+
+**BEFORE starting any refactoring, identify target patterns:**
+
+| Search For | Why |
+|------------|-----|
+| Best examples of this pattern | What does "good" look like in this codebase? |
+| Similar refactorings done before | How were they structured? |
+| Module/directory conventions | What patterns dominate this area? |
+| Recent improvements | What direction is the code evolving? |
+
+**Questions to answer:**
+1. What pattern am I refactoring TOWARD? (Not just away from bad code)
+2. Does this target pattern exist elsewhere in the codebase?
+3. Am I aligning with the codebase's direction, or fighting it?
+4. Will this make surrounding code look inconsistent?
+
+**If target pattern exists:** Match it exactly. Copy naming, structure, style.
+
+**If no target pattern exists:** You're establishing one. Consider:
+- Is this the right time to set a new precedent?
+- Should you refactor MORE code to establish the pattern consistently?
+- Document the new pattern for future reference.
+
+**See:** [pattern-reuse-gate.md](../../references/pattern-reuse-gate.md) for full gate protocol.
+
+---
+
 ## Core Patterns
 
 ### Pattern 1: Mixing Fix and Refactor -> Separate Commits

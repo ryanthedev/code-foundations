@@ -90,6 +90,33 @@ A damage-containment strategy. Interfaces designated as boundaries to "safe" are
 
 **Rationalizing "I'll add proper error handling later"?** You likely won't. Error handling added later is often incomplete because edge cases are forgotten. However, if you genuinely must defer, create a tracked ticket with specific scope.
 
+---
+
+## Pattern Reuse Gate
+
+**BEFORE implementing any error handling, search the codebase:**
+
+| Search For | Why |
+|------------|-----|
+| Same error type elsewhere | How is it handled? Log? Throw? Return code? |
+| Same module's error handling | What's the established pattern here? |
+| Barricade/validation patterns | Where are the trust boundaries? |
+| Exception hierarchy | What custom exceptions exist? |
+
+**Questions to answer:**
+1. How does this codebase handle this type of error elsewhere?
+2. Is there an established error-handling strategy (exceptions vs return codes vs Result types)?
+3. What logging/monitoring patterns are used?
+4. Are there existing custom exception classes I should use?
+
+**If pattern found:** Follow it. Consistency in error handling is critical for debugging.
+
+**If no pattern found:** You're establishing one. Document your decision. Consider if this should become the pattern.
+
+**See:** [pattern-reuse-gate.md](../../references/pattern-reuse-gate.md) for full gate protocol.
+
+---
+
 ## Modes
 
 ### CHECKER

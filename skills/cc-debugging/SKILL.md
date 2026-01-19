@@ -71,7 +71,13 @@ Techniques that are tedious but guaranteed to work. Use when quick approaches fa
          |
          v
 +------------------+
-| 2. Form          | <-- Based on available data
+| 1b. PATTERN      | <-- How were similar bugs fixed?
+|     REUSE GATE   |     Search codebase for patterns
++--------+---------+
+         |
+         v
++------------------+
+| 2. Form          | <-- Based on available data + patterns
 |    HYPOTHESIS    |     What could cause this?
 +--------+---------+
          |
@@ -107,6 +113,32 @@ Techniques that are tedious but guaranteed to work. Use when quick approaches fa
 ```
 
 **CRITICAL:** Do NOT skip steps. Do NOT jump to step 5 without completing 1-4.
+
+---
+
+## Step 1b: Pattern Reuse Gate
+
+**BEFORE forming your hypothesis, search the codebase:**
+
+| Search For | Why |
+|------------|-----|
+| Similar bugs fixed before | How was it solved? Same root cause? |
+| Same error type elsewhere | Is there an established fix pattern? |
+| Same module/component bugs | What patterns emerge in this area? |
+
+**Questions to answer:**
+1. Has this bug (or similar) been fixed before in this codebase?
+2. How do other parts of the code handle this situation?
+3. Is there an established pattern I should follow?
+
+**If pattern found:** Your hypothesis should account for it. Either:
+- The pattern wasn't applied here (apply it)
+- The pattern was applied but incorrectly (fix application)
+- This is a new case the pattern doesn't cover (extend pattern)
+
+**If no pattern found:** You're potentially establishing one. Be deliberate.
+
+**See:** [pattern-reuse-gate.md](../../references/pattern-reuse-gate.md) for full gate protocol.
 
 ---
 

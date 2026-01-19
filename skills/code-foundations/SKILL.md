@@ -38,6 +38,25 @@ description: "Use when doing ANY code task - writing, debugging, reviewing, fixi
 
 ---
 
+### Phase 2.5: Pattern Reuse Gate (For WRITE, DEBUG, REFACTOR, SECURE)
+
+**MANDATORY: Before implementing, search the codebase.**
+
+- [ ] **2.5.1** Search: How is this done elsewhere in this codebase?
+- [ ] **2.5.2** Identify: What patterns exist for this type of work?
+- [ ] **2.5.3** Decide: Follow existing pattern OR document why diverging
+
+| If | Then |
+|----|------|
+| Pattern exists and is good | Follow it exactly |
+| Pattern exists but mediocre | Follow anyway (consistency > perfection) |
+| Pattern exists but bad | Document why diverging, consider fixing globally |
+| No pattern exists | You're establishing one - be deliberate |
+
+**See:** [pattern-reuse-gate.md](../../references/pattern-reuse-gate.md)
+
+---
+
 ### Phase 3: Execute Task-Specific Checklist
 
 **Go to the checklist for your task type:**
