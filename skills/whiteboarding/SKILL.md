@@ -13,11 +13,13 @@ description: "Discovery-oriented brainstorming to produce implementation-ready p
 
 | Phase | Goal | Output |
 |-------|------|--------|
-| UNDERSTAND | Clarify the problem | Problem statement |
-| EXPLORE | Compare 2-3 approaches | Chosen approach + rationale |
+| UNDERSTAND | **Search codebase** + clarify problem | Pattern summary + problem statement |
+| EXPLORE | **Research technologies** + compare 2-3 approaches | Research summary + chosen approach |
 | DETAIL | Break into implementation steps | Checklist with files/functions |
 | VALIDATE | User confirms each section | Approval |
 | SAVE | Write to docs/plans/ | Plan file ready for /building |
+
+**Key change:** Phases 1 and 2 now SEARCH before asking/proposing. No relying on user to know patterns.
 
 ---
 
@@ -25,6 +27,8 @@ description: "Discovery-oriented brainstorming to produce implementation-ready p
 
 | Check | Why Non-Negotiable |
 |-------|-------------------|
+| **Search codebase BEFORE questions** | Patterns exist that user may not know about |
+| **Research BEFORE proposing approaches** | Uninformed proposals waste user's decision-making |
 | **One question at a time** | Multiple questions = cognitive overload = shallow answers |
 | **2-3 approaches before committing** | First idea is rarely best; comparison reveals trade-offs |
 | **User confirms each section** | Unvalidated plans diverge from user intent |
@@ -32,39 +36,77 @@ description: "Discovery-oriented brainstorming to produce implementation-ready p
 
 ---
 
-## Phase 1: UNDERSTAND (Discovery-Oriented Questioning)
+## Phase 1: UNDERSTAND (Discovery + Research)
 
-### Adaptive Depth Decision
+### Step 1a: Pattern Discovery (MANDATORY - Do First)
 
-First, classify complexity:
+**Before asking ANY questions, search the codebase:**
+
+```
+SEARCH FOR:
+1. Similar features/functionality (grep for keywords)
+2. Same directory/module patterns (read nearby files)
+3. Related components (how do similar things work?)
+4. Naming conventions (what patterns exist?)
+```
+
+| Search | Action |
+|--------|--------|
+| Similar features | `grep -r "keyword"` across codebase |
+| Module patterns | Read 2-3 files in target directory |
+| Related components | Find how similar problems were solved |
+| Conventions | Note naming, structure, error handling patterns |
+
+**Output: Pattern Summary**
+```markdown
+## Existing Patterns Found
+- [pattern 1]: [where found, how it works]
+- [pattern 2]: [where found, how it works]
+
+## Conventions to Follow
+- Naming: [observed pattern]
+- Structure: [observed pattern]
+- Error handling: [observed pattern]
+
+## Similar Implementations
+- [file]: [what it does, relevance]
+```
+
+**If no patterns found:** State "No existing patterns found for [topic]. This will establish a new pattern."
+
+**See:** [pattern-reuse-gate.md](../../references/pattern-reuse-gate.md)
+
+---
+
+### Step 1b: Adaptive Questioning
+
+After pattern discovery, classify complexity:
 
 | Signal | Complexity | Question Count |
 |--------|-----------|----------------|
-| Single file, clear scope | Simple | 3-4 questions |
-| Multiple files, some unknowns | Medium | 5-7 questions |
-| Architecture changes, many unknowns | Complex | 8-12 questions |
+| Single file, clear scope | Simple | 2-3 questions |
+| Multiple files, some unknowns | Medium | 4-5 questions |
+| Architecture changes, many unknowns | Complex | 6-8 questions |
 
-**State classification:** "This seems [simple/medium/complex]. I'll ask [N] questions to understand it."
+**State classification:** "This seems [simple/medium/complex]. Based on pattern discovery, I'll ask [N] questions."
 
 ### Question Sequence (Ask ONE at a time)
 
-**Simple (3-4 questions):**
+**Simple (2-3 questions):**
 1. What specific outcome do you want?
 2. What constraints should I know about?
-3. Any existing patterns I should follow?
-4. What does "done" look like?
+3. What does "done" look like?
 
 **Medium (add these):**
-5. Who/what will use this?
-6. What could go wrong?
-7. Any performance considerations?
+4. Who/what will use this?
+5. What could go wrong?
 
 **Complex (add these):**
-8. What's the current architecture?
-9. What other systems does this touch?
-10. What's the rollback plan if it fails?
-11. Are there similar patterns elsewhere in the codebase?
-12. What's the testing strategy?
+6. What other systems does this touch?
+7. What's the rollback plan if it fails?
+8. What's the testing strategy?
+
+**NOTE:** Questions about "existing patterns" removed - we searched instead of asking.
 
 ### Question Format
 
@@ -101,9 +143,55 @@ Get user confirmation: "Does this capture what you want?"
 
 ---
 
-## Phase 2: EXPLORE (2-3 Approaches)
+## Phase 2: EXPLORE (Research + Approaches)
 
-### Mandatory: Generate Alternatives
+### Step 2a: Technology Research (Before Proposing)
+
+**Before proposing approaches, gather data:**
+
+#### Codebase Research
+```
+SEARCH FOR:
+1. How similar problems are solved in this codebase
+2. What libraries/patterns are already in use
+3. What the codebase is NOT using (intentional omissions?)
+```
+
+| Check | Why |
+|-------|-----|
+| Existing dependencies | Don't propose new lib if similar exists |
+| Rejected patterns | Check git history/comments for "we tried X" |
+| Team conventions | Match what's already working |
+
+#### Web Research (When technology choice is involved)
+
+**Use WebSearch/WebFetch when:**
+- Comparing libraries/frameworks
+- Evaluating technology trade-offs
+- Checking current best practices (your knowledge may be outdated)
+
+```
+SEARCH FOR:
+1. "[technology A] vs [technology B] [current year]"
+2. "[problem domain] best practices [current year]"
+3. "[framework] [specific feature] implementation"
+```
+
+**Output: Research Summary**
+```markdown
+## Codebase Findings
+- Already using: [libraries, patterns]
+- Similar solutions: [where, how]
+
+## Web Research (if applicable)
+- [Technology A]: [pros, cons, current status]
+- [Technology B]: [pros, cons, current status]
+- Recommendation: [based on research]
+```
+
+---
+
+### Step 2b: Generate Alternatives
 
 **You MUST present 2-3 approaches before proceeding.**
 
@@ -111,13 +199,15 @@ Get user confirmation: "Does this capture what you want?"
 - ❌ "JWT with refresh tokens" vs "JWT without refresh tokens" = same approach
 - ✅ "JWT tokens" vs "Session cookies" vs "OAuth2" = different approaches
 
-**If user mentioned a solution in their initial request** (e.g., "I'm thinking JWT"), this is exploratory input, NOT a decision. Still present 2-3 structurally different alternatives in this phase.
+**Approaches must be informed by research.** Don't propose technologies you didn't research.
 
-| Approach | Trade-offs | Best When |
-|----------|-----------|-----------|
-| Option A | [pros/cons] | [conditions] |
-| Option B | [pros/cons] | [conditions] |
-| Option C | [pros/cons] | [conditions] |
+**If user mentioned a solution in their initial request** (e.g., "I'm thinking JWT"), this is exploratory input, NOT a decision. Still present 2-3 structurally different alternatives, informed by research.
+
+| Approach | Trade-offs | Best When | Research Source |
+|----------|-----------|-----------|-----------------|
+| Option A | [pros/cons] | [conditions] | [codebase/web] |
+| Option B | [pros/cons] | [conditions] | [codebase/web] |
+| Option C | [pros/cons] | [conditions] | [codebase/web] |
 
 ### Presentation Format
 
@@ -335,6 +425,11 @@ Which do you prefer?
 | "I'll just plan in my head" | Mental plans don't persist. File = resumable artifact. Skip file = lose all planning work on context refresh. |
 | "I'll batch questions to save time" | Batched questions get shallow, incomplete answers. One question = focused, complete answer. |
 | "User mentioned X, so that's decided" | User-mentioned solutions are exploratory. Still compare 2-3 structurally different approaches. |
+| "I'll ask user about patterns" | **Search instead.** User may not know all patterns. You have tools to find them. |
+| "No need to search, I know this tech" | Your knowledge may be outdated. Search confirms current best practices. |
+| "Searching takes too long" | 2 min search prevents 20 min wrong-approach rework. |
+| "I'll research during implementation" | Research informs approach CHOICE. After choosing, it's too late. |
+| "This codebase is new to me" | That's exactly why you search. Don't guess conventions - find them. |
 
 ---
 
