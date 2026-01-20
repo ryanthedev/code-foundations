@@ -33,13 +33,65 @@ else
 fi
 ```
 
-Store the diff - pass it to each agent.
+Store the diff. Check size to determine if triage is needed.
+
+---
+
+## Phase 2.5: Triage (Large Diffs Only)
+
+**Threshold:** If diff > 500 lines OR > 10 files, run triage first.
+
+### Dispatch Triage Agent
+
+```
+Task tool:
+- subagent_type: "general-purpose"
+- model: "sonnet"
+- description: "Triage changes"
+- prompt: |
+    Triage this diff for routing to specialized reviewers.
+
+    REFERENCE: Read references/triage-tags.md for tag vocabulary and mapping.
+
+    GIT DIFF:
+    [paste diff]
+
+    TASK:
+    Go file by file, method by method. For each logical chunk of change, write ONE line:
+
+    FORMAT:
+    file:start-end | description | [tags] | reviewers
+
+    RULES:
+    1. One line per method/function/logical block changed
+    2. Description: what the change DOES (not what it IS), max 10 words
+    3. Tags: max 3, pick most specific from triage-tags.md
+    4. Reviewers: derive from tags (only: defensive, quality, correctness)
+    5. If a chunk touches multiple concerns, list all relevant reviewers
+
+    OUTPUT: Write all lines to a single code block. No headers, no explanations.
+```
+
+### Parse Triage Output
+
+Filter `changes.txt` by reviewer and pass only relevant chunks to each agent.
+
+**Skip triage for small diffs** - pass entire diff to all reviewers (existing behavior).
 
 ---
 
 ## Phase 3: Dispatch 3 Agents in Parallel
 
 **USE TASK TOOL - ALL 3 AGENTS IN SINGLE MESSAGE**
+
+### Input Selection
+
+| Diff Size | Input to Each Agent |
+|-----------|---------------------|
+| Small (< 500 lines, < 10 files) | Entire diff |
+| Large (triage ran) | Only chunks routed to that reviewer |
+
+If triage ran, include relevant `changes.txt` lines for context.
 
 ### Agent 1: defensive-reviewer
 
@@ -52,8 +104,8 @@ Task tool:
 
     Review for security AND error handling: input validation, injection, auth, catch blocks, silent failures.
 
-    GIT DIFF:
-    [paste diff]
+    [If triage ran: TRIAGE CONTEXT + DIFF CHUNKS]
+    [If small diff: GIT DIFF: full diff]
 
     Return: VERDICT + issues grouped by action (Fix/Investigate/Plan)
 ```
@@ -69,8 +121,8 @@ Task tool:
 
     Review for design AND readability: complexity, cohesion, naming, comments, style, trailing newlines.
 
-    GIT DIFF:
-    [paste diff]
+    [If triage ran: TRIAGE CONTEXT + DIFF CHUNKS]
+    [If small diff: GIT DIFF: full diff]
 
     Return: VERDICT + issues grouped by action (Fix/Investigate/Plan)
 ```
@@ -86,8 +138,8 @@ Task tool:
 
     Review for bugs AND test coverage: boundaries, logic flow, duplicates, test gaps.
 
-    GIT DIFF:
-    [paste diff]
+    [If triage ran: TRIAGE CONTEXT + DIFF CHUNKS]
+    [If small diff: GIT DIFF: full diff]
 
     Return: VERDICT + issues grouped by action (Fix/Investigate/Plan)
 ```

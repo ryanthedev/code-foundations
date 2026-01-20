@@ -28,13 +28,91 @@ git diff --name-only $(git merge-base HEAD main)..HEAD
 git diff $(git merge-base HEAD main)..HEAD
 ```
 
-Store the diff - pass it to each agent.
+Store the diff. Check size to determine if triage is needed.
+
+---
+
+## Phase 2.5: Triage (Large Diffs Only)
+
+**Threshold:** If diff > 500 lines OR > 10 files, run triage first.
+
+### Dispatch Triage Agent
+
+```
+Task tool:
+- subagent_type: "general-purpose"
+- model: "sonnet"
+- description: "Triage PR changes"
+- prompt: |
+    Triage this PR diff for routing to specialized reviewers.
+
+    REFERENCE: Read references/triage-tags.md for tag vocabulary and mapping.
+
+    GIT DIFF:
+    [paste diff]
+
+    TASK:
+    Go file by file, method by method. For each logical chunk of change, write ONE line:
+
+    FORMAT:
+    file:start-end | description | [tags] | reviewers
+
+    RULES:
+    1. One line per method/function/logical block changed
+    2. Description: what the change DOES (not what it IS), max 10 words
+    3. Tags: max 3, pick most specific from triage-tags.md
+    4. Reviewers: derive from tags using the mapping in triage-tags.md
+    5. If a chunk touches multiple concerns, list all relevant reviewers
+
+    EXAMPLE OUTPUT:
+    src/auth/login.ts:15-42 | validates user input before DB query | [validation, injection] | defensive
+    src/auth/login.ts:44-60 | adds session timeout handling | [auth, error-handling] | defensive
+    src/services/user.ts:88-95 | retries failed API calls with backoff | [retry, async] | defensive, correctness
+    src/services/user.ts:100-120 | caches user preferences | [cache, state] | performance, correctness
+    src/components/List.tsx:20-45 | renders filtered user list | [loop, interface] | performance, quality
+    src/utils/format.ts:5-15 | extracts date formatting helper | [structure] | quality
+    README.md:1-50 | updates installation instructions | [readme] | documentation
+
+    OUTPUT: Write all lines to a single code block. No headers, no explanations.
+```
+
+### Parse Triage Output
+
+The triage output becomes `changes.txt`. Use it to route chunks to reviewers:
+
+```
+For each reviewer:
+  1. Filter changes.txt for lines containing that reviewer
+  2. For each matching line, extract file:start-end
+  3. Get the actual diff chunk for those lines
+  4. Pass only relevant chunks to that reviewer
+```
+
+**Skip triage for small diffs** - pass entire diff to all reviewers (existing behavior).
 
 ---
 
 ## Phase 3: Dispatch 5 Agents in Parallel
 
 **USE TASK TOOL - ALL 5 AGENTS IN SINGLE MESSAGE**
+
+### Input Selection
+
+| Diff Size | Input to Each Agent |
+|-----------|---------------------|
+| Small (< 500 lines, < 10 files) | Entire diff |
+| Large (triage ran) | Only chunks routed to that reviewer |
+
+If triage ran, include the relevant `changes.txt` lines so reviewer has context:
+
+```
+TRIAGE CONTEXT (your assigned chunks):
+src/auth/login.ts:15-42 | validates user input before DB query | [validation, injection]
+src/auth/login.ts:44-60 | adds session timeout handling | [auth, error-handling]
+
+DIFF CHUNKS:
+[only the diff for lines 15-60 of src/auth/login.ts]
+```
 
 ### Agent 1: defensive-reviewer
 
@@ -47,8 +125,8 @@ Task tool:
 
     Review for security AND error handling: input validation, injection, auth, catch blocks, silent failures.
 
-    GIT DIFF:
-    [paste diff]
+    [If triage ran: TRIAGE CONTEXT + DIFF CHUNKS]
+    [If small diff: GIT DIFF: full diff]
 
     Return: VERDICT + issues grouped by action (Fix/Investigate/Plan)
 ```
@@ -64,8 +142,8 @@ Task tool:
 
     Review for design AND readability: complexity, cohesion, naming, comments, style, trailing newlines.
 
-    GIT DIFF:
-    [paste diff]
+    [If triage ran: TRIAGE CONTEXT + DIFF CHUNKS]
+    [If small diff: GIT DIFF: full diff]
 
     Return: VERDICT + issues grouped by action (Fix/Investigate/Plan)
 ```
@@ -82,8 +160,8 @@ Task tool:
     Review for bugs AND test coverage: boundaries, logic flow, duplicates, test gaps.
     For bug-fix PRs, reference cc-debugging skill for debugging methodology verification.
 
-    GIT DIFF:
-    [paste diff]
+    [If triage ran: TRIAGE CONTEXT + DIFF CHUNKS]
+    [If small diff: GIT DIFF: full diff]
 
     Return: VERDICT + issues grouped by action (Fix/Investigate/Plan)
 ```
@@ -99,8 +177,8 @@ Task tool:
 
     Review for performance: O(n²), I/O in loops, resource usage, hot paths.
 
-    GIT DIFF:
-    [paste diff]
+    [If triage ran: TRIAGE CONTEXT + DIFF CHUNKS]
+    [If small diff: GIT DIFF: full diff]
 
     Return: VERDICT + issues grouped by action (Fix/Investigate/Plan)
 ```
@@ -116,8 +194,8 @@ Task tool:
 
     Review documentation: README accuracy, comment freshness, API docs, changelog.
 
-    GIT DIFF:
-    [paste diff]
+    [If triage ran: TRIAGE CONTEXT + DIFF CHUNKS]
+    [If small diff: GIT DIFF: full diff]
 
     Return: VERDICT + issues grouped by action (Fix/Investigate/Plan)
 ```
@@ -368,11 +446,12 @@ Based on user response, either:
 
 ## MANDATORY
 
-1. Dispatch ALL 5 review agents in parallel
-2. **Group output by ACTION** (Fix / Investigate / Plan / Decide)
-3. **EXECUTE Phase 5** - this is THE LAW
-4. FIX items → subagents with code-foundations → implement → verify
-5. INVESTIGATE items → subagents with cc-debugging → resolve
-6. PLAN items → output ready-to-copy prompts for new sessions
-7. DECIDE items → ask user → execute based on response
-8. **Iterate until execution checklist is complete**
+1. **Large diffs (> 500 lines OR > 10 files):** Run triage first (Phase 2.5)
+2. Dispatch ALL 5 review agents in parallel (with routed chunks if triaged)
+3. **Group output by ACTION** (Fix / Investigate / Plan / Decide)
+4. **EXECUTE Phase 5** - this is THE LAW
+5. FIX items → subagents with code-foundations → implement → verify
+6. INVESTIGATE items → subagents with cc-debugging → resolve
+7. PLAN items → output ready-to-copy prompts for new sessions
+8. DECIDE items → ask user → execute based on response
+9. **Iterate until execution checklist is complete**
