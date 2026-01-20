@@ -93,7 +93,7 @@ User: "Clean this up with foundations"
 ### Output Format
 
 Issues are grouped by action type:
-```markdown
+````markdown
 ## Fix
 1. 🔴 [CRITICAL] Handler.cs:84 - Memory amplification (defensive)
    ```csharp
@@ -111,7 +111,7 @@ Issues are grouped by action type:
 ## Plan
 1. 🔴 [CRITICAL] Auth missing from 5 endpoints
    → `/whiteboarding "auth middleware"`
-```
+````
 
 **Workflow**: Apply "Fix" → Spin off "Investigate" → `/whiteboarding` for "Plan"
 
