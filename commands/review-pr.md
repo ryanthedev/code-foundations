@@ -57,7 +57,7 @@ Task tool:
     CHECKLIST (complete for EACH chunk):
     - [ ] Identify file path and line range
     - [ ] Write concise description (what the change DOES, not what it IS)
-    - [ ] Apply 1-3 tags from triage-tags.md (max 3 per cognitive research)
+    - [ ] Apply 1-3 tags from triage-tags.md
     - [ ] Derive reviewers from tag mapping
     - [ ] Add to chunks array
 
