@@ -69,6 +69,11 @@ Task tool:
     4. Reviewers: derive from tags (only: defensive, quality, correctness)
     5. If a chunk touches multiple concerns, list all relevant reviewers
 
+    EXAMPLE OUTPUT:
+    src/auth/login.ts:15-42 | validates user input before DB query | [validation, injection] | defensive
+    src/services/user.ts:88-95 | retries failed API calls with backoff | [retry, async] | defensive, correctness
+    src/utils/format.ts:5-15 | extracts date formatting helper | [structure] | quality
+
     OUTPUT: Write all lines to a single code block. No headers, no explanations.
 ```
 
@@ -325,6 +330,19 @@ Context from code review:
 - [ ] Final `git status` shows clean or expected state
 
 **DO NOT STOP until this checklist is complete.**
+
+---
+
+## MANDATORY
+
+1. **Large diffs (> 500 lines OR > 10 files):** Run triage first (Phase 2.5)
+2. Dispatch ALL 3 review agents in parallel (with routed chunks if triaged)
+3. **Group output by ACTION** (Fix / Investigate / Plan)
+4. **EXECUTE Phase 5** - this is THE LAW
+5. FIX items → subagents with code-foundations → implement → verify
+6. INVESTIGATE items → subagents with cc-debugging → resolve
+7. PLAN items → output ready-to-copy prompts for new sessions
+8. **Iterate until execution checklist is complete**
 
 ---
 

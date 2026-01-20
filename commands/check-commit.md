@@ -8,6 +8,8 @@ allowed-tools: ["Bash", "Glob", "Grep", "Read"]
 
 Quick sanity check of a single commit. No subagents—run through checklist directly.
 
+**Note:** Triage phase does NOT apply here. This is a quick, direct review without agent dispatch.
+
 **Commit:** "$ARGUMENTS" (default: HEAD)
 
 ---
