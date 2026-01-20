@@ -3,28 +3,16 @@ name: cc-control-flow-quality
 description: "Use when code has deep nesting (3+ levels), complex conditionals needing simplification, loop design questions, or high cyclomatic complexity. Symptoms: arrow-shaped code, repeated conditions, confusing loop exits, lengthy if-else chains."
 ---
 
-# Control Flow Quality
+# Skill: cc-control-flow-quality
 
-## Overview
+## STOP - Never Skip (even under time pressure)
 
-Evaluates and guides control flow quality following McConnell's structured programming principles from Code Complete 2nd Edition (Chapters 14-19). Core insight: **"Minimizing complexity is a key to writing high-quality code."**
+- Check nesting depth before adding levels (max 3)
+- Verify loop exit conditions are reachable
+- Name loop indexes meaningfully in nested loops
+- McCabe complexity >10 = redesign required
 
-Control flow is the largest contributor to program complexity. Poor control structures decrease readability and increase defects; good ones make code easier to understand and maintain.
-
-## When to Use
-
-- Deep nesting (3+ levels) creating arrow-shaped code
-- Complex boolean expressions needing simplification
-- Loop design questions (which type, exit strategy, index naming)
-- High cyclomatic complexity (>10 decision points)
-- Repeated conditions across if-else chains
-- Considering table-driven methods vs inheritance
-
-## When NOT to Use
-
-- Simple 2-3 branch conditionals that are already clear
-- Straightforward single loops with obvious structure
-- Code where control flow isn't the problem
+---
 
 ## Quick Reference
 
@@ -388,12 +376,12 @@ const result = items
 ```
 Prefer over explicit loops when: operations are independent, no early exit needed, and pipeline reads clearly.
 
-## Related Topics
-- **Prerequisite:** cc-data-organization (handles variables/types first)
-- **Cross-references:** Ch 5 (Managing Complexity), Ch 24 (Refactoring), Ch 8 (Defensive Programming)
 
-## References
-- Foundation: [cc-foundations.md](../../references/cc-foundations.md)
-- Checklists: [checklists.md](./checklists.md)
-- Evidence: [hard-data.md](./hard-data.md)
-- Language-specific: [language-notes.md](./language-notes.md)
+---
+
+## Chain
+
+| After | Next |
+|-------|------|
+| Control flow verified | cc-code-layout-and-style (CHECKER) |
+

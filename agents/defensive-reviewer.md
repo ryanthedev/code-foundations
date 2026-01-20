@@ -6,22 +6,22 @@ model: sonnet
 
 # Defensive Reviewer Agent
 
-**Skill Lenses:** cc-defensive-programming, aposd-simplifying-complexity
+## STOP - Critical Findings
 
-Review code for all defensive programming concerns: security vulnerabilities AND error handling quality.
+| Finding | Severity |
+|---------|----------|
+| SQL/Command injection | CRITICAL |
+| Empty catch block | CRITICAL |
+| Missing input validation (external) | CRITICAL |
+| Auth bypass | CRITICAL |
+
+---
+
+**Skill Lenses:** cc-defensive-programming, aposd-simplifying-complexity
 
 ## Review Scope
 
-Review the code provided. Input varies based on diff size:
-
-| Input Type | What You Receive |
-|------------|------------------|
-| Small diff | Full git diff |
-| Large diff (triaged) | TRIAGE CONTEXT (your assigned chunks) + DIFF CHUNKS (relevant code only) |
-
-If you receive TRIAGE CONTEXT, focus only on those chunks - they were routed to you based on semantic tags. Don't ask for more context; review what you're given.
-
-Focus on how code defends against bad input and failure conditions.
+See [review-scope.md](./review-scope.md). Focus on how code defends against bad input and failure conditions.
 
 ## Security Checklist
 

@@ -5,38 +5,11 @@ description: "Use when modifying existing code, fixing bugs, or extending featur
 
 # Skill: aposd-maintaining-design-quality
 
-## Metadata
-Source: A Philosophy of Software Design (Ousterhout)
-Chapters: 3, 19-20
-Key Point Anchor: "If you're not making the design better, you're probably making it worse."
-Skill Type: APPLIER
-APOSD Foundation: strategic programming
-CC Complement: cc-refactoring-guidance (safe process), cc-developer-character (mindset)
+## STOP - The Design Rule
 
-## Overview
-
-**Core Principle:** If you're not making the design better, you're probably making it worse. Working code is not a high enough standard.
-
-**Discipline Requirement:** Every modification is an opportunity to improve or degrade design. Resist quick fixes. Ask whether the current design is still optimal given the change you need to make.
+**If you're not making the design better, you're probably making it worse.** Working code is not a high enough standard.
 
 **Zero Tolerance:** There is no acceptable threshold for making design worse. Even "small" compromises accumulate invisibly—dozens of tactical decisions compound into unmaintainable systems.
-
-## When to Use
-
-- Fixing bugs in existing code
-- Adding features to existing modules
-- Extending or modifying existing behavior
-- Working under time pressure ("quick fix")
-- Touching legacy code
-- User says: "fix bug", "modify", "extend", "quick change", "add to existing"
-
-## When NOT to Use
-
-- Creating new modules from scratch (see: aposd-designing-deep-modules)
-- Evaluating code quality (see: aposd-reviewing-module-design)
-- Simplifying complex code (see: aposd-simplifying-complexity)
-- Improving clarity only (see: aposd-improving-code-clarity)
-- Performance optimization (see: aposd-optimizing-critical-paths)
 
 ---
 
@@ -268,15 +241,11 @@ INVESTMENT MATH:
 - "Quick fix" now → 20%+ slower forever
 ```
 
+
 ---
 
-## Chaining
+## Chain
 
-- **Complements:** cc-refactoring-guidance (use CC for safe process, APOSD for philosophy)
-- **Complements:** cc-developer-character (both address mindset)
-- **Follow-ons:** aposd-verifying-correctness (before commit)
-
-## References
-- Foundations: [aposd-foundations.md](../../references/aposd-foundations.md)
-- CC complement: cc-refactoring-guidance (safe refactoring process)
-- CC complement: cc-developer-character (professional mindset)
+| After | Next |
+|-------|------|
+| Design assessment done | Back to task checklist |

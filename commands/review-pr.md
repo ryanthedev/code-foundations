@@ -6,7 +6,11 @@ allowed-tools: ["Bash", "Glob", "Grep", "Read", "Task", "Skill"]
 
 # Review PR (Level 3 - Full Review)
 
-**MANDATORY:** Dispatch 5 specialized review agents. DO NOT review code yourself.
+## STOP
+
+- **Dispatch 5 agents** - defensive, quality, correctness, performance, documentation (DO NOT review yourself)
+- **Phase 5 is THE LAW** - Execute fixes, don't just report them
+- **Large diffs (> 500 lines OR > 10 files)** - Run triage first
 
 ---
 

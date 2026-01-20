@@ -5,18 +5,16 @@ description: "Use when designing routines, stuck on where to start coding, caugh
 
 # Skill: cc-pseudocode-programming
 
-## Metadata
-Source: Code Complete 2nd Edition
-Chapters: 9
-Checklists: pp. 233-234 (The Pseudocode Programming Process, Routines)
-Key Point Anchor: "A working routine isn't enough - if you don't know why it works, study it, discuss it, experiment with alternative designs, until you do." (p.230)
-Skill Type: APPLIER primary, CHECKER secondary
-CC Foundation: construction-quality
+## STOP - Crisis Invariants
 
-## Overview
-APPLY the Pseudocode Programming Process (PPP) to design routines methodically, following McConnell's step-by-step technique for moving from problem definition to quality code.
+| Check | Time | Why Non-Negotiable |
+|-------|------|-------------------|
+| **Pseudocode before code** | 30 sec | Once you write code, emotional investment prevents good design iteration |
+| **Can you name it clearly?** | 15 sec | Naming difficulty = design problem. Stop and clarify purpose. |
+| **Do you understand why it works?** | 30 sec | Working code you don't understand probably doesn't really work |
+| **Did you consider alternatives?** | 30 sec | First design is rarely best; iterate in pseudocode where it's cheap |
 
-**Core insight:** The key to effective PPP is catching errors at the "least-value stage" - when the least effort has been invested. Pseudocode lets you iterate on design when changes are cheap.
+---
 
 ## When NOT to Use
 
@@ -247,25 +245,12 @@ If you find yourself in any of these situations, you are about to violate the sk
 
 **Note on dated studies:** The 1983-1984 studies predate modern IDEs, but their findings are MORE applicable today: better tooling catches syntax errors faster, making DESIGN errors (which PPP prevents) the dominant problem. The cognitive biases PPP addresses (emotional investment, premature commitment) are hardwired human traits that haven't changed.
 
-## Chain Decision (Execute After Pseudocode Complete)
+---
 
-**This skill designs routines; implementation skills verify quality.** After pseudocode is refined and you're ready to code, INVOKE the next skill.
+## Chain
 
-| Situation | INVOKE NEXT |
-|-----------|-------------|
-| Pseudocode complete, ready to implement | cc-routine-and-class-design (verify design quality) |
-| Implementation complete, ready for review | cc-defensive-programming (CHECKER mode) |
-| Still iterating pseudocode | Stay in this skill until pseudocode is "nearly automatic" |
+| After | Next |
+|-------|------|
+| Pseudocode complete | cc-routine-and-class-design |
+| Implementation done | cc-defensive-programming (CHECKER) |
 
-**Do NOT claim implementation done without running CHECKER gates.** Pseudocode guides design; CHECKERs verify the result.
-
-## Chaining
-- RECEIVES FROM: cc-construction-prerequisites (design context)
-- CHAINS TO: cc-routine-and-class-design (quality checks on result)
-- RELATED: Test-First Development (Section 22.2), Refactoring (Chapter 24)
-
-## References
-- Foundation: [cc-foundations.md](../../references/cc-foundations.md)
-- Checklists: [checklists.md](./checklists.md)
-- Code Complete 2nd Edition, Chapter 9: The Pseudocode Programming Process
-- Design by Contract: Section 8.2

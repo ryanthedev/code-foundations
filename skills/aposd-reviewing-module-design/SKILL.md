@@ -5,35 +5,11 @@ description: "Use when reviewing code, assessing interfaces, during PR review, o
 
 # Skill: aposd-reviewing-module-design
 
-## Metadata
-Source: A Philosophy of Software Design (Ousterhout)
-Chapters: 2, 4-5, 7, 9
-Key Point Anchor: "Complexity is anything related to the structure of a software system that makes it hard to understand and modify."
-Skill Type: CHECKER
-APOSD Foundation: complexity symptoms, red flags
-CC Complement: cc-routine-and-class-design (cohesion metrics), cc-quality-practices (testing)
+## STOP - Systematic Review Required
 
-## Overview
+**Run the checklist.** The checklist exists because intuition misses structural problems.
 
-**Core Principle:** Evaluate code by detecting complexity symptoms and structural anti-patterns. Good design minimizes dependencies, eliminates obscurity, and maximizes module depth.
-
-**Evaluation Focus:** What's wrong with this code? Why is it hard to understand or modify?
-
-## When to Use
-
-- Reviewing code (PR review, code review)
-- Assessing interface quality
-- Answering "is this too complex?"
-- Evaluating design decisions
-- User says: "review", "check my design", "is this good?", "PR review"
-
-## When NOT to Use
-
-- Creating new modules (see: aposd-designing-deep-modules)
-- Transforming/refactoring code (see: aposd-simplifying-complexity)
-- Adding documentation (see: aposd-improving-code-clarity)
-- Performance optimization (see: aposd-optimizing-critical-paths)
-- Checking cohesion/coupling metrics (see: cc-routine-and-class-design CHECKER)
+**Unknown unknowns are highest severity.** If it's unclear what code/info is needed for changes, flag immediately.
 
 ---
 
@@ -245,15 +221,12 @@ OUTPUT:
 - Positive patterns
 ```
 
+
 ---
 
-## Chaining
+## Chain
 
-- **Complements:** cc-routine-and-class-design CHECKER (use CC for metrics, APOSD for symptoms)
-- **Complements:** cc-quality-practices (testing perspective)
-- **Follow-ons:** aposd-simplifying-complexity (if issues found)
-
-## References
-- Foundations: [aposd-foundations.md](../../references/aposd-foundations.md)
-- CC complement: cc-routine-and-class-design (cohesion, coupling, inheritance metrics)
-- CC complement: cc-quality-practices (testing, debugging)
+| After | Next |
+|-------|------|
+| Issues found | Fix or flag for /whiteboarding |
+| No issues | Done |

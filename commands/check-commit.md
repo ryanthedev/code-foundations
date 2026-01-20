@@ -6,9 +6,15 @@ allowed-tools: ["Bash", "Glob", "Grep", "Read"]
 
 # Check Commit (Level 1 - Quick Review)
 
-Quick sanity check of a single commit. No subagents—run through checklist directly.
+## STOP
 
-**Note:** Triage phase does NOT apply here. This is a quick, direct review without agent dispatch.
+- **Any BUG WARNING → FAIL** (don't push)
+- **Big-O issues in hot paths → FAIL**
+- This is direct execution, no subagents
+
+---
+
+Quick sanity check of a single commit. No subagents—run through checklist directly.
 
 **Commit:** "$ARGUMENTS" (default: HEAD)
 

@@ -6,7 +6,11 @@ allowed-tools: ["Bash", "Glob", "Grep", "Read", "Task", "Skill"]
 
 # Review Changes (Level 2 - Medium Review)
 
-**MANDATORY:** Dispatch 3 specialized review agents. DO NOT review code yourself.
+## STOP
+
+- **Dispatch 3 agents** - defensive, quality, correctness (DO NOT review yourself)
+- **Phase 5 is THE LAW** - Execute fixes, don't just report them
+- **Large diffs (> 500 lines OR > 10 files)** - Run triage first
 
 ---
 

@@ -5,35 +5,11 @@ description: "Use when code is 'too slow', needs 'optimization', has performance
 
 # Skill: aposd-optimizing-critical-paths
 
-## Metadata
-Source: A Philosophy of Software Design (Ousterhout)
-Chapter: 20
-Key Point Anchor: "Before making any changes, measure the system's existing behavior."
-Skill Type: APPLIER
-APOSD Foundation: simplicity-performance relationship
-CC Complement: cc-performance-tuning (very similar—both emphasize measure-first)
+## STOP - The Measure-First Rule
 
-## Overview
+**Don't optimize based on intuition—measure first.** Intuitions about performance are unreliable, even for experienced developers.
 
-**Core Principle:** Clean design and high performance are compatible. Simpler code usually runs faster because there are fewer special cases to check and fewer layer crossings.
-
-**Key Insight:** Don't optimize based on intuition—measure first. Intuitions about performance are unreliable, even for experienced developers.
-
-## When to Use
-
-- Code is "too slow" or has performance issues
-- Optimizing hot paths or critical sections
-- Analyzing system bottlenecks
-- Choosing between equally clean alternatives
-- **Symptom keywords:** "optimize", "make faster", "too slow", "performance", "bottleneck", "takes forever", "hangs", "laggy", "timeout", "OOM", "memory issues", "high CPU", "doesn't scale"
-
-## When NOT to Use
-
-- Creating new modules (see: aposd-designing-deep-modules)
-- Evaluating design quality (see: aposd-reviewing-module-design)
-- Simplifying without performance focus (see: aposd-simplifying-complexity)
-- Improving clarity (see: aposd-improving-code-clarity)
-- Modifying behavior (see: aposd-maintaining-design-quality)
+**Stage 1 is a GATE:** You cannot proceed to optimization without actual profiling data.
 
 ---
 
@@ -252,13 +228,11 @@ Measure → Identify → Fix → Verify
 Never skip steps. Never assume.
 ```
 
+
 ---
 
-## Chaining
+## Chain
 
-- **Complements:** cc-performance-tuning (very similar—both measure-first)
-- **Follow-ons:** aposd-reviewing-module-design (verify design didn't degrade)
-
-## References
-- Foundations: [aposd-foundations.md](../../references/aposd-foundations.md)
-- CC complement: cc-performance-tuning (similar approach, different framing)
+| After | Next |
+|-------|------|
+| Optimization done | Verify performance improved |

@@ -5,9 +5,11 @@ description: "Review documentation quality including README, comments, API docs,
 
 # Documentation Quality
 
-**Source:** Code Complete Ch. 32 (Self-Documenting Code) + APOSD (Comments-First)
+## STOP - Documentation Freshness
 
-Documentation rots faster than code. Stale docs are worse than no docs.
+- **Documentation rots faster than code.** Stale docs are worse than no docs.
+- **If code changed, check which docs need updating** - README, CLAUDE.md, API docs, comments
+- **Comments explain WHY, not WHAT** - If it repeats the code, delete it
 
 ---
 
@@ -138,7 +140,13 @@ Check all AI config files that exist in the project:
 3. "Does this comment tell me something the code doesn't?"
 4. "Is this TODO actionable or just noise?"
 
+
 ---
 
-## References
-- Foundation: [cc-foundations.md](../../references/cc-foundations.md)
+## Chain
+
+| After | Next |
+|-------|------|
+| Docs need code changes | Back to implementation |
+| Docs verified | Done (pre-commit gate) |
+

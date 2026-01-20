@@ -5,18 +5,15 @@ description: "Use when code has inconsistent formatting, poor visual structure, 
 
 # Skill: cc-code-layout-and-style
 
-## Metadata
-Source: Code Complete 2nd Edition
-Chapters:
-  - Ch 31: Layout and Style
-  - Ch 32: Self-Documenting Code
-Checklists: pp. 773-774, 816-817
-Key Point Anchor: "The Fundamental Theorem of Formatting: Good visual layout shows the logical structure of a program."
-Skill Type: CHECKER + APPLIER
-CC Foundation: readability, maintainability
+## STOP - The Fundamental Theorem
 
-## Overview
-Evaluates and guides code layout and documentation following McConnell's Fundamental Theorem of Formatting. Implements Code Complete foundation: readability through visual structure, maintainability through self-documenting code.
+**Good visual layout shows the logical structure of a program.**
+
+- One statement per line (always)
+- If it's hard to comment, rewrite the code
+- Consistency matters more than any specific style *within acceptable bounds*
+
+---
 
 ## Quick Reference
 
@@ -241,13 +238,13 @@ Constraints: Consistency trumps any specific choice (p.735), avoid comment densi
 | "We'll clean it up later" | "Later" never comes. 70% of "temporary" code is never cleaned up. Create the cleanup ticket NOW before deploying. |
 | "These studies are 35 years old" | Cognitive principles persist; specific numbers are heuristics. See Evidence Limitations. |
 
-## Chaining
-- Prerequisites: `cc-control-flow-quality` (structure must be sound before formatting)
-- Follow-ons: `cc-quality-practices` (reviews can now focus on logic, not formatting)
-- Cross-refs: Ch 11 (Variable Names), Ch 7 (Routine Names), Ch 19 (General Control Issues)
 
-## References
-- Foundation: [cc-foundations.md](../../references/cc-foundations.md)
-- Checklists: [checklists.md](./checklists.md)
-- Evidence: [hard-data.md](./hard-data.md)
-- Language-specific: [language-notes.md](./language-notes.md)
+---
+
+## Chain
+
+| After | Next |
+|-------|------|
+| Layout/style verified | aposd-improving-code-clarity (if naming/comments need work) |
+| All formatting done | Done (pre-commit gate) |
+

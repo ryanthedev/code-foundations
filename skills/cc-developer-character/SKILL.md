@@ -5,16 +5,20 @@ description: "Use when stuck in debugging, considering skipping reviews, feeling
 
 # Skill: cc-developer-character
 
-## Metadata
-Source: Code Complete 2nd Edition
-Chapters: 33 - Personal Character, 34 - Themes in Software Craftsmanship
-Checklists: See checklists.md
-Key Point Anchor: "The characteristics of a superior programmer have almost nothing to do with talent and everything to do with a commitment to personal development." (p.833)
-Skill Type: DISCIPLINE
-CC Foundation: construction-quality, craftsmanship
+## STOP - Red Flags
 
-## Overview
-ENFORCE personal development practices following McConnell's character traits guidance. Implements Code Complete foundation: construction-quality through disciplined habits.
+**If you think any of these, STOP immediately:**
+
+- About to compile to "see what happens"
+- Ignoring or suppressing compiler warning
+- Feeling 100% certain about a technical decision
+- Stuck for 15+ minutes with no progress
+- "I don't need to test this, it's simple"
+- "I'll fix it properly later"
+
+**All of these mean:** You're rationalizing. Follow the discipline anyway.
+
+---
 
 ## Quick Reference
 
@@ -229,21 +233,13 @@ Iteration improves quality. Requirements iterate, design iterates, code iterates
 - You read more code before writing
 - You're comfortable saying "I don't know"
 
-## Chain Decision (Execute After Mindset Check)
+---
 
-**This skill is a gateway, not a destination.** After completing the mindset check, you MUST chain to the next skill based on task type.
+## Chain
 
-| Task Type (from code-foundations) | INVOKE NEXT |
-|-----------------------------------|-------------|
+| Task Type | Next |
+|-----------|------|
 | WRITE | cc-construction-prerequisites |
-| DEBUG | cc-quality-practices (Scientific Debugging Method) |
+| DEBUG | cc-quality-practices |
 | REFACTOR | cc-refactoring-guidance |
 
-**Do NOT stop after this skill.** The mindset check prepares you; the next skill guides the actual work.
-
-**If task type wasn't set:** You skipped code-foundations classification. Go back and classify first.
-
-## References
-- Foundation: [cc-foundations.md](../../references/cc-foundations.md)
-- Checklists: [checklists.md](./checklists.md)
-- Evidence: [hard-data.md](./hard-data.md)

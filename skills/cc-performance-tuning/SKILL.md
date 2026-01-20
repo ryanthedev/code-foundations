@@ -5,9 +5,13 @@ description: "Use when code is too slow, needs optimization, has performance iss
 
 # Skill: cc-performance-tuning
 
-> "The only reliable rule of thumb for code tuning is to measure the effect of each tuning in your environment." —McConnell
+## STOP - Measure First
 
-Guide performance optimization with measurement-first methodology. Correctness before speed; profile before tuning. **Warning:** Results vary dramatically by language—see [language-notes.md](./language-notes.md).
+- **Don't optimize based on intuition—profile first**
+- **Correctness before speed** - Make it work, then make it fast
+- **<4% of code causes >50% of runtime** - Find the hot spot before touching anything
+
+---
 
 ## CRITICAL: Even In Emergencies
 
@@ -234,10 +238,12 @@ Severity:
 | **Sunk cost:** "It seems faster now" | "Seems faster" is not data. You may have made some faster, others slower. |
 | **Success streak:** "I've been right 5 times" | Past success doesn't change physics. Calibration illusion: 5 wins don't predict win 6. |
 
+
 ---
 
-## References
-- Foundation: [cc-foundations.md](../../references/cc-foundations.md)
-- Evidence: [hard-data.md](./hard-data.md)
-- Language-specific: [language-notes.md](./language-notes.md) (per-language benchmarks)
-- Related: cc-refactoring-guidance (if structure degraded)
+## Chain
+
+| After | Next |
+|-------|------|
+| Optimization complete | Verify design not degraded |
+| Structure degraded | cc-refactoring-guidance |

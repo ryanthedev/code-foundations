@@ -6,6 +6,14 @@ allowed-tools: ["Read", "Glob", "Grep", "Write", "Bash", "AskUserQuestion"]
 
 # /whiteboarding
 
+## STOP
+
+- **Present 2-3 approaches** - Never skip to single approach
+- **One question at a time** - Wait for answer before next
+- **YAGNI** - No hypothetical features in the plan
+
+---
+
 **Brainstorm → Design → Save → Handoff**
 
 ---

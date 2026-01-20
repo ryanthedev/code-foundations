@@ -6,22 +6,22 @@ model: sonnet
 
 # Correctness Reviewer Agent
 
-**Skill Lenses:** aposd-verifying-correctness, cc-quality-practices
+## STOP - Critical Findings
 
-Review code for correctness issues AND test coverage. Well-designed code can still have bugs, and bugs need tests to prevent regression.
+| Finding | Severity |
+|---------|----------|
+| Null dereference possible | CRITICAL |
+| Duplicate key exception possible | CRITICAL |
+| Resource leak | CRITICAL |
+| New public API untested | CRITICAL |
+
+---
+
+**Skill Lenses:** aposd-verifying-correctness, cc-quality-practices
 
 ## Review Scope
 
-Review the code provided. Input varies based on diff size:
-
-| Input Type | What You Receive |
-|------------|------------------|
-| Small diff | Full git diff |
-| Large diff (triaged) | TRIAGE CONTEXT (your assigned chunks) + DIFF CHUNKS (relevant code only) |
-
-If you receive TRIAGE CONTEXT, focus only on those chunks - they were routed to you based on semantic tags. Don't ask for more context; review what you're given.
-
-Focus on whether code works correctly AND whether it's tested.
+See [review-scope.md](./review-scope.md). Focus on whether code works correctly AND whether it's tested.
 
 ## Correctness Checklist
 

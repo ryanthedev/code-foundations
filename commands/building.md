@@ -6,6 +6,14 @@ allowed-tools: ["Read", "Write", "Edit", "Glob", "Grep", "Bash", "Task", "Skill"
 
 # /building
 
+## STOP
+
+- **No building on main/master** - Create feature branch first
+- **Cannot proceed to next phase until reviewer PASS**
+- **All gates are mandatory** - PRE-GATE, POST-GATE, CHECKPOINT
+
+---
+
 **Load Plan → Checklist → Execute → Verify → Report**
 
 ---

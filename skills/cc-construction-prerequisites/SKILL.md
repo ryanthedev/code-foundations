@@ -5,11 +5,13 @@ description: "Use when unsure if project is ready to code, requirements feel inc
 
 # Construction Prerequisites
 
-## Overview
+## STOP - Prerequisite Minimum
 
-**Core principle:** Quality at the beginning has greater influence than quality at the end. The overarching goal of preparation is risk reduction - clear major risks early so the bulk of the project proceeds smoothly.
+- **Never less than 5% of schedule** on prerequisites (hard floor)
+- **Never less than 30 minutes** regardless of project size
+- **Conventions BEFORE construction** - nearly impossible to retrofit
 
-Verifies and guides construction prerequisites following McConnell's upstream preparation principles from Code Complete (Chapters 3-4).
+---
 
 ## When to Use
 
@@ -252,41 +254,6 @@ This skill applies to existing code, not just new projects. Use CHECKER mode as 
 - "Working code is evidence of satisfied prerequisites"
 - "I've already invested X hours, don't waste more" (sunk cost fallacy)
 
-## Research Resources - When to Search Online
-
-**Studying patterns requires more than local codebase review.** When you identify patterns, technologies, or architectures that need study, use web research tools (WebSearch, WebFetch) to supplement your understanding.
-
-**MUST search online when:**
-- Working with an unfamiliar framework, library, or technology
-- Implementing a pattern you haven't used before (e.g., "Telescope-style fuzzy picker")
-- Architecture involves external services or protocols you don't know well
-- Existing codebase uses conventions you don't recognize
-- Error handling or security patterns need domain-specific knowledge
-
-**What to search for:**
-| Need | Search Query Examples |
-|------|----------------------|
-| Framework patterns | "[framework] [component type] best practices", "[framework] official documentation [feature]" |
-| Implementation examples | "[pattern name] implementation example", "how to build [component] in [language]" |
-| Architecture guidance | "[technology] architecture patterns", "[service type] design patterns" |
-| Conventions | "[language/framework] coding conventions", "[project type] project structure" |
-| Error handling | "[technology] error handling best practices", "[API] error codes documentation" |
-
-**Research workflow:**
-1. Identify what you need to learn (from PENDING items in prerequisites check)
-2. Search for official documentation first (most authoritative)
-3. Search for implementation examples (practical guidance)
-4. Search for best practices and common pitfalls (learn from others' mistakes)
-5. Document findings before proceeding to implementation
-
-**This aligns with McConnell's Curiosity principle:** "Actively seek new knowledge. Build your awareness of development processes." (p.822-825) - The best programmers don't rely solely on existing knowledge; they research before implementing unfamiliar patterns.
-
-**Red Flags - Skipping Research:**
-- "I'll figure it out as I go" - Exploring by coding is expensive
-- "The pattern is self-explanatory" - Patterns have nuances that documentation reveals
-- "I've done something similar" - Similar isn't identical; verify assumptions
-- "No time for research" - Research prevents debugging time; it's never "no time"
-
 ## Quick Reference
 
 | Decision | Guideline |
@@ -297,27 +264,12 @@ This skill applies to existing code, not just new projects. Use CHECKER mode as 
 | Defect cost multiplier | 10-100x higher when found late vs early |
 | Debugging time (typical) | ~50% of development without good prerequisites |
 
-## References
 
-- **Foundation:** [cc-foundations.md](../../references/cc-foundations.md)
-- **Checklists:** [checklists.md](./checklists.md) (66 items from pp. 55-60, 69-70)
-- **Evidence:** [hard-data.md](./hard-data.md)
-- **Language notes:** [language-notes.md](./language-notes.md) - includes technology wave assessment, "programming into vs in" guidance, language expressiveness ratios
+---
 
-## Chain Decision (Execute After Prerequisites Verified)
+## Chain
 
-**This skill verifies readiness, then hands off to design skills.** After completing prerequisites check, you MUST chain to the next skill.
-
-| Situation | INVOKE NEXT |
-|-----------|-------------|
-| New routine/function to implement | cc-pseudocode-programming |
-| New class/module to design | cc-routine-and-class-design |
-| Architecture questions remain | Stay in this skill, resolve first |
-
-**Do NOT start coding without invoking a design skill.** Prerequisites verification prepares you; design skills guide the actual implementation.
-
-## Chaining
-
-- **Prerequisites:** None (this is the starting point)
-- **Follow-ons:** cc-pseudocode-programming, cc-routine-and-class-design, cc-defensive-programming
-- **Related:** cc-control-flow-quality (Chapter 5 Section 5.2 on Managing Complexity)
+| After | Next |
+|-------|------|
+| Prerequisites verified | cc-pseudocode-programming |
+| Architecture questions | Stay until resolved |

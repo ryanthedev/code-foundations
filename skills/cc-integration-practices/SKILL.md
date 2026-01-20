@@ -5,20 +5,13 @@ description: "Use when integrating components, planning integration strategy, se
 
 # Skill: cc-integration-practices
 
-## Metadata
-Source: Code Complete 2nd Edition
-Chapters: 29 - Integration
-Checklists: pp. 706-707 (Integration Strategy), pp. 707 (Daily Build and Smoke Test)
-Key Point Anchor: "It doesn't matter that the stadium would have been strong enough by the time it was done; it needed to be strong enough at each step."
-Skill Type: CHECKER + APPLIER
-CC Foundation: reliability, predictability, defect localization
+## STOP - Integration Rules
 
-## Overview
-EVALUATE and GUIDE integration strategy following McConnell's incremental integration techniques. Implements Code Complete foundation: reliability through continuous verification, predictability through daily builds, defect localization through incremental addition.
+- **Never Big Bang integration** - Add components one at a time
+- **Fix broken builds immediately** - Within 1 hour; stop all other work
+- **Daily build is MINIMUM** - Not a ceiling; modern CI/CD goes faster
 
-**Historical Context:** Empirical data is from 1984-2004. Modern CI/CD, containers, and microservices have evolved practices. Use as baseline principles. Daily builds are a MINIMUM frequency, not a ceiling.
-
-**Scope:** This skill applies to builds where components compile/link into a deployable artifact. For microservices, supplement with contract testing and per-service CI/CD.
+---
 
 ## Quick Reference
 
@@ -214,17 +207,13 @@ Building separately is fine. Combining all at once means ALL interface bugs surf
 - Improved code quality
 - Less integration documentation needed
 
-## Chaining
-- Prerequisites: cc-construction-prerequisites (architecture defines integration order)
-- Follow-ons: cc-quality-practices (testing the integrated system)
-- Cross-refs:
-  - Chapter 22: Developer Testing
-  - Chapter 23: Debugging
-  - Chapter 28: Managing Construction
-  - Section 2.3: Software Oyster Farming
-  - Section 5.4: Top-Down/Bottom-Up Design
 
-## References
-- Foundation: [cc-foundations.md](../../references/cc-foundations.md)
-- Checklists: [checklists.md](./checklists.md)
-- Evidence: [hard-data.md](./hard-data.md)
+---
+
+## Chain
+
+| After | Next |
+|-------|------|
+| Integration failing | cc-debugging (STABILIZE phase) |
+| Integration passing | cc-quality-practices (smoke test verification) |
+

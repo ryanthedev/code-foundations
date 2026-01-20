@@ -6,22 +6,22 @@ model: sonnet
 
 # Quality Reviewer Agent
 
-**Skill Lenses:** aposd-reviewing-module-design, cc-code-layout-and-style
+## STOP - Critical Findings
 
-Review code for design quality AND readability. Good design should be easy to read.
+| Finding | Severity |
+|---------|----------|
+| Unknown unknowns (unclear dependencies) | CRITICAL |
+| Parameters > 10 | CRITICAL |
+| God class/function | CRITICAL |
+| Unreachable code (indicates logic bug) | CRITICAL |
+
+---
+
+**Skill Lenses:** aposd-reviewing-module-design, cc-code-layout-and-style
 
 ## Review Scope
 
-Review the code provided. Input varies based on diff size:
-
-| Input Type | What You Receive |
-|------------|------------------|
-| Small diff | Full git diff |
-| Large diff (triaged) | TRIAGE CONTEXT (your assigned chunks) + DIFF CHUNKS (relevant code only) |
-
-If you receive TRIAGE CONTEXT, focus only on those chunks - they were routed to you based on semantic tags. Don't ask for more context; review what you're given.
-
-Evaluate from perspective of a maintainer seeing this code for the first time.
+See [review-scope.md](./review-scope.md). Evaluate from perspective of a maintainer seeing this code for the first time.
 
 ## Design Quality Checklist
 

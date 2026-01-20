@@ -5,40 +5,13 @@ description: "Use when code is 'too complex', needs 'simplification', or has ver
 
 # Skill: aposd-simplifying-complexity
 
-## Metadata
-Source: A Philosophy of Software Design (Ousterhout)
-Chapters: 8, 10, 18
-Key Point Anchor: "The best way to deal with exceptions is to define errors out of existence."
-Skill Type: TRANSFORMER
-APOSD Foundation: complexity reduction
-CC Complement: cc-defensive-programming (error handling techniques), cc-refactoring-guidance (safe process)
+## STOP - Error Reduction Hierarchy
 
-## Overview
+**Walk through each level of hierarchy for EACH error condition.** The best way to deal with exceptions is to define errors out of existence.
 
-**Core Principle:** Move complexity from interfaces to implementations, from callers to callees, and from many places to few. The goal is reducing overall system complexity, not just relocating it.
+**Priority order:** Define out → Mask → Aggregate → Crash (app-level only)
 
-**Three Simplification Levers:**
-1. Pull complexity downward (into implementations)
-2. Define errors out of existence (through better semantics)
-3. Make code obvious (reduce reader effort)
-
-## When to Use
-
-- Code is described as "too complex" or "hard to understand"
-- Error handling is verbose or scattered
-- Refactoring for clarity or simplicity
-- Callers are doing work that belongs in modules
-- Configuration parameters proliferate
-- User says: "simplify", "refactor", "too complex", "reduce errors", "clean up"
-
-## When NOT to Use
-
-- Creating new modules from scratch (see: aposd-designing-deep-modules)
-- Reviewing code quality (see: aposd-reviewing-module-design)
-- Improving names/comments only (see: aposd-improving-code-clarity)
-- Fixing bugs in legacy code (see: aposd-maintaining-design-quality)
-- Performance optimization (see: aposd-optimizing-critical-paths)
-- Implementing error handling techniques (see: cc-defensive-programming)
+**Do NOT present simplified code until the Transformation Checklist is complete.**
 
 ---
 
@@ -260,15 +233,11 @@ SIMPLIFICATION PRIORITY ORDER:
 Do NOT just move complexity around—reduce it.
 ```
 
+
 ---
 
-## Chaining
+## Chain
 
-- **Complements:** cc-defensive-programming (use CC for techniques, APOSD for design-level reduction)
-- **Complements:** cc-refactoring-guidance (use CC for safe process, APOSD for simplification philosophy)
-- **Follow-ons:** aposd-reviewing-module-design (verify complexity reduced)
-
-## References
-- Foundations: [aposd-foundations.md](../../references/aposd-foundations.md)
-- CC complement: cc-defensive-programming (error handling techniques)
-- CC complement: cc-refactoring-guidance (safe refactoring process)
+| After | Next |
+|-------|------|
+| Simplification done | Verify interface simplified |

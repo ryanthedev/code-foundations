@@ -5,39 +5,11 @@ description: "Use when code needs better naming, documentation, or is 'confusing
 
 # Skill: aposd-improving-code-clarity
 
-## Metadata
-Source: A Philosophy of Software Design (Ousterhout)
-Chapters: 12-15, 18
-Key Point Anchor: "Comments should describe things that aren't obvious from the code."
-Skill Type: APPLIER
-APOSD Foundation: obviousness, naming
-CC Complement: cc-code-layout-and-style (formatting), cc-pseudocode-programming (design-first)
+## STOP - The Obviousness Rule
 
-## Overview
+**If a code reviewer says your code is not obvious, it is not obvious**—regardless of how clear it seems to you. "Obvious" exists in the reader's mind, not the writer's.
 
-**Core Principle:** Comments describe things that aren't obvious from the code. Names create clear mental images of what entities are AND what they are not.
-
-**Key Insight:** "Obvious" exists in the reader's mind, not the writer's. You wrote the code; first-time readers didn't. **If a code reviewer says your code is not obvious, it is not obvious—regardless of how clear it seems to you.**
-
-**Discipline Requirement:** For new code, write comments BEFORE implementation. Comment difficulty signals design problems—fix the design, not the comment.
-
-## When to Use
-
-- Code is "confusing" or "hard to understand"
-- Adding or improving comments
-- Improving names (variables, methods, classes)
-- Documenting new code before implementation
-- Reviewer says code is not obvious
-- User says: "add comments", "improve names", "document", "make clearer", "this is confusing"
-
-## When NOT to Use
-
-- Creating new modules/APIs (see: aposd-designing-deep-modules)
-- Evaluating existing design (see: aposd-reviewing-module-design)
-- Simplifying complex logic (see: aposd-simplifying-complexity)
-- Modifying existing behavior (see: aposd-maintaining-design-quality)
-- Performance optimization (see: aposd-optimizing-critical-paths)
-- Formatting/layout only (see: cc-code-layout-and-style)
+**For new code:** Write comments BEFORE implementation. Comment difficulty signals design problems—fix the design, not the comment.
 
 ---
 
@@ -284,15 +256,11 @@ DESIGN SMELL SIGNALS:
 - Interface must describe implementation → shallow abstraction
 ```
 
+
 ---
 
-## Chaining
+## Chain
 
-- **Complements:** cc-code-layout-and-style (use CC for formatting, APOSD for semantic clarity)
-- **Complements:** cc-pseudocode-programming (both emphasize design-before-code)
-- **Follow-ons:** aposd-verifying-correctness (ensure documentation complete before commit)
-
-## References
-- Foundations: [aposd-foundations.md](../../references/aposd-foundations.md)
-- CC complement: cc-code-layout-and-style (formatting, visual structure)
-- CC complement: cc-pseudocode-programming (design-first coding)
+| After | Next |
+|-------|------|
+| Comments/naming done | cc-code-layout-and-style (CHECKER) |

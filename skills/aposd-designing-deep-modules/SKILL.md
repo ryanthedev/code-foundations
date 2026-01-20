@@ -5,34 +5,9 @@ description: "Use when designing interfaces before implementation, creating new 
 
 # Skill: aposd-designing-deep-modules
 
-## Metadata
-Source: A Philosophy of Software Design (Ousterhout)
-Chapters: 4-6, 9
-Key Point Anchor: "The best modules are those that provide powerful functionality yet have simple interfaces."
-Skill Type: APPLIER
-APOSD Foundation: depth, information hiding
-CC Complement: cc-routine-and-class-design (cohesion/coupling metrics)
+## STOP - Before Implementing
 
-## Overview
-
-**Core Principle:** Maximize the ratio of functionality to interface complexity. The best modules provide powerful functionality behind simple interfaces.
-
-**Discipline Requirement:** Never implement your first design. Generate 2-3 radically different approaches, compare them, then implement.
-
-## When to Use
-
-- Creating a new class, module, or service
-- Designing an API or interface
-- Adding a new feature requiring new abstractions
-- User says: "design", "create class", "add module", "implement feature", "what's the best interface for..."
-
-## When NOT to Use
-
-- Modifying existing code (see: aposd-maintaining-design-quality)
-- Reviewing existing design (see: aposd-reviewing-module-design)
-- Refactoring for simplicity (see: aposd-simplifying-complexity)
-- Performance optimization (see: aposd-optimizing-critical-paths)
-- Evaluating cohesion/coupling metrics (see: cc-routine-and-class-design)
+**Never implement your first design.** Generate 2-3 radically different approaches, compare them, then implement.
 
 ---
 
@@ -198,14 +173,11 @@ Rationale: [Why this wins, what's sacrificed]
 - Common case complexity: [simple/moderate/complex]
 ```
 
+
 ---
 
-## Chaining
+## Chain
 
-- **Complements:** cc-routine-and-class-design (use CC for cohesion metrics, APOSD for depth philosophy)
-- **Follow-ons:** aposd-improving-code-clarity (comments-first for new code)
-- **After implementation:** aposd-verifying-correctness (pre-commit checks)
-
-## References
-- Foundations: [aposd-foundations.md](../../references/aposd-foundations.md)
-- CC complement: cc-routine-and-class-design (cohesion, coupling, inheritance)
+| After | Next |
+|-------|------|
+| Design chosen | cc-pseudocode-programming |

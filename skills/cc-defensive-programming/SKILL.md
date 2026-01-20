@@ -5,16 +5,13 @@ description: "Use when reviewing error handling, designing input validation, imp
 
 # Skill: cc-defensive-programming
 
-## Metadata
-Source: Code Complete 2nd Edition
-Chapters: 8 - Defensive Programming
-Checklists: pp. 211-212
-Key Point Anchor: "If a routine is passed bad data, it won't be hurt, even if the bad data is another routine's fault."
-Skill Type: CHECKER | APPLIER
-CC Foundation: robustness, correctness
+## STOP - Never Skip
 
-## Overview
-VERIFY and APPLY defensive programming techniques following McConnell's protection-from-bad-data principle. Core insight: programs will have problems and modifications - smart programmers develop code accordingly.
+| Check | Why Critical |
+|-------|--------------|
+| **No executable code in assertions** | Code disappears in production builds |
+| **No empty catch blocks** | Silently swallows bugs that compound |
+| **External input validated** | Security vulnerabilities, data corruption |
 
 ---
 
@@ -479,17 +476,11 @@ If you find yourself thinking any of these, you are about to violate the skill:
 | Data pipelines | Fail and retry OR quarantine | Silent data loss |
 | Real-time systems | Degrade gracefully | Hard crash |
 
-## Chaining
-- Prerequisites: cc-construction-prerequisites (architecture defines error strategy)
-- Follow-ons: cc-control-flow-quality (error paths need good flow)
-- Cross-refs:
-  - XREF: Information hiding, Section 5.3
-  - XREF: Software architecture, Section 3.5
-  - XREF: Debugging, Chapter 23
-  - XREF: Meyer 1997 (Design by Contract)
 
-## References
-- Foundation: [cc-foundations.md](../../references/cc-foundations.md)
-- Checklists: [checklists.md](./checklists.md)
-- Evidence: [hard-data.md](./hard-data.md)
-- Language-specific: [language-notes.md](./language-notes.md)
+---
+
+## Chain
+
+| After | Next |
+|-------|------|
+| Validation complete | cc-control-flow-quality (CHECKER) |

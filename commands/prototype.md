@@ -6,6 +6,14 @@ allowed-tools: ["Read", "Write", "Edit", "Glob", "Grep", "Bash", "Skill"]
 
 # /prototype
 
+## STOP
+
+- **ONE question** - If scope isn't atomic, narrow it
+- **<50 lines** - If more, re-scope
+- **Branch off main** - Never prototype on main
+
+---
+
 **Prove it works. Minimum code. Maximum learning.**
 
 ---

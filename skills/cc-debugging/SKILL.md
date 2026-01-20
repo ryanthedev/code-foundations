@@ -5,16 +5,11 @@ description: "Use when encountering ANY bug, error, unexpected behavior, test fa
 
 # Skill: cc-debugging
 
-## Metadata
-Source: Code Complete 2nd Edition
-Chapters: 23 - Debugging
-Pages: 535-562
-Key Point Anchor: "A systematic approach to finding and fixing errors is critical to success."
-Skill Type: CHECKER | APPLIER
-CC Foundation: Scientific method, hypothesis testing
+## STOP - Scientific Method Required
 
-## Overview
-Apply systematic debugging methodology based on the scientific method. Core insight: debugging performance varies 20:1 between programmers - the difference is methodology, not talent.
+- **Do NOT skip to FIX** without STABILIZE → HYPOTHESIZE → EXPERIMENT
+- **~50% of rushed fixes are wrong** - Slow down under pressure
+- **Can you PREDICT when the bug occurs?** If not, you don't understand it yet
 
 ---
 
@@ -421,12 +416,12 @@ Before committing ANY fix:
 
 ---
 
-## Chaining
-- Prerequisites: cc-defensive-programming (good error handling makes debugging easier)
-- Follow-ons: cc-quality-practices (testing catches bugs before they need debugging)
-- Related: aposd-verifying-correctness (systematic correctness checking)
-- Foundation: [cc-foundations.md](../../references/cc-foundations.md)
 
-## References
-- Checklists: [checklists.md](./checklists.md)
-- Evidence: [hard-data.md](./hard-data.md)
+---
+
+## Chain
+
+| After | Next |
+|-------|------|
+| Fix verified | SEARCH for similar defects |
+| Similar defects found | Fix each, then done |

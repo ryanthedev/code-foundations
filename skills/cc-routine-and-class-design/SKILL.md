@@ -5,19 +5,15 @@ description: "Use when designing routines or classes, reviewing class interfaces
 
 # Skill: cc-routine-and-class-design
 
-## Metadata
-Source: Code Complete 2nd Edition
-Chapters:
-  - Ch 5: Design in Construction
-  - Ch 6: Working Classes
-  - Ch 7: High-Quality Routines
-Checklists: pp. 118-119, 157, 181-182
-Key Point Anchor: "Information hiding is a particularly valuable concept. Asking 'What should I hide?' settles many difficult design issues."
-Skill Type: CHECKER + APPLIER
-CC Foundation: maintainability, readability
+## STOP - Crisis Invariants (NEVER SKIP)
 
-## Overview
-Evaluates and guides routine and class design following McConnell's design heuristics, ADT principles, and cohesion guidelines. Implements Code Complete foundation: maintainability through information hiding, readability through consistent abstractions.
+| Check | Time | Why Non-Negotiable |
+|-------|------|-------------------|
+| **LSP Test** - "Is 'A is a B' literally true?" | 30 sec | Wrong inheritance creates debugging hell |
+| **Containment Default** - If LSP feels wrong, use containment | 30 sec | Containment is fixable; inheritance requires architecture changes |
+| **Parameter Count** - If >7 parameters, interface is wrong | 15 sec | High parameter count predicts interface errors |
+
+---
 
 ## Prerequisites
 This skill assumes:
@@ -445,13 +441,11 @@ When full checklist review is impractical, these 7 items are MANDATORY:
 
 **Critical insight:** This is MAINTENANCE data, not shipping data. All code "works" on day 1. The 50% vs 18% gap appears during modifications, extensions, and bug fixes. Your success streak measures day-1 shipping; these rules protect day-180 maintenance.
 
-## Chaining
-- Prerequisites: `cc-construction-prerequisites` (architecture decisions first)
-- Follow-ons: `cc-data-organization`, `cc-control-flow-quality`
-- Cross-refs: Ch 8 (defensive programming), Ch 9 (pseudocode programming), Ch 24 (refactoring)
 
-## References
-- Foundation: [cc-foundations.md](../../references/cc-foundations.md)
-- Checklists: [checklists.md](./checklists.md)
-- Evidence: [hard-data.md](./hard-data.md)
-- Language-specific: [language-notes.md](./language-notes.md)
+---
+
+## Chain
+
+| After | Next |
+|-------|------|
+| Design verified | cc-defensive-programming (CHECKER) |

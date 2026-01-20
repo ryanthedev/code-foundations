@@ -5,23 +5,13 @@ description: "Use before claiming code is 'done', after implementation, before c
 
 # Skill: aposd-verifying-correctness
 
-## Metadata
-Source: A Philosophy of Software Design (Ousterhout) + Engineering best practices
-Key Point Anchor: "Design quality ≠ correctness. Well-designed code can still have bugs."
-Skill Type: CHECKER
-APOSD Foundation: completeness verification
-CC Complement: NEW—fills gap in CC skills (cc-quality-practices focuses on testing/debugging, not pre-commit verification)
-
-## Overview
+## STOP - Before "Done"
 
 **Design quality ≠ correctness.** Well-designed code can still have bugs, missing requirements, or safety issues.
 
-## When to Use
+**Run ALL dimension checks before claiming done.** "I think I covered everything" without explicit mapping is a red flag.
 
-- Before claiming implementation is "done"
-- Before committing new code
-- After strategic-coding design work
-- When reviewing your own code
+---
 
 ## Dimension Detection & Checks
 
@@ -214,15 +204,11 @@ When verifying, output:
 
 **Order:** Design → Implement → Verify (this skill) → Done
 
+
 ---
 
-## Chaining
+## Chain
 
-- **Predecessor:** Any implementation skill (aposd-designing-deep-modules, aposd-maintaining-design-quality)
-- **Complements:** cc-quality-practices (testing), cc-defensive-programming (error handling)
-- **Gate for:** Claiming "done", committing code
-
-## References
-- Foundations: [aposd-foundations.md](../../references/aposd-foundations.md)
-- CC complement: cc-quality-practices (testing, debugging process)
-- CC complement: cc-defensive-programming (error handling techniques)
+| After | Next |
+|-------|------|
+| All dimensions pass | Done (pre-commit gate) |

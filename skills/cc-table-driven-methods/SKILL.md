@@ -5,16 +5,11 @@ description: "Use when writing if/else chains with 3+ branches, creating inherit
 
 # Skill: cc-table-driven-methods
 
-## Metadata
-Source: Code Complete 2nd Edition
-Chapters: 18 - Table-Driven Methods
-Pages: 411-430
-Key Point Anchor: "Table-driven code is simpler than complicated logic, easier to modify, and more efficient."
-Skill Type: CHECKER | APPLIER
-CC Foundation: Data over logic, information hiding
+## STOP - Table vs Logic
 
-## Overview
-Replace complicated logic with table lookups. Core insight: virtually anything you can select with logic statements, you can select with tables instead. Put knowledge in data, not code.
+- **4+ if/else branches for same classification?** → Convert to table
+- **Subclass differs only in data, not behavior?** → Use table, not inheritance
+- **Data changes without code changes needed?** → Table is mandatory
 
 ---
 
@@ -299,23 +294,11 @@ Wend
 
 ---
 
-## Evidence Summary
-
-| Claim | Source | Confidence |
-|-------|--------|------------|
-| Table-driven code simpler than complicated logic | p.411 | High (qualified: "in appropriate circumstances") |
-| OOP not automatically better | p.423 | High (explicit statement) |
-| Two issues: access method + what to store | p.412-413 | High (key framework) |
-| Data more flexible than logic | p.420-421 | High (easier maintenance) |
 
 ---
 
-## Chaining
-- Prerequisites: cc-data-organization (data type selection)
-- Follow-ons: cc-routine-and-class-design (class structure decisions)
-- Related: Information hiding (Section 5.3)
-- Foundation: [cc-foundations.md](../../references/cc-foundations.md)
+## Chain
 
-## References
-- Checklists: [checklists.md](./checklists.md)
-- Evidence: [hard-data.md](./hard-data.md)
+| After | Next |
+|-------|------|
+| Table implemented | cc-routine-and-class-design (CHECKER) |

@@ -5,17 +5,13 @@ description: "Use when modifying existing code, improving code quality without c
 
 # Skill: cc-refactoring-guidance
 
-## Metadata
-Source: Code Complete 2nd Edition
-Chapters:
-  - Ch 24: Refactoring
-Page Range: pp. 563-585
-Key Point Anchor: "Evolution should improve the internal quality of the program."
-Skill Type: APPLIER + TRANSFORMER
-CC Foundation: maintainability, quality
+## STOP - Refactoring Rules
 
-## Overview
-Guides safe refactoring decisions and execution following McConnell's empirically-grounded process. Implements Code Complete foundation: maintainability through behavior-preserving changes, quality through rigorous small-change discipline.
+- **Fix first, then refactor** - Never simultaneously (separate commits)
+- **Small changes need MORE rigor, not less** - 1-line changes have HIGHEST error rate
+- **>50% of changes fail first attempt** - Review and test even "trivial" changes
+
+---
 
 ## Quick Reference
 
@@ -245,28 +241,12 @@ If you skipped review on a small change:
 | "No one's available to review" | Use 24h self-delay, rubber duck, or AI review. Something > nothing. |
 | "We don't have tests" | Write characterization tests first, or document manual verification. Can't verify "behavior-preserving" blind. |
 
-## Chain Decision (Execute After Refactoring Complete)
 
-**This skill guides safe changes; CHECKER skills verify quality wasn't degraded.** After completing refactoring, INVOKE verification skills.
+---
 
-| Situation | INVOKE NEXT |
-|-----------|-------------|
-| Refactoring complete | cc-control-flow-quality (CHECKER) + cc-routine-and-class-design (CHECKER) |
-| Bug fix applied | cc-quality-practices (verify fix, then SEARCH for similar) |
-| Structure significantly changed | cc-data-organization (CHECKER) as well |
+## Chain
 
-**Do NOT claim refactoring done without CHECKER gates.** Behavior-preserving changes can still degrade design quality. Verify.
-
-**Both CHECKERs are mandatory for REFACTOR tasks:**
-1. cc-control-flow-quality - verify nesting, complexity, loop structure
-2. cc-routine-and-class-design - verify cohesion, coupling, abstraction levels
-
-## Chaining
-- Prerequisites: `cc-quality-practices` (Ch 21-23 defect fixing context)
-- Follow-ons: `cc-control-flow-quality`, `cc-routine-and-class-design`
-- Cross-refs: Ch 5 (design), Ch 21 (collaborative construction), Ch 22 (developer testing), Ch 23 (debugging)
-
-## References
-- Foundation: [cc-foundations.md](../../references/cc-foundations.md)
-- Checklist: [checklists.md](./checklists.md)
-- Evidence: [hard-data.md](./hard-data.md)
+| After | Next |
+|-------|------|
+| Refactoring complete | cc-control-flow-quality (CHECKER) |
+| Structure changed | cc-routine-and-class-design (CHECKER) |

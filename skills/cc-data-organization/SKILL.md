@@ -5,11 +5,8 @@ description: "Use when reviewing variable declarations, choosing data types, or 
 
 # Skill: cc-data-organization
 
-## Emergency Mode
+## STOP - Priority 1: Never Skip
 
-**Under time pressure? Use this tiered checklist:**
-
-### Priority 1: Execute Every Time (<2 min)
 | Item | Why Critical |
 |------|--------------|
 | No magic numbers in business logic | Source of silent bugs |
@@ -18,33 +15,9 @@ description: "Use when reviewing variable declarations, choosing data types, or 
 | Variables initialized before use | Undefined behavior |
 | Boolean naming is unambiguous | Logic inversion bugs |
 
-### Priority 2: Execute Unless Crisis (<5 min)
-- Enum conventions (reserve 0, First/Last bounds)
-- Variable scope minimized
-- Globals accessed through routines only
-- Names describe entity accurately
+**Skipping Priority 1 items is NEVER acceptable.** They represent latent defects that will manifest later.
 
-### Priority 3: Execute During Review
-- Full checklist in [checklists.md](./checklists.md)
-- Span/Live Time calculations
-- Documentation completeness
-
-**Note:** Skipping Priority 1 items is NEVER acceptable, regardless of time pressure. They represent latent defects that will manifest later.
-
-## Metadata
-Source: Code Complete 2nd Edition
-Chapters:
-  - Ch 10: General Issues in Using Variables
-  - Ch 11: The Power of Variable Names
-  - Ch 12: Fundamental Data Types
-  - Ch 13: Unusual Data Types
-Checklists: pp. 257-259, 288-289, 316-318, 343-345
-Key Point Anchor: "Programmer-defined data types are one of the most powerful capabilities a language can give you to clarify your understanding of a program."
-Skill Type: CHECKER + APPLIER + TRANSFORMER
-CC Foundation: correctness, readability
-
-## Overview
-Evaluates and guides data organization following McConnell's data type and variable guidelines. Implements Code Complete foundation: correctness through proper type usage, readability through meaningful naming and structures.
+---
 
 ## Modes
 
@@ -180,13 +153,12 @@ Secrets, tokens, API keys require special handling:
 - **Use dedicated types** - `SecureString`, `SensitiveData` wrappers
 - **Limit scope aggressively** - Shortest possible lifetime
 
-## Chaining
-- Prerequisites: `cc-construction-prerequisites` (foundational decisions first)
-- Follow-ons: `cc-control-flow-quality`, `cc-routine-and-class-design`
-- Cross-refs: Ch 6 (classes), Ch 8 (defensive programming), Ch 16 (loops), Ch 32 (self-documenting code)
 
-## References
-- Foundation: [cc-foundations.md](../../references/cc-foundations.md)
-- Checklists: [checklists.md](./checklists.md)
-- Evidence: [hard-data.md](./hard-data.md)
-- Language-specific: [language-notes.md](./language-notes.md)
+---
+
+## Chain
+
+| After | Next |
+|-------|------|
+| Data organization verified | cc-control-flow-quality (CHECKER) |
+

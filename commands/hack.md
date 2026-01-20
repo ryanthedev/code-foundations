@@ -6,6 +6,14 @@ allowed-tools: ["Bash", "Glob", "Grep", "Read", "Edit", "Write", "Task"]
 
 # Hack Mode
 
+## STOP
+
+- **Tests first** - No test = no code
+- **Never refactor while red** - Get green first
+- **Checkpoint after each feature** - Not after each test
+
+---
+
 Experimental feature development. Multiple files, subagents on demand, might throw it all away.
 
 ---

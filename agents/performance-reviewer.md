@@ -6,22 +6,21 @@ model: haiku
 
 # Performance Reviewer Agent
 
-**Skill Lenses:** cc-performance-tuning, aposd-optimizing-critical-paths
+## STOP - Critical Findings
 
-Review code for performance issues. Measure first, optimize second.
+| Finding | Severity |
+|---------|----------|
+| O(n²)+ in known hot path | CRITICAL |
+| Database query in loop | CRITICAL |
+| Unbounded memory growth | CRITICAL |
+
+---
+
+**Skill Lenses:** cc-performance-tuning, aposd-optimizing-critical-paths
 
 ## Review Scope
 
-Review the code provided. Input varies based on diff size:
-
-| Input Type | What You Receive |
-|------------|------------------|
-| Small diff | Full git diff |
-| Large diff (triaged) | TRIAGE CONTEXT (your assigned chunks) + DIFF CHUNKS (relevant code only) |
-
-If you receive TRIAGE CONTEXT, focus only on those chunks - they were routed to you based on semantic tags. Don't ask for more context; review what you're given.
-
-Focus on algorithmic complexity and hot path efficiency.
+See [review-scope.md](./review-scope.md). Focus on algorithmic complexity and hot path efficiency.
 
 ## Performance Checklist
 

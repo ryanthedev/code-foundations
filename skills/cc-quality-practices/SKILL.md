@@ -5,22 +5,15 @@ description: "Use when planning quality assurance, choosing review methods, desi
 
 # Skill: cc-quality-practices
 
-## Metadata
-Source: Code Complete 2nd Edition
-Chapters:
-  - Ch 20: The Software-Quality Landscape
-  - Ch 21: Collaborative Construction
-  - Ch 22: Developer Testing
-  - Ch 23: Debugging
-Checklists: pp. 603-644, various
-Key Point Anchor: "The General Principle of Software Quality is that improving quality reduces development costs."
-Skill Type: CHECKER + APPLIER
-CC Foundation: correctness, reliability, maintainability
+## STOP - The Quality Principle
 
-## Overview
-Evaluates and guides quality practices following McConnell's empirically-grounded techniques. Implements Code Complete foundation: correctness through defect detection, reliability through multiple techniques, maintainability through systematic debugging.
+**Improving quality reduces development costs.** No single defect-detection technique exceeds 75% effectiveness. Combining techniques nearly doubles detection rates.
 
-**Core Insight:** No single defect-detection technique exceeds 75% effectiveness. Combining techniques nearly doubles detection rates. Testing alone achieves ~85% removal; leading organizations achieve 95%+ by combining inspections, testing, and reviews.
+**Critical ratio:** Mature organizations have 5 dirty tests for every 1 clean test.
+
+**Debugging rule:** Do NOT skip to FIX without completing STABILIZE → HYPOTHESIZE → EXPERIMENT. ~50% of defect corrections are wrong the first time.
+
+---
 
 ## Key Definitions
 
@@ -363,28 +356,13 @@ If you find yourself thinking any of these, you are about to violate the skill:
 | "This skill is for new code, not existing code" | The skill applies whenever code hasn't been verified by these techniques—regardless of when written. |
 | "Adding tests to working code is overkill" | If you believe coverage is 95% but it's actually 50%, half your code is untested. Measure, don't assume. |
 
-## Chain Decision (Execute After Quality Analysis)
+---
 
-**This skill identifies defects; other skills guide the fix.** After completing quality analysis, INVOKE the next skill based on findings.
+## Chain
 
-| Situation | INVOKE NEXT |
-|-----------|-------------|
-| Defect identified, ready to fix | cc-refactoring-guidance (safe fix process) |
-| Code review found design issues | cc-routine-and-class-design (CHECKER mode) |
-| Debugging complete, fix verified | Done - but SEARCH for similar defects first |
-| Review passed, no issues | Done |
+| After | Next |
+|-------|------|
+| Defect found | cc-refactoring-guidance |
+| Design issues | cc-routine-and-class-design (CHECKER) |
+| Fix verified | SEARCH for similar defects, then done |
 
-**Do NOT fix defects without cc-refactoring-guidance.** Scientific debugging identifies the problem; safe refactoring fixes it without introducing new defects.
-
-**After DEBUG:** Always complete step 7 (SEARCH) - check same file, same developer, same pattern for similar defects before claiming done.
-
-## Chaining
-- Prerequisites: `cc-routine-and-class-design` (design quality first)
-- Follow-ons: `cc-refactoring-guidance` (fix quality issues found)
-- Cross-refs: §3.1 (rework costs), §20.5 (General Principle)
-
-## References
-- Foundation: [cc-foundations.md](../../references/cc-foundations.md)
-- Checklists: [checklists.md](./checklists.md)
-- Evidence: [hard-data.md](./hard-data.md)
-- Language-specific: [language-notes.md](./language-notes.md)
