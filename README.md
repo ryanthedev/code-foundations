@@ -47,6 +47,24 @@ User: "Clean this up with foundations"
   → CHECKER gates verify quality preserved
 ```
 
+### CODE REVIEW (5 Parallel Agents)
+```
+User: "/review-pr" (on feature branch)
+  → Triage: Categorize files by change type
+  → Dispatch 5 agents IN PARALLEL:
+      ┌─────────────────────────────────────────────────────────┐
+      │  defensive-reviewer    → security + error handling      │
+      │  quality-reviewer      → design + readability           │
+      │  correctness-reviewer  → bugs + test coverage           │
+      │  performance-reviewer  → algorithms + hot paths         │
+      │  documentation-reviewer → docs + comments               │
+      └─────────────────────────────────────────────────────────┘
+  → Aggregate findings by action type:
+      Fix         → Apply immediately
+      Investigate → Spin off research
+      Plan        → /whiteboarding for design work
+```
+
 ---
 
 ## Skills
