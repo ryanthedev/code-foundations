@@ -57,29 +57,54 @@ Task tool:
     [paste diff]
 
     TASK:
-    Go file by file, method by method. For each logical chunk of change, write ONE line:
+    Go file by file, method by method. For each logical chunk of change, create a JSON object.
 
-    FORMAT:
-    file:start-end | description | [tags] | reviewers
+    CHECKLIST (complete for EACH chunk):
+    - [ ] Identify file path and line range
+    - [ ] Write concise description (what the change DOES, not what it IS)
+    - [ ] Apply 1-3 tags from triage-tags.md (max 3 per cognitive research)
+    - [ ] Derive reviewers from tag mapping (only: defensive, quality, correctness)
+    - [ ] Add to chunks array
 
-    RULES:
-    1. One line per method/function/logical block changed
-    2. Description: what the change DOES (not what it IS), max 10 words
-    3. Tags: max 3, pick most specific from triage-tags.md
-    4. Reviewers: derive from tags (only: defensive, quality, correctness)
-    5. If a chunk touches multiple concerns, list all relevant reviewers
+    OUTPUT FORMAT (JSON):
+    ```json
+    {
+      "chunks": [
+        {
+          "file": "src/auth/login.ts",
+          "lines": [15, 42],
+          "description": "validates user input before DB query",
+          "tags": ["validation", "injection"],
+          "reviewers": ["defensive"]
+        },
+        {
+          "file": "src/services/user.ts",
+          "lines": [88, 95],
+          "description": "retries failed API calls with backoff",
+          "tags": ["retry", "async"],
+          "reviewers": ["defensive", "correctness"]
+        }
+      ]
+    }
+    ```
 
-    EXAMPLE OUTPUT:
-    src/auth/login.ts:15-42 | validates user input before DB query | [validation, injection] | defensive
-    src/services/user.ts:88-95 | retries failed API calls with backoff | [retry, async] | defensive, correctness
-    src/utils/format.ts:5-15 | extracts date formatting helper | [structure] | quality
-
-    OUTPUT: Write all lines to a single code block. No headers, no explanations.
+    STOP CONDITIONS:
+    - Do NOT skip any changed method/function
+    - Do NOT invent tags outside triage-tags.md
+    - Do NOT include explanations outside the JSON
 ```
 
 ### Parse Triage Output
 
-Filter `changes.txt` by reviewer and pass only relevant chunks to each agent.
+The triage output is JSON. Filter chunks array by reviewer and pass only relevant chunks to each agent.
+
+```
+For each reviewer:
+  1. Filter chunks where reviewers[] contains that reviewer
+  2. Extract file and lines for each matching chunk
+  3. Get actual diff for those line ranges
+  4. Pass to reviewer as JSON context + diff chunks
+```
 
 **Skip triage for small diffs** - pass entire diff to all reviewers (existing behavior).
 

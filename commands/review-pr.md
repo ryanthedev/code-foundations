@@ -52,39 +52,52 @@ Task tool:
     [paste diff]
 
     TASK:
-    Go file by file, method by method. For each logical chunk of change, write ONE line:
+    Go file by file, method by method. For each logical chunk of change, create a JSON object.
 
-    FORMAT:
-    file:start-end | description | [tags] | reviewers
+    CHECKLIST (complete for EACH chunk):
+    - [ ] Identify file path and line range
+    - [ ] Write concise description (what the change DOES, not what it IS)
+    - [ ] Apply 1-3 tags from triage-tags.md (max 3 per cognitive research)
+    - [ ] Derive reviewers from tag mapping
+    - [ ] Add to chunks array
 
-    RULES:
-    1. One line per method/function/logical block changed
-    2. Description: what the change DOES (not what it IS), max 10 words
-    3. Tags: max 3, pick most specific from triage-tags.md
-    4. Reviewers: derive from tags using the mapping in triage-tags.md
-    5. If a chunk touches multiple concerns, list all relevant reviewers
+    OUTPUT FORMAT (JSON):
+    ```json
+    {
+      "chunks": [
+        {
+          "file": "src/auth/login.ts",
+          "lines": [15, 42],
+          "description": "validates user input before DB query",
+          "tags": ["validation", "injection"],
+          "reviewers": ["defensive"]
+        },
+        {
+          "file": "src/services/user.ts",
+          "lines": [88, 95],
+          "description": "retries failed API calls with backoff",
+          "tags": ["retry", "async"],
+          "reviewers": ["defensive", "correctness"]
+        }
+      ]
+    }
+    ```
 
-    EXAMPLE OUTPUT:
-    src/auth/login.ts:15-42 | validates user input before DB query | [validation, injection] | defensive
-    src/auth/login.ts:44-60 | adds session timeout handling | [auth, error-handling] | defensive
-    src/services/user.ts:88-95 | retries failed API calls with backoff | [retry, async] | defensive, correctness
-    src/services/user.ts:100-120 | caches user preferences | [cache, state] | performance, correctness
-    src/components/List.tsx:20-45 | renders filtered user list | [loop, interface] | performance, quality
-    src/utils/format.ts:5-15 | extracts date formatting helper | [structure] | quality
-    README.md:1-50 | updates installation instructions | [readme] | documentation
-
-    OUTPUT: Write all lines to a single code block. No headers, no explanations.
+    STOP CONDITIONS:
+    - Do NOT skip any changed method/function
+    - Do NOT invent tags outside triage-tags.md
+    - Do NOT include explanations outside the JSON
 ```
 
 ### Parse Triage Output
 
-The triage output becomes `changes.txt`. Use it to route chunks to reviewers:
+The triage output is JSON. Use it to route chunks to reviewers:
 
 ```
 For each reviewer:
-  1. Filter changes.txt for lines containing that reviewer
-  2. For each matching line, extract file:start-end
-  3. Get the actual diff chunk for those lines
+  1. Filter chunks array where reviewers[] contains that reviewer
+  2. For each matching chunk, extract file and lines
+  3. Get the actual diff for those line ranges
   4. Pass only relevant chunks to that reviewer
 ```
 
@@ -103,12 +116,14 @@ For each reviewer:
 | Small (< 500 lines, < 10 files) | Entire diff |
 | Large (triage ran) | Only chunks routed to that reviewer |
 
-If triage ran, include the relevant `changes.txt` lines so reviewer has context:
+If triage ran, include the relevant chunks as JSON so reviewer has context:
 
 ```
 TRIAGE CONTEXT (your assigned chunks):
-src/auth/login.ts:15-42 | validates user input before DB query | [validation, injection]
-src/auth/login.ts:44-60 | adds session timeout handling | [auth, error-handling]
+[
+  {"file": "src/auth/login.ts", "lines": [15, 42], "description": "validates user input before DB query", "tags": ["validation", "injection"]},
+  {"file": "src/auth/login.ts", "lines": [44, 60], "description": "adds session timeout handling", "tags": ["auth", "error-handling"]}
+]
 
 DIFF CHUNKS:
 [only the diff for lines 15-60 of src/auth/login.ts]
