@@ -6,7 +6,7 @@ allowed-tools: ["Bash", "Glob", "Grep", "Read", "Edit", "Write", "Task"]
 
 # Hack Mode
 
-Fast iteration. Minimal ceremony. You and me slinging code.
+Experimental feature development. Multiple files, subagents on demand, might throw it all away.
 
 ---
 
@@ -20,7 +20,20 @@ Fast iteration. Minimal ceremony. You and me slinging code.
 5. REPEAT
 ```
 
-**No plan files. No whiteboarding. Direct execution with quality gates.**
+**No plan files. No READMEs. No documentation updates. Just code with quality gates.**
+
+---
+
+## Scope
+
+| In Scope | Out of Scope |
+|----------|--------------|
+| Multiple files | README updates |
+| Entire features | Documentation |
+| Ad-hoc subagents | Changelog entries |
+| Comments (CC-style) | Version bumps |
+| Exploratory code | Plugin metadata |
+| Throwing it all away | PR descriptions |
 
 ---
 
@@ -135,6 +148,8 @@ Detect from project and use appropriate command.
 | Making it "nice" before it works | Ship ugly, refactor when green |
 | Skipping checkpoint "it's small" | Small mistakes compound. Checkpoint. |
 | Checkpoint after every test | Too slow. Checkpoint after feature. |
+| Updating README mid-hack | Out of scope. Code only. |
+| Afraid to throw it away | That's the point. Experiment freely. |
 
 ---
 
@@ -195,20 +210,44 @@ Ready for next feature or done.
 
 ---
 
+## Ad-Hoc Subagents
+
+User can request subagents anytime during hack mode:
+
+```
+"spin off an agent to handle the API client"
+"use haiku to bang out these utility functions"
+"dispatch sonnet to figure out this type issue"
+```
+
+**Model selection:**
+| Task | Model |
+|------|-------|
+| Boilerplate, utilities, simple functions | haiku |
+| Complex logic, type puzzles, debugging | sonnet |
+| Architecture decisions, critical paths | opus |
+
+Subagents inherit hack mode rules: tests first, checkpoint when done.
+
+---
+
 ## When to Exit Hack Mode
 
 - Feature complete + checkpoint passed → Done (or `/review-changes` for deeper review)
 - Checkpoint keeps failing → Stop, something's wrong with the approach
+- Ready to ship → Exit, update docs, bump version
 - Scope creep detected → `/whiteboarding` (stop, plan properly)
 - Stuck on architecture → `/prototype` first
-- Need multiple files/systems → Exit hack mode, this is too big
 
 ---
 
 ## Quick Ref
 
 ```
-/hack [goal]     → Start hacking
-/review-changes  → Quick review when done (optional)
-/whiteboarding   → Escape hatch if scope explodes
+/hack [goal]       → Start hacking (multi-file, exploratory)
+"spin off agent"   → Ad-hoc subagent dispatch
+checkpoint         → Validate patterns/tests/integration
+/review-changes    → Deeper review when ready to ship
+/whiteboarding     → Escape hatch if scope explodes
+git reset --hard   → Throw it all away, start fresh
 ```
