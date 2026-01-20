@@ -156,7 +156,18 @@ Trade-off needing human judgment.
 
 **Key principle**: State what you DON'T know (**Unknown** section).
 
-**Workflow**: Apply "Fix" → Spin off "Investigate" → Run `/whiteboarding` for "Plan"
+### Execution (THE LAW)
+
+After review, **execute to completion**:
+
+| Action | Execution |
+|--------|-----------|
+| **Fix** | Dispatch subagent with `code-foundations` → implement → verify |
+| **Investigate** | Dispatch subagent with `cc-debugging` → resolve → fix or escalate |
+| **Plan** | Output ready-to-copy prompt for new `/whiteboarding` session |
+| **Decide** | Ask user → execute based on response |
+
+**Do not stop until all items are resolved.**
 
 ## Severity Levels
 

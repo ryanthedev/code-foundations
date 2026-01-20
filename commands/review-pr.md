@@ -50,7 +50,7 @@ Task tool:
     GIT DIFF:
     [paste diff]
 
-    Return: VERDICT + file:line issues with Fix and Assessment [S:_ R:_ C:_ V:_]
+    Return: VERDICT + issues grouped by action (Fix/Investigate/Plan)
 ```
 
 ### Agent 2: quality-reviewer
@@ -67,7 +67,7 @@ Task tool:
     GIT DIFF:
     [paste diff]
 
-    Return: VERDICT + file:line issues with Fix and Assessment [S:_ R:_ C:_ V:_]
+    Return: VERDICT + issues grouped by action (Fix/Investigate/Plan)
 ```
 
 ### Agent 3: correctness-reviewer
@@ -85,7 +85,7 @@ Task tool:
     GIT DIFF:
     [paste diff]
 
-    Return: VERDICT + file:line issues with Fix and Assessment [S:_ R:_ C:_ V:_]
+    Return: VERDICT + issues grouped by action (Fix/Investigate/Plan)
 ```
 
 ### Agent 4: performance-reviewer
@@ -102,7 +102,7 @@ Task tool:
     GIT DIFF:
     [paste diff]
 
-    Return: VERDICT + file:line issues with Fix and Assessment [S:_ R:_ C:_ V:_]
+    Return: VERDICT + issues grouped by action (Fix/Investigate/Plan)
 ```
 
 ### Agent 5: documentation-reviewer
@@ -119,7 +119,7 @@ Task tool:
     GIT DIFF:
     [paste diff]
 
-    Return: VERDICT + file:line issues with Fix and Assessment [S:_ R:_ C:_ V:_]
+    Return: VERDICT + issues grouped by action (Fix/Investigate/Plan)
 ```
 
 ---
@@ -229,10 +229,150 @@ Trade-offs needing human judgment.
 
 ---
 
+---
+
+## Phase 5: Execute (THE LAW)
+
+After presenting the review report, **execute to completion**. This is mandatory.
+
+### 5.1 Execute FIX Items
+
+For EACH item in the "Fix" section, dispatch a subagent:
+
+```
+Task tool:
+- subagent_type: "general-purpose"
+- description: "Fix: [brief description]"
+- prompt: |
+    Invoke code-foundations skill.
+
+    TASK: Implement this fix.
+
+    FILE: [file path]
+    LINE: [line number]
+    ISSUE: [issue description]
+    FIX: [the code/fix from review]
+
+    CHECKLIST:
+    - [ ] Read the file to understand context
+    - [ ] Apply the fix exactly as specified
+    - [ ] Run tests if available
+    - [ ] Verify the fix compiles/passes
+
+    CHECKPOINT: Do not return until fix is verified working.
+```
+
+Dispatch FIX agents in parallel where files don't overlap.
+
+**Iterate until all FIX items are complete.**
+
+---
+
+### 5.2 Execute INVESTIGATE Items
+
+For EACH item in the "Investigate" section, dispatch a subagent:
+
+```
+Task tool:
+- subagent_type: "general-purpose"
+- description: "Investigate: [brief description]"
+- prompt: |
+    Invoke code-foundations skill.
+    Invoke cc-debugging skill for scientific debugging method.
+
+    TASK: Investigate this issue and report findings.
+
+    FILE: [file path]
+    LINE: [line number]
+    ISSUE: [issue description]
+    CHECK: [what to investigate from review]
+    UNKNOWN: [the unknown from review]
+
+    DEBUGGING METHOD (cc-debugging):
+    1. STABILIZE - Can you reproduce the concern?
+    2. LOCATE - Find all relevant code paths
+    3. HYPOTHESIZE - Form hypothesis about the issue
+    4. EXPERIMENT - Test the hypothesis
+    5. CONCLUDE - What did you find?
+
+    RETURN:
+    - Finding: [what you discovered]
+    - Confidence: [High/Medium/Low]
+    - Recommendation: [FIX with code | PLAN needed | FALSE ALARM]
+```
+
+If investigation returns "FIX with code", add to FIX queue and execute.
+If investigation returns "PLAN needed", add to PLAN section.
+
+---
+
+### 5.3 Handle PLAN Items
+
+For EACH item in the "Plan" section, **output a ready-to-use prompt** for a new session:
+
+```markdown
+## New Session Required
+
+The following items require dedicated planning sessions.
+Copy the prompt and start a new Claude session.
+
+### Plan 1: [topic]
+
+**Issue:** [description]
+**Files affected:** [list]
+
+**Prompt to copy:**
+\`\`\`
+/whiteboarding "[topic]"
+
+Context from code review:
+- Issue: [description]
+- Files: [affected files]
+- Severity: [CRITICAL/IMPORTANT]
+- Unknown: [what we don't know]
+\`\`\`
+```
+
+---
+
+### 5.4 Handle DECIDE Items
+
+For EACH item in the "Decide" section, **ask the user**:
+
+```
+AskUserQuestion tool:
+- question: "[Issue description]. Which approach?"
+- options:
+  - A: [option A description]
+  - B: [option B description]
+```
+
+Based on user response, either:
+- Execute as FIX if user chooses an option
+- Move to INVESTIGATE if user says "need more info"
+- Move to PLAN if user says "needs broader discussion"
+
+---
+
+## Execution Checklist
+
+- [ ] All FIX items implemented and verified
+- [ ] All INVESTIGATE items resolved (fixed, planned, or dismissed)
+- [ ] All PLAN items have ready-to-copy prompts
+- [ ] All DECIDE items have user responses and are executed
+- [ ] Final `git status` shows clean or expected state
+
+**DO NOT STOP until this checklist is complete.**
+
+---
+
 ## MANDATORY
 
-1. Dispatch ALL 5 agents in parallel
+1. Dispatch ALL 5 review agents in parallel
 2. **Group output by ACTION** (Fix / Investigate / Plan / Decide)
-3. Provide code snippets for "Fix" items
-4. Provide `/whiteboarding` topics for "Plan" items
-5. State **Unknown** for Investigate/Decide items
+3. **EXECUTE Phase 5** - this is THE LAW
+4. FIX items → subagents with code-foundations → implement → verify
+5. INVESTIGATE items → subagents with cc-debugging → resolve
+6. PLAN items → output ready-to-copy prompts for new sessions
+7. DECIDE items → ask user → execute based on response
+8. **Iterate until execution checklist is complete**

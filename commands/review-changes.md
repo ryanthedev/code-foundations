@@ -55,7 +55,7 @@ Task tool:
     GIT DIFF:
     [paste diff]
 
-    Return: VERDICT + file:line issues with Fix and Assessment [S:_ R:_ C:_ V:_]
+    Return: VERDICT + issues grouped by action (Fix/Investigate/Plan)
 ```
 
 ### Agent 2: quality-reviewer
@@ -72,7 +72,7 @@ Task tool:
     GIT DIFF:
     [paste diff]
 
-    Return: VERDICT + file:line issues with Fix and Assessment [S:_ R:_ C:_ V:_]
+    Return: VERDICT + issues grouped by action (Fix/Investigate/Plan)
 ```
 
 ### Agent 3: correctness-reviewer
@@ -89,7 +89,7 @@ Task tool:
     GIT DIFF:
     [paste diff]
 
-    Return: VERDICT + file:line issues with Fix and Assessment [S:_ R:_ C:_ V:_]
+    Return: VERDICT + issues grouped by action (Fix/Investigate/Plan)
 ```
 
 ---
@@ -161,17 +161,118 @@ Systemic. Spin off to `/whiteboarding`.
 
 ---
 
-## Phase 5: Debugging Guidance (Optional)
+## Phase 5: Execute (THE LAW)
 
-If correctness-reviewer reports CRITICAL bugs:
+After presenting the review report, **execute to completion**. This is mandatory.
 
-1. Suggest: "For systematic debugging, invoke cc-debugging skill"
-2. Add to Action Plan:
-   ```
-   ## Debugging Resources
-   For systematic investigation of bugs found above, consider:
-   - `/skill cc-debugging` - Scientific debugging methodology
-   ```
+### 5.1 Execute FIX Items
+
+For EACH item in the "Fix" section, dispatch a subagent:
+
+```
+Task tool:
+- subagent_type: "general-purpose"
+- description: "Fix: [brief description]"
+- prompt: |
+    Invoke code-foundations skill.
+
+    TASK: Implement this fix.
+
+    FILE: [file path]
+    LINE: [line number]
+    ISSUE: [issue description]
+    FIX: [the code/fix from review]
+
+    CHECKLIST:
+    - [ ] Read the file to understand context
+    - [ ] Apply the fix exactly as specified
+    - [ ] Run tests if available
+    - [ ] Verify the fix compiles/passes
+
+    CHECKPOINT: Do not return until fix is verified working.
+```
+
+Dispatch FIX agents in parallel where files don't overlap.
+
+**Iterate until all FIX items are complete.**
+
+---
+
+### 5.2 Execute INVESTIGATE Items
+
+For EACH item in the "Investigate" section, dispatch a subagent:
+
+```
+Task tool:
+- subagent_type: "general-purpose"
+- description: "Investigate: [brief description]"
+- prompt: |
+    Invoke code-foundations skill.
+    Invoke cc-debugging skill for scientific debugging method.
+
+    TASK: Investigate this issue and report findings.
+
+    FILE: [file path]
+    LINE: [line number]
+    ISSUE: [issue description]
+    CHECK: [what to investigate from review]
+    UNKNOWN: [the unknown from review]
+
+    DEBUGGING METHOD (cc-debugging):
+    1. STABILIZE - Can you reproduce the concern?
+    2. LOCATE - Find all relevant code paths
+    3. HYPOTHESIZE - Form hypothesis about the issue
+    4. EXPERIMENT - Test the hypothesis
+    5. CONCLUDE - What did you find?
+
+    RETURN:
+    - Finding: [what you discovered]
+    - Confidence: [High/Medium/Low]
+    - Recommendation: [FIX with code | PLAN needed | FALSE ALARM]
+```
+
+If investigation returns "FIX with code", add to FIX queue and execute.
+If investigation returns "PLAN needed", add to PLAN section.
+
+---
+
+### 5.3 Handle PLAN Items
+
+For EACH item in the "Plan" section, **output a ready-to-use prompt** for a new session:
+
+```markdown
+## New Session Required
+
+The following items require dedicated planning sessions.
+Copy the prompt and start a new Claude session.
+
+### Plan 1: [topic]
+
+**Issue:** [description]
+**Files affected:** [list]
+
+**Prompt to copy:**
+\`\`\`
+/whiteboarding "[topic]"
+
+Context from code review:
+- Issue: [description]
+- Files: [affected files]
+- Severity: [CRITICAL/IMPORTANT]
+- Unknown: [what we don't know]
+\`\`\`
+```
+
+---
+
+## Execution Checklist
+
+- [ ] All FIX items implemented and verified
+- [ ] All INVESTIGATE items resolved (fixed, planned, or dismissed)
+- [ ] All PLAN items have ready-to-copy prompts
+- [ ] Final `git status` shows clean or expected state
+
+**DO NOT STOP until this checklist is complete.**
 
 ---
 
