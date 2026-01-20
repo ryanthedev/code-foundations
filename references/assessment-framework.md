@@ -118,18 +118,100 @@ The new format is more precise because:
 - Confidence is independent of effort
 - Verification needs vary by risk, not effort
 
+## Action Types
+
+Based on the assessment, each finding gets an **action type** that determines how it's grouped in output:
+
+| Action | When | What to Output |
+|--------|------|----------------|
+| **FIX** | `S:L/B` + `C:H/M` + ≤10 lines | Code snippet, ready to apply |
+| **DESCRIBE** | `S:B` + `C:H` + >10 lines | Prose approach, clear steps |
+| **INVESTIGATE** | `C:L` or unclear root cause | What to check, not what to fix |
+| **PLAN** | `S:S` or multi-phase work | Topic for `/whiteboarding` |
+| **DECIDE** | Business logic, trade-offs | Options for human to choose |
+
+### Action Decision Flow
+
+```
+Is Scope Systemic (S:S)?
+  YES → PLAN
+  NO ↓
+
+Is Confidence Low (C:L)?
+  YES → Is it business logic or trade-off?
+          YES → DECIDE
+          NO  → INVESTIGATE
+  NO ↓
+
+Is fix >10 lines?
+  YES → DESCRIBE
+  NO  → FIX
+```
+
+### Why Group by Action?
+
+Grouping by action (not severity) enables workflow:
+1. **Apply all FIX items** in current session
+2. **Spin off INVESTIGATE tasks** as separate work
+3. **Create PLAN sessions** via `/whiteboarding`
+4. **Present DECIDE items** to stakeholders
+
+## Output Structure (Grouped by Action)
+
+```markdown
+## Fix Now
+Issues with clear, ready-to-apply solutions.
+
+1. 🔴 [CRITICAL] file:line - issue
+   Fix: [code snippet]
+   Assessment: [S:L R:H C:H V:T]
+
+2. 🟡 [IMPORTANT] file:line - issue
+   Fix: [code snippet]
+   Assessment: [S:L R:M C:H V:C]
+
+## Investigate
+Low confidence or unclear root cause. Need more context before fixing.
+
+1. 🟡 [IMPORTANT] file:line - issue
+   Assessment: [S:L R:M C:L V:R]
+   Check: [what to investigate]
+   **Unknown**: [what we don't know]
+
+## Plan
+Systemic changes requiring dedicated planning session.
+
+1. 🔴 [CRITICAL] file:line - issue
+   Assessment: [S:S R:H C:H V:R]
+   Topic: "add auth middleware to all endpoints"
+   → Invoke: `/whiteboarding "add auth middleware"`
+
+## Decide
+Trade-offs or business logic requiring human judgment.
+
+1. 🟡 [IMPORTANT] file:line - issue
+   Assessment: [S:B R:M C:L V:R]
+   Options:
+   - Option A: [approach] - [trade-off]
+   - Option B: [approach] - [trade-off]
+```
+
 ## Agent Integration
 
 Each reviewer agent should:
 
 1. **Assess all four dimensions** for each finding
-2. **State unknowns explicitly** - what would change the assessment?
-3. **Use compact form** for suggestions, expanded for critical
-4. **Default to lower confidence** when uncertain
+2. **Assign action type** based on decision flow
+3. **State unknowns explicitly** for INVESTIGATE/DECIDE items
+4. **Provide code** only for FIX items
+5. **Suggest whiteboarding topic** for PLAN items
 
 ## Aggregation
 
-When aggregating across agents, use worst-case for Risk and Verification:
+When aggregating across agents:
+
+1. **Group by action type first**, then by file within each group
+2. Use worst-case for Risk and Verification:
 
 ```
 defensive: [S:L R:H C:H V:T]

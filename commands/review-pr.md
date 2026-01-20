@@ -124,9 +124,11 @@ Task tool:
 
 ---
 
-## Phase 4: Aggregate Results (GROUP BY FILE)
+## Phase 4: Aggregate Results (GROUP BY ACTION)
 
-Combine findings **grouped by file**, not by dimension:
+Combine findings **grouped by action type** (what to do next), then by file within each group.
+
+See `references/assessment-framework.md` for action type definitions.
 
 ```markdown
 # PR Review Report
@@ -141,17 +143,16 @@ Combine findings **grouped by file**, not by dimension:
 
 ---
 
-## Issues by File
+## Fix Now
+Ready-to-apply fixes with high confidence. Apply these in current session.
 
 ### src/middleware/FeatureHeader.cs
 
 1. 🔴 [CRITICAL] Line 84 - Base64 memory amplification (defensive)
-   Fix: Add max expansion check
    ```csharp
    if (encoded.Length > MaxDecodedSize / 1.34) return null;
    ```
-   Assessment: `[S:L R:H C:H V:T]` - Localized fix, high risk (DoS), high confidence, needs test
-   **Unknown**: What's the expected max input size in production?
+   Assessment: `[S:L R:H C:H V:T]`
 
 2. 🟡 [IMPORTANT] Line 58 - Silent JSON failure (defensive)
    Fix: Add telemetry logging
@@ -169,28 +170,63 @@ Combine findings **grouped by file**, not by dimension:
 
 ---
 
+## Investigate
+Low confidence or unclear root cause. Need more context before fixing.
+
+### src/services/UserService.cs
+
+1. 🟡 [IMPORTANT] Line 200 - Possible race condition (correctness)
+   Assessment: `[S:B R:M C:L V:R]`
+   Check: Is this method called concurrently? Check callers.
+   **Unknown**: Thread safety requirements for this service.
+
+---
+
+## Plan
+Systemic changes requiring dedicated planning session.
+
+### src/api/*.cs (multiple files)
+
+1. 🔴 [CRITICAL] Auth middleware missing from 5 endpoints (defensive)
+   Assessment: `[S:S R:H C:H V:R]`
+   Topic: "add consistent auth middleware to all API endpoints"
+   → Invoke: `/whiteboarding "auth middleware pattern"`
+
+---
+
+## Decide
+Trade-offs or business logic requiring human judgment.
+
+### src/config/Settings.cs
+
+1. 🟡 [IMPORTANT] Line 30 - Cache TTL seems too long (performance)
+   Assessment: `[S:L R:M C:L V:R]`
+   Options:
+   - Option A: Reduce to 5 min - fresher data, more load
+   - Option B: Keep 1 hour - stale data, less load
+   **Unknown**: Acceptable staleness for this data?
+
+---
+
 ## Positive Patterns
 - [good things observed]
 
 ---
 
-## Action Plan
+## Summary
 
-| Priority | Count | High Risk | Low Confidence | Needs Review |
-|----------|-------|-----------|----------------|--------------|
-| 🔴 Critical | [n] | [count R:H] | [count C:L] | [count V:R] |
-| 🟡 Important | [n] | [count R:H] | [count C:L] | [count V:R] |
-| 🟢 Suggestions | [n] | [count R:H] | [count C:L] | [count V:R] |
+| Action | Count | Breakdown |
+|--------|-------|-----------|
+| Fix Now | [n] | [n] critical, [n] important |
+| Investigate | [n] | Need context before fixing |
+| Plan | [n] | → `/whiteboarding` sessions |
+| Decide | [n] | Needs human judgment |
 
-**Assessment Legend**: `[S:Scope R:Risk C:Confidence V:Verification]`
-- Scope: L=Localized, B=Bounded, S=Systemic
-- Risk: L=Low, M=Medium, H=High
-- Confidence: L=Low (speculative), M=Medium, H=High (pattern-matched)
-- Verification: C=Compile, T=Test, R=Review (human required)
-
-1. Fix critical issues first (especially `R:H` high-risk)
-2. Human review required for any `C:L` or `V:R` items
-3. Re-run: `/review-pr` to verify
+**Next Steps:**
+1. Apply "Fix Now" items in this session
+2. Spin off "Investigate" as separate tasks
+3. Run `/whiteboarding` for each "Plan" item
+4. Discuss "Decide" items with stakeholders
 ```
 
 ---
@@ -221,8 +257,9 @@ Combine findings **grouped by file**, not by dimension:
 ## MANDATORY
 
 1. Dispatch ALL 5 agents in parallel
-2. Group output by FILE, not dimension
-3. Include 4-dimension assessment `[S:_ R:_ C:_ V:_]` for each issue
-4. Include code fix snippets where possible
-5. State unknowns for critical issues (epistemic humility)
-6. Flag any `C:L` (low confidence) items for human review
+2. **Group output by ACTION TYPE** (Fix Now / Investigate / Plan / Decide)
+3. Within each action group, organize by file
+4. Include 4-dimension assessment `[S:_ R:_ C:_ V:_]` for each issue
+5. Provide code snippets ONLY for "Fix Now" items
+6. Provide `/whiteboarding` topics for "Plan" items
+7. State unknowns for Investigate/Decide items (epistemic humility)

@@ -94,7 +94,9 @@ Task tool:
 
 ---
 
-## Phase 4: Aggregate Results (GROUP BY FILE)
+## Phase 4: Aggregate Results (GROUP BY ACTION)
+
+Group findings by **action type** (what to do next). See `references/assessment-framework.md`.
 
 ```markdown
 # Review Changes Report
@@ -106,35 +108,52 @@ Task tool:
 
 ---
 
-## Issues by File
+## Fix Now
+Ready-to-apply fixes. Apply these in current session.
 
 ### [filename]
-
 1. 🔴 [CRITICAL] Line X - [issue] (agent)
-   Fix: [specific fix]
+   Fix: [code snippet]
    Assessment: `[S:_ R:_ C:_ V:_]`
-   **Unknown**: [what would change this assessment?]
 
 2. 🟡 [IMPORTANT] Line Y - [issue] (agent)
-   Fix: [suggestion]
+   Fix: [code snippet]
    Assessment: `[S:_ R:_ C:_ V:_]`
 
 ---
 
-## Action Plan
+## Investigate
+Need more context before fixing.
 
-| Priority | Count | High Risk | Low Confidence | Needs Review |
-|----------|-------|-----------|----------------|--------------|
-| 🔴 Critical | [n] | [count R:H] | [count C:L] | [count V:R] |
-| 🟡 Important | [n] | [count R:H] | [count C:L] | [count V:R] |
-| 🟢 Suggestions | [n] | [count R:H] | [count C:L] | [count V:R] |
+### [filename]
+1. 🟡 [IMPORTANT] Line Z - [issue] (agent)
+   Assessment: `[S:_ R:_ C:L V:R]`
+   Check: [what to investigate]
+   **Unknown**: [what we don't know]
 
-**Assessment Legend**: `[S:Scope R:Risk C:Confidence V:Verification]`
-See `references/assessment-framework.md` for full definitions.
+---
 
-1. Fix critical issues (especially `R:H` high-risk)
-2. Human review required for any `C:L` or `V:R` items
-3. Re-run: `/review-changes`
+## Plan
+Systemic changes - spin off to `/whiteboarding`.
+
+1. 🔴 [CRITICAL] [description]
+   Assessment: `[S:S R:_ C:_ V:R]`
+   → Invoke: `/whiteboarding "[topic]"`
+
+---
+
+## Summary
+
+| Action | Count |
+|--------|-------|
+| Fix Now | [n] |
+| Investigate | [n] |
+| Plan | [n] |
+
+**Next Steps:**
+1. Apply "Fix Now" items
+2. Spin off "Investigate" tasks
+3. Run `/whiteboarding` for "Plan" items
 ```
 
 ---

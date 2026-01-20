@@ -117,16 +117,34 @@ skills/<skill-name>/
 
 ## Review Output Format
 
-Reviews are **grouped by file** with multi-dimensional assessments:
+Reviews are **grouped by action type** (what to do next), then by file:
 
 ```markdown
-### src/file.cs
-
-1. 🔴 [CRITICAL] Line 84 - Issue (agent)
-   Fix: [specific code]
+## Fix Now
+1. 🔴 [CRITICAL] src/file.cs:84 - Issue (agent)
+   Fix: [code snippet]
    Assessment: `[S:L R:H C:H V:T]`
-   **Unknown**: [what would change this assessment?]
+
+## Investigate
+1. 🟡 [IMPORTANT] src/other.cs:200 - Issue (agent)
+   Assessment: `[S:B R:M C:L V:R]`
+   Check: [what to investigate]
+   **Unknown**: [what we don't know]
+
+## Plan
+1. 🔴 [CRITICAL] Multiple files - Systemic issue
+   Assessment: `[S:S R:H C:H V:R]`
+   → Invoke: `/whiteboarding "[topic]"`
 ```
+
+### Action Types
+
+| Action | When | Output |
+|--------|------|--------|
+| **Fix Now** | `S:L/B` + `C:H/M` | Code snippet to apply |
+| **Investigate** | `C:L` or unclear cause | What to check first |
+| **Plan** | `S:S` (systemic) | `/whiteboarding` topic |
+| **Decide** | Business logic/trade-offs | Options for human |
 
 ### Assessment Framework (4 Dimensions)
 
@@ -141,7 +159,7 @@ See `references/assessment-framework.md` for full definitions.
 
 **Key principle**: Always state what you DON'T know (epistemic humility).
 
-**Auto-escalation**: Any `C:L` (low confidence) or `V:R` (needs review) requires human validation.
+**Workflow**: Apply "Fix Now" → Spin off "Investigate" → Run `/whiteboarding` for "Plan"
 
 ## Severity Levels
 
