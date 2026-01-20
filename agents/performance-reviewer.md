@@ -45,34 +45,31 @@ Review the git diff provided. Focus on algorithmic complexity and hot path effic
 
 ## Output Format
 
-See `references/assessment-framework.md` for dimension definitions.
+Group findings by action type. See `references/assessment-framework.md`.
 
 ```markdown
 ## Performance Review
 
-### Critical Issues
-- [CRITICAL] [file:line] - [issue]
+### Fix (high confidence, provide code)
+- [CRITICAL/IMPORTANT] [file:line] - [issue]
   Complexity: O(n²) / O(n³) / etc.
   Impact: [when this matters]
-  Fix: [specific optimization]
+  ```lang
+  [optimized code]
+  ```
 
-  | Dimension | Level | Rationale |
-  |-----------|-------|-----------|
-  | Scope | [S:L/B/S] | [why] |
-  | Risk | [R:L/M/H] | [why - perf degradation severity] |
-  | Confidence | [C:L/M/H] | [why - need profiling?] |
-  | Verification | [V:C/T/R] | [why - need benchmark?] |
-
-  **Unknown**: [what data size makes this critical?]
-
-### Important Issues
+### Investigate (need profiling/measurement)
 - [IMPORTANT] [file:line] - [issue]
-  Fix: [suggestion]
-  Assessment: [S:_ R:_ C:_ V:_]
+  Complexity: [suspected]
+  Check: [what to measure]
+  **Unknown**: [data size, call frequency, etc.]
+
+### Plan (systemic, needs /whiteboarding)
+- [CRITICAL] [description - e.g., caching layer needed]
+  → `/whiteboarding "[topic]"`
 
 ### Suggestions
 - [SUGGESTION] [file:line] - [optimization opportunity]
-  Assessment: [S:_ R:_ C:_ V:_]
 
 ### Positive Patterns
 - [efficient code observed]

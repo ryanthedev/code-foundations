@@ -117,49 +117,46 @@ skills/<skill-name>/
 
 ## Review Output Format
 
-Reviews are **grouped by action type** (what to do next), then by file:
+Reviews are **grouped by action type** (what to do next):
 
 ```markdown
-## Fix Now
-1. 🔴 [CRITICAL] src/file.cs:84 - Issue (agent)
-   Fix: [code snippet]
-   Assessment: `[S:L R:H C:H V:T]`
+## Fix
+High confidence. Apply now.
+1. 🔴 [CRITICAL] file:line - Issue (agent)
+   ```lang
+   [code to apply]
+   ```
 
 ## Investigate
-1. 🟡 [IMPORTANT] src/other.cs:200 - Issue (agent)
-   Assessment: `[S:B R:M C:L V:R]`
+Low confidence. Need context first.
+1. 🟡 [IMPORTANT] file:line - Issue (agent)
    Check: [what to investigate]
-   **Unknown**: [what we don't know]
+   **Unknown**: [missing context]
 
 ## Plan
-1. 🔴 [CRITICAL] Multiple files - Systemic issue
-   Assessment: `[S:S R:H C:H V:R]`
-   → Invoke: `/whiteboarding "[topic]"`
+Systemic. Spin off to whiteboarding.
+1. 🔴 [CRITICAL] Multiple files - Issue
+   → `/whiteboarding "[topic]"`
+
+## Decide
+Trade-off needing human judgment.
+1. 🟡 [IMPORTANT] file:line - Issue (agent)
+   Options: A vs B
+   **Unknown**: [what would inform decision]
 ```
 
 ### Action Types
 
 | Action | When | Output |
 |--------|------|--------|
-| **Fix Now** | `S:L/B` + `C:H/M` | Code snippet to apply |
-| **Investigate** | `C:L` or unclear cause | What to check first |
-| **Plan** | `S:S` (systemic) | `/whiteboarding` topic |
-| **Decide** | Business logic/trade-offs | Options for human |
+| **Fix** | High confidence, localized | Code snippet |
+| **Investigate** | Low confidence | What to check |
+| **Plan** | Systemic (many files) | `/whiteboarding` topic |
+| **Decide** | Trade-off | Options for human |
 
-### Assessment Framework (4 Dimensions)
+**Key principle**: State what you DON'T know (**Unknown** section).
 
-See `references/assessment-framework.md` for full definitions.
-
-| Dimension | Levels | Meaning |
-|-----------|--------|---------|
-| **S**cope | L/B/S | Localized (<10 lines) / Bounded (<50 lines) / Systemic |
-| **R**isk | L/M/H | Low (reversible) / Medium (state changes) / High (security, data loss) |
-| **C**onfidence | L/M/H | Low (speculative) / Medium (inference) / High (pattern-matched) |
-| **V**erification | C/T/R | Compile / Test / Review (human required) |
-
-**Key principle**: Always state what you DON'T know (epistemic humility).
-
-**Workflow**: Apply "Fix Now" → Spin off "Investigate" → Run `/whiteboarding` for "Plan"
+**Workflow**: Apply "Fix" → Spin off "Investigate" → Run `/whiteboarding` for "Plan"
 
 ## Severity Levels
 

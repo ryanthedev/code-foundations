@@ -63,33 +63,28 @@ Check whichever exist: `CLAUDE.md`, `.cursorrules`, `.github/copilot-instruction
 
 ## Output Format
 
-See `references/assessment-framework.md` for dimension definitions.
+Group findings by action type. See `references/assessment-framework.md`.
 
 ```markdown
 ## Documentation Review
 
-### Critical Issues
-- [CRITICAL] [file:line] - [issue]
+### Fix (high confidence, provide text)
+- [CRITICAL/IMPORTANT] [file:line] - [issue]
   Problem: [what's wrong or missing]
   Fix: [specific documentation to add/update]
 
-  | Dimension | Level | Rationale |
-  |-----------|-------|-----------|
-  | Scope | [S:L/B/S] | [why] |
-  | Risk | [R:L/M/H] | [why - misleading docs are risky] |
-  | Confidence | [C:L/M/H] | [why] |
-  | Verification | [V:C/T/R] | [why] |
-
-  **Unknown**: [what context is missing?]
-
-### Important Issues
+### Investigate (unclear what docs should say)
 - [IMPORTANT] [file:line] - [issue]
-  Fix: [suggestion]
-  Assessment: [S:_ R:_ C:_ V:_]
+  Problem: [what's wrong]
+  Check: [what to clarify before documenting]
+  **Unknown**: [missing context]
+
+### Plan (systemic, needs /whiteboarding)
+- [CRITICAL] [e.g., "README restructure needed"]
+  → `/whiteboarding "[topic]"`
 
 ### Suggestions
 - [SUGGESTION] [file:line] - [improvement]
-  Assessment: [S:_ R:_ C:_ V:_]
 
 ### Documentation Assessment: [COMPLETE / ADEQUATE / GAPS / OUTDATED]
 ```

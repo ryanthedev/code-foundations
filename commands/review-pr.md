@@ -126,9 +126,7 @@ Task tool:
 
 ## Phase 4: Aggregate Results (GROUP BY ACTION)
 
-Combine findings **grouped by action type** (what to do next), then by file within each group.
-
-See `references/assessment-framework.md` for action type definitions.
+Combine findings **grouped by action type** (what to do next).
 
 ```markdown
 # PR Review Report
@@ -137,14 +135,13 @@ See `references/assessment-framework.md` for action type definitions.
 - **PR:** [title]
 - **Branch:** [head] → [base]
 - **Files Changed:** [count]
-- **Agents:** defensive, quality, correctness, performance, documentation
 
 ## Verdict: [APPROVE / REQUEST CHANGES / BLOCKED]
 
 ---
 
-## Fix Now
-Ready-to-apply fixes with high confidence. Apply these in current session.
+## Fix
+High confidence. Apply these now.
 
 ### src/middleware/FeatureHeader.cs
 
@@ -152,81 +149,59 @@ Ready-to-apply fixes with high confidence. Apply these in current session.
    ```csharp
    if (encoded.Length > MaxDecodedSize / 1.34) return null;
    ```
-   Assessment: `[S:L R:H C:H V:T]`
 
 2. 🟡 [IMPORTANT] Line 58 - Silent JSON failure (defensive)
    Fix: Add telemetry logging
-   Assessment: `[S:L R:M C:H V:C]`
 
 3. 🟡 [IMPORTANT] Line 134 - Missing trailing newline (quality)
    Fix: Add newline at EOF
-   Assessment: `[S:L R:L C:H V:C]`
-
-### src/services/FeatureToggle.cs
-
-1. 🟡 [IMPORTANT] Line 45 - New public API undocumented (documentation)
-   Fix: Add XML doc comment
-   Assessment: `[S:L R:L C:H V:C]`
 
 ---
 
 ## Investigate
-Low confidence or unclear root cause. Need more context before fixing.
+Low confidence. Need more context.
 
 ### src/services/UserService.cs
 
 1. 🟡 [IMPORTANT] Line 200 - Possible race condition (correctness)
-   Assessment: `[S:B R:M C:L V:R]`
-   Check: Is this method called concurrently? Check callers.
+   Check: Is this method called concurrently?
    **Unknown**: Thread safety requirements for this service.
 
 ---
 
 ## Plan
-Systemic changes requiring dedicated planning session.
-
-### src/api/*.cs (multiple files)
+Systemic. Spin off to `/whiteboarding`.
 
 1. 🔴 [CRITICAL] Auth middleware missing from 5 endpoints (defensive)
-   Assessment: `[S:S R:H C:H V:R]`
-   Topic: "add consistent auth middleware to all API endpoints"
-   → Invoke: `/whiteboarding "auth middleware pattern"`
+   → `/whiteboarding "auth middleware pattern"`
 
 ---
 
 ## Decide
-Trade-offs or business logic requiring human judgment.
+Trade-offs needing human judgment.
 
-### src/config/Settings.cs
-
-1. 🟡 [IMPORTANT] Line 30 - Cache TTL seems too long (performance)
-   Assessment: `[S:L R:M C:L V:R]`
+1. 🟡 [IMPORTANT] Settings.cs:30 - Cache TTL seems too long (performance)
    Options:
-   - Option A: Reduce to 5 min - fresher data, more load
-   - Option B: Keep 1 hour - stale data, less load
-   **Unknown**: Acceptable staleness for this data?
-
----
-
-## Positive Patterns
-- [good things observed]
+   - A: 5 min TTL - fresher data, more load
+   - B: 1 hour TTL - stale data, less load
+   **Unknown**: Acceptable staleness?
 
 ---
 
 ## Summary
 
-| Action | Count | Breakdown |
-|--------|-------|-----------|
-| Fix Now | [n] | [n] critical, [n] important |
-| Investigate | [n] | Need context before fixing |
-| Plan | [n] | → `/whiteboarding` sessions |
-| Decide | [n] | Needs human judgment |
+| Action | Count |
+|--------|-------|
+| Fix | [n] |
+| Investigate | [n] |
+| Plan | [n] |
+| Decide | [n] |
 
 **Next Steps:**
-1. Apply "Fix Now" items in this session
-2. Spin off "Investigate" as separate tasks
-3. Run `/whiteboarding` for each "Plan" item
-4. Discuss "Decide" items with stakeholders
+1. Apply "Fix" items now
+2. Spin off "Investigate" as tasks
+3. Run `/whiteboarding` for "Plan" items
+4. Discuss "Decide" with stakeholders
 ```
 
 ---
@@ -257,9 +232,7 @@ Trade-offs or business logic requiring human judgment.
 ## MANDATORY
 
 1. Dispatch ALL 5 agents in parallel
-2. **Group output by ACTION TYPE** (Fix Now / Investigate / Plan / Decide)
-3. Within each action group, organize by file
-4. Include 4-dimension assessment `[S:_ R:_ C:_ V:_]` for each issue
-5. Provide code snippets ONLY for "Fix Now" items
-6. Provide `/whiteboarding` topics for "Plan" items
-7. State unknowns for Investigate/Decide items (epistemic humility)
+2. **Group output by ACTION** (Fix / Investigate / Plan / Decide)
+3. Provide code snippets for "Fix" items
+4. Provide `/whiteboarding` topics for "Plan" items
+5. State **Unknown** for Investigate/Decide items

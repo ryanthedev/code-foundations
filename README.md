@@ -82,22 +82,28 @@ User: "Clean this up with foundations"
 
 ### Output Format
 
-Issues are grouped by file with 4-dimension assessments:
+Issues are grouped by action type:
 ```markdown
-### src/middleware/Handler.cs
+## Fix
+1. 🔴 [CRITICAL] Handler.cs:84 - Memory amplification (defensive)
+   ```csharp
+   if (encoded.Length > MaxDecodedSize / 1.34) return null;
+   ```
 
-1. 🔴 [CRITICAL] Line 84 - Memory amplification (defensive)
-   Fix: Add max expansion check
-   Assessment: `[S:L R:H C:H V:T]` - Localized, High risk, High confidence, needs Test
-   **Unknown**: What's the expected max input size?
-
-2. 🟡 [IMPORTANT] Line 58 - Silent failure (defensive)
+2. 🟡 [IMPORTANT] Handler.cs:58 - Silent failure (defensive)
    Fix: Add logging
-   Assessment: `[S:L R:M C:H V:C]`
+
+## Investigate
+1. 🟡 [IMPORTANT] UserService.cs:200 - Race condition? (correctness)
+   Check: Is this called concurrently?
+   **Unknown**: Thread safety requirements
+
+## Plan
+1. 🔴 [CRITICAL] Auth missing from 5 endpoints
+   → `/whiteboarding "auth middleware"`
 ```
 
-**Assessment Key**: `[S:Scope R:Risk C:Confidence V:Verification]`
-- Low confidence (`C:L`) or needs review (`V:R`) → human validation required
+**Workflow**: Apply "Fix" → Spin off "Investigate" → `/whiteboarding` for "Plan"
 
 ---
 

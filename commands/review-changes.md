@@ -96,7 +96,7 @@ Task tool:
 
 ## Phase 4: Aggregate Results (GROUP BY ACTION)
 
-Group findings by **action type** (what to do next). See `references/assessment-framework.md`.
+Group findings by **action type** (what to do next).
 
 ```markdown
 # Review Changes Report
@@ -108,37 +108,34 @@ Group findings by **action type** (what to do next). See `references/assessment-
 
 ---
 
-## Fix Now
-Ready-to-apply fixes. Apply these in current session.
+## Fix
+High confidence. Apply now.
 
 ### [filename]
 1. 🔴 [CRITICAL] Line X - [issue] (agent)
-   Fix: [code snippet]
-   Assessment: `[S:_ R:_ C:_ V:_]`
+   ```lang
+   [code to apply]
+   ```
 
 2. 🟡 [IMPORTANT] Line Y - [issue] (agent)
-   Fix: [code snippet]
-   Assessment: `[S:_ R:_ C:_ V:_]`
+   Fix: [description]
 
 ---
 
 ## Investigate
-Need more context before fixing.
+Low confidence. Need context.
 
-### [filename]
-1. 🟡 [IMPORTANT] Line Z - [issue] (agent)
-   Assessment: `[S:_ R:_ C:L V:R]`
+1. 🟡 [IMPORTANT] file:line - [issue] (agent)
    Check: [what to investigate]
    **Unknown**: [what we don't know]
 
 ---
 
 ## Plan
-Systemic changes - spin off to `/whiteboarding`.
+Systemic. Spin off to `/whiteboarding`.
 
 1. 🔴 [CRITICAL] [description]
-   Assessment: `[S:S R:_ C:_ V:R]`
-   → Invoke: `/whiteboarding "[topic]"`
+   → `/whiteboarding "[topic]"`
 
 ---
 
@@ -146,14 +143,9 @@ Systemic changes - spin off to `/whiteboarding`.
 
 | Action | Count |
 |--------|-------|
-| Fix Now | [n] |
+| Fix | [n] |
 | Investigate | [n] |
 | Plan | [n] |
-
-**Next Steps:**
-1. Apply "Fix Now" items
-2. Spin off "Investigate" tasks
-3. Run `/whiteboarding` for "Plan" items
 ```
 
 ---

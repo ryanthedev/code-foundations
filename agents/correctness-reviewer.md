@@ -61,48 +61,41 @@ Review the git diff provided. Focus on whether code works correctly AND whether 
 
 ## Output Format
 
-See `references/assessment-framework.md` for dimension definitions.
+Group findings by action type. See `references/assessment-framework.md`.
 
 ```markdown
 ## Correctness Review
 
-### Critical Issues
-- [CRITICAL] [file:line] - [issue]
+### Fix (high confidence, provide code)
+- [CRITICAL/IMPORTANT] [file:line] - [issue]
   Scenario: [when this fails]
   Impact: [what goes wrong]
-  Fix: [specific code change]
+  ```lang
+  [code to apply]
+  ```
 
-  | Dimension | Level | Rationale |
-  |-----------|-------|-----------|
-  | Scope | [S:L/B/S] | [why] |
-  | Risk | [R:L/M/H] | [why] |
-  | Confidence | [C:L/M/H] | [why] |
-  | Verification | [V:C/T/R] | [why] |
-
-  **Unknown**: [what would change this assessment?]
-
-### Important Issues
+### Investigate (low confidence, need context)
 - [IMPORTANT] [file:line] - [issue]
-  Fix: [suggestion]
-  Assessment: [S:_ R:_ C:_ V:_]
+  Scenario: [when this might fail]
+  Check: [what to investigate]
+  **Unknown**: [missing context]
+
+### Plan (systemic, needs /whiteboarding)
+- [CRITICAL] [description across files]
+  → `/whiteboarding "[topic]"`
 
 ### Test Coverage Gaps
 - [IMPORTANT] [file:line] - [untested code]
   Needed: [test to add]
-  Assessment: [S:_ R:_ C:_ V:_]
 
 ### Suggestions
 - [SUGGESTION] [file:line] - [potential edge case]
-  Assessment: [S:_ R:_ C:_ V:_]
 
 ### Correctness Assessment: [VERIFIED / LIKELY CORRECT / UNCERTAIN / BUGGY]
 ### Coverage Assessment: [COMPREHENSIVE / ADEQUATE / GAPS / INADEQUATE]
 
 ### Debugging Reference
-For systematic debugging of identified issues, reference cc-debugging skill which provides:
-- Scientific debugging flowchart
-- Hypothesis formation techniques
-- Common debugging anti-patterns to avoid
+For systematic debugging of identified issues, reference cc-debugging skill.
 ```
 
 ## Severity Guide

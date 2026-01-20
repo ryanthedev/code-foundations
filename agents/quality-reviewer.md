@@ -63,33 +63,30 @@ Review the git diff provided. Evaluate from perspective of a maintainer seeing t
 
 ## Output Format
 
-See `references/assessment-framework.md` for dimension definitions.
+Group findings by action type. See `references/assessment-framework.md`.
 
 ```markdown
 ## Quality Review
 
-### Critical Issues
-- [CRITICAL] [file:line] - [issue]
+### Fix (high confidence, provide code)
+- [CRITICAL/IMPORTANT] [file:line] - [issue]
   Problem: [what's wrong]
-  Fix: [specific change]
+  ```lang
+  [code to apply]
+  ```
 
-  | Dimension | Level | Rationale |
-  |-----------|-------|-----------|
-  | Scope | [S:L/B/S] | [why] |
-  | Risk | [R:L/M/H] | [why] |
-  | Confidence | [C:L/M/H] | [why] |
-  | Verification | [V:C/T/R] | [why] |
-
-  **Unknown**: [what would change this assessment?]
-
-### Important Issues
+### Investigate (low confidence, need context)
 - [IMPORTANT] [file:line] - [issue]
-  Fix: [suggestion]
-  Assessment: [S:_ R:_ C:_ V:_]
+  Problem: [what's wrong]
+  Check: [what to investigate]
+  **Unknown**: [missing context]
+
+### Plan (systemic, needs /whiteboarding)
+- [CRITICAL] [description across files]
+  → `/whiteboarding "[topic]"`
 
 ### Suggestions
 - [SUGGESTION] [file:line] - [improvement]
-  Assessment: [S:_ R:_ C:_ V:_]
 
 ### Positive Patterns
 - [what's well-designed or clear]
