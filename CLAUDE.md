@@ -52,6 +52,29 @@ The `code-foundations` skill (`skills/code-foundations/SKILL.md`) is the entry p
 4. Executes task-specific checklist
 5. Runs pre-commit gate via `aposd-verifying-correctness`
 
+### Development Workflows
+
+**Choose based on scope:**
+
+| Situation | Command | Ceremony |
+|-----------|---------|----------|
+| Quick hack, TDD, pair programming | `/hack` | None |
+| Technical uncertainty | `/prototype` | Minimal |
+| Feature needs planning | `/whiteboarding` | Medium |
+| Executing approved plan | `/building` | Full |
+
+### Hack Mode
+
+```
+/hack [what to build]
+→ RED: Write failing test
+→ GREEN: Minimum code to pass
+→ REFACTOR: Clean up
+→ REPEAT
+```
+
+No plans, no checkpoints, no subagents. Direct code slinging.
+
 ### Prototype → Whiteboarding → Building Workflow
 
 Three-stage pattern for feature development:

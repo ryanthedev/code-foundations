@@ -4,6 +4,16 @@ Code Complete-based software engineering skills for Claude Code.
 
 ## How It Works
 
+### HACK (TDD Mode)
+```
+User: "/hack add email validation"
+  → No planning, no ceremony
+  → RED: Write failing test
+  → GREEN: Minimum code to pass
+  → REFACTOR: Clean up
+  → REPEAT
+```
+
 ### DEBUG
 ```
 User: "X isn't working, use foundations to debug it"
