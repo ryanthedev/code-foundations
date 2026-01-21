@@ -136,15 +136,17 @@ TodoWrite([
 
 ## Phase 3: EXECUTE (Implement Sections)
 
-### CRITICAL: DO NOT IMPLEMENT DIRECTLY
+### CRITICAL: DO NOT DO ANYTHING DIRECTLY
 
-**You MUST dispatch subagents for implementation. DO NOT:**
+**You MUST dispatch subagents for ALL work. DO NOT:**
+- Read/explore code files directly during building
 - Edit code files directly during building
+- Skip DISCOVERY subagent
 - Skip PRE-GATE pseudocode
 - Skip POST-GATE reviewer agent
 - Proceed after reviewer returns FAIL
 
-**The gates are BLOCKING, not advisory.**
+**The gates are BLOCKING, not advisory. All exploration and implementation is done by subagents.**
 
 ### Execution Loop - Gated
 
@@ -152,6 +154,13 @@ For each phase, execute this **mandatory** sequence:
 
 ```
 ┌──────────────────────────────────────────────────────────┐
+│  DISCOVERY (via subagent - DO NOT explore directly)      │
+│  ├─ Task tool → dispatch Explore subagent                │
+│  ├─ Subagent reads files, understands current state      │
+│  └─ Returns: findings, gaps, what exists vs plan         │
+│                                                          │
+│  ⛔ STOP: Cannot proceed until discovery complete        │
+├──────────────────────────────────────────────────────────┤
 │  PRE-GATE (BLOCKS IMPLEMENTATION)                        │
 │  ├─ Skill(cc-pseudocode-programming) → pseudocode        │
 │  ├─ Skill(aposd-designing-deep-modules) → design review  │
@@ -177,6 +186,46 @@ For each phase, execute this **mandatory** sequence:
 │  └─ Update execution log                                 │
 └──────────────────────────────────────────────────────────┘
 ```
+
+---
+
+### DISCOVERY (MANDATORY - VIA SUBAGENT)
+
+## STOP. YOU CANNOT EXPLORE CODE DIRECTLY.
+
+**Dispatch an Explore subagent to understand the current state:**
+
+```
+Task tool:
+- subagent_type: "Explore"
+- description: "Discovery for Phase N"
+- prompt: |
+    Explore the codebase to understand what exists for Phase N.
+
+    ## Phase N: [name]
+    [paste phase description and file list from plan]
+
+    ## Questions to Answer
+    1. Do the files listed in the plan exist?
+    2. What is the current implementation state?
+    3. What already exists vs what needs to be built?
+    4. Are there any gaps between plan assumptions and reality?
+
+    ## Output Format
+    Return:
+    - FILES_EXIST: [list of existing files relevant to this phase]
+    - CURRENT_STATE: [summary of what already exists]
+    - GAPS: [differences between plan and reality]
+    - RECOMMENDATION: [what actually needs to be done]
+```
+
+**Wait for Explore subagent to complete.**
+
+**After discovery:**
+1. Review findings - does the plan match reality?
+2. If plan assumptions are wrong, update plan before proceeding
+3. If phase is already complete (code exists), mark complete and skip to next phase
+4. If work needed, proceed to PRE-GATE with discovery context
 
 ---
 
@@ -542,6 +591,9 @@ When resuming blocked plan:
 | "I can implement faster than dispatching" | Direct implementation skips quality gates. Subagent ensures fresh context. |
 | "Pseudocode is overkill, I know what to do" | You know NOW. The subagent doesn't. Pseudocode is the contract. |
 | "The subagent will figure it out" | Subagent needs explicit pseudocode. No pseudocode = garbage implementation. |
+| "I'll just quickly read the files myself" | Direct exploration pollutes your context. Discovery subagent returns only what's relevant. |
+| "Discovery is overkill for a simple phase" | Plan assumptions often mismatch reality. Discovery catches this before wasted work. |
+| "I already know this codebase" | Your context is stale. Discovery subagent has fresh eyes and finds what changed. |
 
 ---
 

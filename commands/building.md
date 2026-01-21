@@ -74,6 +74,11 @@ Update plan: `Status: in-progress`
 For each phase, run this **mandatory** sequence:
 
 ```
+DISCOVERY (via subagent - DO NOT explore directly)
+├─ Task tool → Explore subagent
+├─ Subagent reads files, understands current state
+└─ Returns: what exists vs what plan expects
+
 PRE-GATE (BLOCKS IMPLEMENTATION)
 ├─ Skill(code-foundations:cc-pseudocode-programming)
 ├─ Skill(code-foundations:aposd-designing-deep-modules)
@@ -95,7 +100,22 @@ CHECKPOINT (only if reviewer returns PASS)
 └─ Update execution log
 ```
 
-### 4. Implementation Subagent (MANDATORY)
+### 4. Discovery Subagent (MANDATORY)
+
+**DO NOT explore codebase directly. Dispatch Explore subagent:**
+
+```
+Task tool:
+- subagent_type: "Explore"
+- description: "Discovery for Phase N"
+- prompt: |
+    Explore Phase N files. Report:
+    - What exists vs plan expectations
+    - Gaps or discrepancies
+    - Recommendation: build/skip/update-plan
+```
+
+### 5. Implementation Subagent (MANDATORY)
 
 **DO NOT implement directly. Dispatch subagent:**
 
@@ -112,7 +132,7 @@ Task tool:
     Return: DONE or BLOCKED
 ```
 
-### 5. Phase Reviewer Agent (MANDATORY)
+### 6. Phase Reviewer Agent (MANDATORY)
 
 ```
 Task tool:
@@ -126,7 +146,7 @@ Task tool:
 
 **STOP. Cannot proceed until reviewer returns PASS.**
 
-### 6. Final Verification
+### 7. Final Verification
 
 ```bash
 npm test  # or equivalent
@@ -134,7 +154,7 @@ npm test  # or equivalent
 
 All tests must pass before completion.
 
-### 7. Report
+### 8. Report
 
 Update plan: `Status: complete`
 
