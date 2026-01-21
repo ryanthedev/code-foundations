@@ -1,10 +1,10 @@
 {
   "name": "code-foundations",
-  "version": "2.6.0",
-  "description": "Software engineering skills from Code Complete and A Philosophy of Software Design. Includes three-level code review system with 5 specialized agents using 4-dimension assessment (Scope/Risk/Confidence/Verification), plus prototype→whiteboarding→building workflow for feature development with quality gates.",
+  "version": "2.7.0",
+  "description": "Software engineering skills from Code Complete and A Philosophy of Software Design. Three-level code review with 5 parallel agents, skill chaining for workflow continuity, and prototype→whiteboarding→building development flow.",
   "author": {
     "name": "ryanthedev"
   },
   "license": "MIT",
-  "keywords": ["code-complete", "aposd", "skills", "software-engineering", "best-practices", "design-philosophy", "code-review", "pr-review", "prototyping", "planning"]
+  "keywords": ["code-complete", "aposd", "skills", "software-engineering", "best-practices", "design-philosophy", "code-review", "pr-review", "prototyping", "planning", "skill-chaining"]
 }
