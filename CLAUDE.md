@@ -216,3 +216,32 @@ All CC skills reference `references/cc-foundations.md` for shared vocabulary (co
 New skills added:
 - `cc-debugging` - Scientific debugging (Chapter 23): STABILIZE → LOCATE → HYPOTHESIZE → EXPERIMENT → FIX → TEST → SEARCH
 - `cc-table-driven-methods` - Replace complex logic with tables (Chapter 18): direct access, indexed access, stair-step access
+
+## Publishing
+
+### Plugin Structure
+
+- `.claude-plugin/plugin.json` - Plugin manifest with name, version, description
+- Version follows semver (e.g., 2.7.1)
+
+### Marketplace
+
+Published to `ryanthedev/rtd-claude-inn` marketplace:
+
+**Marketplace files:**
+- `~/repos/rtd-claude-inn/.claude-plugin/marketplace.json` - Plugin registry with versions
+- `~/repos/rtd-claude-inn/README.md` - Marketplace documentation with version table
+
+**To publish a new version:**
+1. Bump version in `.claude-plugin/plugin.json`
+2. Commit and push to `origin/main`
+3. Update `marketplace.json` in rtd-claude-inn with new version
+4. Update README.md version table
+5. Commit and push rtd-claude-inn
+
+**Install commands:**
+```bash
+/plugin marketplace add ryanthedev/rtd-claude-inn
+/plugin install code-foundations@rtd
+/plugin update code-foundations@rtd
+```
