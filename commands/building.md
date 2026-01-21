@@ -115,22 +115,23 @@ Task tool:
     - Recommendation: build/skip/update-plan
 ```
 
-### 5. Implementation Subagent (MANDATORY)
+### 5. Implementation Agent (MANDATORY)
 
-**DO NOT implement directly. Dispatch subagent:**
+**DO NOT implement directly. Dispatch specialized agent:**
 
 ```
 Task tool:
-- subagent_type: "general-purpose"
+- subagent_type: "code-foundations:implementation-agent"
 - description: "Implement Phase N"
 - prompt: |
-    INVOKE code-foundations skill.
     Implement Phase N from this pseudocode:
     [pseudocode from PRE-GATE]
 
     Files: [list]
     Return: DONE or BLOCKED
 ```
+
+Implementation agent has methodology built-in (no skill invocation needed).
 
 ### 6. Phase Reviewer Agent (MANDATORY)
 

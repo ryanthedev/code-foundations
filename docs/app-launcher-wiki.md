@@ -430,6 +430,37 @@ Go CLI discovers all sources, assembles unified item list, sends to grid-picker 
 - `28509be` - fix: add DISCOVERY phase with Explore subagent
 - Marketplace: `c371311` - bump to 2.7.2
 
+### Fix: Specialized Reviewer Agents (v2.7.3)
+
+**Problem:** Prompt said "INVOKE code-foundations skill first" but Claude ignored it.
+
+**Root Cause (via oberprompt analysis):** Subagents cannot invoke skills - they're fresh contexts without access to the Skill tool. The instruction was impossible to follow.
+
+**Solution:** Use specialized code-foundations reviewer agent types that have skills built-in:
+
+| Phase Focus | Agent Type |
+|-------------|------------|
+| General implementation | `code-foundations:correctness-reviewer` |
+| Error handling | `code-foundations:defensive-reviewer` |
+| Design/architecture | `code-foundations:quality-reviewer` |
+| Performance critical | `code-foundations:performance-reviewer` |
+
+**New prompt template:**
+```
+Task tool:
+- subagent_type: "code-foundations:correctness-reviewer"
+- description: "Phase N review"
+- prompt: |
+    Review Phase N implementation.
+    Files: [list]
+    Requirements: [from plan]
+    Return: PASS or FAIL with issues.
+```
+
+**Commits:**
+- `2048533` - fix: use specialized reviewer agents
+- Marketplace: `bbd2115` - bump to 2.7.3
+
 ---
 
 ## Building in Action

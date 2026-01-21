@@ -279,18 +279,18 @@ Verify:
 
 ## STOP. Confirm PRE-GATE passed before proceeding.
 
-**Dispatch implementation subagent** - DO NOT implement directly:
+**Dispatch implementation agent** - DO NOT implement directly:
+
+Use the specialized implementation agent (has implementation skills built-in):
 
 ```
 Task tool:
-- subagent_type: "general-purpose"
+- subagent_type: "code-foundations:implementation-agent"
 - description: "Implement Phase N"
 - prompt: |
-    You are implementing Phase N of a building plan.
+    Implement Phase N of the building plan.
 
-    INVOKE code-foundations skill first.
-
-    ## Pseudocode to Implement
+    ## Pseudocode
     [paste pseudocode from PRE-GATE]
 
     ## Files to Create/Modify
@@ -299,14 +299,15 @@ Task tool:
     ## Tasks
     [task list from plan phase]
 
-    ## Requirements
-    1. Translate pseudocode to code exactly
-    2. Run tests after each file change
-    3. Return: DONE with files changed, or BLOCKED with issue
-
-    DO NOT add features not in pseudocode.
-    DO NOT refactor unrelated code.
+    Return: DONE with files changed, or BLOCKED with issue.
 ```
+
+**Why specialized agent:** Subagents can't invoke skills (fresh context).
+The `code-foundations:implementation-agent` has implementation methodology built-in:
+- Translates pseudocode exactly (no feature creep)
+- Applies defensive programming
+- Runs tests after each file
+- Reports deviations from spec
 
 **Wait for subagent to complete before proceeding.**
 
@@ -315,14 +316,6 @@ Task tool:
 1. Verify subagent returned DONE (not BLOCKED)
 2. Run tests to confirm implementation works
 3. If BLOCKED, debug and re-dispatch or escalate
-
-**During implementation, subagent should invoke:**
-
-| Situation | Skill |
-|-----------|-------|
-| Error handling code | `Skill(code-foundations:cc-defensive-programming)` |
-| Complex control flow | `Skill(code-foundations:cc-control-flow-quality)` |
-| Data structures | `Skill(code-foundations:cc-data-organization)` |
 
 ---
 
