@@ -48,7 +48,7 @@ TodoWrite([
 
 ---
 
-## STEP 1: GET PR DIFF
+## STEP 1: GET PR METADATA (NOT FULL DIFF)
 
 Mark todo "Get PR diff" as `in_progress`.
 
@@ -56,59 +56,91 @@ Mark todo "Get PR diff" as `in_progress`.
 gh pr view --json number,title,baseRefName,headRefName 2>/dev/null || echo "No PR"
 git diff --name-only $(git merge-base HEAD main)..HEAD
 git diff $(git merge-base HEAD main)..HEAD | wc -l  # Count lines for size check
-git diff $(git merge-base HEAD main)..HEAD  # Full diff
 ```
 
-**SIZE CHECK:**
-- Lines > 500 OR files > 10 → Must run triage (Step 2)
-- Otherwise → Skip to Step 3
+**DO NOT run `git diff` for full content.** Triage subagent will handle it.
 
-Store the full diff in memory. Mark todo complete.
+**SIZE CHECK:**
+- Lines > 500 OR files > 10 → Run triage with haiku (Step 2)
+- Otherwise → Run triage with haiku (Step 2) - still needed to create JSON
+
+**ALWAYS run triage.** This ensures consistent JSON-based workflow for all agents.
+
+Store only file list and line count. Mark todo complete.
 
 ---
 
-## STEP 2: TRIAGE (LARGE DIFFS ONLY)
+## STEP 2: TRIAGE (ALWAYS RUN)
 
-**GATE CONDITION:** Only run if diff > 500 lines OR > 10 files.
+**ALWAYS run triage** to create the JSON file that agents will read.
 
 Mark todo "Run triage" as `in_progress`.
+
+**Create unique run directory:**
+```bash
+RUN_ID=$(date +%Y%m%d-%H%M%S)
+mkdir -p /tmp/pr-review-$RUN_ID
+echo $RUN_ID
+```
+
+Store `RUN_ID` for use in all subsequent steps.
+
+**IMPORTANT:** When dispatching agents, replace `[RUN_ID]` in prompts with the actual value (e.g., `20260121-121731`).
 
 Dispatch triage agent:
 
 ```
 Task(
   subagent_type: "general-purpose",
-  model: "haiku",
   description: "Triage PR changes",
   prompt: """
 Triage this PR diff for routing to specialized reviewers.
 
-GIT DIFF:
-<diff>
-[PASTE FULL DIFF HERE]
-</diff>
+Run this command to get the full diff:
+```bash
+git diff $(git merge-base HEAD main)..HEAD
+```
 
-TASK: For each logical change chunk, output JSON:
-
-{
-  "chunks": [
-    {
-      "file": "path/to/file.ext",
-      "lines": [start, end],
-      "description": "what this change DOES",
-      "reviewers": ["defensive", "quality", "correctness", "performance", "documentation"]
-    }
-  ]
-}
+TASK: Parse the diff and create a triage JSON with embedded diff hunks for each reviewer.
 
 REVIEWER MAPPING:
-- Input validation, auth, error handling → defensive
-- Naming, complexity, cohesion → quality
-- Logic, boundaries, tests → correctness
-- O(n²), loops, resources → performance
-- Comments, README, docs → documentation
+- Input validation, auth, error handling, catch blocks → defensive
+- Naming, complexity, cohesion, style → quality
+- Logic, boundaries, tests, race conditions → correctness
+- O(n²), loops, resources, hot paths → performance
+- Comments, README, docs, CLAUDE.md → documentation
 
-OUTPUT: JSON only, no explanation.
+OUTPUT: Write JSON to /tmp/pr-review-[RUN_ID]/triage.json using the Write tool:
+
+{
+  "metadata": {
+    "base": "main",
+    "head": "[branch name]",
+    "total_files": [count],
+    "total_lines": [count]
+  },
+  "by_reviewer": {
+    "defensive": [
+      {
+        "file": "path/to/file.ext",
+        "lines": [start, end],
+        "description": "what this change DOES",
+        "diff": "@@ -45,10 +45,27 @@\n actual diff hunk here\n- removed line\n+ added line\n context..."
+      }
+    ],
+    "quality": [...],
+    "correctness": [...],
+    "performance": [...],
+    "documentation": [...]
+  }
+}
+
+CRITICAL:
+- Extract and embed the actual diff hunk for each chunk (not just file paths)
+- A chunk may be assigned to multiple reviewers - duplicate the entry in each
+- Empty array [] if no chunks for a reviewer
+- Use the Write tool to save to /tmp/pr-review-[RUN_ID]/triage.json
+- Return "Triage complete - /tmp/pr-review-[RUN_ID]" when done
 """
 )
 ```
@@ -126,17 +158,17 @@ Mark todo "GATE: Dispatch ALL 5 review agents" as `in_progress`.
 ### VERIFICATION CHECKPOINT
 
 Before proceeding, verify:
-- [ ] You have the diff stored in memory
-- [ ] If large diff, triage JSON is available
+- [ ] You have the file list and line count (NOT full diff in memory)
+- [ ] If large diff, triage JSON is available with file paths
 - [ ] You are about to call Task tool 5 times in ONE message
 
 ### THE 5 AGENT PROMPTS
 
 Use these EXACT prompts. Call ALL 5 in a SINGLE message with the Task tool.
 
-**INPUT SELECTION:**
-- Small diff (< 500 lines, < 10 files): Pass entire diff to all agents
-- Large diff (triage ran): Pass only chunks routed to each reviewer
+**INPUT:** Agents ALWAYS read from `/tmp/pr-triage.json` which contains embedded diff hunks.
+
+**CRITICAL:** Specialized agents read ONLY the JSON file. The diff hunks are already embedded - NO git commands needed. Zero redundant diff reads.
 
 ---
 
@@ -157,12 +189,17 @@ Review for security AND error handling:
 - Silent failures
 - Error context preservation
 
-GIT DIFF:
-<diff>
-[PASTE DIFF OR TRIAGED CHUNKS HERE]
-</diff>
+YOUR INPUT: Read /tmp/pr-review-[RUN_ID]/triage.json and review ONLY `by_reviewer.defensive` entries.
+Each entry contains: file, lines, description, and the actual diff hunk.
 
-OUTPUT FORMAT:
+⛔ DO NOT run full `git diff` - the hunks are already in the JSON.
+✅ You MAY run targeted git commands (git show, git blame, git log) if you need additional context.
+
+If `by_reviewer.defensive` is empty or missing, write "No chunks assigned - PASS" to the output file.
+
+OUTPUT: Write your review to /tmp/pr-review-[RUN_ID]/defensive.md using the Write tool.
+
+FORMAT:
 ## Defensive Review
 
 ### Fix (high confidence)
@@ -181,6 +218,8 @@ OUTPUT FORMAT:
   → /whiteboarding "[topic]"
 
 ### Verdict: HARDENED / ADEQUATE / FRAGILE / VULNERABLE
+
+Return: "/tmp/pr-review-[RUN_ID]/defensive.md"
 """
 )
 ```
@@ -205,12 +244,17 @@ Review for design AND readability:
 - Style consistency
 - Trailing newlines
 
-GIT DIFF:
-<diff>
-[PASTE DIFF OR TRIAGED CHUNKS HERE]
-</diff>
+YOUR INPUT: Read /tmp/pr-review-[RUN_ID]/triage.json and review ONLY `by_reviewer.quality` entries.
+Each entry contains: file, lines, description, and the actual diff hunk.
 
-OUTPUT FORMAT:
+⛔ DO NOT run full `git diff` - the hunks are already in the JSON.
+✅ You MAY run targeted git commands (git show, git blame, git log) if you need additional context.
+
+If `by_reviewer.quality` is empty or missing, write "No chunks assigned - PASS" to the output file.
+
+OUTPUT: Write your review to /tmp/pr-review-[RUN_ID]/quality.md using the Write tool.
+
+FORMAT:
 ## Quality Review
 
 ### Fix (high confidence)
@@ -229,6 +273,8 @@ OUTPUT FORMAT:
   → /whiteboarding "[topic]"
 
 ### Verdict: EXCELLENT / GOOD / ADEQUATE / POOR
+
+Return: "/tmp/pr-review-[RUN_ID]/quality.md"
 """
 )
 ```
@@ -251,12 +297,17 @@ Review for bugs AND test coverage:
 - Race conditions
 - Test gaps for new code
 
-GIT DIFF:
-<diff>
-[PASTE DIFF OR TRIAGED CHUNKS HERE]
-</diff>
+YOUR INPUT: Read /tmp/pr-review-[RUN_ID]/triage.json and review ONLY `by_reviewer.correctness` entries.
+Each entry contains: file, lines, description, and the actual diff hunk.
 
-OUTPUT FORMAT:
+⛔ DO NOT run full `git diff` - the hunks are already in the JSON.
+✅ You MAY run targeted git commands (git show, git blame, git log) if you need additional context.
+
+If `by_reviewer.correctness` is empty or missing, write "No chunks assigned - PASS" to the output file.
+
+OUTPUT: Write your review to /tmp/pr-review-[RUN_ID]/correctness.md using the Write tool.
+
+FORMAT:
 ## Correctness Review
 
 ### Fix (high confidence)
@@ -275,6 +326,8 @@ OUTPUT FORMAT:
   → /whiteboarding "[topic]"
 
 ### Verdict: VERIFIED / LIKELY CORRECT / UNCERTAIN / BUGGY
+
+Return: "/tmp/pr-review-[RUN_ID]/correctness.md"
 """
 )
 ```
@@ -297,12 +350,17 @@ Review for performance:
 - Hot path efficiency
 - Memory amplification
 
-GIT DIFF:
-<diff>
-[PASTE DIFF OR TRIAGED CHUNKS HERE]
-</diff>
+YOUR INPUT: Read /tmp/pr-review-[RUN_ID]/triage.json and review ONLY `by_reviewer.performance` entries.
+Each entry contains: file, lines, description, and the actual diff hunk.
 
-OUTPUT FORMAT:
+⛔ DO NOT run full `git diff` - the hunks are already in the JSON.
+✅ You MAY run targeted git commands (git show, git blame, git log) if you need additional context.
+
+If `by_reviewer.performance` is empty or missing, write "No chunks assigned - PASS" to the output file.
+
+OUTPUT: Write your review to /tmp/pr-review-[RUN_ID]/performance.md using the Write tool.
+
+FORMAT:
 ## Performance Review
 
 ### Fix (high confidence)
@@ -321,6 +379,8 @@ OUTPUT FORMAT:
   → /whiteboarding "[topic]"
 
 ### Verdict: OPTIMIZED / ACCEPTABLE / NEEDS ATTENTION / PROBLEMATIC
+
+Return: "/tmp/pr-review-[RUN_ID]/performance.md"
 """
 )
 ```
@@ -343,12 +403,17 @@ Review documentation:
 - Changelog entries for user-facing changes
 - CLAUDE.md / AI documentation updates
 
-GIT DIFF:
-<diff>
-[PASTE DIFF OR TRIAGED CHUNKS HERE]
-</diff>
+YOUR INPUT: Read /tmp/pr-review-[RUN_ID]/triage.json and review ONLY `by_reviewer.documentation` entries.
+Each entry contains: file, lines, description, and the actual diff hunk.
 
-OUTPUT FORMAT:
+⛔ DO NOT run full `git diff` - the hunks are already in the JSON.
+✅ You MAY run targeted git commands (git show, git blame, git log) if you need additional context.
+
+If `by_reviewer.documentation` is empty or missing, write "No chunks assigned - PASS" to the output file.
+
+OUTPUT: Write your review to /tmp/pr-review-[RUN_ID]/documentation.md using the Write tool.
+
+FORMAT:
 ## Documentation Review
 
 ### Fix (high confidence)
@@ -367,6 +432,8 @@ OUTPUT FORMAT:
   → /whiteboarding "[topic]"
 
 ### Verdict: COMPLETE / ADEQUATE / INCOMPLETE / MISSING
+
+Return: "/tmp/pr-review-[RUN_ID]/documentation.md"
 """
 )
 ```
@@ -389,7 +456,17 @@ Mark todo "GATE: Wait for all 5 agents" as complete.
 
 Mark todo "Aggregate results" as `in_progress`.
 
-Combine findings from all 5 agents **grouped by action type**.
+**Collect file paths returned by agents**, then read all review files:
+```bash
+cat /tmp/pr-review-[RUN_ID]/defensive.md
+cat /tmp/pr-review-[RUN_ID]/quality.md
+cat /tmp/pr-review-[RUN_ID]/correctness.md
+cat /tmp/pr-review-[RUN_ID]/performance.md
+cat /tmp/pr-review-[RUN_ID]/documentation.md
+```
+
+**Synthesize into human-readable report** grouped by action type.
+Write the final report to `/tmp/pr-review-[RUN_ID]/REPORT.md` AND output to user.
 
 ```markdown
 # PR Review Report

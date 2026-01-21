@@ -47,69 +47,98 @@ TodoWrite([
 
 ---
 
-## STEP 1: GET DIFF
+## STEP 1: GET DIFF METADATA (NOT FULL DIFF)
 
 Mark todo "Get diff" as `in_progress`.
 
 ```bash
-# Staged, specific files, or unstaged (default)
+# Get file list and line count only
 if [[ "$ARGUMENTS" == "--staged" ]]; then
-  git diff --cached
+  git diff --cached --name-only
+  git diff --cached | wc -l
 elif [[ -n "$ARGUMENTS" ]]; then
-  git diff $ARGUMENTS
+  git diff --name-only $ARGUMENTS
+  git diff $ARGUMENTS | wc -l
 else
-  git diff
+  git diff --name-only
+  git diff | wc -l
 fi
 ```
 
-**SIZE CHECK:**
-- Lines > 500 OR files > 10 → Must run triage (Step 2)
-- Otherwise → Skip to Step 3
+**DO NOT run full `git diff` for content.** Triage subagent will handle it.
 
-Store the full diff in memory. Mark todo complete.
+**ALWAYS run triage (Step 2)** to create the JSON file that agents will read.
+
+Store only file list and line count. Mark todo complete.
 
 ---
 
-## STEP 2: TRIAGE (LARGE DIFFS ONLY)
+## STEP 2: TRIAGE (ALWAYS RUN)
 
-**GATE CONDITION:** Only run if diff > 500 lines OR > 10 files.
+**ALWAYS run triage** to create the JSON file that agents will read.
 
 Mark todo "Run triage" as `in_progress`.
+
+**Create unique run directory:**
+```bash
+RUN_ID=$(date +%Y%m%d-%H%M%S)
+mkdir -p /tmp/review-changes-$RUN_ID
+echo $RUN_ID
+```
+
+Store `RUN_ID` for use in all subsequent steps.
+
+**IMPORTANT:** When dispatching agents, replace `[RUN_ID]` in prompts with the actual value (e.g., `20260121-121731`).
 
 Dispatch triage agent:
 
 ```
 Task(
   subagent_type: "general-purpose",
-  model: "haiku",
   description: "Triage changes",
   prompt: """
 Triage this diff for routing to specialized reviewers.
 
-GIT DIFF:
-<diff>
-[PASTE FULL DIFF HERE]
-</diff>
+Run this command to get the full diff:
+```bash
+git diff
+```
+(Or `git diff --cached` for staged, or `git diff <files>` for specific files)
 
-TASK: For each logical change chunk, output JSON:
-
-{
-  "chunks": [
-    {
-      "file": "path/to/file.ext",
-      "lines": [start, end],
-      "description": "what this change DOES",
-      "reviewers": ["defensive", "quality", "correctness"]
-    }
-  ]
-}
+TASK: Parse the diff and create a triage JSON with embedded diff hunks for each reviewer.
 
 REVIEWER MAPPING (only these 3 for review-changes):
-- Input validation, auth, error handling → defensive
-- Naming, complexity, cohesion → quality
-- Logic, boundaries, tests → correctness
+- Input validation, auth, error handling, catch blocks → defensive
+- Naming, complexity, cohesion, style → quality
+- Logic, boundaries, tests, race conditions → correctness
 
-OUTPUT: JSON only, no explanation.
+OUTPUT: Write JSON to /tmp/review-changes-[RUN_ID]/triage.json using the Write tool:
+
+{
+  "metadata": {
+    "total_files": [count],
+    "total_lines": [count]
+  },
+  "by_reviewer": {
+    "defensive": [
+      {
+        "file": "path/to/file.ext",
+        "lines": [start, end],
+        "description": "what this change DOES",
+        "diff": "@@ -45,10 +45,27 @@\n actual diff hunk here\n- removed line\n+ added line\n context..."
+      }
+    ],
+    "quality": [...],
+    "correctness": [...]
+  }
+}
+
+CRITICAL:
+- Extract and embed the actual diff hunk for each chunk (not just file paths)
+- A chunk may be assigned to multiple reviewers - duplicate the entry in each
+- Empty array [] if no chunks for a reviewer
+- Use the Write tool to save to /tmp/review-changes-[RUN_ID]/triage.json
+- Return "Triage complete - /tmp/review-changes-[RUN_ID]" when done
 """
 )
 ```
@@ -127,17 +156,17 @@ Mark todo "GATE: Dispatch ALL 3 review agents" as `in_progress`.
 ### VERIFICATION CHECKPOINT
 
 Before proceeding, verify:
-- [ ] You have the diff stored in memory
-- [ ] If large diff, triage JSON is available
+- [ ] You have the file list and line count (NOT full diff in memory)
+- [ ] If large diff, triage JSON is at /tmp/changes-triage.json
 - [ ] You are about to call Task tool 3 times in ONE message
 
 ### THE 3 AGENT PROMPTS
 
 Use these EXACT prompts. Call ALL 3 in a SINGLE message with the Task tool.
 
-**INPUT SELECTION:**
-- Small diff (< 500 lines, < 10 files): Pass entire diff to all agents
-- Large diff (triage ran): Pass only chunks routed to each reviewer
+**INPUT:** Agents ALWAYS read from `/tmp/review-changes-[RUN_ID]/triage.json` which contains embedded diff hunks.
+
+**CRITICAL:** Specialized agents read ONLY the JSON file. The diff hunks are already embedded - NO git commands needed. Zero redundant diff reads.
 
 ---
 
@@ -158,12 +187,17 @@ Review for security AND error handling:
 - Silent failures
 - Error context preservation
 
-GIT DIFF:
-<diff>
-[PASTE DIFF OR TRIAGED CHUNKS HERE]
-</diff>
+YOUR INPUT: Read /tmp/review-changes-[RUN_ID]/triage.json and review ONLY `by_reviewer.defensive` entries.
+Each entry contains: file, lines, description, and the actual diff hunk.
 
-OUTPUT FORMAT:
+⛔ DO NOT run full `git diff` - the hunks are already in the JSON.
+✅ You MAY run targeted git commands (git show, git blame, git log) if you need additional context.
+
+If `by_reviewer.defensive` is empty or missing, write "No chunks assigned - PASS" to the output file.
+
+OUTPUT: Write your review to /tmp/review-changes-[RUN_ID]/defensive.md using the Write tool.
+
+FORMAT:
 ## Defensive Review
 
 ### Fix (high confidence)
@@ -182,6 +216,8 @@ OUTPUT FORMAT:
   → /whiteboarding "[topic]"
 
 ### Verdict: HARDENED / ADEQUATE / FRAGILE / VULNERABLE
+
+Return: "/tmp/review-changes-[RUN_ID]/defensive.md"
 """
 )
 ```
@@ -206,12 +242,17 @@ Review for design AND readability:
 - Style consistency
 - Trailing newlines
 
-GIT DIFF:
-<diff>
-[PASTE DIFF OR TRIAGED CHUNKS HERE]
-</diff>
+YOUR INPUT: Read /tmp/review-changes-[RUN_ID]/triage.json and review ONLY `by_reviewer.quality` entries.
+Each entry contains: file, lines, description, and the actual diff hunk.
 
-OUTPUT FORMAT:
+⛔ DO NOT run full `git diff` - the hunks are already in the JSON.
+✅ You MAY run targeted git commands (git show, git blame, git log) if you need additional context.
+
+If `by_reviewer.quality` is empty or missing, write "No chunks assigned - PASS" to the output file.
+
+OUTPUT: Write your review to /tmp/review-changes-[RUN_ID]/quality.md using the Write tool.
+
+FORMAT:
 ## Quality Review
 
 ### Fix (high confidence)
@@ -230,6 +271,8 @@ OUTPUT FORMAT:
   → /whiteboarding "[topic]"
 
 ### Verdict: EXCELLENT / GOOD / ADEQUATE / POOR
+
+Return: "/tmp/review-changes-[RUN_ID]/quality.md"
 """
 )
 ```
@@ -252,12 +295,17 @@ Review for bugs AND test coverage:
 - Race conditions
 - Test gaps for new code
 
-GIT DIFF:
-<diff>
-[PASTE DIFF OR TRIAGED CHUNKS HERE]
-</diff>
+YOUR INPUT: Read /tmp/review-changes-[RUN_ID]/triage.json and review ONLY `by_reviewer.correctness` entries.
+Each entry contains: file, lines, description, and the actual diff hunk.
 
-OUTPUT FORMAT:
+⛔ DO NOT run full `git diff` - the hunks are already in the JSON.
+✅ You MAY run targeted git commands (git show, git blame, git log) if you need additional context.
+
+If `by_reviewer.correctness` is empty or missing, write "No chunks assigned - PASS" to the output file.
+
+OUTPUT: Write your review to /tmp/review-changes-[RUN_ID]/correctness.md using the Write tool.
+
+FORMAT:
 ## Correctness Review
 
 ### Fix (high confidence)
@@ -276,6 +324,8 @@ OUTPUT FORMAT:
   → /whiteboarding "[topic]"
 
 ### Verdict: VERIFIED / LIKELY CORRECT / UNCERTAIN / BUGGY
+
+Return: "/tmp/review-changes-[RUN_ID]/correctness.md"
 """
 )
 ```
@@ -298,7 +348,15 @@ Mark todo "GATE: Wait for all 3 agents" as complete.
 
 Mark todo "Aggregate results" as `in_progress`.
 
-Combine findings from all 3 agents **grouped by action type**.
+**Collect file paths returned by agents**, then read all review files:
+```bash
+cat /tmp/review-changes-[RUN_ID]/defensive.md
+cat /tmp/review-changes-[RUN_ID]/quality.md
+cat /tmp/review-changes-[RUN_ID]/correctness.md
+```
+
+**Synthesize into human-readable report** grouped by action type.
+Write the final report to `/tmp/review-changes-[RUN_ID]/REPORT.md` AND output to user.
 
 ```markdown
 # Review Changes Report
