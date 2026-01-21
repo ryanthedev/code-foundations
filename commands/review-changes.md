@@ -1,30 +1,55 @@
 ---
 description: "Medium-depth review with 3 parallel agents: defensive (security+errors), quality (maintainability+clarity), and correctness (bugs+tests)."
 argument-hint: "[--staged | files...]"
-allowed-tools: ["Bash", "Glob", "Grep", "Read", "Task", "Skill"]
+allowed-tools: ["Bash", "Glob", "Grep", "Read", "Task", "Skill", "TodoWrite", "AskUserQuestion"]
 ---
 
 # Review Changes (Level 2 - Medium Review)
 
-## STOP
+## ⛔ MANDATORY EXECUTION PROTOCOL
 
-- **Dispatch 3 agents** - defensive, quality, correctness (DO NOT review yourself)
-- **Phase 5 is THE LAW** - Execute fixes, don't just report them
-- **Large diffs (> 500 lines OR > 10 files)** - Run triage first
+This is a checklist-driven process. You MUST use TodoWrite to track progress.
+
+**THE RULES:**
+
+1. **Create the execution checklist FIRST** - Use TodoWrite before any other action
+2. **Mark items in_progress BEFORE starting** - Never skip ahead
+3. **Dispatch 3 agents** - Use Task tool, ALL 3 IN ONE MESSAGE
+4. **Phase 5 is THE LAW** - Execute fixes, don't just report them
+5. **DO NOT RETURN** until execution checklist is 100% complete
+
+**FAILURE MODES TO AVOID:**
+
+- Saying "let me dispatch agents" but not calling Task tool
+- Calling Task tool with only 1-2 agents instead of 3
+- Skipping Phase 5 execution
+- Not using TodoWrite to track progress
 
 ---
 
-## Phase 1: Invoke oberagent (if available)
+## STEP 0: CREATE EXECUTION CHECKLIST
+
+**DO THIS IMMEDIATELY. NO EXCEPTIONS.**
 
 ```
-Skill(oberskills:oberagent)
+TodoWrite([
+  {content: "Get diff and check size", status: "pending", activeForm: "Getting diff"},
+  {content: "Run triage if large diff (>500 lines OR >10 files)", status: "pending", activeForm: "Running triage on large diff"},
+  {content: "GATE: Dispatch ALL 3 review agents in parallel", status: "pending", activeForm: "Dispatching 3 review agents"},
+  {content: "GATE: Wait for all 3 agents to complete", status: "pending", activeForm: "Waiting for agent results"},
+  {content: "Aggregate results grouped by action type", status: "pending", activeForm: "Aggregating review results"},
+  {content: "Execute FIX items (dispatch subagents)", status: "pending", activeForm: "Executing FIX items"},
+  {content: "Execute INVESTIGATE items (dispatch subagents)", status: "pending", activeForm: "Executing INVESTIGATE items"},
+  {content: "Handle PLAN items (output prompts)", status: "pending", activeForm: "Handling PLAN items"},
+  {content: "Final verification - all items resolved", status: "pending", activeForm: "Verifying all items resolved"}
+])
 ```
-
-Skip if oberskills not installed.
 
 ---
 
-## Phase 2: Get Changes
+## STEP 1: GET DIFF
+
+Mark todo "Get diff" as `in_progress`.
 
 ```bash
 # Staged, specific files, or unstaged (default)
@@ -37,152 +62,243 @@ else
 fi
 ```
 
-Store the diff. Check size to determine if triage is needed.
+**SIZE CHECK:**
+- Lines > 500 OR files > 10 → Must run triage (Step 2)
+- Otherwise → Skip to Step 3
+
+Store the full diff in memory. Mark todo complete.
 
 ---
 
-## Phase 2.5: Triage (Large Diffs Only)
+## STEP 2: TRIAGE (LARGE DIFFS ONLY)
 
-**Threshold:** If diff > 500 lines OR > 10 files, run triage first.
+**GATE CONDITION:** Only run if diff > 500 lines OR > 10 files.
 
-### Dispatch Triage Agent
+Mark todo "Run triage" as `in_progress`.
+
+Dispatch triage agent:
 
 ```
-Task tool:
-- subagent_type: "general-purpose"
-- model: "sonnet"
-- description: "Triage changes"
-- prompt: |
-    Triage this diff for routing to specialized reviewers.
+Task(
+  subagent_type: "general-purpose",
+  model: "haiku",
+  description: "Triage changes",
+  prompt: """
+Triage this diff for routing to specialized reviewers.
 
-    REFERENCE: Read references/triage-tags.md for tag vocabulary and mapping.
+GIT DIFF:
+<diff>
+[PASTE FULL DIFF HERE]
+</diff>
 
-    GIT DIFF:
-    [paste diff]
+TASK: For each logical change chunk, output JSON:
 
-    TASK:
-    Go file by file, method by method. For each logical chunk of change, create a JSON object.
-
-    CHECKLIST (complete for EACH chunk):
-    - [ ] Identify file path and line range
-    - [ ] Write concise description (what the change DOES, not what it IS)
-    - [ ] Apply 1-3 tags from triage-tags.md
-    - [ ] Derive reviewers from tag mapping (only: defensive, quality, correctness)
-    - [ ] Add to chunks array
-
-    OUTPUT FORMAT (JSON):
-    ```json
+{
+  "chunks": [
     {
-      "chunks": [
-        {
-          "file": "src/auth/login.ts",
-          "lines": [15, 42],
-          "description": "validates user input before DB query",
-          "tags": ["validation", "injection"],
-          "reviewers": ["defensive"]
-        },
-        {
-          "file": "src/services/user.ts",
-          "lines": [88, 95],
-          "description": "retries failed API calls with backoff",
-          "tags": ["retry", "async"],
-          "reviewers": ["defensive", "correctness"]
-        }
-      ]
+      "file": "path/to/file.ext",
+      "lines": [start, end],
+      "description": "what this change DOES",
+      "reviewers": ["defensive", "quality", "correctness"]
     }
-    ```
+  ]
+}
 
-    STOP CONDITIONS:
-    - Do NOT skip any changed method/function
-    - Do NOT invent tags outside triage-tags.md
-    - Do NOT include explanations outside the JSON
+REVIEWER MAPPING (only these 3 for review-changes):
+- Input validation, auth, error handling → defensive
+- Naming, complexity, cohesion → quality
+- Logic, boundaries, tests → correctness
+
+OUTPUT: JSON only, no explanation.
+"""
+)
 ```
 
-### Parse Triage Output
-
-The triage output is JSON. Filter chunks array by reviewer and pass only relevant chunks to each agent.
-
-```
-For each reviewer:
-  1. Filter chunks where reviewers[] contains that reviewer
-  2. Extract file and lines for each matching chunk
-  3. Get actual diff for those line ranges
-  4. Pass to reviewer as JSON context + diff chunks
-```
-
-**Skip triage for small diffs** - pass entire diff to all reviewers (existing behavior).
+Mark todo complete when triage returns.
 
 ---
 
-## Phase 3: Dispatch 3 Agents in Parallel
+## STEP 3: DISPATCH 3 AGENTS ⛔ THIS IS A GATE
 
-**USE TASK TOOL - ALL 3 AGENTS IN SINGLE MESSAGE**
+**YOU MUST DISPATCH ALL 3 AGENTS IN A SINGLE MESSAGE.**
 
-### Input Selection
+Mark todo "GATE: Dispatch ALL 3 review agents" as `in_progress`.
 
-| Diff Size | Input to Each Agent |
-|-----------|---------------------|
-| Small (< 500 lines, < 10 files) | Entire diff |
-| Large (triage ran) | Only chunks routed to that reviewer |
+### VERIFICATION CHECKPOINT
 
-If triage ran, include relevant `changes.txt` lines for context.
+Before proceeding, verify:
+- [ ] You have the diff stored in memory
+- [ ] If large diff, triage JSON is available
+- [ ] You are about to call Task tool 3 times in ONE message
 
-### Agent 1: defensive-reviewer
+### THE 3 AGENT PROMPTS
 
-```
-Task tool:
-- subagent_type: "general-purpose"
-- description: "Defensive review"
-- prompt: |
-    First invoke code-foundations skill, then read agents/defensive-reviewer.md.
+Use these EXACT prompts. Call ALL 3 in a SINGLE message with the Task tool.
 
-    Review for security AND error handling: input validation, injection, auth, catch blocks, silent failures.
+**INPUT SELECTION:**
+- Small diff (< 500 lines, < 10 files): Pass entire diff to all agents
+- Large diff (triage ran): Pass only chunks routed to each reviewer
 
-    [If triage ran: TRIAGE CONTEXT + DIFF CHUNKS]
-    [If small diff: GIT DIFF: full diff]
+---
 
-    Return: VERDICT + issues grouped by action (Fix/Investigate/Plan)
-```
-
-### Agent 2: quality-reviewer
+### AGENT 1: defensive-reviewer
 
 ```
-Task tool:
-- subagent_type: "general-purpose"
-- description: "Quality review"
-- prompt: |
-    First invoke code-foundations skill, then read agents/quality-reviewer.md.
+Task(
+  subagent_type: "code-foundations:defensive-reviewer",
+  description: "Defensive review",
+  prompt: """
+Read agents/defensive-reviewer.md for your role.
 
-    Review for design AND readability: complexity, cohesion, naming, comments, style, trailing newlines.
+Review for security AND error handling:
+- Input validation at trust boundaries
+- Injection prevention (SQL, command, path traversal)
+- Auth checks BEFORE action
+- Empty catch blocks
+- Silent failures
+- Error context preservation
 
-    [If triage ran: TRIAGE CONTEXT + DIFF CHUNKS]
-    [If small diff: GIT DIFF: full diff]
+GIT DIFF:
+<diff>
+[PASTE DIFF OR TRIAGED CHUNKS HERE]
+</diff>
 
-    Return: VERDICT + issues grouped by action (Fix/Investigate/Plan)
-```
+OUTPUT FORMAT:
+## Defensive Review
 
-### Agent 3: correctness-reviewer
+### Fix (high confidence)
+- [CRITICAL/IMPORTANT] file:line - issue
+  ```lang
+  code fix
+  ```
 
-```
-Task tool:
-- subagent_type: "general-purpose"
-- description: "Correctness review"
-- prompt: |
-    First invoke code-foundations skill, then read agents/correctness-reviewer.md.
+### Investigate (low confidence)
+- [IMPORTANT] file:line - issue
+  Check: [what to investigate]
+  **Unknown**: [missing context]
 
-    Review for bugs AND test coverage: boundaries, logic flow, duplicates, test gaps.
+### Plan (systemic)
+- [CRITICAL] description
+  → /whiteboarding "[topic]"
 
-    [If triage ran: TRIAGE CONTEXT + DIFF CHUNKS]
-    [If small diff: GIT DIFF: full diff]
-
-    Return: VERDICT + issues grouped by action (Fix/Investigate/Plan)
+### Verdict: HARDENED / ADEQUATE / FRAGILE / VULNERABLE
+"""
+)
 ```
 
 ---
 
-## Phase 4: Aggregate Results (GROUP BY ACTION)
+### AGENT 2: quality-reviewer
 
-Group findings by **action type** (what to do next).
+```
+Task(
+  subagent_type: "code-foundations:quality-reviewer",
+  description: "Quality review",
+  prompt: """
+Read agents/quality-reviewer.md for your role.
+
+Review for design AND readability:
+- Complexity symptoms (change amplification, cognitive load)
+- Cohesion (routine does ONE thing)
+- Coupling (minimized dependencies)
+- Naming clarity
+- Comment quality
+- Style consistency
+- Trailing newlines
+
+GIT DIFF:
+<diff>
+[PASTE DIFF OR TRIAGED CHUNKS HERE]
+</diff>
+
+OUTPUT FORMAT:
+## Quality Review
+
+### Fix (high confidence)
+- [CRITICAL/IMPORTANT] file:line - issue
+  ```lang
+  code fix
+  ```
+
+### Investigate (low confidence)
+- [IMPORTANT] file:line - issue
+  Check: [what to investigate]
+  **Unknown**: [missing context]
+
+### Plan (systemic)
+- [CRITICAL] description
+  → /whiteboarding "[topic]"
+
+### Verdict: EXCELLENT / GOOD / ADEQUATE / POOR
+"""
+)
+```
+
+---
+
+### AGENT 3: correctness-reviewer
+
+```
+Task(
+  subagent_type: "code-foundations:correctness-reviewer",
+  description: "Correctness review",
+  prompt: """
+Read agents/correctness-reviewer.md for your role.
+
+Review for bugs AND test coverage:
+- Boundary conditions (off-by-one, empty, null, max)
+- Logic flow (all paths, early returns)
+- Duplicate handling
+- Race conditions
+- Test gaps for new code
+
+GIT DIFF:
+<diff>
+[PASTE DIFF OR TRIAGED CHUNKS HERE]
+</diff>
+
+OUTPUT FORMAT:
+## Correctness Review
+
+### Fix (high confidence)
+- [CRITICAL/IMPORTANT] file:line - issue
+  ```lang
+  code fix
+  ```
+
+### Investigate (low confidence)
+- [IMPORTANT] file:line - issue
+  Check: [what to investigate]
+  **Unknown**: [missing context]
+
+### Plan (systemic)
+- [CRITICAL] description
+  → /whiteboarding "[topic]"
+
+### Verdict: VERIFIED / LIKELY CORRECT / UNCERTAIN / BUGGY
+"""
+)
+```
+
+---
+
+### POST-DISPATCH VERIFICATION
+
+After calling Task tool 3 times, mark todo "GATE: Dispatch ALL 3 review agents" as complete.
+
+Mark todo "GATE: Wait for all 3 agents" as `in_progress`.
+
+Wait for all 3 agents to return results.
+
+Mark todo "GATE: Wait for all 3 agents" as complete.
+
+---
+
+## STEP 4: AGGREGATE RESULTS
+
+Mark todo "Aggregate results" as `in_progress`.
+
+Combine findings from all 3 agents **grouped by action type**.
 
 ```markdown
 # Review Changes Report
@@ -198,34 +314,31 @@ Group findings by **action type** (what to do next).
 High confidence. Apply now.
 
 ### [filename]
-1. 🔴 [CRITICAL] Line X - [issue] (agent)
+1. [SEVERITY] Line X - [issue] ([agent])
    ```lang
    [code to apply]
    ```
-
-2. 🟡 [IMPORTANT] Line Y - [issue] (agent)
-   Fix: [description]
 
 ---
 
 ## Investigate
 Low confidence. Need context.
 
-1. 🟡 [IMPORTANT] file:line - [issue] (agent)
+1. [SEVERITY] file:line - [issue] ([agent])
    Check: [what to investigate]
    **Unknown**: [what we don't know]
 
 ---
 
 ## Plan
-Systemic. Spin off to `/whiteboarding`.
+Systemic. Spin off to /whiteboarding.
 
-1. 🔴 [CRITICAL] [description]
-   → `/whiteboarding "[topic]"`
+1. [SEVERITY] [description]
+   → /whiteboarding "[topic]"
 
 ---
 
-## Summary
+## Summary Table
 
 | Action | Count |
 |--------|-------|
@@ -234,9 +347,7 @@ Systemic. Spin off to `/whiteboarding`.
 | Plan | [n] |
 ```
 
----
-
-## Verdict Logic
+### Verdict Logic
 
 | Condition | Verdict |
 |-----------|---------|
@@ -245,86 +356,103 @@ Systemic. Spin off to `/whiteboarding`.
 | SUGGESTIONS only | **READY** |
 | No issues | **READY** |
 
+Mark todo "Aggregate results" as complete.
+
 ---
 
-## Phase 5: Execute (THE LAW)
+## STEP 5: EXECUTE ⛔ THIS IS THE LAW
 
-After presenting the review report, **execute to completion**. This is mandatory.
+**DO NOT SKIP THIS STEP. EXECUTION IS MANDATORY.**
 
 ### 5.1 Execute FIX Items
+
+Mark todo "Execute FIX items" as `in_progress`.
 
 For EACH item in the "Fix" section, dispatch a subagent:
 
 ```
-Task tool:
-- subagent_type: "general-purpose"
-- description: "Fix: [brief description]"
-- prompt: |
-    Invoke code-foundations skill.
+Task(
+  subagent_type: "code-foundations:implementation-agent",
+  description: "Fix: [brief description]",
+  prompt: """
+TASK: Implement this fix.
 
-    TASK: Implement this fix.
+FILE: [file path]
+LINE: [line number]
+ISSUE: [issue description]
+FIX:
+```lang
+[the code/fix from review]
+```
 
-    FILE: [file path]
-    LINE: [line number]
-    ISSUE: [issue description]
-    FIX: [the code/fix from review]
+CHECKLIST:
+- [ ] Read the file to understand context
+- [ ] Apply the fix exactly as specified
+- [ ] Run tests if available
+- [ ] Verify the fix compiles/passes
 
-    CHECKLIST:
-    - [ ] Read the file to understand context
-    - [ ] Apply the fix exactly as specified
-    - [ ] Run tests if available
-    - [ ] Verify the fix compiles/passes
-
-    CHECKPOINT: Do not return until fix is verified working.
+CHECKPOINT: Do not return until fix is verified working.
+"""
+)
 ```
 
 Dispatch FIX agents in parallel where files don't overlap.
 
-**Iterate until all FIX items are complete.**
+**ITERATE until all FIX items are complete.**
+
+Mark todo "Execute FIX items" as complete when ALL fixes are done.
 
 ---
 
 ### 5.2 Execute INVESTIGATE Items
 
+Mark todo "Execute INVESTIGATE items" as `in_progress`.
+
 For EACH item in the "Investigate" section, dispatch a subagent:
 
 ```
-Task tool:
-- subagent_type: "general-purpose"
-- description: "Investigate: [brief description]"
-- prompt: |
-    Invoke code-foundations skill.
-    Invoke cc-debugging skill for scientific debugging method.
+Task(
+  subagent_type: "general-purpose",
+  description: "Investigate: [brief description]",
+  prompt: """
+Invoke cc-debugging skill for scientific debugging method.
 
-    TASK: Investigate this issue and report findings.
+TASK: Investigate this issue and report findings.
 
-    FILE: [file path]
-    LINE: [line number]
-    ISSUE: [issue description]
-    CHECK: [what to investigate from review]
-    UNKNOWN: [the unknown from review]
+FILE: [file path]
+LINE: [line number]
+ISSUE: [issue description]
+CHECK: [what to investigate from review]
+UNKNOWN: [the unknown from review]
 
-    DEBUGGING METHOD (cc-debugging):
-    1. STABILIZE - Can you reproduce the concern?
-    2. LOCATE - Find all relevant code paths
-    3. HYPOTHESIZE - Form hypothesis about the issue
-    4. EXPERIMENT - Test the hypothesis
-    5. CONCLUDE - What did you find?
+DEBUGGING METHOD (cc-debugging):
+1. STABILIZE - Can you reproduce the concern?
+2. LOCATE - Find all relevant code paths
+3. HYPOTHESIZE - Form hypothesis about the issue
+4. EXPERIMENT - Test the hypothesis
+5. CONCLUDE - What did you find?
 
-    RETURN:
-    - Finding: [what you discovered]
-    - Confidence: [High/Medium/Low]
-    - Recommendation: [FIX with code | PLAN needed | FALSE ALARM]
+RETURN:
+- Finding: [what you discovered]
+- Confidence: [High/Medium/Low]
+- Recommendation: [FIX with code | PLAN needed | FALSE ALARM]
+"""
+)
 ```
 
-If investigation returns "FIX with code", add to FIX queue and execute.
-If investigation returns "PLAN needed", add to PLAN section.
+If investigation returns "FIX with code" → Add to FIX queue and execute.
+If investigation returns "PLAN needed" → Add to PLAN section.
+If investigation returns "FALSE ALARM" → Document and move on.
+
+Mark todo "Execute INVESTIGATE items" as complete when ALL investigations are resolved.
 
 ---
 
 ### 5.3 Handle PLAN Items
 
-For EACH item in the "Plan" section, **output a ready-to-use prompt** for a new session:
+Mark todo "Handle PLAN items" as `in_progress`.
+
+For EACH item in the "Plan" section, output a ready-to-use prompt:
 
 ```markdown
 ## New Session Required
@@ -336,9 +464,10 @@ Copy the prompt and start a new Claude session.
 
 **Issue:** [description]
 **Files affected:** [list]
+**Severity:** [CRITICAL/IMPORTANT]
 
 **Prompt to copy:**
-\`\`\`
+```
 /whiteboarding "[topic]"
 
 Context from code review:
@@ -346,32 +475,52 @@ Context from code review:
 - Files: [affected files]
 - Severity: [CRITICAL/IMPORTANT]
 - Unknown: [what we don't know]
-\`\`\`
 ```
+```
+
+Mark todo "Handle PLAN items" as complete when all prompts are generated.
 
 ---
 
-## Execution Checklist
+## STEP 6: FINAL VERIFICATION
+
+Mark todo "Final verification" as `in_progress`.
+
+**Verify ALL items are resolved:**
 
 - [ ] All FIX items implemented and verified
 - [ ] All INVESTIGATE items resolved (fixed, planned, or dismissed)
 - [ ] All PLAN items have ready-to-copy prompts
-- [ ] Final `git status` shows clean or expected state
+- [ ] `git status` shows expected state
 
-**DO NOT STOP until this checklist is complete.**
+```bash
+git status
+git diff --stat
+```
+
+Mark todo "Final verification" as complete.
+
+**ONLY NOW MAY YOU STOP.**
 
 ---
 
-## MANDATORY
+## QUICK REFERENCE
 
-1. **Large diffs (> 500 lines OR > 10 files):** Run triage first (Phase 2.5)
-2. Dispatch ALL 3 review agents in parallel (with routed chunks if triaged)
-3. **Group output by ACTION** (Fix / Investigate / Plan)
-4. **EXECUTE Phase 5** - this is THE LAW
-5. FIX items → subagents with code-foundations → implement → verify
-6. INVESTIGATE items → subagents with cc-debugging → resolve
-7. PLAN items → output ready-to-copy prompts for new sessions
-8. **Iterate until execution checklist is complete**
+### Agent Summary Table (3 agents for review-changes)
+
+| Agent | Combines | Skills |
+|-------|----------|--------|
+| defensive-reviewer | security + errors | cc-defensive-programming, aposd-simplifying-complexity |
+| quality-reviewer | maintainability + clarity | aposd-reviewing-module-design, cc-code-layout-and-style |
+| correctness-reviewer | bugs + tests | aposd-verifying-correctness, cc-quality-practices |
+
+### Severity Levels
+
+| Severity | Meaning | Verdict Impact |
+|----------|---------|----------------|
+| **CRITICAL** | Blocks merge | BLOCKED |
+| **IMPORTANT** | Should fix | NEEDS WORK |
+| **SUGGESTION** | Consider | READY |
 
 ---
 
