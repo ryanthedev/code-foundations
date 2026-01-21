@@ -136,110 +136,230 @@ TodoWrite([
 
 ## Phase 3: EXECUTE (Implement Sections)
 
+### CRITICAL: DO NOT IMPLEMENT DIRECTLY
+
+**You MUST dispatch subagents for implementation. DO NOT:**
+- Edit code files directly during building
+- Skip PRE-GATE pseudocode
+- Skip POST-GATE reviewer agent
+- Proceed after reviewer returns FAIL
+
+**The gates are BLOCKING, not advisory.**
+
 ### Execution Loop - Gated
 
 For each phase, execute this **mandatory** sequence:
 
 ```
-┌─────────────────────────────────────────┐
-│  PRE-GATE (Before writing any code)     │
-│  ├─ INVOKE cc-pseudocode-programming    │
-│  └─ INVOKE aposd-designing-deep-modules │
-├─────────────────────────────────────────┤
-│  IMPLEMENT (Write code for phase)       │
-│  ├─ Execute each task                   │
-│  └─ Run relevant tests                  │
-├─────────────────────────────────────────┤
-│  POST-GATE (Before marking complete)    │
-│  ├─ INVOKE aposd-verifying-correctness  │
-│  ├─ INVOKE cc-defensive-programming     │
-│  └─ DISPATCH phase-reviewer agent       │
-├─────────────────────────────────────────┤
-│  CHECKPOINT (Only if all gates pass)    │
-│  ├─ Commit code                         │
-│  └─ Update execution log                │
-└─────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────┐
+│  PRE-GATE (BLOCKS IMPLEMENTATION)                        │
+│  ├─ Skill(cc-pseudocode-programming) → pseudocode        │
+│  ├─ Skill(aposd-designing-deep-modules) → design review  │
+│  └─ CONFIRM: Pseudocode exists? Design passed?           │
+│                                                          │
+│  ⛔ STOP: Cannot proceed until PRE-GATE checklist TRUE   │
+├──────────────────────────────────────────────────────────┤
+│  IMPLEMENT (via subagent - DO NOT code directly)         │
+│  ├─ Task tool → dispatch implementation subagent         │
+│  ├─ Wait for subagent DONE                               │
+│  └─ Run tests to verify                                  │
+├──────────────────────────────────────────────────────────┤
+│  POST-GATE (BLOCKS CHECKPOINT)                           │
+│  ├─ Skill(aposd-verifying-correctness)                   │
+│  ├─ Skill(cc-defensive-programming)                      │
+│  ├─ Task tool → dispatch reviewer agent                  │
+│  └─ Wait for PASS                                        │
+│                                                          │
+│  ⛔ STOP: Cannot proceed until reviewer returns PASS     │
+├──────────────────────────────────────────────────────────┤
+│  CHECKPOINT (Only after PASS)                            │
+│  ├─ Commit with phase summary                            │
+│  └─ Update execution log                                 │
+└──────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-### PRE-GATE (MANDATORY)
+### PRE-GATE (MANDATORY - BLOCKS IMPLEMENTATION)
 
-**Before writing ANY code for a phase:**
+## STOP. YOU CANNOT WRITE CODE UNTIL THIS GATE PASSES.
 
-1. **INVOKE cc-pseudocode-programming**
-   - Write pseudocode for the phase's implementation
-   - Verify pseudocode is detailed enough to generate code
-   - Consider alternatives before committing to approach
+**Before writing ANY code for a phase, complete this checklist:**
 
-2. **INVOKE aposd-designing-deep-modules** (if phase creates new modules/classes)
-   - Verify interface is simpler than implementation
-   - Check for information hiding
-   - Apply "design it twice" principle
+- [ ] Pseudocode written via `cc-pseudocode-programming`
+- [ ] Design reviewed via `aposd-designing-deep-modules` (if new modules)
+- [ ] PRE-GATE checklist saved to execution log
 
-**Gate passes when:** Pseudocode exists and design is reviewed.
+**Step 1: Write Pseudocode**
+
+```
+Skill(code-foundations:cc-pseudocode-programming)
+```
+
+Provide the skill with:
+- Phase description from plan
+- Files to be created/modified
+- Expected behavior
+
+**DO NOT PROCEED** until pseudocode output is captured.
+
+**Step 2: Design Review** (if phase creates new modules/classes)
+
+```
+Skill(code-foundations:aposd-designing-deep-modules)
+```
+
+Verify:
+- Interface is simpler than implementation
+- Information hiding applied
+- "Design it twice" principle considered
+
+**PRE-GATE CHECKLIST (Must be TRUE before IMPLEMENT):**
+
+| Check | Status |
+|-------|--------|
+| Pseudocode exists for this phase | [ ] |
+| Pseudocode covers all tasks in phase | [ ] |
+| Design review passed (if applicable) | [ ] |
+
+**If any check is FALSE, you CANNOT proceed to IMPLEMENT.**
 
 ---
 
-### IMPLEMENT
+### IMPLEMENT (ONLY AFTER PRE-GATE PASSES)
 
-Execute each task in the phase:
+## STOP. Confirm PRE-GATE passed before proceeding.
+
+**Dispatch implementation subagent** - DO NOT implement directly:
 
 ```
-1. Mark task in_progress in TodoWrite
-2. Read task details from plan + pseudocode from PRE-GATE
-3. Implement (translate pseudocode to code)
-4. Run relevant tests
-5. Mark task complete only if tests pass
+Task tool:
+- subagent_type: "general-purpose"
+- description: "Implement Phase N"
+- prompt: |
+    You are implementing Phase N of a building plan.
+
+    INVOKE code-foundations skill first.
+
+    ## Pseudocode to Implement
+    [paste pseudocode from PRE-GATE]
+
+    ## Files to Create/Modify
+    [list from plan]
+
+    ## Tasks
+    [task list from plan phase]
+
+    ## Requirements
+    1. Translate pseudocode to code exactly
+    2. Run tests after each file change
+    3. Return: DONE with files changed, or BLOCKED with issue
+
+    DO NOT add features not in pseudocode.
+    DO NOT refactor unrelated code.
 ```
 
-**During implementation, also invoke:**
+**Wait for subagent to complete before proceeding.**
 
-| Situation | Invoke |
-|-----------|--------|
-| Error handling code | cc-defensive-programming (APPLIER) |
-| Complex control flow | cc-control-flow-quality |
-| Data structures | cc-data-organization |
+**After subagent returns:**
+
+1. Verify subagent returned DONE (not BLOCKED)
+2. Run tests to confirm implementation works
+3. If BLOCKED, debug and re-dispatch or escalate
+
+**During implementation, subagent should invoke:**
+
+| Situation | Skill |
+|-----------|-------|
+| Error handling code | `Skill(code-foundations:cc-defensive-programming)` |
+| Complex control flow | `Skill(code-foundations:cc-control-flow-quality)` |
+| Data structures | `Skill(code-foundations:cc-data-organization)` |
 
 ---
 
-### POST-GATE (MANDATORY)
+### POST-GATE (MANDATORY - BLOCKS CHECKPOINT)
 
-**Before marking phase complete:**
+## STOP. YOU CANNOT COMMIT UNTIL THIS GATE PASSES.
 
-1. **INVOKE aposd-verifying-correctness**
-   - Requirements: Each requirement mapped to code?
-   - Concurrency: Shared state protected?
-   - Errors: All failure points handled?
-   - Resources: All acquired resources released?
-   - Boundaries: Edge cases handled?
+**Before marking phase complete, ALL of these must pass:**
 
-2. **INVOKE cc-defensive-programming (CHECKER mode)**
-   - External input validated?
-   - No empty catch blocks?
-   - Error handling consistent?
+- [ ] Verification via `aposd-verifying-correctness`
+- [ ] Defensive check via `cc-defensive-programming`
+- [ ] Reviewer agent returns PASS
 
-3. **DISPATCH phase-reviewer agent**
+**Step 1: Verification**
+
+```
+Skill(code-foundations:aposd-verifying-correctness)
+```
+
+Check:
+- Requirements: Each requirement mapped to code?
+- Concurrency: Shared state protected?
+- Errors: All failure points handled?
+- Resources: All acquired resources released?
+- Boundaries: Edge cases handled?
+
+**Step 2: Defensive Programming Check**
+
+```
+Skill(code-foundations:cc-defensive-programming)
+```
+
+Check:
+- External input validated?
+- No empty catch blocks?
+- Error handling consistent?
+
+**Step 3: Dispatch Phase Reviewer Agent (MANDATORY)**
 
 ```
 Task tool:
 - subagent_type: "general-purpose"
 - description: "Phase N review"
 - prompt: |
-    Review Phase N implementation for this plan.
+    You are reviewing Phase N of a building plan.
 
-    INVOKE code-foundations skill, then review:
-    - Does implementation match plan?
-    - Any bugs, security issues, or missing error handling?
-    - Code quality issues?
+    INVOKE code-foundations skill first.
 
-    FILES CHANGED:
-    [list files from this phase]
+    ## Files Changed This Phase
+    [list files from implementation subagent]
 
-    Return: PASS/FAIL with specific issues if FAIL
+    ## Plan Requirements
+    [paste phase requirements from plan]
+
+    ## Review Checklist
+    1. Does implementation match plan exactly?
+    2. Any bugs, security issues, or missing error handling?
+    3. Code quality issues?
+    4. Tests cover the implementation?
+
+    ## Output Format
+    Return EXACTLY one of:
+    - PASS: [brief summary]
+    - FAIL: [specific issues that must be fixed]
+
+    Be strict. If anything is wrong, return FAIL.
 ```
 
-**Gate passes when:** All verification checks pass AND reviewer agent returns PASS.
+**WAIT for reviewer agent response.**
+
+**POST-GATE CHECKLIST (Must ALL be TRUE before CHECKPOINT):**
+
+| Check | Status |
+|-------|--------|
+| Verification skill passed | [ ] |
+| Defensive programming check passed | [ ] |
+| Reviewer agent returned PASS | [ ] |
+| All tests pass | [ ] |
+
+**If reviewer returns FAIL:**
+1. Fix the issues identified
+2. Re-run tests
+3. Re-dispatch reviewer agent
+4. Repeat until PASS
+
+**You CANNOT proceed to CHECKPOINT until reviewer returns PASS.**
 
 ---
 
@@ -419,6 +539,9 @@ When resuming blocked plan:
 | "Gates passed last phase, skip this one" | Each phase is independent. Past gates don't predict current quality. |
 | "I'll just commit to main, it's faster" | Multi-phase builds on main = no rollback. Feature branch is mandatory. |
 | "It's a small change, main is fine" | Small changes grow. Branch now or regret later. |
+| "I can implement faster than dispatching" | Direct implementation skips quality gates. Subagent ensures fresh context. |
+| "Pseudocode is overkill, I know what to do" | You know NOW. The subagent doesn't. Pseudocode is the contract. |
+| "The subagent will figure it out" | Subagent needs explicit pseudocode. No pseudocode = garbage implementation. |
 
 ---
 

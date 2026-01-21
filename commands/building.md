@@ -6,11 +6,13 @@ allowed-tools: ["Read", "Write", "Edit", "Glob", "Grep", "Bash", "Task", "Skill"
 
 # /building
 
-## STOP
+## STOP - READ BEFORE PROCEEDING
 
 - **No building on main/master** - Create feature branch first
-- **Cannot proceed to next phase until reviewer PASS**
-- **All gates are mandatory** - PRE-GATE, POST-GATE, CHECKPOINT
+- **DO NOT implement directly** - Dispatch subagent for implementation
+- **PRE-GATE must pass** - Pseudocode required before any code
+- **POST-GATE must pass** - Reviewer agent must return PASS
+- **Cannot skip gates** - All gates are blocking, not advisory
 
 ---
 
@@ -72,39 +74,59 @@ Update plan: `Status: in-progress`
 For each phase, run this **mandatory** sequence:
 
 ```
-PRE-GATE (before any code)
-├─ INVOKE cc-pseudocode-programming
-└─ INVOKE aposd-designing-deep-modules
+PRE-GATE (BLOCKS IMPLEMENTATION)
+├─ Skill(code-foundations:cc-pseudocode-programming)
+├─ Skill(code-foundations:aposd-designing-deep-modules)
+└─ Confirm: Pseudocode exists? Design reviewed?
 
-IMPLEMENT
-├─ Write code from pseudocode
+IMPLEMENT (via subagent - DO NOT code directly)
+├─ Task tool → implementation subagent
+├─ Wait for subagent DONE
 └─ Run tests
 
-POST-GATE (before marking complete)
-├─ INVOKE aposd-verifying-correctness
-├─ INVOKE cc-defensive-programming
-└─ DISPATCH phase-reviewer agent
+POST-GATE (BLOCKS CHECKPOINT)
+├─ Skill(code-foundations:aposd-verifying-correctness)
+├─ Skill(code-foundations:cc-defensive-programming)
+├─ Task tool → reviewer agent
+└─ Wait for PASS
 
-CHECKPOINT (only if all gates pass)
+CHECKPOINT (only if reviewer returns PASS)
 ├─ Commit
 └─ Update execution log
 ```
 
-### 4. Phase Reviewer Agent (MANDATORY)
+### 4. Implementation Subagent (MANDATORY)
 
-Dispatch per phase:
+**DO NOT implement directly. Dispatch subagent:**
+
 ```
 Task tool:
 - subagent_type: "general-purpose"
+- description: "Implement Phase N"
+- prompt: |
+    INVOKE code-foundations skill.
+    Implement Phase N from this pseudocode:
+    [pseudocode from PRE-GATE]
+
+    Files: [list]
+    Return: DONE or BLOCKED
+```
+
+### 5. Phase Reviewer Agent (MANDATORY)
+
+```
+Task tool:
+- subagent_type: "general-purpose"
+- description: "Phase N review"
 - prompt: |
     INVOKE code-foundations skill.
     Review Phase N: [files changed]
-    Return: PASS/FAIL with specific issues
+    Return: PASS or FAIL with issues
 ```
 
-**Cannot proceed to next phase until reviewer returns PASS.**
+**STOP. Cannot proceed until reviewer returns PASS.**
 
-### 5. Final Verification
+### 6. Final Verification
 
 ```bash
 npm test  # or equivalent
@@ -112,7 +134,7 @@ npm test  # or equivalent
 
 All tests must pass before completion.
 
-### 6. Report
+### 7. Report
 
 Update plan: `Status: complete`
 
