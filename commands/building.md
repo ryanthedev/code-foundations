@@ -134,13 +134,21 @@ Task tool:
 
 ### 6. Phase Reviewer Agent (MANDATORY)
 
+Use specialized reviewer agents (they have skills built-in):
+
+| Focus | Agent |
+|-------|-------|
+| General | `code-foundations:correctness-reviewer` |
+| Error handling | `code-foundations:defensive-reviewer` |
+| Design | `code-foundations:quality-reviewer` |
+
 ```
 Task tool:
-- subagent_type: "general-purpose"
+- subagent_type: "code-foundations:correctness-reviewer"
 - description: "Phase N review"
 - prompt: |
-    INVOKE code-foundations skill.
     Review Phase N: [files changed]
+    Requirements: [from plan]
     Return: PASS or FAIL with issues
 ```
 

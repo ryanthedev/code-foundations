@@ -362,34 +362,33 @@ Check:
 
 **Step 3: Dispatch Phase Reviewer Agent (MANDATORY)**
 
+Use specialized code-foundations reviewer agents - they have review skills built-in:
+
+| Phase Focus | Use Agent |
+|-------------|-----------|
+| General implementation | `code-foundations:correctness-reviewer` |
+| Error handling heavy | `code-foundations:defensive-reviewer` |
+| Design/architecture | `code-foundations:quality-reviewer` |
+| Performance critical | `code-foundations:performance-reviewer` |
+
 ```
 Task tool:
-- subagent_type: "general-purpose"
+- subagent_type: "code-foundations:correctness-reviewer"
 - description: "Phase N review"
 - prompt: |
-    You are reviewing Phase N of a building plan.
+    Review Phase N implementation.
 
-    INVOKE code-foundations skill first.
-
-    ## Files Changed This Phase
+    ## Files Changed
     [list files from implementation subagent]
 
     ## Plan Requirements
-    [paste phase requirements from plan]
+    [brief requirements from plan]
 
-    ## Review Checklist
-    1. Does implementation match plan exactly?
-    2. Any bugs, security issues, or missing error handling?
-    3. Code quality issues?
-    4. Tests cover the implementation?
-
-    ## Output Format
-    Return EXACTLY one of:
-    - PASS: [brief summary]
-    - FAIL: [specific issues that must be fixed]
-
-    Be strict. If anything is wrong, return FAIL.
+    Return: PASS or FAIL with specific issues.
 ```
+
+**Why specialized agents:** Subagents cannot invoke skills (fresh context).
+The `code-foundations:*-reviewer` agents have review skills built-in.
 
 **WAIT for reviewer agent response.**
 
@@ -594,6 +593,8 @@ When resuming blocked plan:
 | "I'll just quickly read the files myself" | Direct exploration pollutes your context. Discovery subagent returns only what's relevant. |
 | "Discovery is overkill for a simple phase" | Plan assumptions often mismatch reality. Discovery catches this before wasted work. |
 | "I already know this codebase" | Your context is stale. Discovery subagent has fresh eyes and finds what changed. |
+| "I'll tell the subagent to invoke a skill" | Subagents can't invoke skills (fresh context). Use specialized agent types instead. |
+| "general-purpose is fine for review" | Specialized reviewer agents have skills built-in. Use `code-foundations:*-reviewer`. |
 
 ---
 

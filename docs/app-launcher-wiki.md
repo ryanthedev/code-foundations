@@ -413,8 +413,201 @@ Go CLI discovers all sources, assembles unified item list, sends to grid-picker 
 
 **Published:**
 - code-foundations repo: `origin/main`
-- rtd-claude-inn marketplace: `f7424fa` - bumped to 2.7.1
+- rtd-claude-inn marketplace: `c371311` - bumped to 2.7.2
 - CLAUDE.md updated with marketplace publishing instructions
+
+### Additional Fix: DISCOVERY Phase (v2.7.2)
+
+**Problem:** Claude was still exploring the codebase directly before PRE-GATE.
+
+**Fix:** Added DISCOVERY phase with Explore subagent as first step in execution loop:
+1. Dispatch Explore subagent to understand current state
+2. Subagent returns: files exist, current state, gaps vs plan
+3. Main agent reviews findings before proceeding to PRE-GATE
+4. If plan assumptions wrong, update plan first
+
+**Commits:**
+- `28509be` - fix: add DISCOVERY phase with Explore subagent
+- Marketplace: `c371311` - bump to 2.7.2
+
+---
+
+## Building in Action
+
+*Execution log from `/code-foundations:building` on the unified launcher plan*
+
+### Phase 2: Source Discovery
+
+**PRE-GATE: Pseudocode Design**
+
+```go
+// sources/types.go
+type SourceItem struct {
+    ID         string
+    Title      string
+    Subtitle   string
+    Icon       string            // bundle:id, path, or emoji
+    Searchable []string
+    Action     Action
+    Metadata   map[string]string
+}
+
+type Action struct {
+    Type       string // "focus-window", "open-app", "open-chrome-profile", "exec"
+    WindowID   int
+    AppPath    string
+    Command    string
+    ProfileDir string
+}
+
+// sources/apps.go
+func DiscoverApps() []SourceItem:
+    dirs = ["/Applications", "/System/Applications", "~/Applications"]
+    for each dir:
+        scan for .app bundles
+        for each app:
+            iconPath = extractIconFromBundle(app)
+            bundleID = extractBundleID(app)
+            item = SourceItem{
+                ID: "app:" + bundleID,
+                Title: appName,
+                Icon: "bundle:" + bundleID,
+                Action: {Type: "open-app", AppPath: path}
+            }
+    return items
+
+// sources/chrome.go
+func DiscoverChromeProfiles(stateFile string) []SourceItem:
+    parse ~/Library/Application Support/Google/Chrome/Local State
+    for each profile in info_cache:
+        item = SourceItem{
+            ID: "chrome:" + profileDir,
+            Title: profileName,
+            Icon: "bundle:com.google.Chrome",
+            Action: {Type: "open-chrome-profile", ProfileDir: dir}
+        }
+    return items
+
+// sources/actions.go
+func DiscoverActions(config []ActionConfig) []SourceItem:
+    for each action in config:
+        item = SourceItem{
+            ID: "action:" + slugify(name),
+            Title: action.Name,
+            Icon: action.Icon,  // SF Symbol or emoji
+            Action: {Type: "exec", Command: action.Command}
+        }
+    return items
+
+// sources/windows.go (refactor from existing runPickWindow)
+func DiscoverWindows(client, state) []SourceItem:
+    // Reuse existing window discovery and enrichment
+    // Transform to SourceItem format
+    return items
+
+// sources/sources.go
+func DiscoverAll(enabled EnabledSources, config) []SourceItem:
+    results = []SourceItem{}
+    parallel:
+        if enabled.Windows: results += DiscoverWindows()
+        if enabled.Apps: results += DiscoverApps()
+        if enabled.Chrome: results += DiscoverChromeProfiles()
+        if enabled.Actions: results += DiscoverActions(config)
+    return results
+```
+
+**Interface Design (APOSD principles):**
+- Deep modules: Each source discoverer is independent and self-contained
+- Information hiding: Discovery details hidden, only SourceItem exposed
+- Clean interfaces: `DiscoverAll()` takes enabled flags and config, returns unified items
+
+**IMPLEMENT: Subagent Dispatch**
+```
+Task(Implement Phase 2 sources)
+→ Done (15 tool uses · 30.4k tokens · 1m 50s)
+```
+
+**POST-GATE: Review**
+```
+Task(Phase 2 code review)
+→ Done (13 tool uses · 35.4k tokens · 55s)
+→ Review passed
+```
+
+**Tests:**
+```
+=== RUN   TestDiscoverApps
+    sources_test.go:28: found 71 apps
+--- PASS: TestDiscoverApps (0.04s)
+```
+
+**CHECKPOINT:**
+```
+git commit -m "feat(cli): add source discovery for unified launcher"
+→ [feature/unified-launcher 7f1b844]
+→ 9 files changed, 954 insertions(+), 43 deletions(-)
+```
+
+Phase 2 complete. Moving to Phase 3: Action Execution.
+
+---
+
+### Phase 3: Action Execution
+
+**PRE-GATE: Pseudocode Design**
+
+```go
+// sources/executor.go
+func ExecuteAction(ctx context.Context, client interface{}, action Action) error:
+    switch action.Type:
+    case "focus-window":
+        // Cast client and use existing focus logic
+        focusWindow(ctx, client, action.WindowID)
+
+    case "open-app":
+        exec.Command("open", "-a", action.AppPath).Run()
+
+    case "open-chrome-profile":
+        exec.Command("open", "-na", "Google Chrome", "--args",
+            "--profile-directory=" + action.ProfileDir).Run()
+
+    case "exec":
+        exec.Command("sh", "-c", action.Command).Run()
+
+    default:
+        error("unknown action type")
+```
+
+**IMPLEMENT: Subagent Dispatch**
+```
+Task(Implement Phase 3 executor)
+→ Done (9 tool uses · 25.2k tokens · 38s)
+```
+
+**POST-GATE: Review**
+```
+Task(Phase 3 code review)
+→ Done (8 tool uses · 23.6k tokens · 48s)
+→ Review passed
+```
+
+**Tests:**
+```
+=== RUN   TestExecuteAction_MissingFields/open-app_missing_path
+=== RUN   TestExecuteAction_MissingFields/chrome_missing_profile
+=== RUN   TestExecuteAction_MissingFields/exec_missing_command
+--- PASS: TestExecuteAction_MissingFields (0.00s)
+```
+
+**CHECKPOINT:**
+```
+git commit -m "feat(cli): add action executor for unified launcher"
+→ [feature/unified-launcher c8687b0]
+→ 2 files changed, 99 insertions(+)
+→ executor.go, executor_test.go created
+```
+
+Phase 3 complete. Moving to Phase 4: Config Integration.
 
 ---
 
