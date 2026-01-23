@@ -34,14 +34,11 @@ This is a checklist-driven process. You MUST use TodoWrite to track progress.
 ```
 TodoWrite([
   {content: "Get diff and check size", status: "pending", activeForm: "Getting diff"},
-  {content: "Run triage if large diff (>500 lines OR >10 files)", status: "pending", activeForm: "Running triage on large diff"},
+  {content: "Run triage to create JSON for review agents", status: "pending", activeForm: "Running triage"},
   {content: "GATE: Dispatch ALL 3 review agents in parallel", status: "pending", activeForm: "Dispatching 3 review agents"},
   {content: "GATE: Wait for all 3 agents to complete", status: "pending", activeForm: "Waiting for agent results"},
   {content: "Aggregate results grouped by action type", status: "pending", activeForm: "Aggregating review results"},
-  {content: "Execute FIX items (dispatch subagents)", status: "pending", activeForm: "Executing FIX items"},
-  {content: "Execute INVESTIGATE items (dispatch subagents)", status: "pending", activeForm: "Executing INVESTIGATE items"},
-  {content: "Handle PLAN items (output prompts)", status: "pending", activeForm: "Handling PLAN items"},
-  {content: "Final verification - all items resolved", status: "pending", activeForm: "Verifying all items resolved"}
+  {content: "GATE: Get user decision on execution", status: "pending", activeForm: "Getting user decision"}
 ])
 ```
 
@@ -105,40 +102,52 @@ git diff
 ```
 (Or `git diff --cached` for staged, or `git diff <files>` for specific files)
 
-TASK: Parse the diff and create a triage JSON with embedded diff hunks for each reviewer.
-
 REVIEWER MAPPING (only these 3 for review-changes):
 - Input validation, auth, error handling, catch blocks → defensive
 - Naming, complexity, cohesion, style → quality
 - Logic, boundaries, tests, race conditions → correctness
 
-OUTPUT: Write JSON to /tmp/review-changes-[RUN_ID]/triage.json using the Write tool:
+⛔ CRITICAL - WRITE INCREMENTALLY, NOT ALL AT ONCE:
 
-{
-  "metadata": {
-    "total_files": [count],
-    "total_lines": [count]
-  },
-  "by_reviewer": {
-    "defensive": [
-      {
-        "file": "path/to/file.ext",
-        "lines": [start, end],
-        "description": "what this change DOES",
-        "diff": "@@ -45,10 +45,27 @@\n actual diff hunk here\n- removed line\n+ added line\n context..."
-      }
-    ],
-    "quality": [...],
-    "correctness": [...]
+1. First, initialize empty JSON files for each reviewer:
+   ```bash
+   echo '[]' > /tmp/review-changes-[RUN_ID]/defensive.json
+   echo '[]' > /tmp/review-changes-[RUN_ID]/quality.json
+   echo '[]' > /tmp/review-changes-[RUN_ID]/correctness.json
+   ```
+
+2. Process the diff FILE BY FILE. For each file:
+   - Identify which reviewers need to see it
+   - Read the current JSON for that reviewer
+   - Append the new chunk(s)
+   - Write the updated JSON immediately
+
+   Example for one file:
+   ```
+   # After analyzing src/auth.ts, found chunks for defensive and correctness
+   # Read defensive.json, append new chunk, write back
+   # Read correctness.json, append new chunk, write back
+   # Move to next file
+   ```
+
+3. After processing ALL files, write metadata:
+   ```bash
+   echo '{"total_files":[n],"total_lines":[n]}' > /tmp/review-changes-[RUN_ID]/metadata.json
+   ```
+
+CHUNK FORMAT (for each reviewer's JSON array):
+[
+  {
+    "file": "path/to/file.ext",
+    "lines": [start, end],
+    "description": "what this change DOES",
+    "diff": "@@ -45,10 +45,27 @@\n actual diff hunk..."
   }
-}
+]
 
-CRITICAL:
-- Extract and embed the actual diff hunk for each chunk (not just file paths)
-- A chunk may be assigned to multiple reviewers - duplicate the entry in each
-- Empty array [] if no chunks for a reviewer
-- Use the Write tool to save to /tmp/review-changes-[RUN_ID]/triage.json
-- Return "Triage complete - /tmp/review-changes-[RUN_ID]" when done
+WHY INCREMENTAL: Large diffs can exceed context limits. Writing after each file ensures nothing is lost.
+
+Return "Triage complete - /tmp/review-changes-[RUN_ID]" when done.
 """
 )
 ```
@@ -164,9 +173,9 @@ Before proceeding, verify:
 
 Use these EXACT prompts. Call ALL 3 in a SINGLE message with the Task tool.
 
-**INPUT:** Agents ALWAYS read from `/tmp/review-changes-[RUN_ID]/triage.json` which contains embedded diff hunks.
+**INPUT:** Each agent reads from their own JSON file (e.g., `/tmp/review-changes-[RUN_ID]/defensive.json`).
 
-**CRITICAL:** Specialized agents read ONLY the JSON file. The diff hunks are already embedded - NO git commands needed. Zero redundant diff reads.
+**CRITICAL:** Each agent reads ONLY their assigned chunks file. The diff hunks are already embedded - NO full git diff needed. Zero redundant diff reads.
 
 ---
 
@@ -187,13 +196,13 @@ Review for security AND error handling:
 - Silent failures
 - Error context preservation
 
-YOUR INPUT: Read /tmp/review-changes-[RUN_ID]/triage.json and review ONLY `by_reviewer.defensive` entries.
+YOUR INPUT: Read /tmp/review-changes-[RUN_ID]/defensive.json for your assigned chunks.
 Each entry contains: file, lines, description, and the actual diff hunk.
 
 ⛔ DO NOT run full `git diff` - the hunks are already in the JSON.
 ✅ You MAY run targeted git commands (git show, git blame, git log) if you need additional context.
 
-If `by_reviewer.defensive` is empty or missing, write "No chunks assigned - PASS" to the output file.
+If the JSON array is empty [], write "No chunks assigned - PASS" to the output file.
 
 OUTPUT: Write your review to /tmp/review-changes-[RUN_ID]/defensive.md using the Write tool.
 
@@ -242,13 +251,13 @@ Review for design AND readability:
 - Style consistency
 - Trailing newlines
 
-YOUR INPUT: Read /tmp/review-changes-[RUN_ID]/triage.json and review ONLY `by_reviewer.quality` entries.
+YOUR INPUT: Read /tmp/review-changes-[RUN_ID]/quality.json for your assigned chunks.
 Each entry contains: file, lines, description, and the actual diff hunk.
 
 ⛔ DO NOT run full `git diff` - the hunks are already in the JSON.
 ✅ You MAY run targeted git commands (git show, git blame, git log) if you need additional context.
 
-If `by_reviewer.quality` is empty or missing, write "No chunks assigned - PASS" to the output file.
+If the JSON array is empty [], write "No chunks assigned - PASS" to the output file.
 
 OUTPUT: Write your review to /tmp/review-changes-[RUN_ID]/quality.md using the Write tool.
 
@@ -295,13 +304,13 @@ Review for bugs AND test coverage:
 - Race conditions
 - Test gaps for new code
 
-YOUR INPUT: Read /tmp/review-changes-[RUN_ID]/triage.json and review ONLY `by_reviewer.correctness` entries.
+YOUR INPUT: Read /tmp/review-changes-[RUN_ID]/correctness.json for your assigned chunks.
 Each entry contains: file, lines, description, and the actual diff hunk.
 
 ⛔ DO NOT run full `git diff` - the hunks are already in the JSON.
 ✅ You MAY run targeted git commands (git show, git blame, git log) if you need additional context.
 
-If `by_reviewer.correctness` is empty or missing, write "No chunks assigned - PASS" to the output file.
+If the JSON array is empty [], write "No chunks assigned - PASS" to the output file.
 
 OUTPUT: Write your review to /tmp/review-changes-[RUN_ID]/correctness.md using the Write tool.
 
@@ -418,11 +427,107 @@ Mark todo "Aggregate results" as complete.
 
 ---
 
-## STEP 5: EXECUTE ⛔ THIS IS THE LAW
+## STEP 5: USER DECISION GATE ⛔ MANDATORY
 
-**DO NOT SKIP THIS STEP. EXECUTION IS MANDATORY.**
+**STOP. Present full report and let user decide what to execute.**
 
-### 5.1 Execute FIX Items
+Mark todo "GATE: Get user decision on execution" as `in_progress`.
+
+### 5.1 Present Full Report to User
+
+**ALWAYS output the complete report** with all sections (Fix, Investigate, Plan) as formatted in Step 4.
+
+Then show the summary:
+
+```markdown
+## Review Complete
+
+| Action | Count |
+|--------|-------|
+| Fix | [n] |
+| Investigate | [n] |
+| Plan | [n] |
+
+**Verdict:** [READY / NEEDS WORK / BLOCKED]
+```
+
+### 5.2 Ask User What to Execute
+
+```
+AskUserQuestion(
+  questions: [
+    {
+      question: "Execute Fix items? ([n] high-confidence issues with code fixes)",
+      header: "Fix",
+      options: [
+        {label: "All (Recommended)", description: "Apply all [n] fixes"},
+        {label: "CRITICAL only", description: "Apply only critical severity fixes"},
+        {label: "None", description: "Skip all fixes"}
+      ],
+      multiSelect: false
+    },
+    {
+      question: "Execute Investigate items? ([n] low-confidence issues needing context)",
+      header: "Investigate",
+      options: [
+        {label: "All (Recommended)", description: "Investigate all [n] uncertain items"},
+        {label: "None", description: "Skip investigations"}
+      ],
+      multiSelect: false
+    },
+    {
+      question: "Generate Plan prompts? ([n] systemic issues for /whiteboarding)",
+      header: "Plan",
+      options: [
+        {label: "All (Recommended)", description: "Generate all [n] /whiteboarding prompts"},
+        {label: "None", description: "Skip plan generation"}
+      ],
+      multiSelect: false
+    }
+  ]
+)
+```
+
+**Note:** Replace `[n]` with actual counts from the report.
+
+### 5.3 Build Execution Checklist
+
+Based on user selections, create todos ONLY for the selected categories:
+
+```
+todos = []
+
+if Fix != "None":
+  todos.push({content: "Execute FIX items", status: "pending", activeForm: "Executing FIX items"})
+
+if Investigate != "None":
+  todos.push({content: "Execute INVESTIGATE items", status: "pending", activeForm: "Executing INVESTIGATE items"})
+
+if Plan != "None":
+  todos.push({content: "Handle PLAN items", status: "pending", activeForm: "Handling PLAN items"})
+
+if todos.length > 0:
+  todos.push({content: "Final verification", status: "pending", activeForm: "Verifying completion"})
+  TodoWrite(todos)
+else:
+  # User selected "None" for everything - we're done
+  STOP HERE
+```
+
+**Filter logic for Fix items:**
+- "All" → Execute all Fix items
+- "CRITICAL only" → Execute only items marked 🔴 CRITICAL
+- "None" → Skip
+
+Mark todo "GATE: Get user decision on execution" as complete.
+
+---
+
+## STEP 6: EXECUTE
+
+**Execute based on user's selection from Step 5.**
+
+### 6.1 Execute FIX Items
 
 Mark todo "Execute FIX items" as `in_progress`.
 
@@ -462,7 +567,7 @@ Mark todo "Execute FIX items" as complete when ALL fixes are done.
 
 ---
 
-### 5.2 Execute INVESTIGATE Items
+### 6.2 Execute INVESTIGATE Items
 
 Mark todo "Execute INVESTIGATE items" as `in_progress`.
 
@@ -506,7 +611,7 @@ Mark todo "Execute INVESTIGATE items" as complete when ALL investigations are re
 
 ---
 
-### 5.3 Handle PLAN Items
+### 6.3 Handle PLAN Items
 
 Mark todo "Handle PLAN items" as `in_progress`.
 
@@ -540,7 +645,7 @@ Mark todo "Handle PLAN items" as complete when all prompts are generated.
 
 ---
 
-## STEP 6: FINAL VERIFICATION
+## STEP 7: FINAL VERIFICATION
 
 Mark todo "Final verification" as `in_progress`.
 

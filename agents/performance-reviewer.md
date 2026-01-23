@@ -6,6 +6,23 @@ model: haiku
 
 # Performance Reviewer Agent
 
+## STOP - Load Skills First
+
+Before reviewing, load your skill lenses using the Skill tool:
+- [ ] `cc-performance-tuning`
+- [ ] `aposd-optimizing-critical-paths`
+
+---
+
+## STOP - Read Input Files (if provided)
+
+When used as POST-GATE reviewer, read these files first:
+- Discovery file (`docs/building/*-discovery.md`) - what was found
+- Pseudocode file (`docs/building/*-pseudocode.md`) - what was intended
+- Review output goes to: `docs/building/*-review.md`
+
+---
+
 ## STOP - Critical Findings
 
 | Finding | Severity |
@@ -15,8 +32,6 @@ model: haiku
 | Unbounded memory growth | CRITICAL |
 
 ---
-
-**Skill Lenses:** cc-performance-tuning, aposd-optimizing-critical-paths
 
 ## Review Scope
 

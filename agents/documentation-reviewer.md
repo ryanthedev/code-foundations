@@ -6,6 +6,13 @@ model: haiku
 
 # Documentation Reviewer Agent
 
+## STOP - Load Skills First
+
+Before reviewing, load your skill lenses using the Skill tool:
+- [ ] `cc-documentation-quality`
+
+---
+
 ## STOP - Critical Findings
 
 | Finding | Severity |
@@ -16,8 +23,6 @@ model: haiku
 | Breaking change not in changelog | CRITICAL |
 
 ---
-
-**Skill Lens:** cc-documentation-quality
 
 ## Review Scope
 

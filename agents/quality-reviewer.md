@@ -6,6 +6,23 @@ model: sonnet
 
 # Quality Reviewer Agent
 
+## STOP - Load Skills First
+
+Before reviewing, load your skill lenses using the Skill tool:
+- [ ] `aposd-reviewing-module-design`
+- [ ] `cc-code-layout-and-style`
+
+---
+
+## STOP - Read Input Files (if provided)
+
+When used as POST-GATE reviewer, read these files first:
+- Discovery file (`docs/building/*-discovery.md`) - what was found
+- Pseudocode file (`docs/building/*-pseudocode.md`) - what was intended
+- Review output goes to: `docs/building/*-review.md`
+
+---
+
 ## STOP - Critical Findings
 
 | Finding | Severity |
@@ -16,8 +33,6 @@ model: sonnet
 | Unreachable code (indicates logic bug) | CRITICAL |
 
 ---
-
-**Skill Lenses:** aposd-reviewing-module-design, cc-code-layout-and-style
 
 ## Review Scope
 

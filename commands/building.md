@@ -69,73 +69,77 @@ TodoWrite([
 
 Update plan: `Status: in-progress`
 
-### 3. Execute Each Phase (Gated)
+### 3. Execute Each Phase (Gated, File-Based)
 
-For each phase, run this **mandatory** sequence:
+For each phase, run this **mandatory** sequence. All outputs go to files in `docs/building/`:
 
 ```
-DISCOVERY (via subagent - DO NOT explore directly)
-├─ Task tool → Explore subagent
-├─ Subagent reads files, understands current state
-└─ Returns: what exists vs what plan expects
+DISCOVERY (via subagent)
+├─ Explore subagent reads codebase
+├─ Writes: docs/building/<plan>-phase-N-discovery.md
+└─ Returns: file path only
 
-PRE-GATE (BLOCKS IMPLEMENTATION)
-├─ Skill(code-foundations:cc-pseudocode-programming)
-├─ Skill(code-foundations:aposd-designing-deep-modules)
-└─ Confirm: Pseudocode exists? Design reviewed?
+PRE-GATE (via subagent)
+├─ Reads discovery file
+├─ Runs pseudocode + design skills
+├─ Writes: docs/building/<plan>-phase-N-pseudocode.md
+└─ Returns: file path only
 
-IMPLEMENT (via subagent - DO NOT code directly)
-├─ Task tool → implementation subagent
-├─ Wait for subagent DONE
-└─ Run tests
+IMPLEMENT (via subagent)
+├─ Reads discovery + pseudocode files
+├─ Implementation agent writes code
+└─ Returns: DONE or BLOCKED
 
-POST-GATE (BLOCKS CHECKPOINT)
-├─ Skill(code-foundations:aposd-verifying-correctness)
-├─ Skill(code-foundations:cc-defensive-programming)
-├─ Task tool → reviewer agent
-└─ Wait for PASS
+POST-GATE (via subagent)
+├─ Reads all phase files
+├─ Reviewer agent runs checklists
+├─ Writes: docs/building/<plan>-phase-N-review.md
+└─ Returns: PASS or FAIL
 
-CHECKPOINT (only if reviewer returns PASS)
+CHECKPOINT (only if PASS)
 ├─ Commit
 └─ Update execution log
 ```
 
 ### 4. Discovery Subagent (MANDATORY)
 
-**DO NOT explore codebase directly. Dispatch Explore subagent:**
-
 ```
 Task tool:
 - subagent_type: "Explore"
 - description: "Discovery for Phase N"
 - prompt: |
-    Explore Phase N files. Report:
-    - What exists vs plan expectations
-    - Gaps or discrepancies
-    - Recommendation: build/skip/update-plan
+    Explore Phase N files.
+    Write findings to: docs/building/<plan>-phase-N-discovery.md
+    Return: file path only
 ```
 
-### 5. Implementation Agent (MANDATORY)
+### 5. PRE-GATE Subagent (MANDATORY)
 
-**DO NOT implement directly. Dispatch specialized agent:**
+```
+Task tool:
+- subagent_type: "general-purpose"
+- description: "PRE-GATE for Phase N"
+- prompt: |
+    Load skills: cc-pseudocode-programming, aposd-designing-deep-modules
+    Read: docs/building/<plan>-phase-N-discovery.md
+    Write pseudocode to: docs/building/<plan>-phase-N-pseudocode.md
+    Return: file path only
+```
+
+### 6. Implementation Agent (MANDATORY)
 
 ```
 Task tool:
 - subagent_type: "code-foundations:implementation-agent"
 - description: "Implement Phase N"
 - prompt: |
-    Implement Phase N from this pseudocode:
-    [pseudocode from PRE-GATE]
-
-    Files: [list]
+    Read input files:
+    - docs/building/<plan>-phase-N-discovery.md
+    - docs/building/<plan>-phase-N-pseudocode.md
     Return: DONE or BLOCKED
 ```
 
-Implementation agent has methodology built-in (no skill invocation needed).
-
-### 6. Phase Reviewer Agent (MANDATORY)
-
-Use specialized reviewer agents (they have skills built-in):
+### 7. POST-GATE Reviewer (MANDATORY)
 
 | Focus | Agent |
 |-------|-------|
@@ -146,11 +150,11 @@ Use specialized reviewer agents (they have skills built-in):
 ```
 Task tool:
 - subagent_type: "code-foundations:correctness-reviewer"
-- description: "Phase N review"
+- description: "POST-GATE for Phase N"
 - prompt: |
-    Review Phase N: [files changed]
-    Requirements: [from plan]
-    Return: PASS or FAIL with issues
+    Read all phase files in docs/building/<plan>-phase-N-*
+    Write review to: docs/building/<plan>-phase-N-review.md
+    Return: PASS or FAIL
 ```
 
 **STOP. Cannot proceed until reviewer returns PASS.**

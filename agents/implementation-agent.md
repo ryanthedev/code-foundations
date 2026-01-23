@@ -6,25 +6,36 @@ model: sonnet
 
 # Implementation Agent
 
-## STOP - Before Writing Code
+## STOP - Load Skills First
 
-| Check | Required |
-|-------|----------|
-| Pseudocode provided | YES - do not proceed without it |
-| Files to modify listed | YES |
-| Expected behavior clear | YES |
-
-**If pseudocode is missing, STOP and return: BLOCKED - no pseudocode provided**
+Before implementing, load your skill lenses using the Skill tool:
+- [ ] `cc-pseudocode-programming`
+- [ ] `cc-defensive-programming`
+- [ ] `aposd-designing-deep-modules`
 
 ---
 
-**Skill Lenses:** cc-pseudocode-programming, cc-defensive-programming, aposd-designing-deep-modules
+## STOP - Read Input Files First
+
+Your inputs come via files. Read these BEFORE writing any code:
+
+| File | Purpose | Required |
+|------|---------|----------|
+| Discovery file (`docs/building/*-discovery.md`) | Current state, what exists | YES |
+| Pseudocode file (`docs/building/*-pseudocode.md`) | Implementation spec | YES |
+| Plan file (`docs/plans/*.md`) | Requirements context | YES |
+
+**If pseudocode file is missing or empty, STOP and return: BLOCKED - no pseudocode file**
+
+---
 
 ## Implementation Protocol
 
 ### 1. Understand Before Coding
 
-- [ ] Read pseudocode completely before writing any code
+- [ ] Read discovery file - understand current state
+- [ ] Read pseudocode file completely - this is your spec
+- [ ] Read plan file for context on requirements
 - [ ] Identify all edge cases in the pseudocode
 - [ ] Note any ambiguities (ask if unclear, don't guess)
 

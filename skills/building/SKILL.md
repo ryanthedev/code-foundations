@@ -193,7 +193,7 @@ For each phase, execute this **mandatory** sequence:
 
 ## STOP. YOU CANNOT EXPLORE CODE DIRECTLY.
 
-**Dispatch an Explore subagent to understand the current state:**
+**Dispatch an Explore subagent that writes findings to a file:**
 
 ```
 Task tool:
@@ -211,67 +211,106 @@ Task tool:
     3. What already exists vs what needs to be built?
     4. Are there any gaps between plan assumptions and reality?
 
-    ## Output Format
-    Return:
-    - FILES_EXIST: [list of existing files relevant to this phase]
-    - CURRENT_STATE: [summary of what already exists]
-    - GAPS: [differences between plan and reality]
-    - RECOMMENDATION: [what actually needs to be done]
+    ## OUTPUT REQUIREMENT
+    Write your findings to: docs/building/<plan-name>-phase-N-discovery.md
+
+    Use this format:
+    ```markdown
+    # Discovery: Phase N - [name]
+
+    ## Files Found
+    - [list existing files relevant to this phase]
+
+    ## Current State
+    [summary of what already exists]
+
+    ## Gaps
+    [differences between plan and reality]
+
+    ## Recommendation
+    [BUILD | SKIP | UPDATE_PLAN]
+    [what actually needs to be done]
+    ```
+
+    Return only: "Discovery written to docs/building/<plan-name>-phase-N-discovery.md"
 ```
 
 **Wait for Explore subagent to complete.**
 
 **After discovery:**
-1. Review findings - does the plan match reality?
-2. If plan assumptions are wrong, update plan before proceeding
-3. If phase is already complete (code exists), mark complete and skip to next phase
-4. If work needed, proceed to PRE-GATE with discovery context
+1. Read the discovery file (quick scan, not full context load)
+2. If SKIP recommended - mark phase complete, proceed to next
+3. If UPDATE_PLAN recommended - pause and ask user
+4. If BUILD recommended - proceed to PRE-GATE
 
 ---
 
-### PRE-GATE (MANDATORY - BLOCKS IMPLEMENTATION)
+### PRE-GATE (MANDATORY - VIA SUBAGENT)
 
 ## STOP. YOU CANNOT WRITE CODE UNTIL THIS GATE PASSES.
 
-**Before writing ANY code for a phase, complete this checklist:**
-
-- [ ] Pseudocode written via `cc-pseudocode-programming`
-- [ ] Design reviewed via `aposd-designing-deep-modules` (if new modules)
-- [ ] PRE-GATE checklist saved to execution log
-
-**Step 1: Write Pseudocode**
+**Dispatch a PRE-GATE subagent that writes pseudocode to a file:**
 
 ```
-Skill(code-foundations:cc-pseudocode-programming)
+Task tool:
+- subagent_type: "general-purpose"
+- description: "PRE-GATE for Phase N"
+- prompt: |
+    You are the PRE-GATE agent for Phase N.
+
+    ## STOP - Load Skills First
+    Before proceeding, load these skills using the Skill tool:
+    - [ ] `cc-pseudocode-programming`
+    - [ ] `aposd-designing-deep-modules`
+
+    ## Inputs
+    - Discovery file: docs/building/<plan-name>-phase-N-discovery.md
+    - Plan file: docs/plans/<plan-name>.md
+    - Phase: N - [name]
+
+    ## Your Tasks
+    1. Read the discovery file to understand current state
+    2. Read the plan file to understand requirements for Phase N
+    3. Use cc-pseudocode-programming to write pseudocode
+    4. Use aposd-designing-deep-modules to review design (if new modules)
+
+    ## OUTPUT REQUIREMENT
+    Write your pseudocode to: docs/building/<plan-name>-phase-N-pseudocode.md
+
+    Use this format:
+    ```markdown
+    # Pseudocode: Phase N - [name]
+
+    ## Files to Create/Modify
+    - [list from discovery + plan]
+
+    ## Pseudocode
+
+    ### [file1.ext]
+    [pseudocode for file 1]
+
+    ### [file2.ext]
+    [pseudocode for file 2]
+
+    ## Design Notes
+    [any design decisions, interface choices, information hiding]
+
+    ## PRE-GATE Status
+    - [x] Pseudocode complete
+    - [x] Design reviewed (if applicable)
+    - [ ] Ready for implementation
+    ```
+
+    Return only: "PRE-GATE complete. Pseudocode written to docs/building/<plan-name>-phase-N-pseudocode.md"
 ```
 
-Provide the skill with:
-- Phase description from plan
-- Files to be created/modified
-- Expected behavior
+**Wait for PRE-GATE subagent to complete.**
 
-**DO NOT PROCEED** until pseudocode output is captured.
-
-**Step 2: Design Review** (if phase creates new modules/classes)
-
-```
-Skill(code-foundations:aposd-designing-deep-modules)
-```
-
-Verify:
-- Interface is simpler than implementation
-- Information hiding applied
-- "Design it twice" principle considered
-
-**PRE-GATE CHECKLIST (Must be TRUE before IMPLEMENT):**
-
-| Check | Status |
-|-------|--------|
-| Pseudocode exists for this phase | [ ] |
-| Pseudocode covers all tasks in phase | [ ] |
-| Design review passed (if applicable) | [ ] |
-
-**If any check is FALSE, you CANNOT proceed to IMPLEMENT.**
+**After PRE-GATE:**
+1. Verify the pseudocode file exists
+2. Quick scan - does it cover all tasks in phase?
+3. If incomplete, re-dispatch PRE-GATE agent
+4. If complete, proceed to IMPLEMENT
 
 ---
 
@@ -279,9 +318,7 @@ Verify:
 
 ## STOP. Confirm PRE-GATE passed before proceeding.
 
-**Dispatch implementation agent** - DO NOT implement directly:
-
-Use the specialized implementation agent (has implementation skills built-in):
+**Dispatch implementation agent with file references** - DO NOT implement directly:
 
 ```
 Task tool:
@@ -290,24 +327,25 @@ Task tool:
 - prompt: |
     Implement Phase N of the building plan.
 
-    ## Pseudocode
-    [paste pseudocode from PRE-GATE]
+    ## Input Files (READ THESE FIRST)
+    - Discovery: docs/building/<plan-name>-phase-N-discovery.md
+    - Pseudocode: docs/building/<plan-name>-phase-N-pseudocode.md
+    - Plan: docs/plans/<plan-name>.md (Phase N section)
 
-    ## Files to Create/Modify
-    [list from plan]
-
-    ## Tasks
-    [task list from plan phase]
+    ## Your Tasks
+    1. Read the discovery file - understand current state
+    2. Read the pseudocode file - this is your implementation spec
+    3. Implement exactly what the pseudocode specifies
+    4. Run tests after each file change
 
     Return: DONE with files changed, or BLOCKED with issue.
 ```
 
-**Why specialized agent:** Subagents can't invoke skills (fresh context).
-The `code-foundations:implementation-agent` has implementation methodology built-in:
-- Translates pseudocode exactly (no feature creep)
-- Applies defensive programming
-- Runs tests after each file
-- Reports deviations from spec
+**Why file-based handoff:**
+- Main context stays clean (no pseudocode bloat)
+- Implementation agent has full context via files
+- Artifacts are persistent and reviewable
+- Enables resume if interrupted
 
 **Wait for subagent to complete before proceeding.**
 
@@ -319,43 +357,13 @@ The `code-foundations:implementation-agent` has implementation methodology built
 
 ---
 
-### POST-GATE (MANDATORY - BLOCKS CHECKPOINT)
+### POST-GATE (MANDATORY - VIA SUBAGENT)
 
 ## STOP. YOU CANNOT COMMIT UNTIL THIS GATE PASSES.
 
-**Before marking phase complete, ALL of these must pass:**
+**Dispatch a reviewer agent with file references:**
 
-- [ ] Verification via `aposd-verifying-correctness`
-- [ ] Defensive check via `cc-defensive-programming`
-- [ ] Reviewer agent returns PASS
-
-**Step 1: Verification**
-
-```
-Skill(code-foundations:aposd-verifying-correctness)
-```
-
-Check:
-- Requirements: Each requirement mapped to code?
-- Concurrency: Shared state protected?
-- Errors: All failure points handled?
-- Resources: All acquired resources released?
-- Boundaries: Edge cases handled?
-
-**Step 2: Defensive Programming Check**
-
-```
-Skill(code-foundations:cc-defensive-programming)
-```
-
-Check:
-- External input validated?
-- No empty catch blocks?
-- Error handling consistent?
-
-**Step 3: Dispatch Phase Reviewer Agent (MANDATORY)**
-
-Use specialized code-foundations reviewer agents - they have review skills built-in:
+Choose reviewer based on phase focus:
 
 | Phase Focus | Use Agent |
 |-------------|-----------|
@@ -367,38 +375,57 @@ Use specialized code-foundations reviewer agents - they have review skills built
 ```
 Task tool:
 - subagent_type: "code-foundations:correctness-reviewer"
-- description: "Phase N review"
+- description: "POST-GATE for Phase N"
 - prompt: |
     Review Phase N implementation.
+
+    ## Input Files (READ THESE FIRST)
+    - Discovery: docs/building/<plan-name>-phase-N-discovery.md
+    - Pseudocode: docs/building/<plan-name>-phase-N-pseudocode.md
+    - Plan: docs/plans/<plan-name>.md (Phase N section)
 
     ## Files Changed
     [list files from implementation subagent]
 
-    ## Plan Requirements
-    [brief requirements from plan]
+    ## Review Checklist
+    1. Does implementation match pseudocode?
+    2. Are all requirements from plan covered?
+    3. Any deviations from spec?
+    4. Run your skill checklists (loaded via Skill tool)
 
-    Return: PASS or FAIL with specific issues.
+    ## OUTPUT REQUIREMENT
+    Write your review to: docs/building/<plan-name>-phase-N-review.md
+
+    Use this format:
+    ```markdown
+    # Review: Phase N - [name]
+
+    ## Verdict: PASS | FAIL
+
+    ## Checklist
+    - [x] Implementation matches pseudocode
+    - [x] Requirements covered
+    - [x] Defensive programming applied
+    - [x] Correctness verified
+
+    ## Issues (if FAIL)
+    1. [issue description]
+       - File: [path:line]
+       - Fix: [what to do]
+
+    ## Notes
+    [any observations]
+    ```
+
+    Return: "POST-GATE [PASS|FAIL]. Review written to docs/building/<plan-name>-phase-N-review.md"
 ```
 
-**Why specialized agents:** Subagents cannot invoke skills (fresh context).
-The `code-foundations:*-reviewer` agents have review skills built-in.
+**Wait for reviewer agent response.**
 
-**WAIT for reviewer agent response.**
-
-**POST-GATE CHECKLIST (Must ALL be TRUE before CHECKPOINT):**
-
-| Check | Status |
-|-------|--------|
-| Verification skill passed | [ ] |
-| Defensive programming check passed | [ ] |
-| Reviewer agent returned PASS | [ ] |
-| All tests pass | [ ] |
-
-**If reviewer returns FAIL:**
-1. Fix the issues identified
-2. Re-run tests
-3. Re-dispatch reviewer agent
-4. Repeat until PASS
+**After POST-GATE:**
+1. Read the review file
+2. If PASS - proceed to CHECKPOINT
+3. If FAIL - fix issues and re-run POST-GATE
 
 **You CANNOT proceed to CHECKPOINT until reviewer returns PASS.**
 

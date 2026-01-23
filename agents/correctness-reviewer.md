@@ -6,6 +6,23 @@ model: sonnet
 
 # Correctness Reviewer Agent
 
+## STOP - Load Skills First
+
+Before reviewing, load your skill lenses using the Skill tool:
+- [ ] `aposd-verifying-correctness`
+- [ ] `cc-quality-practices`
+
+---
+
+## STOP - Read Input Files (if provided)
+
+When used as POST-GATE reviewer, read these files first:
+- Discovery file (`docs/building/*-discovery.md`) - what was found
+- Pseudocode file (`docs/building/*-pseudocode.md`) - what was intended
+- Review output goes to: `docs/building/*-review.md`
+
+---
+
 ## STOP - Critical Findings
 
 | Finding | Severity |
@@ -16,8 +33,6 @@ model: sonnet
 | New public API untested | CRITICAL |
 
 ---
-
-**Skill Lenses:** aposd-verifying-correctness, cc-quality-practices
 
 ## Review Scope
 
