@@ -27,7 +27,7 @@ Code-foundations is a Claude Code plugin providing software engineering skills b
 
 | Level | Command | Agents | Focus |
 |-------|---------|--------|-------|
-| 1 | `/check-commit` | 0 | Quick scan (direct execution) |
+| 1 | `/review-commit` | 0 | Quick scan (direct execution) |
 | 2 | `/review-changes` | 3 | defensive, quality, correctness |
 | 3 | `/review-pr` | 5 | All agents including performance + documentation |
 

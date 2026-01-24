@@ -8,7 +8,7 @@ Three levels of code review, each building on the previous.
 
 | Level | Command | Scope | Time | Agents |
 |-------|---------|-------|------|--------|
-| **1** | `/check-commit` | Single commit | ~2 min | None (single pass) |
+| **1** | `/review-commit` | Single commit | ~2 min | None (single pass) |
 | **2** | `/review-changes` | Staged/unstaged changes | ~5-10 min | 2-3 parallel |
 | **3** | `/review-pr` | Full PR (branch vs main) | ~15-30 min | 6+ parallel |
 
@@ -51,7 +51,7 @@ Three levels of code review, each building on the previous.
 
 | Situation | Use |
 |-----------|-----|
-| Quick sanity check before commit | `/check-commit` |
+| Quick sanity check before commit | `/review-commit` |
 | Review work before staging | `/review-changes` |
 | Final check before PR creation | `/review-pr` |
 | Responding to PR feedback | `/review-changes` on specific files |

@@ -116,7 +116,7 @@ User: "/review-pr" (on feature branch)
 
 | Level | Command | Agents | Use Case |
 |-------|---------|--------|----------|
-| 1 | `/check-commit` | 1 (quick) | Pre-commit sanity check |
+| 1 | `/review-commit` | 1 (quick) | Pre-commit sanity check |
 | 2 | `/review-changes` | 3 (parallel) | Medium review for changes |
 | 3 | `/review-pr` | 5 (parallel) | Full PR review |
 
