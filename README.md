@@ -49,7 +49,7 @@ User: "Clean this up with foundations"
 
 ### WHITEBOARDING (Plan Features)
 ```
-User: "/whiteboarding add user notifications"
+User: "/code-foundations:whiteboarding add user notifications"
   → Discovery questions to clarify scope
   → 2-3 approaches with trade-offs
   → Implementation-ready plan
@@ -58,13 +58,13 @@ User: "/whiteboarding add user notifications"
 
 ### BUILDING (Execute Plans)
 ```
-User: "/building docs/plans/2024-01-15-notifications.md"
+User: "/code-foundations:building docs/plans/2024-01-15-notifications.md"
   → Feature branch required
   → For each phase:
       DISCOVERY  → Explore subagent → docs/building/*-discovery.md
       PRE-GATE   → Pseudocode agent → docs/building/*-pseudocode.md
-      IMPLEMENT  → Implementation agent reads files
-      POST-GATE  → Reviewer agent → docs/building/*-review.md
+      IMPLEMENT  → code-foundations:implementation-agent reads files
+      POST-GATE  → code-foundations:*-reviewer agent → docs/building/*-review.md
       CHECKPOINT → Commit only after PASS
   → All artifacts persistent and reviewable
 ```
