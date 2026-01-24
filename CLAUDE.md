@@ -58,15 +58,15 @@ The `code-foundations` skill (`skills/code-foundations/SKILL.md`) is the entry p
 
 | Situation | Command | Ceremony |
 |-----------|---------|----------|
-| Quick hack, TDD, pair programming | `/hack` | None |
-| Technical uncertainty | `/prototype` | Minimal |
-| Feature needs planning | `/whiteboarding` | Medium |
-| Executing approved plan | `/building` | Full |
+| Quick hack, TDD, pair programming | `/code-foundations:hack` | None |
+| Technical uncertainty | `/code-foundations:prototype` | Minimal |
+| Feature needs planning | `/code-foundations:whiteboarding` | Medium |
+| Executing approved plan | `/code-foundations:building` | Full |
 
 ### Hack Mode
 
 ```
-/hack [what to build]
+/code-foundations:hack [what to build]
 → RED: Write failing test
 → GREEN: Minimum code to pass
 → REFACTOR: Clean up
@@ -81,13 +81,13 @@ Three-stage pattern for feature development:
 
 | Command | Purpose | Output |
 |---------|---------|--------|
-| `/prototype` | Prove feasibility with minimum code | Prototype log in `docs/prototypes/` |
-| `/whiteboarding` | Discovery-oriented brainstorming | Plan file in `docs/plans/` |
-| `/building` | Checklist-based execution | Working code + tests |
+| `/code-foundations:prototype` | Prove feasibility with minimum code | Prototype log in `docs/prototypes/` |
+| `/code-foundations:whiteboarding` | Discovery-oriented brainstorming | Plan file in `docs/plans/` |
+| `/code-foundations:building` | Checklist-based execution | Working code + tests |
 
 **Full Flow:**
 ```
-/prototype "can I show a notification?"
+/code-foundations:prototype "can I show a notification?"
   → One question to prove
   → Minimum code (~50 lines max)
   → Binary answer: YES/NO/PARTIAL
@@ -95,7 +95,7 @@ Three-stage pattern for feature development:
 
         ↓ (if feasible)
 
-/whiteboarding "build notification system"
+/code-foundations:whiteboarding "build notification system"
   → Discovery questions (informed by prototype)
   → 2-3 approaches with trade-offs
   → Implementation-ready plan
@@ -103,7 +103,7 @@ Three-stage pattern for feature development:
 
         ↓ (after plan approval)
 
-/building docs/plans/<plan>.md
+/code-foundations:building docs/plans/<plan>.md
   → Feature branch required
   → Execute phases with quality gates
   → Per-phase commits + reviewer agent
@@ -114,11 +114,11 @@ Three-stage pattern for feature development:
 
 | Situation | Command |
 |-----------|---------|
-| "Can I do X?" / technical uncertainty | `/prototype` |
-| Ready to plan full feature | `/whiteboarding` |
-| Plan exists, ready to implement | `/building` |
+| "Can I do X?" / technical uncertainty | `/code-foundations:prototype` |
+| Ready to plan full feature | `/code-foundations:whiteboarding` |
+| Plan exists, ready to implement | `/code-foundations:building` |
 
-**Quality Gates (per phase during /building):**
+**Quality Gates (per phase during /code-foundations:building):**
 ```
 PRE-GATE:  cc-pseudocode-programming + aposd-designing-deep-modules
 IMPLEMENT: Write code, run tests
@@ -159,7 +159,7 @@ Low confidence. Need context first.
 ## Plan
 Systemic. Spin off to whiteboarding.
 1. 🔴 [CRITICAL] Multiple files - Issue
-   → `/whiteboarding "[topic]"`
+   → `/code-foundations:whiteboarding "[topic]"`
 
 ## Decide
 Trade-off needing human judgment.
@@ -174,7 +174,7 @@ Trade-off needing human judgment.
 |--------|------|--------|
 | **Fix** | High confidence, localized | Code snippet |
 | **Investigate** | Low confidence | What to check |
-| **Plan** | Systemic (many files) | `/whiteboarding` topic |
+| **Plan** | Systemic (many files) | `/code-foundations:whiteboarding` topic |
 | **Decide** | Trade-off | Options for human |
 
 **Key principle**: State what you DON'T know (**Unknown** section).
@@ -187,7 +187,7 @@ After review, **execute to completion**:
 |--------|-----------|
 | **Fix** | Dispatch subagent with `code-foundations` → implement → verify |
 | **Investigate** | Dispatch subagent with `cc-debugging` → resolve → fix or escalate |
-| **Plan** | Output ready-to-copy prompt for new `/whiteboarding` session |
+| **Plan** | Output ready-to-copy prompt for new `/code-foundations:whiteboarding` session |
 | **Decide** | Ask user → execute based on response |
 
 **Do not stop until all items are resolved.**

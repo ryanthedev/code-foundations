@@ -96,9 +96,9 @@ Skill(code-foundations:prototype)
 ## What Happens Next
 
 ```
-/prototype succeeds
+/code-foundations:prototype succeeds
      ↓
-/whiteboarding (informed by learnings)
+/code-foundations:whiteboarding (informed by learnings)
      ↓
-/building (production code)
+/code-foundations:building (production code)
 ```

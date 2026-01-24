@@ -222,7 +222,7 @@ FORMAT:
 
 ### Plan (systemic)
 - [CRITICAL] description
-  → /whiteboarding "[topic]"
+  → /code-foundations:whiteboarding "[topic]"
 
 ### Verdict: HARDENED / ADEQUATE / FRAGILE / VULNERABLE
 
@@ -277,7 +277,7 @@ FORMAT:
 
 ### Plan (systemic)
 - [CRITICAL] description
-  → /whiteboarding "[topic]"
+  → /code-foundations:whiteboarding "[topic]"
 
 ### Verdict: EXCELLENT / GOOD / ADEQUATE / POOR
 
@@ -330,7 +330,7 @@ FORMAT:
 
 ### Plan (systemic)
 - [CRITICAL] description
-  → /whiteboarding "[topic]"
+  → /code-foundations:whiteboarding "[topic]"
 
 ### Verdict: VERIFIED / LIKELY CORRECT / UNCERTAIN / BUGGY
 
@@ -398,10 +398,10 @@ Low confidence. Need context.
 ---
 
 ## Plan
-Systemic. Spin off to /whiteboarding.
+Systemic. Spin off to /code-foundations:whiteboarding.
 
 1. [SEVERITY] [description]
-   → /whiteboarding "[topic]"
+   → /code-foundations:whiteboarding "[topic]"
 
 ---
 
@@ -476,10 +476,10 @@ AskUserQuestion(
       multiSelect: false
     },
     {
-      question: "Generate Plan prompts? ([n] systemic issues for /whiteboarding)",
+      question: "Generate Plan prompts? ([n] systemic issues for /code-foundations:whiteboarding)",
       header: "Plan",
       options: [
-        {label: "All (Recommended)", description: "Generate all [n] /whiteboarding prompts"},
+        {label: "All (Recommended)", description: "Generate all [n] /code-foundations:whiteboarding prompts"},
         {label: "None", description: "Skip plan generation"}
       ],
       multiSelect: false
@@ -631,7 +631,7 @@ Copy the prompt and start a new Claude session.
 
 **Prompt to copy:**
 ```
-/whiteboarding "[topic]"
+/code-foundations:whiteboarding "[topic]"
 
 Context from code review:
 - Issue: [description]

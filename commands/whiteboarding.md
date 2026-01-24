@@ -1,5 +1,5 @@
 ---
-description: "Discovery-oriented brainstorming to create implementation-ready plans. Saves to docs/plans/ for /building execution."
+description: "Discovery-oriented brainstorming to create implementation-ready plans. Saves to docs/plans/ for /code-foundations:building execution."
 argument-hint: "[feature description or user story]"
 allowed-tools: ["Read", "Glob", "Grep", "Write", "Bash", "AskUserQuestion", "Skill", "Task"]
 ---
@@ -77,8 +77,8 @@ mkdir -p docs/plans
 
 ```
 Plan saved. Next steps:
-1. Refresh context → /building <plan-path> (recommended for complex)
-2. Continue now → /building (OK for simple)
+1. Refresh context → /code-foundations:building <plan-path> (recommended for complex)
+2. Continue now → /code-foundations:building (OK for simple)
 ```
 
 ---
@@ -118,7 +118,7 @@ Plan saved. Next steps:
 [edge cases, gotchas]
 
 ## Execution Log
-_Filled during /building_
+_Filled during /code-foundations:building_
 ```
 
 ---

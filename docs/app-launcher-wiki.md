@@ -374,7 +374,7 @@ Go CLI discovers all sources, assembles unified item list, sends to grid-picker 
 - Design review (`aposd-designing-deep-modules`)
 - Dispatching reviewer agent after each phase
 
-**Root cause:** The `/building` skill says "INVOKE" but doesn't:
+**Root cause:** The `/code-foundations:building` skill says "INVOKE" but doesn't:
 1. Use explicit `Skill()` tool syntax
 2. Dispatch subagents for implementation (does it directly)
 3. Block on PRE-GATE strongly enough

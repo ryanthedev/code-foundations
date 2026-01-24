@@ -1,6 +1,6 @@
 ---
 name: building
-description: "Execute whiteboard plans with checklist-based tracking. Use after /whiteboarding to implement saved plans. Triggers on: build it, execute plan, implement the whiteboard, run the plan. Loads plan from docs/plans/, tracks progress, produces working code with tests."
+description: "Execute whiteboard plans with checklist-based tracking. Use after /code-foundations:whiteboarding to implement saved plans. Triggers on: build it, execute plan, implement the whiteboard, run the plan. Loads plan from docs/plans/, tracks progress, produces working code with tests."
 ---
 
 # Skill: building
@@ -651,12 +651,12 @@ When resuming blocked plan:
 
 ---
 
-## Integration with /whiteboarding
+## Integration with /code-foundations:whiteboarding
 
 ### Expected Flow
 
 ```
-/whiteboarding "user story"
+/code-foundations:whiteboarding "user story"
   ↓
 [Socratic questions]
 [2-3 approaches]
@@ -665,7 +665,7 @@ When resuming blocked plan:
   ↓
 [Optional: Refresh context window]
   ↓
-/building docs/plans/YYYY-MM-DD-topic.md
+/code-foundations:building docs/plans/YYYY-MM-DD-topic.md
   ↓
 [Checklist execution]
 [Tests pass]
@@ -674,7 +674,7 @@ When resuming blocked plan:
 
 ### Context Refresh Benefits
 
-Starting fresh session before /building:
+Starting fresh session before /code-foundations:building:
 - Full context window for implementation
 - No planning discussion cluttering context
 - Plan file contains all necessary information

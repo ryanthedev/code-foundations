@@ -87,9 +87,9 @@ Group findings by action type. See `references/assessment-framework.md`.
   Check: [what to measure]
   **Unknown**: [data size, call frequency, etc.]
 
-### Plan (systemic, needs /whiteboarding)
+### Plan (systemic, needs /code-foundations:whiteboarding)
 - [CRITICAL] [description - e.g., caching layer needed]
-  → `/whiteboarding "[topic]"`
+  → `/code-foundations:whiteboarding "[topic]"`
 
 ### Suggestions
 - [SUGGESTION] [file:line] - [optimization opportunity]

@@ -114,7 +114,7 @@ docs/plans/YYYY-MM-DD-<topic-slug>.md
 
 ## Execution Log
 
-_Filled during /building execution_
+_Filled during /code-foundations:building execution_
 
 ### Phase 1: [Name]
 - [x] Task 1 - Completed YYYY-MM-DD HH:MM

@@ -256,7 +256,7 @@ mkdir -p docs/prototypes
 
 ## Next Steps
 
-- [ ] Proceed to `/whiteboarding` with these learnings
+- [ ] Proceed to `/code-foundations:whiteboarding` with these learnings
 - [ ] OR: More prototyping needed for [specific question]
 - [ ] OR: Blocked by [blocker], need [alternative]
 ```
@@ -312,5 +312,5 @@ These are NOT optional. They are mandatory steps in the checklist.
 ## Chaining
 
 - **RECEIVES FROM:** User question, feature idea, technical uncertainty
-- **CHAINS TO:** `/whiteboarding` (with prototype learnings)
+- **CHAINS TO:** `/code-foundations:whiteboarding` (with prototype learnings)
 - **SKILLS INVOKED:** aposd-reviewing-module-design, cc-pseudocode-programming

@@ -93,9 +93,9 @@ Group findings by action type. See `references/assessment-framework.md`.
   Check: [what to clarify before documenting]
   **Unknown**: [missing context]
 
-### Plan (systemic, needs /whiteboarding)
+### Plan (systemic, needs /code-foundations:whiteboarding)
 - [CRITICAL] [e.g., "README restructure needed"]
-  → `/whiteboarding "[topic]"`
+  → `/code-foundations:whiteboarding "[topic]"`
 
 ### Suggestions
 - [SUGGESTION] [file:line] - [improvement]

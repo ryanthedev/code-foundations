@@ -6,7 +6,7 @@ Code Complete-based software engineering skills for Claude Code.
 
 ### HACK (TDD Mode)
 ```
-User: "/hack add email validation"
+User: "/code-foundations:hack add email validation"
   → No planning, no ceremony
   → RED: Write failing test
   → GREEN: Minimum code to pass
@@ -84,7 +84,7 @@ User: "/review-pr" (on feature branch)
   → Aggregate findings by action type:
       Fix         → Apply immediately
       Investigate → Spin off research
-      Plan        → /whiteboarding for design work
+      Plan        → /code-foundations:whiteboarding for design work
 ```
 
 ---
@@ -150,10 +150,10 @@ Issues are grouped by action type:
 
 ## Plan
 1. 🔴 [CRITICAL] Auth missing from 5 endpoints
-   → `/whiteboarding "auth middleware"`
+   → `/code-foundations:whiteboarding "auth middleware"`
 ````
 
-**Workflow**: Apply "Fix" → Spin off "Investigate" → `/whiteboarding` for "Plan"
+**Workflow**: Apply "Fix" → Spin off "Investigate" → `/code-foundations:whiteboarding` for "Plan"
 
 ---
 

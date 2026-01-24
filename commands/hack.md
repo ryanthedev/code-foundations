@@ -68,7 +68,7 @@ Experimental feature development. Multiple files, subagents on demand, might thr
 
 ### Start
 ```
-User: /hack [what to build]
+User: /code-foundations:hack [what to build]
 
 → Understand the goal (30 seconds, no docs)
 → Find or create test file
@@ -160,7 +160,7 @@ Detect from project and use appropriate command.
 ## Example Session
 
 ```
-User: /hack add email validation to signup form
+User: /code-foundations:hack add email validation to signup form
 
 Claude: Got it. Let me find the signup code and tests.
 
@@ -241,18 +241,18 @@ Subagents inherit hack mode rules: tests first, checkpoint when done.
 - Feature complete + checkpoint passed → Done (or `/review-changes` for deeper review)
 - Checkpoint keeps failing → Stop, something's wrong with the approach
 - Ready to ship → Exit, update docs, bump version
-- Scope creep detected → `/whiteboarding` (stop, plan properly)
-- Stuck on architecture → `/prototype` first
+- Scope creep detected → `/code-foundations:whiteboarding` (stop, plan properly)
+- Stuck on architecture → `/code-foundations:prototype` first
 
 ---
 
 ## Quick Ref
 
 ```
-/hack [goal]       → Start hacking (multi-file, exploratory)
+/code-foundations:hack [goal]       → Start hacking (multi-file, exploratory)
 "spin off agent"   → Ad-hoc subagent dispatch
 checkpoint         → Validate patterns/tests/integration
-/review-changes    → Deeper review when ready to ship
-/whiteboarding     → Escape hatch if scope explodes
+/code-foundations:review-changes    → Deeper review when ready to ship
+/code-foundations:whiteboarding     → Escape hatch if scope explodes
 git reset --hard   → Throw it all away, start fresh
 ```

@@ -104,9 +104,9 @@ Group findings by action type. See `references/assessment-framework.md`.
   Check: [what to investigate]
   **Unknown**: [missing context]
 
-### Plan (systemic, needs /whiteboarding)
+### Plan (systemic, needs /code-foundations:whiteboarding)
 - [CRITICAL] [description across files]
-  → `/whiteboarding "[topic]"`
+  → `/code-foundations:whiteboarding "[topic]"`
 
 ### Test Coverage Gaps
 - [IMPORTANT] [file:line] - [untested code]

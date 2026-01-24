@@ -228,5 +228,5 @@ OUTPUT:
 
 | After | Next |
 |-------|------|
-| Issues found | Fix or flag for /whiteboarding |
+| Issues found | Fix or flag for /code-foundations:whiteboarding |
 | No issues | Done |

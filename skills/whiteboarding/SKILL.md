@@ -1,6 +1,6 @@
 ---
 name: whiteboarding
-description: "Discovery-oriented brainstorming to produce implementation-ready plans. Use when starting features, designing solutions, or planning complex work. Triggers on: whiteboard, let's plan, brainstorm, design this, figure out how to build. Saves plans to docs/plans/ for execution via /building command."
+description: "Discovery-oriented brainstorming to produce implementation-ready plans. Use when starting features, designing solutions, or planning complex work. Triggers on: whiteboard, let's plan, brainstorm, design this, figure out how to build. Saves plans to docs/plans/ for execution via /code-foundations:building command."
 ---
 
 # Skill: whiteboarding
@@ -17,7 +17,7 @@ description: "Discovery-oriented brainstorming to produce implementation-ready p
 | EXPLORE | **Research technologies** + compare 2-3 approaches | Research summary + chosen approach |
 | DETAIL | Break into implementation steps | Checklist with files/functions |
 | VALIDATE | User confirms each section | Approval |
-| SAVE | Write to docs/plans/ | Plan file ready for /building |
+| SAVE | Write to docs/plans/ | Plan file ready for /code-foundations:building |
 
 **Key change:** Phases 1 and 2 now SEARCH before asking/proposing. No relying on user to know patterns.
 
@@ -377,7 +377,7 @@ docs/plans/YYYY-MM-DD-<topic-slug>.md
 
 ## Execution Log
 
-_To be filled during /building_
+_To be filled during /code-foundations:building_
 ```
 
 ### Save Command
@@ -399,10 +399,10 @@ After saving, offer:
 Plan saved to: docs/plans/YYYY-MM-DD-<topic>.md
 
 **Recommended next steps:**
-1. **Refresh context** - Start new session, run `/building docs/plans/YYYY-MM-DD-<topic>.md`
+1. **Refresh context** - Start new session, run `/code-foundations:building docs/plans/YYYY-MM-DD-<topic>.md`
    - Best for complex plans (fresh context = better execution)
 
-2. **Continue now** - Run `/building` in this session
+2. **Continue now** - Run `/code-foundations:building` in this session
    - OK for simple plans
 
 Which do you prefer?
