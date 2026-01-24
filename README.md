@@ -50,7 +50,7 @@ User: "Clean this up with foundations"
 ### WHITEBOARDING (Plan Features)
 ```
 User: "/whiteboarding add user notifications"
-  → Socratic questions to clarify scope
+  → Discovery questions to clarify scope
   → 2-3 approaches with trade-offs
   → Implementation-ready plan
   → Saves to docs/plans/YYYY-MM-DD-<topic>.md
