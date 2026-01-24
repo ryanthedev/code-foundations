@@ -9,8 +9,8 @@ model: sonnet
 ## STOP - Load Skills First
 
 Before reviewing, load your skill lenses using the Skill tool:
-- [ ] `cc-defensive-programming`
-- [ ] `aposd-simplifying-complexity`
+1. `Skill(code-foundations:cc-defensive-programming)`
+2. `Skill(code-foundations:aposd-simplifying-complexity)`
 
 ---
 

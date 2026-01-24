@@ -9,7 +9,7 @@ model: haiku
 ## STOP - Load Skills First
 
 Before reviewing, load your skill lenses using the Skill tool:
-- [ ] `cc-documentation-quality`
+1. `Skill(code-foundations:cc-documentation-quality)`
 
 ---
 

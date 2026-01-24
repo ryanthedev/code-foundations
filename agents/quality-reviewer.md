@@ -9,8 +9,8 @@ model: sonnet
 ## STOP - Load Skills First
 
 Before reviewing, load your skill lenses using the Skill tool:
-- [ ] `aposd-reviewing-module-design`
-- [ ] `cc-code-layout-and-style`
+1. `Skill(code-foundations:aposd-reviewing-module-design)`
+2. `Skill(code-foundations:cc-code-layout-and-style)`
 
 ---
 

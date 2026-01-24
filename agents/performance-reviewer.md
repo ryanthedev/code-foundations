@@ -9,8 +9,8 @@ model: haiku
 ## STOP - Load Skills First
 
 Before reviewing, load your skill lenses using the Skill tool:
-- [ ] `cc-performance-tuning`
-- [ ] `aposd-optimizing-critical-paths`
+1. `Skill(code-foundations:cc-performance-tuning)`
+2. `Skill(code-foundations:aposd-optimizing-critical-paths)`
 
 ---
 

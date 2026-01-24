@@ -9,9 +9,9 @@ model: sonnet
 ## STOP - Load Skills First
 
 Before implementing, load your skill lenses using the Skill tool:
-- [ ] `cc-pseudocode-programming`
-- [ ] `cc-defensive-programming`
-- [ ] `aposd-designing-deep-modules`
+1. `Skill(code-foundations:cc-pseudocode-programming)`
+2. `Skill(code-foundations:cc-defensive-programming)`
+3. `Skill(code-foundations:aposd-designing-deep-modules)`
 
 ---
 

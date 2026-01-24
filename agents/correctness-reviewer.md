@@ -9,8 +9,8 @@ model: sonnet
 ## STOP - Load Skills First
 
 Before reviewing, load your skill lenses using the Skill tool:
-- [ ] `aposd-verifying-correctness`
-- [ ] `cc-quality-practices`
+1. `Skill(code-foundations:aposd-verifying-correctness)`
+2. `Skill(code-foundations:cc-quality-practices)`
 
 ---
 
