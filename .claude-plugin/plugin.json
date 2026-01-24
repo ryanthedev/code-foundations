@@ -1,6 +1,6 @@
 {
   "name": "code-foundations",
-  "version": "2.9.1",
+  "version": "2.9.2",
   "description": "Software engineering skills from Code Complete and A Philosophy of Software Design. Three-level code review with 5 parallel agents, skill chaining for workflow continuity, and prototype→whiteboarding→building development flow.",
   "author": {
     "name": "ryanthedev"
