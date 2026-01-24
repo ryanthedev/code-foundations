@@ -94,8 +94,7 @@ When a logical chunk of work is done, run the checkpoint before continuing.
 **Dispatch checkpoint agent:**
 ```
 Task tool:
-- subagent_type: "general-purpose"
-- model: "haiku"
+- subagent_type: "code-foundations:correctness-reviewer"
 - description: "Hack checkpoint"
 - prompt: |
     Quick validation checkpoint for hack mode.
@@ -105,19 +104,8 @@ Task tool:
 
     VALIDATE:
     1. PATTERNS - Does new code follow existing patterns in codebase?
-       - Naming conventions match?
-       - Error handling matches nearby code?
-       - File organization consistent?
-
-    2. TESTS - Are tests valid?
-       - Testing behavior, not implementation?
-       - Edge cases covered?
-       - Test names describe the behavior?
-
-    3. INTEGRATION - Will this work with the rest?
-       - Imports/exports correct?
-       - Types align?
-       - No obvious conflicts?
+    2. TESTS - Testing behavior not implementation? Edge cases covered?
+    3. INTEGRATION - Imports/exports correct? Types align?
 
     RETURN:
     - ✅ PASS: Ready to continue
@@ -232,16 +220,17 @@ User can request subagents anytime during hack mode:
 
 ```
 "spin off an agent to handle the API client"
-"use haiku to bang out these utility functions"
-"dispatch sonnet to figure out this type issue"
+"use implementation-agent for this complex module"
+"dispatch an agent to figure out this type issue"
 ```
 
-**Model selection:**
-| Task | Model |
+**Agent selection:**
+| Task | Agent |
 |------|-------|
-| Boilerplate, utilities, simple functions | haiku |
-| Complex logic, type puzzles, debugging | sonnet |
-| Architecture decisions, critical paths | opus |
+| Complex implementation with pseudocode | `code-foundations:implementation-agent` |
+| Quick review mid-hack | `code-foundations:correctness-reviewer` |
+| Design questions | `code-foundations:quality-reviewer` |
+| Simple utilities | `general-purpose` with haiku |
 
 Subagents inherit hack mode rules: tests first, checkpoint when done.
 
