@@ -120,7 +120,11 @@ Task tool:
 - subagent_type: "general-purpose"
 - description: "PRE-GATE for Phase N"
 - prompt: |
-    Load skills: cc-pseudocode-programming, aposd-designing-deep-modules
+    FIRST: Load your skills using the Skill tool:
+    1. Skill(code-foundations:cc-pseudocode-programming)
+    2. Skill(code-foundations:aposd-designing-deep-modules)
+
+    THEN:
     Read: docs/building/<plan>-phase-N-discovery.md
     Write pseudocode to: docs/building/<plan>-phase-N-pseudocode.md
     Return: file path only
@@ -133,6 +137,12 @@ Task tool:
 - subagent_type: "code-foundations:implementation-agent"
 - description: "Implement Phase N"
 - prompt: |
+    FIRST: Load your skills using the Skill tool:
+    1. Skill(code-foundations:cc-pseudocode-programming)
+    2. Skill(code-foundations:cc-defensive-programming)
+    3. Skill(code-foundations:aposd-designing-deep-modules)
+
+    THEN:
     Read input files:
     - docs/building/<plan>-phase-N-discovery.md
     - docs/building/<plan>-phase-N-pseudocode.md
@@ -152,6 +162,11 @@ Task tool:
 - subagent_type: "code-foundations:correctness-reviewer"
 - description: "POST-GATE for Phase N"
 - prompt: |
+    FIRST: Load your skills using the Skill tool:
+    1. Skill(code-foundations:aposd-verifying-correctness)
+    2. Skill(code-foundations:cc-quality-practices)
+
+    THEN:
     Read all phase files in docs/building/<plan>-phase-N-*
     Write review to: docs/building/<plan>-phase-N-review.md
     Return: PASS or FAIL

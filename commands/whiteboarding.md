@@ -9,8 +9,8 @@ allowed-tools: ["Read", "Glob", "Grep", "Write", "Bash", "AskUserQuestion", "Ski
 ## STOP - Load Skills First
 
 Before whiteboarding, load your skill lenses using the Skill tool:
-- [ ] `cc-construction-prerequisites` - requirements validation
-- [ ] `aposd-designing-deep-modules` - interface design principles
+1. `Skill(code-foundations:cc-construction-prerequisites)` - requirements validation
+2. `Skill(code-foundations:aposd-designing-deep-modules)` - interface design principles
 
 ---
 

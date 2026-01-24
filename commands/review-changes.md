@@ -186,7 +186,11 @@ Task(
   subagent_type: "code-foundations:defensive-reviewer",
   description: "Defensive review",
   prompt: """
-Read agents/defensive-reviewer.md for your role.
+FIRST: Load your skills using the Skill tool:
+1. Skill(code-foundations:cc-defensive-programming)
+2. Skill(code-foundations:aposd-simplifying-complexity)
+
+THEN: Read agents/defensive-reviewer.md for your role.
 
 Review for security AND error handling:
 - Input validation at trust boundaries
@@ -240,7 +244,11 @@ Task(
   subagent_type: "code-foundations:quality-reviewer",
   description: "Quality review",
   prompt: """
-Read agents/quality-reviewer.md for your role.
+FIRST: Load your skills using the Skill tool:
+1. Skill(code-foundations:aposd-reviewing-module-design)
+2. Skill(code-foundations:cc-code-layout-and-style)
+
+THEN: Read agents/quality-reviewer.md for your role.
 
 Review for design AND readability:
 - Complexity symptoms (change amplification, cognitive load)
@@ -295,7 +303,11 @@ Task(
   subagent_type: "code-foundations:correctness-reviewer",
   description: "Correctness review",
   prompt: """
-Read agents/correctness-reviewer.md for your role.
+FIRST: Load your skills using the Skill tool:
+1. Skill(code-foundations:aposd-verifying-correctness)
+2. Skill(code-foundations:cc-quality-practices)
+
+THEN: Read agents/correctness-reviewer.md for your role.
 
 Review for bugs AND test coverage:
 - Boundary conditions (off-by-one, empty, null, max)
@@ -538,6 +550,13 @@ Task(
   subagent_type: "code-foundations:implementation-agent",
   description: "Fix: [brief description]",
   prompt: """
+FIRST: Load your skills using the Skill tool:
+1. Skill(code-foundations:cc-pseudocode-programming)
+2. Skill(code-foundations:cc-defensive-programming)
+3. Skill(code-foundations:aposd-designing-deep-modules)
+
+THEN: Implement this fix.
+
 TASK: Implement this fix.
 
 FILE: [file path]

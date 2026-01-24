@@ -9,8 +9,8 @@ allowed-tools: ["Bash", "Glob", "Grep", "Read", "Edit", "Write", "Task", "Skill"
 ## STOP - Load Skills First
 
 Before hacking, load your skill lenses using the Skill tool:
-- [ ] `cc-quality-practices` - testing practices, 5:1 dirty/clean ratio
-- [ ] `cc-refactoring-guidance` - safe refactoring during green phase
+1. `Skill(code-foundations:cc-quality-practices)` - testing practices, 5:1 dirty/clean ratio
+2. `Skill(code-foundations:cc-refactoring-guidance)` - safe refactoring during green phase
 
 ---
 
@@ -97,7 +97,11 @@ Task tool:
 - subagent_type: "code-foundations:correctness-reviewer"
 - description: "Hack checkpoint"
 - prompt: |
-    Quick validation checkpoint for hack mode.
+    FIRST: Load your skills using the Skill tool:
+    1. Skill(code-foundations:aposd-verifying-correctness)
+    2. Skill(code-foundations:cc-quality-practices)
+
+    THEN: Quick validation checkpoint for hack mode.
 
     FILES CHANGED:
     [list files]

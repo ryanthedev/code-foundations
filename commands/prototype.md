@@ -9,8 +9,8 @@ allowed-tools: ["Read", "Write", "Edit", "Glob", "Grep", "Bash", "Skill", "Task"
 ## STOP - Load Skills First
 
 Before prototyping, load your skill lenses using the Skill tool:
-- [ ] `cc-pseudocode-programming` - design before code
-- [ ] `aposd-reviewing-module-design` - interface simplicity check
+1. `Skill(code-foundations:cc-pseudocode-programming)` - design before code
+2. `Skill(code-foundations:aposd-reviewing-module-design)` - interface simplicity check
 
 ---
 
