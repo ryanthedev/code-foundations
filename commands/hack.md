@@ -1,10 +1,18 @@
 ---
 description: "TDD hacker mode. Write test → make it pass → refactor → checkpoint → repeat."
 argument-hint: "[what to build]"
-allowed-tools: ["Bash", "Glob", "Grep", "Read", "Edit", "Write", "Task"]
+allowed-tools: ["Bash", "Glob", "Grep", "Read", "Edit", "Write", "Task", "Skill"]
 ---
 
 # Hack Mode
+
+## STOP - Load Skills First
+
+Before hacking, load your skill lenses using the Skill tool:
+- [ ] `cc-quality-practices` - testing practices, 5:1 dirty/clean ratio
+- [ ] `cc-refactoring-guidance` - safe refactoring during green phase
+
+---
 
 ## STOP
 
