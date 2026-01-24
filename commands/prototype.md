@@ -1,10 +1,18 @@
 ---
 description: "Quick proof-of-concept with minimum code. Prove feasibility before committing to full implementation."
 argument-hint: "[can I...? / prove X works / spike on Y]"
-allowed-tools: ["Read", "Write", "Edit", "Glob", "Grep", "Bash", "Skill"]
+allowed-tools: ["Read", "Write", "Edit", "Glob", "Grep", "Bash", "Skill", "Task"]
 ---
 
 # /prototype
+
+## STOP - Load Skills First
+
+Before prototyping, load your skill lenses using the Skill tool:
+- [ ] `cc-pseudocode-programming` - design before code
+- [ ] `aposd-reviewing-module-design` - interface simplicity check
+
+---
 
 ## STOP
 

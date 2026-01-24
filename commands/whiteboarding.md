@@ -1,10 +1,18 @@
 ---
 description: "Discovery-oriented brainstorming to create implementation-ready plans. Saves to docs/plans/ for /building execution."
 argument-hint: "[feature description or user story]"
-allowed-tools: ["Read", "Glob", "Grep", "Write", "Bash", "AskUserQuestion"]
+allowed-tools: ["Read", "Glob", "Grep", "Write", "Bash", "AskUserQuestion", "Skill", "Task"]
 ---
 
 # /whiteboarding
+
+## STOP - Load Skills First
+
+Before whiteboarding, load your skill lenses using the Skill tool:
+- [ ] `cc-construction-prerequisites` - requirements validation
+- [ ] `aposd-designing-deep-modules` - interface design principles
+
+---
 
 ## STOP
 
