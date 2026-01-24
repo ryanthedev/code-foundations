@@ -47,18 +47,40 @@ User: "Clean this up with foundations"
   → CHECKER gates verify quality preserved
 ```
 
+### WHITEBOARDING (Plan Features)
+```
+User: "/whiteboarding add user notifications"
+  → Socratic questions to clarify scope
+  → 2-3 approaches with trade-offs
+  → Implementation-ready plan
+  → Saves to docs/plans/YYYY-MM-DD-<topic>.md
+```
+
+### BUILDING (Execute Plans)
+```
+User: "/building docs/plans/2024-01-15-notifications.md"
+  → Feature branch required
+  → For each phase:
+      DISCOVERY  → Explore subagent → docs/building/*-discovery.md
+      PRE-GATE   → Pseudocode agent → docs/building/*-pseudocode.md
+      IMPLEMENT  → Implementation agent reads files
+      POST-GATE  → Reviewer agent → docs/building/*-review.md
+      CHECKPOINT → Commit only after PASS
+  → All artifacts persistent and reviewable
+```
+
 ### CODE REVIEW (5 Parallel Agents)
 ```
 User: "/review-pr" (on feature branch)
   → Triage: Categorize files by change type
   → Dispatch 5 agents IN PARALLEL:
-      ┌─────────────────────────────────────────────────────────┐
-      │  defensive-reviewer    → security + error handling      │
-      │  quality-reviewer      → design + readability           │
-      │  correctness-reviewer  → bugs + test coverage           │
-      │  performance-reviewer  → algorithms + hot paths         │
-      │  documentation-reviewer → docs + comments               │
-      └─────────────────────────────────────────────────────────┘
+      ┌──────────────────────────────────────────────────────────────────────┐
+      │  code-foundations:defensive-reviewer    → security + error handling  │
+      │  code-foundations:quality-reviewer      → design + readability       │
+      │  code-foundations:correctness-reviewer  → bugs + test coverage       │
+      │  code-foundations:performance-reviewer  → algorithms + hot paths     │
+      │  code-foundations:documentation-reviewer → docs + comments           │
+      └──────────────────────────────────────────────────────────────────────┘
   → Aggregate findings by action type:
       Fix         → Apply immediately
       Investigate → Spin off research
