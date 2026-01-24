@@ -1,5 +1,7 @@
 # Code Foundations
 
+> **Experimental** - This plugin is under active development, currently incorporating knowledge from *Code Complete* and *A Philosophy of Software Design*, with more books planned. Subagent orchestration for plan execution is being fine-tuned to ensure reliable skill loading and phase execution. GitHub releases will be added once the plugin reaches a stable state.
+
 Code Complete-based software engineering skills for Claude Code.
 
 ## How It Works
