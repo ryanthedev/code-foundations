@@ -281,6 +281,35 @@ If answer is "not needed now" → Remove from plan.
 
 ## Phase 4: VALIDATE (Confirmation Loop)
 
+### Test Coverage Question (MANDATORY)
+
+Before finalizing the plan, ask about test coverage:
+
+```
+How much test coverage do you want for this implementation?
+
+1. 100% coverage (Recommended)
+   Unit tests for all new code + integration tests for critical paths
+
+2. Backend only
+   Tests for server-side/API changes only
+
+3. Backend + frontend
+   Tests for both server and client layers
+
+4. None
+   Skip tests (not recommended - technical debt)
+
+5. Ask at each phase
+   Decide test scope when building each phase
+```
+
+**Record the answer in the plan file** under `## Test Coverage`.
+
+**Inform building:** This choice affects POST-GATE behavior - reviewers will check for tests matching the chosen coverage level.
+
+---
+
 ### Full Plan Review
 
 Present complete plan structure:
@@ -358,6 +387,10 @@ docs/plans/YYYY-MM-DD-<topic-slug>.md
 ...
 
 ---
+
+## Test Coverage
+
+**Level:** [100% / Backend only / Backend + frontend / None / Per-phase]
 
 ## Test Plan
 

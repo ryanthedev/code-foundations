@@ -91,7 +91,10 @@ Extract from plan file:
 1. **Context** - What we're building
 2. **Approach** - How we're building it
 3. **Phases** - Implementation sections
-4. **Test Plan** - Verification criteria
+4. **Test Coverage** - What level of tests required (100%, backend only, etc.)
+5. **Test Plan** - Specific verification criteria
+
+**If Test Coverage is missing:** Default to "100% coverage" and inform user.
 
 ### Verify Plan is Ready
 
@@ -391,7 +394,8 @@ Task tool:
     1. Does implementation match pseudocode?
     2. Are all requirements from plan covered?
     3. Any deviations from spec?
-    4. Run your skill checklists (loaded via Skill tool)
+    4. **Test coverage matches plan level** (check Test Coverage field in plan)
+    5. Run your skill checklists (loaded via Skill tool)
 
     ## OUTPUT REQUIREMENT
     Write your review to: docs/building/<plan-name>-phase-N-review.md
@@ -476,10 +480,25 @@ If any gate fails:
 
 ## Phase 4: VERIFY (Full Test Suite)
 
+### Test Coverage Check
+
+Read the **Test Coverage** field from the plan:
+
+| Level | Verification |
+|-------|--------------|
+| **100%** | Unit tests for ALL new code + integration tests |
+| **Backend only** | Server-side tests only, skip frontend |
+| **Backend + frontend** | Tests for both layers |
+| **None** | Skip test verification (warn: technical debt) |
+| **Per-phase** | Check each phase's test notes |
+
+**If coverage falls short:** FAIL verification, require tests before proceeding.
+
 ### Pre-Completion Checks
 
 - [ ] All plan phases marked complete
-- [ ] All tests pass (unit + integration)
+- [ ] **Test coverage matches plan level**
+- [ ] All tests pass (unit + integration as required)
 - [ ] No skipped tasks
 - [ ] Code compiles without warnings
 
@@ -501,9 +520,10 @@ npm run test:integration
 
 | Condition | Action |
 |-----------|--------|
-| All tests pass | Proceed to REPORT |
+| All tests pass, coverage met | Proceed to REPORT |
 | Tests fail | Debug, fix, re-verify |
-| Tests missing | Write tests, then re-verify |
+| Tests missing (but required by coverage level) | Write tests, then re-verify |
+| Coverage = None | Warn "Skipping tests per plan. Technical debt noted." and proceed |
 
 ---
 

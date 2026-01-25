@@ -110,6 +110,9 @@ Plan saved. Next steps:
 
 ### Phase 2: ...
 
+## Test Coverage
+**Level:** [100% / Backend only / Backend + frontend / None / Per-phase]
+
 ## Test Plan
 - [ ] Unit: ...
 - [ ] Integration: ...
@@ -129,5 +132,6 @@ Before saving, verify:
 - [ ] Problem statement confirmed by user
 - [ ] At least 2 approaches were considered
 - [ ] Each section validated by user
+- [ ] **Test coverage level chosen** (100% recommended)
 - [ ] Test plan included
 - [ ] YAGNI applied (no hypothetical features)

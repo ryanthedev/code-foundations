@@ -90,6 +90,14 @@ docs/plans/YYYY-MM-DD-<topic-slug>.md
 
 ---
 
+## Test Coverage
+
+**Level:** 100% | Backend only | Backend + frontend | None | Per-phase
+
+_Chosen during whiteboarding. Affects POST-GATE reviewer and final verification._
+
+---
+
 ## Test Plan
 
 ### Unit Tests
@@ -161,6 +169,9 @@ For simple features, minimal required fields:
 ### Phase 1: [Name]
 - [ ] [task]
 
+## Test Coverage
+**Level:** 100%
+
 ## Test Plan
 - [ ] [test]
 ```
@@ -174,5 +185,6 @@ Before saving plan:
 - [ ] Context clearly states what we're building
 - [ ] At least one phase in implementation checklist
 - [ ] Each phase has specific tasks (not vague goals)
+- [ ] **Test coverage level specified** (default: 100%)
 - [ ] Test plan has at least one item
 - [ ] No hypothetical/YAGNI features included
