@@ -1,6 +1,6 @@
 ---
 description: "Medium-depth review with 3 parallel agents: defensive (security+errors), quality (maintainability+clarity), and correctness (bugs+tests)."
-argument-hint: "[--staged | files...]"
+argument-hint: "[--lens] [--staged | files...]"
 allowed-tools: ["Bash", "Glob", "Grep", "Read", "Task", "Skill", "TodoWrite", "AskUserQuestion"]
 ---
 
@@ -44,6 +44,43 @@ TodoWrite([
 
 ---
 
+## ARGUMENT PARSING
+
+Parse `--lens` flag from arguments:
+
+```
+LENS_MODE=false
+DIFF_ARGS=""
+
+for arg in $ARGUMENTS; do
+  if [[ "$arg" == "--lens" ]]; then
+    LENS_MODE=true
+  else
+    DIFF_ARGS="$DIFF_ARGS $arg"
+  fi
+done
+```
+
+### LENS MODE REDIRECT
+
+**If `LENS_MODE=true`, use the lens orchestrator instead:**
+
+```
+If LENS_MODE=true:
+  → Use lens-review command: /lens-review review-changes $DIFF_ARGS
+  → This dispatches 7 agents (one per skill) with full checklist execution
+  → STOP processing this command - lens-review handles everything
+```
+
+The lens orchestrator (`commands/lens-review.md`) provides:
+- One agent per skill (7 total for review-changes)
+- Every checklist item executed with evidence
+- Full audit trail in `/tmp/lens-review-{RUN_ID}/`
+
+**If `LENS_MODE=false`, continue with standard review below.**
+
+---
+
 ## STEP 1: GET DIFF METADATA (NOT FULL DIFF)
 
 Mark todo "Get diff" as `in_progress`.
@@ -72,87 +109,40 @@ Store only file list and line count. Mark todo complete.
 
 ## STEP 2: TRIAGE (ALWAYS RUN)
 
-**ALWAYS run triage** to create the JSON file that agents will read.
+**ALWAYS run triage** to create the JSON files that agents will read.
 
 Mark todo "Run triage" as `in_progress`.
 
-**Create unique run directory:**
+**Determine diff command based on arguments:**
 ```bash
 RUN_ID=$(date +%Y%m%d-%H%M%S)
-mkdir -p /tmp/review-changes-$RUN_ID
-echo $RUN_ID
+
+if [[ "$ARGUMENTS" == "--staged" ]]; then
+  DIFF_CMD="git diff --cached"
+elif [[ -n "$ARGUMENTS" ]]; then
+  DIFF_CMD="git diff $ARGUMENTS"
+else
+  DIFF_CMD="git diff"
+fi
+
+./scripts/triage-diff.sh "$RUN_ID" "$DIFF_CMD"
 ```
 
 Store `RUN_ID` for use in all subsequent steps.
 
 **IMPORTANT:** When dispatching agents, replace `[RUN_ID]` in prompts with the actual value (e.g., `20260121-121731`).
 
-Dispatch triage agent:
+The script outputs to `/tmp/review-$RUN_ID/` with:
+- `defensive.json` - error handling, validation, auth patterns
+- `quality.json` - code structure (catch-all)
+- `correctness.json` - test files
+- `performance.json` - loops, I/O patterns (ignored for review-changes)
+- `documentation.json` - .md files, docs/ (ignored for review-changes)
+- `metadata.json` - run info
 
-```
-Task(
-  subagent_type: "general-purpose",
-  description: "Triage changes",
-  prompt: """
-Triage this diff for routing to specialized reviewers.
+**Note:** review-changes uses only 3 reviewers (defensive, quality, correctness). The script generates all 5, but only 3 are dispatched.
 
-Run this command to get the full diff:
-```bash
-git diff
-```
-(Or `git diff --cached` for staged, or `git diff <files>` for specific files)
-
-REVIEWER MAPPING (only these 3 for review-changes):
-- Input validation, auth, error handling, catch blocks → defensive
-- Naming, complexity, cohesion, style → quality
-- Logic, boundaries, tests, race conditions → correctness
-
-⛔ CRITICAL - WRITE INCREMENTALLY, NOT ALL AT ONCE:
-
-1. First, initialize empty JSON files for each reviewer:
-   ```bash
-   echo '[]' > /tmp/review-changes-[RUN_ID]/defensive.json
-   echo '[]' > /tmp/review-changes-[RUN_ID]/quality.json
-   echo '[]' > /tmp/review-changes-[RUN_ID]/correctness.json
-   ```
-
-2. Process the diff FILE BY FILE. For each file:
-   - Identify which reviewers need to see it
-   - Read the current JSON for that reviewer
-   - Append the new chunk(s)
-   - Write the updated JSON immediately
-
-   Example for one file:
-   ```
-   # After analyzing src/auth.ts, found chunks for defensive and correctness
-   # Read defensive.json, append new chunk, write back
-   # Read correctness.json, append new chunk, write back
-   # Move to next file
-   ```
-
-3. After processing ALL files, write metadata:
-   ```bash
-   echo '{"total_files":[n],"total_lines":[n]}' > /tmp/review-changes-[RUN_ID]/metadata.json
-   ```
-
-CHUNK FORMAT (for each reviewer's JSON array):
-[
-  {
-    "file": "path/to/file.ext",
-    "lines": [start, end],
-    "description": "what this change DOES",
-    "diff": "@@ -45,10 +45,27 @@\n actual diff hunk..."
-  }
-]
-
-WHY INCREMENTAL: Large diffs can exceed context limits. Writing after each file ensures nothing is lost.
-
-Return "Triage complete - /tmp/review-changes-[RUN_ID]" when done.
-"""
-)
-```
-
-Mark todo complete when triage returns.
+Mark todo complete when script returns.
 
 ---
 
@@ -173,7 +163,7 @@ Before proceeding, verify:
 
 Use these EXACT prompts. Call ALL 3 in a SINGLE message with the Task tool.
 
-**INPUT:** Each agent reads from their own JSON file (e.g., `/tmp/review-changes-[RUN_ID]/defensive.json`).
+**INPUT:** Each agent reads from their own JSON file (e.g., `/tmp/review-[RUN_ID]/defensive.json`).
 
 **CRITICAL:** Each agent reads ONLY their assigned chunks file. The diff hunks are already embedded - NO full git diff needed. Zero redundant diff reads.
 
@@ -200,7 +190,7 @@ Review for security AND error handling:
 - Silent failures
 - Error context preservation
 
-YOUR INPUT: Read /tmp/review-changes-[RUN_ID]/defensive.json for your assigned chunks.
+YOUR INPUT: Read /tmp/review-[RUN_ID]/defensive.json for your assigned chunks.
 Each entry contains: file, lines, description, and the actual diff hunk.
 
 ⛔ DO NOT run full `git diff` - the hunks are already in the JSON.
@@ -208,7 +198,7 @@ Each entry contains: file, lines, description, and the actual diff hunk.
 
 If the JSON array is empty [], write "No chunks assigned - PASS" to the output file.
 
-OUTPUT: Write your review to /tmp/review-changes-[RUN_ID]/defensive.md using the Write tool.
+OUTPUT: Write your review to /tmp/review-[RUN_ID]/defensive.md using the Write tool.
 
 FORMAT:
 ## Defensive Review
@@ -230,7 +220,7 @@ FORMAT:
 
 ### Verdict: HARDENED / ADEQUATE / FRAGILE / VULNERABLE
 
-Return: "/tmp/review-changes-[RUN_ID]/defensive.md"
+Return: "/tmp/review-[RUN_ID]/defensive.md"
 """
 )
 ```
@@ -238,6 +228,10 @@ Return: "/tmp/review-changes-[RUN_ID]/defensive.md"
 ---
 
 ### AGENT 2: quality-reviewer
+
+**CONDITIONAL DISPATCH**: If `LENS_MODE=true`, use the lens-based agent.
+
+#### Standard Mode (LENS_MODE=false)
 
 ```
 Task(
@@ -259,7 +253,7 @@ Review for design AND readability:
 - Style consistency
 - Trailing newlines
 
-YOUR INPUT: Read /tmp/review-changes-[RUN_ID]/quality.json for your assigned chunks.
+YOUR INPUT: Read /tmp/review-[RUN_ID]/quality.json for your assigned chunks.
 Each entry contains: file, lines, description, and the actual diff hunk.
 
 ⛔ DO NOT run full `git diff` - the hunks are already in the JSON.
@@ -267,7 +261,7 @@ Each entry contains: file, lines, description, and the actual diff hunk.
 
 If the JSON array is empty [], write "No chunks assigned - PASS" to the output file.
 
-OUTPUT: Write your review to /tmp/review-changes-[RUN_ID]/quality.md using the Write tool.
+OUTPUT: Write your review to /tmp/review-[RUN_ID]/quality.md using the Write tool.
 
 FORMAT:
 ## Quality Review
@@ -289,7 +283,7 @@ FORMAT:
 
 ### Verdict: EXCELLENT / GOOD / ADEQUATE / POOR
 
-Return: "/tmp/review-changes-[RUN_ID]/quality.md"
+Return: "/tmp/review-[RUN_ID]/quality.md"
 """
 )
 ```
@@ -316,7 +310,7 @@ Review for bugs AND test coverage:
 - Race conditions
 - Test gaps for new code
 
-YOUR INPUT: Read /tmp/review-changes-[RUN_ID]/correctness.json for your assigned chunks.
+YOUR INPUT: Read /tmp/review-[RUN_ID]/correctness.json for your assigned chunks.
 Each entry contains: file, lines, description, and the actual diff hunk.
 
 ⛔ DO NOT run full `git diff` - the hunks are already in the JSON.
@@ -324,7 +318,7 @@ Each entry contains: file, lines, description, and the actual diff hunk.
 
 If the JSON array is empty [], write "No chunks assigned - PASS" to the output file.
 
-OUTPUT: Write your review to /tmp/review-changes-[RUN_ID]/correctness.md using the Write tool.
+OUTPUT: Write your review to /tmp/review-[RUN_ID]/correctness.md using the Write tool.
 
 FORMAT:
 ## Correctness Review
@@ -346,7 +340,7 @@ FORMAT:
 
 ### Verdict: VERIFIED / LIKELY CORRECT / UNCERTAIN / BUGGY
 
-Return: "/tmp/review-changes-[RUN_ID]/correctness.md"
+Return: "/tmp/review-[RUN_ID]/correctness.md"
 """
 )
 ```
@@ -371,13 +365,13 @@ Mark todo "Aggregate results" as `in_progress`.
 
 **Collect file paths returned by agents**, then read all review files:
 ```bash
-cat /tmp/review-changes-[RUN_ID]/defensive.md
-cat /tmp/review-changes-[RUN_ID]/quality.md
-cat /tmp/review-changes-[RUN_ID]/correctness.md
+cat /tmp/review-[RUN_ID]/defensive.md
+cat /tmp/review-[RUN_ID]/quality.md
+cat /tmp/review-[RUN_ID]/correctness.md
 ```
 
 **Synthesize into human-readable report** grouped by action type.
-Write the final report to `/tmp/review-changes-[RUN_ID]/REPORT.md` AND output to user.
+Write the final report to `/tmp/review-[RUN_ID]/REPORT.md` AND output to user.
 
 ```markdown
 # Review Changes Report
@@ -712,4 +706,18 @@ Mark todo "Final verification" as complete.
 /review-changes           # Unstaged changes
 /review-changes --staged  # Staged only
 /review-changes file.ts   # Specific files
+/review-changes --lens    # Lens mode: explicit checklist execution
+/review-changes --lens --staged  # Lens mode on staged changes
 ```
+
+### Lens Mode
+
+When `--lens` is specified, the quality-reviewer uses lens-based execution:
+- Executes every checklist item explicitly (175+ items)
+- Records PASS/FINDING for each item with evidence
+- Creates full audit trail in output
+
+Use lens mode when:
+- Standard review isn't catching issues
+- You need traceable evidence of what was checked
+- Testing the review system itself
