@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Code-foundations is a Claude Code plugin providing software engineering skills based on *Code Complete* (McConnell) and *A Philosophy of Software Design* (Ousterhout). It includes a three-level code review system with 5 specialized dual-role agents.
+Code-foundations is a Claude Code plugin providing software engineering skills based on *Code Complete* (McConnell) and *A Philosophy of Software Design* (Ousterhout). It includes a lens-based code review system that dispatches one agent per skill for full checklist execution with evidence trails.
 
 ## Architecture
 
@@ -17,31 +17,47 @@ Code-foundations is a Claude Code plugin providing software engineering skills b
 
 ### Directory Structure
 
-- `skills/` - Individual skill definitions (SKILL.md + supporting markdown)
+- `skills/` - Individual skill definitions (SKILL.md + checklists.md)
 - `commands/` - User-invocable commands (slash commands)
-- `agents/` - 5 consolidated review agents with dual roles
+- `agents/lens/` - Lens-based review system (config + agent template)
 - `references/` - Shared reference materials (including `cc-foundations.md` for shared CC vocabulary)
 - `docs/` - Case study examples
 
-### Three-Level Code Review System
+### Lens-Based Code Review System
 
-| Level | Command | Agents | Focus |
-|-------|---------|--------|-------|
-| 1 | `/review-commit` | 0 | Quick scan (direct execution) |
-| 2 | `/review-changes` | 3 | defensive, quality, correctness |
-| 3 | `/review-pr` | 5 | All agents including performance + documentation |
+Reviews dispatch **one agent per skill**, each executing their full checklist with evidence.
 
-### 5 Consolidated Agents (Dual Roles)
+| Level | Command | Skills | Agents | Checklist Items |
+|-------|---------|--------|--------|-----------------|
+| 1 | `/review-commit` | 0 | 0 | Quick scan (direct execution) |
+| 2 | `/review-changes` | 7 | 7 | ~360 |
+| 3 | `/review-pr` | 9 | 9 | ~548 |
 
-| Agent | Combines | Skills |
-|-------|----------|--------|
-| **defensive-reviewer** | security + error-handling | cc-defensive-programming, aposd-simplifying-complexity |
-| **quality-reviewer** | maintainability + clarity | aposd-reviewing-module-design, cc-code-layout-and-style |
-| **correctness-reviewer** | bugs + test coverage | aposd-verifying-correctness, cc-quality-practices |
-| **performance-reviewer** | algorithms + hot paths | cc-performance-tuning, aposd-optimizing-critical-paths |
-| **documentation-reviewer** | docs + comments | cc-documentation-quality |
+### Review Categories & Skills
 
-Each agent invokes 2 skills: one from CC (process) + one from APOSD (philosophy).
+| Category | Skills | Items |
+|----------|--------|-------|
+| **defensive** | cc-defensive-programming, aposd-simplifying-complexity | 75 |
+| **quality** | aposd-reviewing-module-design, cc-code-layout-and-style, cc-control-flow-quality | 221 |
+| **correctness** | aposd-verifying-correctness, cc-quality-practices | 146 |
+| **performance** | cc-performance-tuning, aposd-optimizing-critical-paths | 80 |
+| **documentation** | cc-documentation-quality | 26 |
+
+### Lens System Configuration
+
+Edit `agents/lens/config.yaml` to add/remove skills:
+
+```yaml
+review-changes:
+  categories:
+    quality:
+      skills:
+        - aposd-reviewing-module-design
+        - cc-code-layout-and-style
+        - new-skill  # ← add here
+```
+
+No code changes needed when modifying skills.
 
 ### Master Dispatcher Flow
 

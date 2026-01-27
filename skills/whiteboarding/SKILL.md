@@ -424,22 +424,21 @@ mkdir -p docs/plans
 
 ## Phase 6: HANDOFF
 
-### Context Refresh Recommendation
+### Ask User How to Proceed
 
-After saving, offer:
+After saving the plan, use `AskUserQuestion` with these options:
 
-```
-Plan saved to: docs/plans/YYYY-MM-DD-<topic>.md
+**Question:** "Plan saved to docs/plans/YYYY-MM-DD-<topic>.md. How would you like to proceed?"
 
-**Recommended next steps:**
-1. **Refresh context** - Start new session, run `/code-foundations:building docs/plans/YYYY-MM-DD-<topic>.md`
-   - Best for complex plans (fresh context = better execution)
+**Options:**
+1. **Clear conversation and build** (Recommended) - Fresh context for better execution
+2. **Tell me what to do** - Get step-by-step instructions to execute manually
 
-2. **Continue now** - Run `/code-foundations:building` in this session
-   - OK for simple plans
+**If user selects option 1:**
+Execute `/clear` command, then immediately run `/code-foundations:building docs/plans/YYYY-MM-DD-<topic>.md`
 
-Which do you prefer?
-```
+**If user selects option 2:**
+Provide numbered steps the user can follow to implement the plan manually
 
 ---
 
