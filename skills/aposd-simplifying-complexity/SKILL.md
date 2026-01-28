@@ -1,6 +1,6 @@
 ---
 name: aposd-simplifying-complexity
-description: "Use when code is 'too complex', needs 'simplification', or has verbose/scattered error handling. Also for refactoring when callers do work that belongs in modules, or configuration parameters proliferate. Complements cc-defensive-programming with design-level error reduction."
+description: "Simplify complex code through the Error Reduction Hierarchy: Define out > Mask > Aggregate > Crash. Use when code is too complex, has scattered error handling, configuration explosion, or callers doing module work. Produce technique analysis table with gate checks before simplified code. Triggers on: too complex, simplify, scattered errors, configuration proliferation, verbose error handling. Complements cc-defensive-programming with design-level error elimination."
 ---
 
 # Skill: aposd-simplifying-complexity

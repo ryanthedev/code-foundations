@@ -1,6 +1,6 @@
 ---
 name: cc-defensive-programming
-description: "Use when reviewing error handling, designing input validation, implementing robustness patterns, or deciding between assertions and exceptions. Triggers on symptoms like empty catch blocks, missing input validation, garbage in garbage out mentality, assertions with side effects, inconsistent error strategies. Also use when seeing NullPointerException, buffer overflow, SQL injection, or silent data corruption."
+description: "Review error handling, input validation, and exception patterns using 24-item checklist. Use when auditing defensive code, designing barricades, choosing assertion vs error handling, or deciding correctness vs robustness strategy. Triggers on: empty catch blocks, missing input validation, assertions with side effects, wrong exception abstraction level, garbage in garbage out mentality, deadline pressure to skip validation, trusted source rationalization. Produce status table with VIOLATION/WARNING/PASS per item, or barricade/error-handling design recommendations."
 ---
 
 # Skill: cc-defensive-programming

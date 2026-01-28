@@ -1,6 +1,6 @@
 ---
 name: cc-table-driven-methods
-description: "Use when writing if/else chains with 3+ branches, creating inheritance hierarchies per variant, or encountering volatile data formats that change without code changes. Triggers on: too many if statements, switch statement growing, subclass per type, customer-controlled format, data-driven behavior, lookup table, mapping data to actions."
+description: "Replace complex conditional logic with table lookups. CHECKER mode identifies opportunities where if/else chains or inheritance hierarchies should become tables. APPLIER mode designs table structure, access method (direct/indexed/stair-step), and key transformations. Use when writing 4+ if/else branches, switch statements keep growing, subclasses differ only in data not behavior, or data changes without code changes. Triggers on: too many if statements, switch growing, subclass per type, customer-controlled format, data-driven behavior, lookup table, mapping data to actions."
 ---
 
 # Skill: cc-table-driven-methods

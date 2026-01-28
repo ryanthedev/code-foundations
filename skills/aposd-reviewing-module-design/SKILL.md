@@ -1,6 +1,6 @@
 ---
 name: aposd-reviewing-module-design
-description: "Use when reviewing code, assessing interfaces, during PR review, or when asked 'is this too complex?' or 'is this design good?' Detects complexity symptoms and structural anti-patterns. Complements cc-routine-and-class-design CHECKER mode."
+description: "Evaluate module design using APOSD principles with 40-item checklist. Detect complexity symptoms (change amplification, cognitive load, unknown unknowns), shallow modules, information leakage, pass-through methods, and structural anti-patterns. Produce categorized design review (Critical/Moderate/Observations/Positive). Use when reviewing code, assessing interfaces, during PR review, or evaluating 'is this too complex?' Triggers on: code review, design review, module complexity, interface assessment, PR review, structural analysis."
 ---
 
 # Skill: aposd-reviewing-module-design
@@ -157,6 +157,16 @@ Ask before concluding:
 - **Are there related modules that should be reviewed together?** Classitis often hides across file boundaries.
 - **Would combining these modules simplify the overall interface?** If yes, flag as potential shallow split.
 - **Must callers use these modules in sequence?** If yes, possible temporal decomposition.
+
+### Pattern Consistency Check
+
+| Question | If Yes |
+|----------|--------|
+| Is there an existing pattern for this type of problem? | Compare approaches |
+| Does this introduce a second way to do the same thing? | Flag unless justified |
+| Would a maintainer be surprised by the difference? | Requires explicit documentation |
+
+**Balance:** Evaluate patterns on merit, but don't create gratuitous inconsistency. The goal is maintainability, not conformance.
 
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: whiteboarding
-description: "Discovery-oriented brainstorming to produce implementation-ready plans. Use when starting features, designing solutions, or planning complex work. Triggers on: whiteboard, let's plan, brainstorm, design this, figure out how to build. Saves plans to docs/plans/ for execution via /code-foundations:building command."
+description: "Brainstorm and plan features through codebase search, technology research, and 2-3 approach comparison before producing implementation-ready plans. Use when starting features, designing solutions, or planning complex work. Triggers on: whiteboard, let's plan, brainstorm, design this, figure out how to build. Save plans to docs/plans/ for execution via /code-foundations:building."
 ---
 
 # Skill: whiteboarding

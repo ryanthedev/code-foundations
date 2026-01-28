@@ -1,6 +1,6 @@
 ---
 name: aposd-optimizing-critical-paths
-description: "Use when code is 'too slow', needs 'optimization', has performance issues, 'takes forever', 'hangs', 'laggy', timeouts, OOM errors, high CPU/memory, or 'doesn't scale'. Emphasizes measure-first approach. Very similar to cc-performance-tuning."
+description: "Optimize performance through mandatory measure-first workflow with 3 stages: MEASURE (gate) -> FUNDAMENTAL FIX -> CRITICAL PATH REDESIGN. Use when code is too slow, laggy, hangs, doesn't scale, has timeouts, OOM errors, or high CPU/memory. Emphasize that simpler code usually runs faster. Triggers on: performance issues, optimization needed, takes forever, profiling. Produces profiling-backed optimization with verified improvement."
 ---
 
 # Skill: aposd-optimizing-critical-paths

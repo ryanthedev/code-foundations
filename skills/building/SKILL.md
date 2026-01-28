@@ -1,6 +1,6 @@
 ---
 name: building
-description: "Execute whiteboard plans with checklist-based tracking. Use after /code-foundations:whiteboarding to implement saved plans. Triggers on: build it, execute plan, implement the whiteboard, run the plan. Loads plan from docs/plans/, tracks progress, produces working code with tests."
+description: "Execute whiteboard plans through gated phases with subagent dispatch. Require feature branch. Each phase goes through DISCOVERY -> PRE-GATE (pseudocode) -> IMPLEMENT -> POST-GATE (reviewer) -> CHECKPOINT. Produce per-phase commits, execution log, and working code with tests. Use after /code-foundations:whiteboarding to implement saved plans. Triggers on: build it, execute plan, implement the whiteboard, run the plan."
 ---
 
 # Skill: building

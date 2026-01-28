@@ -1,6 +1,6 @@
 ---
 name: cc-routine-and-class-design
-description: "Use when designing routines or classes, reviewing class interfaces, choosing between inheritance and containment, or evaluating routine cohesion. Also use when tempted to use inheritance as a quick fix under deadline pressure, or when rationalizing but it works for code with deep inheritance or many parameters. Symptoms include vague routine names, >7 parameters, deep inheritance, mixed abstraction levels, working code that violates design principles."
+description: "Evaluate routine and class design quality using Code Complete checklists (43 items). Use when designing routines or classes, reviewing class interfaces, choosing between inheritance and containment, or evaluating routine cohesion. Also trigger when tempted to use inheritance as a quick fix under deadline pressure, or when rationalizing 'but it works' for code with deep inheritance or many parameters. Produce severity-tagged reviews (VIOLATION/WARNING/PASS) in CHECKER mode or design decisions in APPLIER mode. Symptoms: vague routine names, >7 parameters, deep inheritance, mixed abstraction levels."
 ---
 
 # Skill: cc-routine-and-class-design

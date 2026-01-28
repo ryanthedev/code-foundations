@@ -1,6 +1,6 @@
 ---
 name: cc-debugging
-description: "Use when encountering ANY bug, error, unexpected behavior, test failure, crash, wrong output, missing output, flaky behavior, race condition, regression, \"it doesn't work\", \"something's wrong\", \"not working as expected\", \"should do X but does Y\", broken functionality, logic error, runtime error, exception, assertion failure, timeout, hang, or any situation where code behavior differs from intent. Triggers on \"debug\", \"fix\", \"broken\", \"failing\", \"investigate\", \"figure out why\", \"not working\"."
+description: "Guide systematic debugging using scientific method: STABILIZE -> HYPOTHESIZE -> EXPERIMENT -> FIX -> TEST -> SEARCH. Two modes: CHECKER audits debugging approach (outputs status table with violations/warnings), APPLIER guides when stuck (outputs stabilization strategy, hypothesis formation, fix verification). Use when encountering ANY bug, error, test failure, crash, wrong output, flaky behavior, race condition, regression, timeout, hang, or code behavior differing from intent. Triggers on: debug, fix, broken, failing, investigate, figure out why, not working, it doesn't work, something's wrong."
 ---
 
 # Skill: cc-debugging

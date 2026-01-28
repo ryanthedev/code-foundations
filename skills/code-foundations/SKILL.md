@@ -1,6 +1,6 @@
 ---
 name: code-foundations
-description: "Use when doing ANY code task - writing, debugging, reviewing, fixing, implementing, optimizing, or refactoring. Symptoms that trigger this skill include seeing code, being asked to implement something, fix a bug, review code, or improve performance. This skill dispatches to specific skills based on task type. Includes both Code Complete (cc-*) and APOSD (aposd-*) skill families."
+description: "Classify code tasks and execute task-specific checklists with quality gates. Route to WRITE, DEBUG, REVIEW, OPTIMIZE, REFACTOR, SIMPLIFY, or SECURE workflows, each invoking relevant CC and APOSD skills. Produce classification statement plus DONE/NOT DONE verdict with mandatory pre-commit verification. Use when writing, debugging, reviewing, fixing, implementing, optimizing, refactoring, simplifying, or securing code. Triggers on: implement, build, create, debug, fix bug, broken, error, review, audit, optimize, slow, performance, refactor, clean up, simplify, confusing, too complex, secure, vulnerability."
 ---
 
 # Code Foundations
