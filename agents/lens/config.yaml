@@ -103,7 +103,7 @@ reviews:
 
 # Agent configuration
 agent:
-  model: sonnet
+  # model: inherited from user's configured model (no override)
   max_checklist_items: 120  # Per agent soft limit
 
 # Output paths
