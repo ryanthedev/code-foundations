@@ -52,7 +52,7 @@ User: "/code-foundations:whiteboarding preserve z-index when applying layout"
 
 ---
 
-## `/code-foundations:building` — Gated Execution With Fresh Eyes
+## `/code-foundations:building` — Skill-Loaded Subagents Per Phase
 
 Most AI execution just runs through tasks sequentially. Building enforces **quality gates per phase** with **separate subagents** for discovery, implementation, and review — each with fresh context.
 
@@ -113,30 +113,9 @@ Engineering best practices are **automatically loaded** at each phase — not op
 
 Subagents load these skills and execute their checklists.
 
-### Why Separate Subagents?
-
-From the [Z-Index case study](docs/whiteboarding-example-zindex-preservation.md), the implementation agent loaded skills before touching code:
-
-```
-Skill(cc-pseudocode-programming)
-Skill(cc-defensive-programming)
-Skill(aposd-designing-deep-modules)
-
-Read(docs/building/preserve-zorder-phase-1-discovery.md)
-Read(docs/building/preserve-zorder-phase-1-pseudocode.md)
-```
-
-The reviewer agent started fresh — different context, different assumptions, catches what the implementer missed.
-
-**File-based handoff means:**
-- Main context stays clean (no pseudocode bloat)
-- Each agent has full context via files
-- Artifacts persist if interrupted
-- Anyone can review what happened
-
 ---
 
-## `/code-foundations:code` — Design With Me, Then Build (Experimental)
+## `/code-foundations:code` — Pseudocode First, Then Implement (Experimental)
 
 You know what to build. You don't need a full whiteboarding session. But you want to work through the design together before code exists.
 
@@ -237,58 +216,27 @@ The task list prevents rabbit holes, forgotten verifications, and lost context. 
 
 ---
 
-## How It Works
+## Code Review — Lens-Based
 
-### DEBUG
-```
-User: "/code-foundations:debug X isn't working"
-  → Loop: PREDICT → LOG → RUN → DECIDE
-  → Task list grows: narrow → fix → verify
-  → Done when verified
-```
+One agent per skill. Each runs its full checklist with evidence.
 
-### WRITE
-```
-User: "Build feature X with foundations"
-  → code-foundations classifies as WRITE
-  → cc-construction-prerequisites: requirements check
-  → cc-pseudocode-programming: design first
-  → CHECKER gates before done
-```
+| Command | Skills | Agents | Use When |
+|---------|--------|--------|----------|
+| `/review-commit` | — | — | Quick sanity check |
+| `/review-changes` | 7 | 7 | Unstaged changes |
+| `/review-pr` | 9 | 9 | Full PR review |
 
-### REVIEW
-```
-User: "Use foundations to review this code"
-  → cc-quality-practices (CHECKER mode)
-  → cc-routine-and-class-design (CHECKER mode)
-  → Output: violations, warnings, fixes
-```
+Skills grouped by category:
 
-### REFACTOR
-```
-User: "Clean this up with foundations"
-  → cc-refactoring-guidance: plan steps
-  → Execute one change at a time
-  → CHECKER gates verify quality preserved
-```
+| Category | Skills |
+|----------|--------|
+| **defensive** | cc-defensive-programming, aposd-simplifying-complexity |
+| **quality** | aposd-reviewing-module-design, cc-code-layout-and-style, cc-control-flow-quality |
+| **correctness** | aposd-verifying-correctness, cc-quality-practices |
+| **performance** | cc-performance-tuning, aposd-optimizing-critical-paths |
+| **documentation** | cc-documentation-quality |
 
-### CODE REVIEW (Parallel Agents)
-```
-User: "/review-pr" (on feature branch)
-  → Triage: Categorize files by change type
-  → Dispatch agents IN PARALLEL:
-      ┌──────────────────────────────────────────────────────────────────────┐
-      │  code-foundations:defensive-reviewer    → security + error handling  │
-      │  code-foundations:quality-reviewer      → design + readability       │
-      │  code-foundations:correctness-reviewer  → bugs + test coverage       │
-      │  code-foundations:performance-reviewer  → algorithms + hot paths     │
-      │  code-foundations:documentation-reviewer → docs + comments           │
-      └──────────────────────────────────────────────────────────────────────┘
-  → Aggregate findings by action type:
-      Fix         → Apply immediately
-      Investigate → Spin off research
-      Plan        → /code-foundations:whiteboarding for design work
-```
+Configure in `agents/lens/config.yaml` — add/remove skills without code changes.
 
 ---
 
@@ -314,24 +262,6 @@ User: "/review-pr" (on feature branch)
 | **cc-table-driven-methods** | Replace if/else with tables | "too many if statements", "switch growing" |
 
 ---
-
-## Three-Level Code Review System
-
-| Level | Command | Agents | Use Case |
-|-------|---------|--------|----------|
-| 1 | `/review-commit` | 1 (quick) | Pre-commit sanity check |
-| 2 | `/review-changes` | 3 (parallel) | Medium review for changes |
-| 3 | `/review-pr` | 5 (parallel) | Full PR review |
-
-### 5 Consolidated Agents (Dual Roles)
-
-| Agent | Combines | Skills |
-|-------|----------|--------|
-| **defensive-reviewer** | security + error-handling | cc-defensive-programming, aposd-simplifying-complexity |
-| **quality-reviewer** | maintainability + clarity | aposd-reviewing-module-design, cc-code-layout-and-style |
-| **correctness-reviewer** | bugs + test coverage | aposd-verifying-correctness, cc-quality-practices |
-| **performance-reviewer** | algorithms + hot paths | cc-performance-tuning, aposd-optimizing-critical-paths |
-| **documentation-reviewer** | docs + comments | cc-documentation-quality |
 
 ## Skill Chain
 
