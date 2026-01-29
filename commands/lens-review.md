@@ -47,75 +47,117 @@ Store `RUN_ID` and review type for all subsequent steps.
 
 ---
 
-## STEP 2: TRIAGE
+## STEP 2: TRIAGE (AST-Based)
 
-Get the diff and route chunks to categories:
+Extract semantic units using tree-sitter, then route to categories.
+
+### 2a: Run AST Extraction
 
 ```bash
-# Determine diff command
+# Determine diff args
 if [[ "$DIFF_ARGS" == "--staged" ]]; then
-  DIFF_CMD="git diff --cached"
+  EXTRACT_ARGS="--staged"
 elif [[ -n "$DIFF_ARGS" ]]; then
-  DIFF_CMD="git diff $DIFF_ARGS"
+  EXTRACT_ARGS="$DIFF_ARGS"
 else
-  DIFF_CMD="git diff"
+  EXTRACT_ARGS=""
 fi
+
+# Run tree-sitter extraction
+cd agents/lens
+./extract-units.sh $EXTRACT_ARGS > "$BASE_DIR/extraction.json"
 ```
 
-Dispatch triage agent:
+Output structure:
+```json
+{
+  "units": [
+    {"type": "function", "name": "validateInput", "file": "src/auth.ts", "lines": [10, 25],
+     "characteristics": {"has_loops": false, "has_try_catch": true, "has_async": false}}
+  ],
+  "fallback_files": ["src/utils.swift"],
+  "tree_sitter_available": true
+}
+```
+
+### 2b: LLM Fallback (if needed)
+
+For each file in `fallback_files`, dispatch a haiku agent **in parallel**:
 
 ```
 Task(
   subagent_type: "general-purpose",
   model: "haiku",
-  description: "Triage diff for lens review",
+  description: "Extract: {FILENAME}",
   prompt: """
-Triage this diff for routing to review categories.
+Extract semantic units from this code file.
 
-Run: `{DIFF_CMD}` to get the full diff.
+Read: {FILE_PATH}
 
-Route each file/chunk to categories based on patterns:
+Return JSON:
+{
+  "file": "{FILE_PATH}",
+  "units": [
+    {"type": "function|class|method|test", "name": "...", "lines": [start, end],
+     "characteristics": {"has_loops": bool, "has_try_catch": bool, "has_async": bool, "has_io_calls": bool}}
+  ]
+}
 
-DEFENSIVE (error handling, security):
-- Files in auth/, security/
-- Code with: try, catch, error, exception, validate, sanitize, auth, token, password
+Characteristics to detect:
+- has_loops: for, while, forEach, map, reduce, filter
+- has_try_catch: try, catch, except, rescue, finally
+- has_async: async, await, Promise
+- has_io_calls: fetch, http, fs., query, execute, connect
 
-QUALITY (catch-all for code structure):
-- All code files not matching other patterns
+Return valid JSON only.
+"""
+)
+```
 
-CORRECTNESS (tests):
-- Files: *_test.*, *.test.*, *.spec.*, test/, tests/
-- Code with: test, assert, expect, mock
+Merge fallback results into `extraction.json`.
 
-PERFORMANCE (review-pr only):
-- Code with: loop, for, while, async, await, cache, buffer, batch
-- Files in perf/, benchmark/
+### 2c: Route Units to Categories
 
-DOCUMENTATION (review-pr only):
-- Files: *.md, docs/, README*
+Route each unit based on **characteristics** and **file patterns**:
 
-Write JSON files to {BASE_DIR}/:
+| Category | Routing Rules |
+|----------|---------------|
+| **defensive** | `has_try_catch: true` OR `has_io_calls: true` OR file in `auth/`, `security/` |
+| **quality** | All units (every unit gets quality review) |
+| **correctness** | `type: "test"` OR file matches `*_test.*`, `*.test.*`, `*.spec.*` |
+| **performance** | `has_loops: true` OR `has_async: true` OR `nesting_depth >= 3` |
+| **documentation** | File matches `*.md`, `docs/`, `README*` |
 
-For each category, write `{category}.json`:
+**Note:** Units can appear in multiple categories. Quality is always included.
+
+### 2d: Write Category Files
+
+For each category, write `{BASE_DIR}/{category}.json`:
+
 ```json
 [
   {
-    "file": "path/to/file.ext",
-    "lines": [start, end],
-    "description": "what this change does",
-    "diff": "@@ -45,10 +45,27 @@\n actual diff hunk..."
+    "file": "src/auth.ts",
+    "name": "validateInput",
+    "type": "function",
+    "lines": [10, 25],
+    "characteristics": {"has_try_catch": true, "has_async": false}
   }
 ]
 ```
 
 Write metadata:
 ```bash
-echo '{"run_id":"{RUN_ID}","review_type":"{REVIEW_TYPE}","total_files":N,"total_lines":N}' > {BASE_DIR}/metadata.json
-```
-
-Return: "{BASE_DIR}"
-"""
-)
+cat > "$BASE_DIR/metadata.json" << EOF
+{
+  "run_id": "{RUN_ID}",
+  "review_type": "{REVIEW_TYPE}",
+  "total_units": N,
+  "total_files": N,
+  "tree_sitter_available": bool,
+  "fallback_count": N
+}
+EOF
 ```
 
 ---

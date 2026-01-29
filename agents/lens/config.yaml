@@ -1,35 +1,26 @@
 # Lens Review Configuration
 # Maps review types to skills. Each skill = one agent.
 
-# Triage patterns for routing chunks to categories
+# Triage routing based on AST-extracted characteristics
+# See agents/lens/extract-units.sh for characteristic detection
 triage:
   defensive:
-    patterns:
-      - "error"
-      - "catch"
-      - "try"
-      - "exception"
-      - "auth"
-      - "password"
-      - "token"
-      - "secret"
-      - "validate"
-      - "sanitize"
+    # Units with error handling or I/O (attack surface)
+    characteristics:
+      - has_try_catch: true
+      - has_io_calls: true
     file_patterns:
       - "**/auth/**"
       - "**/security/**"
 
   quality:
-    # Catch-all for code structure
+    # All units get quality review (catch-all)
     default: true
 
   correctness:
-    patterns:
-      - "test"
-      - "spec"
-      - "assert"
-      - "expect"
-      - "mock"
+    # Test files and test-type units
+    unit_types:
+      - test
     file_patterns:
       - "**/*_test.*"
       - "**/*.test.*"
@@ -38,15 +29,11 @@ triage:
       - "**/tests/**"
 
   performance:
-    patterns:
-      - "loop"
-      - "for"
-      - "while"
-      - "async"
-      - "await"
-      - "cache"
-      - "buffer"
-      - "batch"
+    # Units with loops, async, or deep nesting
+    characteristics:
+      - has_loops: true
+      - has_async: true
+      - nesting_depth: ">= 3"
     file_patterns:
       - "**/perf/**"
       - "**/benchmark/**"
