@@ -218,23 +218,34 @@ The task list prevents rabbit holes, forgotten verifications, and lost context. 
 
 ## Code Review — Lens-Based
 
-One agent per skill. Each runs its full checklist with evidence.
+**~550 checklist items across 9 skills.** One agent per skill, each running its full checklist with evidence.
 
-| Command | Skills | Agents | Use When |
+| Command | Skills | Checks | Use When |
 |---------|--------|--------|----------|
-| `/review-commit` | — | — | Quick sanity check |
-| `/review-changes` | 7 | 7 | Unstaged changes |
-| `/review-pr` | 9 | 9 | Full PR review |
+| `/review-commit` | — | quick | Sanity check before commit |
+| `/review-changes` | 7 | ~360 | Unstaged changes |
+| `/review-pr` | 9 | ~550 | Full PR review |
 
-Skills grouped by category:
+### Extraction: AST + LLM Fallback
 
-| Category | Skills |
-|----------|--------|
-| **defensive** | cc-defensive-programming, aposd-simplifying-complexity |
-| **quality** | aposd-reviewing-module-design, cc-code-layout-and-style, cc-control-flow-quality |
-| **correctness** | aposd-verifying-correctness, cc-quality-practices |
-| **performance** | cc-performance-tuning, aposd-optimizing-critical-paths |
-| **documentation** | cc-documentation-quality |
+Code is parsed into semantic units (functions, classes, methods) before review:
+
+- **Tree-sitter AST** — Fast, accurate extraction for supported languages
+- **LLM fallback** — Handles unsupported languages or missing grammars
+
+Each unit is analyzed for characteristics (loops, async, I/O, nesting depth) and routed to relevant reviewers.
+
+See [Wiki: Tree-sitter Setup](https://github.com/ryanthedev/code-foundations/wiki) for installation.
+
+### Categories
+
+| Category | Skills | Focus |
+|----------|--------|-------|
+| **defensive** | cc-defensive-programming, aposd-simplifying-complexity | Security, error handling |
+| **quality** | aposd-reviewing-module-design, cc-code-layout-and-style, cc-control-flow-quality | Design, readability |
+| **correctness** | aposd-verifying-correctness, cc-quality-practices | Bugs, test coverage |
+| **performance** | cc-performance-tuning, aposd-optimizing-critical-paths | Algorithms, hot paths |
+| **documentation** | cc-documentation-quality | Docs, comments |
 
 Configure in `agents/lens/config.yaml` — add/remove skills without code changes.
 
@@ -305,27 +316,6 @@ code-foundations (dispatcher)
 # Update to latest
 /plugin update code-foundations@rtd
 ```
-
-## Documentation
-
-For guides and detailed documentation, visit the **[Wiki](https://github.com/ryanthedev/code-foundations/wiki)**.
-
-## Case Studies
-
-Ranked by how well they demonstrate the skills:
-
-| # | Example | Type | Shows |
-|---|---------|------|-------|
-| 1 | [Z-Index Preservation](docs/whiteboarding-example-zindex-preservation.md) ⭐ | WHITEBOARD→BUILD | Full workflow: explore, pushback, research, 3-phase gated execution |
-| 2 | [Two-Tier Review Comparison](docs/review-example-two-tier-comparison.md) | REVIEW | Quick vs full review, context window trade-offs |
-| 3 | [Picker History Review](docs/review-example-picker-history-plan.md) | REVIEW | Multi-skill chaining, 4 violations, 3 warnings |
-| 4 | [Comment Renumbering](docs/refactor-example-comment-renumbering.md) | REFACTOR | Most concise—systematic table, one change at a time |
-| 5 | [Critical Path Review](docs/perf-example-critical-path-review.md) | OPTIMIZE | Measure-first—correctly decides NOT to optimize |
-| 6 | [Border Window Cleanup](docs/refactor-example-border-cleanup.md) | REFACTOR | CHECKER gates, McCabe complexity |
-| 7 | [Picker Text Overflow](docs/debug-flow-example-picker-overflow.md) | DEBUG | Root cause analysis, pattern matching |
-| 8 | [Tab Indicator Removal](docs/refactor-example-tab-indicator-removal.md) | REFACTOR | Discipline recovery, systematic removal |
-| 9 | [Picker Focus Bug](docs/debug-flow-example-picker-focus.md) | DEBUG | Scientific debugging method |
-| 10 | [Window Picker Plan](docs/prerequisites-example-window-picker-plan.md) | PLAN | Phased plan with checkpoints |
 
 ## Source
 
