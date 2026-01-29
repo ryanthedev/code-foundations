@@ -50,20 +50,6 @@ User: "/code-foundations:whiteboarding preserve z-index when applying layout"
 | First approach wins | **2-3 structurally different approaches** — comparison reveals trade-offs |
 | Plan lives in conversation | **Persistent plan file** — survives context refresh, enables `/building` execution |
 
-### The Pushback That Paid Off
-
-From the [Z-Index Preservation case study](docs/whiteboarding-example-zindex-preservation.md):
-
-Claude recommended `CGWindowListCopyWindowInfo` for z-order. User selected "you should research" instead of accepting.
-
-Research revealed: current code uses `.optionAll` which does **not** guarantee z-order. The "recommended" option was wrong. Research discovered the real solution: a secondary query with `.optionOnScreenOnly`.
-
-| Without Pushback | With Pushback |
-|------------------|---------------|
-| Generic recommendation | Discovered `.optionAll` doesn't guarantee order |
-| Assumed current code would work | Identified need for secondary query |
-| May have led to bugs | Evidence-based approach |
-
 ---
 
 ## `/code-foundations:building` — Gated Execution With Fresh Eyes
@@ -116,14 +102,16 @@ User: "/code-foundations:building docs/plans/2026-01-24-preserve-zorder.md"
 
 ### What Makes It Different
 
-| Other Execution Modes | Building |
-|----------------------|----------|
-| Run tasks sequentially | **Gated phases** — can't proceed until gate passes |
-| Same context does everything | **Fresh subagent per phase** — no context pollution |
-| Implementation then review | **Pseudocode first** — design before code |
-| Self-review | **Different agent reviews** — fresh eyes catch different bugs |
-| One big commit at end | **Per-phase commits** — rollback to any checkpoint |
-| Artifacts in conversation | **Files in docs/building/** — persistent, resumable, reviewable |
+Engineering best practices are **automatically loaded** at each phase — not optional guidelines, but enforced checklists.
+
+| Phase | Skills Loaded | What Gets Enforced |
+|-------|---------------|-------------------|
+| PRE-GATE | `cc-pseudocode-programming` | Design before code, routine cohesion |
+| PRE-GATE | `aposd-designing-deep-modules` | Interface depth, information hiding |
+| POST-GATE | `aposd-verifying-correctness` | Requirements coverage, boundary conditions |
+| POST-GATE | `cc-defensive-programming` | Error handling, input validation |
+
+Subagents load these skills and execute their checklists.
 
 ### Why Separate Subagents?
 
@@ -148,7 +136,7 @@ The reviewer agent started fresh — different context, different assumptions, c
 
 ---
 
-## `/code-foundations:code` — Design With Me, Then Build
+## `/code-foundations:code` — Design With Me, Then Build (Experimental)
 
 You know what to build. You don't need a full whiteboarding session. But you want to work through the design together before code exists.
 
@@ -183,110 +171,6 @@ User: "/code-foundations:code add email validation to signup"
   └─────────────────────────────────────────────────────────────┘
 ```
 
-### Phase 1: Design Loop
-
-Collaborative design with subagents and tasklist tracking. When the design feels complete, ask the user if they're ready to build.
-
-```
-/code-foundations:code add email validation to signup
-
-✅ Task #1 created: Design email validation flow
-
-PSEUDOCODE (draft 1):
-validateEmail(email: string) → boolean
-  if empty → return false
-  if no @ → return false
-  return true
-
-User: "should return error messages, not just boolean"
-
-✅ Task #1 updated: return ValidationResult with error messages
-
-PSEUDOCODE (draft 2):
-validateEmail(email: string) → ValidationResult
-  if empty → {valid: false, error: "Email is required"}
-  if no @ → {valid: false, error: "Invalid email format"}
-  return {valid: true}
-
-User: "what about disposable email domains?"
-
-✅ Task #2 created: Research disposable email handling
-
-→ Dispatching explore subagent...
-→ Found: disposable-email-domains npm package (10M downloads)
-→ Found: existing blocklist pattern in src/utils/spam.ts
-
-✅ Task #2 completed: use existing spam.ts pattern
-✅ Task #1 updated: add disposable domain check
-
-PSEUDOCODE (draft 3):
-validateEmail(email: string) → ValidationResult
-  if empty → {valid: false, error: "Email is required"}
-  if no @ → {valid: false, error: "Invalid email format"}
-  if domain in disposableList → {valid: false, error: "Please use permanent email"}
-  return {valid: true}
-
-disposableList: use existing pattern from spam.ts
-
----
-Design looks complete. Ready to build?
-
-User: "yes"
-
-→ Design confirmed. Switching to implementation.
-```
-
-### Phase 2: Implementation Loop
-
-Execute the confirmed design. Subagents do the work, tasklist continues from design phase.
-
-```
-Tasklist from design:
-✅ #1 Design email validation flow
-✅ #2 Research disposable email handling
-
-Converting to implementation tasks...
-✅ Task #3 created: Implement validateEmail
-✅ Task #4 created: Unit tests
-✅ Task #5 created: Integration with SignupForm
-
-IMPLEMENT #3:
-→ Dispatching implementation subagent...
-→ Reads confirmed pseudocode
-→ Writes src/utils/validation.ts
-→ DONE
-
-✅ Task #3 completed
-
-TEST #4:
-→ Dispatching test subagent...
-→ Unit tests for each case:
-  ✓ rejects empty
-  ✓ rejects invalid format
-  ✓ rejects disposable domains
-  ✓ accepts valid email
-→ All pass
-
-✅ Task #4 completed
-
-COMMIT:
-→ git commit -m "feat: add email validation with disposable domain check"
-
-Current tasklist:
-✅ #1 Design email validation flow
-✅ #2 Research disposable email handling
-✅ #3 Implement validateEmail
-✅ #4 Unit tests
-◻ #5 Integration with SignupForm
-◻ #6 Add to password reset flow (added mid-session)
-
-What's next?
-
-User: "do #5, then #6"
-
-[continues...]
-```
-
 ### Why Two Phases?
 
 | Single Loop | Design → Build |
@@ -306,6 +190,50 @@ The design loop is where changes are cheap. Once you say "let's build," the cont
 | Need to explore multiple approaches | `/whiteboarding` |
 | Have a plan file, need full gated execution | `/building` |
 | Technical uncertainty, prove feasibility | `/prototype` |
+| Bug hunting, predict → log → repeat | `/debug` |
+
+---
+
+## `/code-foundations:debug` — Resolution Loop With Tasks
+
+You always have a **current task** — the question you're answering. Predict, log, run. Then resolve: either you answered it (next task) or you need more info (narrower task). The task list keeps you on track.
+
+```
+User: "/code-foundations:debug login fails 20% of the time"
+
+  Current task: "Investigate: login failure"
+  ┌──────────────────────────────────────────────────┐
+  │  PREDICT   What do I expect to see?              │
+  │  LOG       Add log to test prediction            │
+  │  RUN       Execute, check output                 │
+  │  RESOLVE   What did we learn?                    │
+  │     ├─ Need more info → TaskCreate (narrow)      │
+  │     ├─ Found cause   → TaskCreate (fix)          │
+  │     ├─ Applied fix   → TaskCreate (verify)       │
+  │     └─ Verified      → Done!                     │
+  └──────────────────────────────────────────────────┘
+
+  Task list = your debug trail:
+
+  #1 ✓ Investigate: login failure (20%)
+  #2 ✓ Narrow: validateToken result → race condition!
+  #3 ✓ Fix: request deduplication
+  #4 ✓ Verify: parallel logins work
+  Done.
+```
+
+### What Makes It Different
+
+| Typical Debugging | /debug |
+|-------------------|--------|
+| Debug trail in your head | **Task list shows your reasoning** |
+| Add logs randomly | **Predict first, then log to test it** |
+| "It's probably X" → fix | **PREDICT + IF WRONG forces you to think** |
+| Fix, hope it works | **Verify task required before done** |
+
+### Staying On Track
+
+The task list prevents rabbit holes, forgotten verifications, and lost context. If you feel lost: `TaskList` — see where you are, what you've learned, what's next.
 
 ---
 
@@ -313,10 +241,10 @@ The design loop is where changes are cheap. Once you say "let's build," the cont
 
 ### DEBUG
 ```
-User: "X isn't working, use foundations to debug it"
-  → code-foundations classifies as DEBUG
-  → cc-developer-character checks mindset
-  → cc-debugging: stabilize → hypothesize → experiment → fix
+User: "/code-foundations:debug X isn't working"
+  → Loop: PREDICT → LOG → RUN → DECIDE
+  → Task list grows: narrow → fix → verify
+  → Done when verified
 ```
 
 ### WRITE
@@ -404,60 +332,6 @@ User: "/review-pr" (on feature branch)
 | **correctness-reviewer** | bugs + test coverage | aposd-verifying-correctness, cc-quality-practices |
 | **performance-reviewer** | algorithms + hot paths | cc-performance-tuning, aposd-optimizing-critical-paths |
 | **documentation-reviewer** | docs + comments | cc-documentation-quality |
-
-### Output Format
-
-Issues are grouped by action type:
-````markdown
-## Fix
-1. 🔴 [CRITICAL] Handler.cs:84 - Memory amplification (defensive)
-   ```csharp
-   if (encoded.Length > MaxDecodedSize / 1.34) return null;
-   ```
-
-2. 🟡 [IMPORTANT] Handler.cs:58 - Silent failure (defensive)
-   Fix: Add logging
-
-## Investigate
-1. 🟡 [IMPORTANT] UserService.cs:200 - Race condition? (correctness)
-   Check: Is this called concurrently?
-   **Unknown**: Thread safety requirements
-
-## Plan
-1. 🔴 [CRITICAL] Auth missing from 5 endpoints
-   → `/code-foundations:whiteboarding "auth middleware"`
-````
-
-**Workflow**: Apply "Fix" → Spin off "Investigate" → `/code-foundations:whiteboarding` for "Plan"
-
----
-
-## Example
-
-**Question:**
-> "The picker text is overflowing into the icons on the right side"
-
-**Result:**
-```
-Step 1: Task Classification
-  → DEBUG (signals: "overflowing", visual bug)
-
-Step 2: Developer Character Check ✓
-
-Step 3: Root Cause Analysis
-  | Location        | Uses maxWidth? |
-  |-----------------|----------------|
-  | ResultRow       | ✓ maxWidth set |
-  | PickerTextField | ✗ No maxWidth  |
-
-  Root cause: PickerTextField missing the pattern already used elsewhere.
-
-Step 4: Surgical Fix
-  → Add maxWidth: "calc(100% - iconSpace)" to PickerTextField
-  → Done in 57 seconds
-```
-
----
 
 ## Skill Chain
 
