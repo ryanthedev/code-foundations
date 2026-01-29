@@ -2,19 +2,314 @@
 
 > **Experimental** - This plugin is under active development, currently incorporating knowledge from *Code Complete* and *A Philosophy of Software Design*, with more books planned. Subagent orchestration for plan execution is being fine-tuned to ensure reliable skill loading and phase execution. GitHub releases will be added once the plugin reaches a stable state.
 
-Code Complete-based software engineering skills for Claude Code.
+Software engineering skills for Claude Code based on *Code Complete* and *A Philosophy of Software Design*.
+
+---
+
+## `/code-foundations:whiteboarding` — Planning That Investigates First
+
+Most AI planning modes ask you questions, take your answers at face value, then generate a plan. **Whiteboarding inverts this:** it searches your codebase and researches technologies *before* asking anything.
+
+```
+User: "/code-foundations:whiteboarding preserve z-index when applying layout"
+
+  SEARCH FIRST (before any questions)
+  ├─ Grep for similar features
+  ├─ Read nearby files for patterns
+  ├─ Find how similar problems were solved
+  └─ Note naming conventions, error handling patterns
+
+  ASK ONE QUESTION AT A TIME (not a wall of questions)
+  ├─ "What should 'preserving z-index' mean?"
+  │   ☐ Frontmost window gets focus
+  │   ☐ Preserve stacking order in cell
+  │   ☐ Both
+  └─ Wait for answer → ask next question
+
+  RESEARCH BEFORE PROPOSING (not guessing)
+  ├─ Check existing dependencies (don't propose new lib if similar exists)
+  ├─ Web search for current best practices
+  └─ User can push back: "you should research" → triggers deeper investigation
+
+  2-3 STRUCTURALLY DIFFERENT APPROACHES (not variations)
+  ├─ Option A: Server-side z-order field (recommended)
+  ├─ Option B: CLI requests z-order on-demand
+  └─ Option C: Infer from focus history
+
+  → Saves to docs/plans/YYYY-MM-DD-<topic>.md
+  → Execute with /code-foundations:building
+```
+
+### What Makes It Different
+
+| Other Plan Modes | Whiteboarding |
+|-----------------|---------------|
+| Ask user about existing patterns | **Search codebase** — user may not know all patterns |
+| Batch questions into a wall | **One question at a time** — better answers |
+| Recommend based on training data | **Research first** — your codebase, current best practices |
+| First approach wins | **2-3 structurally different approaches** — comparison reveals trade-offs |
+| Plan lives in conversation | **Persistent plan file** — survives context refresh, enables `/building` execution |
+
+### The Pushback That Paid Off
+
+From the [Z-Index Preservation case study](docs/whiteboarding-example-zindex-preservation.md):
+
+Claude recommended `CGWindowListCopyWindowInfo` for z-order. User selected "you should research" instead of accepting.
+
+Research revealed: current code uses `.optionAll` which does **not** guarantee z-order. The "recommended" option was wrong. Research discovered the real solution: a secondary query with `.optionOnScreenOnly`.
+
+| Without Pushback | With Pushback |
+|------------------|---------------|
+| Generic recommendation | Discovered `.optionAll` doesn't guarantee order |
+| Assumed current code would work | Identified need for secondary query |
+| May have led to bugs | Evidence-based approach |
+
+---
+
+## `/code-foundations:building` — Gated Execution With Fresh Eyes
+
+Most AI execution just runs through tasks sequentially. Building enforces **quality gates per phase** with **separate subagents** for discovery, implementation, and review — each with fresh context.
+
+```
+User: "/code-foundations:building docs/plans/2026-01-24-preserve-zorder.md"
+
+  BRANCH GATE (mandatory)
+  ├─ On main? → STOP. Create feature branch first.
+  └─ Feature branch ensures per-phase commits can be rolled back
+
+  FOR EACH PHASE:
+  ┌────────────────────────────────────────────────────────────┐
+  │  DISCOVERY (Explore subagent)                              │
+  │  ├─ Fresh agent explores codebase                          │
+  │  ├─ Writes findings to docs/building/*-discovery.md        │
+  │  └─ Returns: BUILD | SKIP | UPDATE_PLAN                    │
+  │                                                            │
+  │  ⛔ Cannot proceed until discovery complete                │
+  ├────────────────────────────────────────────────────────────┤
+  │  PRE-GATE (Pseudocode subagent)                            │
+  │  ├─ Loads cc-pseudocode-programming skill                  │
+  │  ├─ Reads discovery notes                                  │
+  │  └─ Writes pseudocode to docs/building/*-pseudocode.md     │
+  │                                                            │
+  │  ⛔ Cannot implement until pseudocode exists               │
+  ├────────────────────────────────────────────────────────────┤
+  │  IMPLEMENT (Implementation subagent)                       │
+  │  ├─ Reads discovery + pseudocode files                     │
+  │  ├─ Implements exactly what pseudocode specifies           │
+  │  └─ Returns: DONE | BLOCKED                                │
+  ├────────────────────────────────────────────────────────────┤
+  │  POST-GATE (Reviewer subagent)                             │
+  │  ├─ Different agent reviews the implementation             │
+  │  ├─ Checks: matches pseudocode? requirements covered?      │
+  │  └─ Writes review to docs/building/*-review.md             │
+  │                                                            │
+  │  ⛔ Cannot commit until reviewer returns PASS              │
+  ├────────────────────────────────────────────────────────────┤
+  │  CHECKPOINT                                                │
+  │  ├─ Commit with phase summary                              │
+  │  └─ Update execution log in plan file                      │
+  └────────────────────────────────────────────────────────────┘
+
+  → Per-phase commits enable rollback
+  → All artifacts in docs/building/ are reviewable
+```
+
+### What Makes It Different
+
+| Other Execution Modes | Building |
+|----------------------|----------|
+| Run tasks sequentially | **Gated phases** — can't proceed until gate passes |
+| Same context does everything | **Fresh subagent per phase** — no context pollution |
+| Implementation then review | **Pseudocode first** — design before code |
+| Self-review | **Different agent reviews** — fresh eyes catch different bugs |
+| One big commit at end | **Per-phase commits** — rollback to any checkpoint |
+| Artifacts in conversation | **Files in docs/building/** — persistent, resumable, reviewable |
+
+### Why Separate Subagents?
+
+From the [Z-Index case study](docs/whiteboarding-example-zindex-preservation.md), the implementation agent loaded skills before touching code:
+
+```
+Skill(cc-pseudocode-programming)
+Skill(cc-defensive-programming)
+Skill(aposd-designing-deep-modules)
+
+Read(docs/building/preserve-zorder-phase-1-discovery.md)
+Read(docs/building/preserve-zorder-phase-1-pseudocode.md)
+```
+
+The reviewer agent started fresh — different context, different assumptions, catches what the implementer missed.
+
+**File-based handoff means:**
+- Main context stays clean (no pseudocode bloat)
+- Each agent has full context via files
+- Artifacts persist if interrupted
+- Anyone can review what happened
+
+---
+
+## `/code-foundations:code` — Design With Me, Then Build
+
+You know what to build. You don't need a full whiteboarding session. But you want to work through the design together before code exists.
+
+**Two phases: Design Loop → Implementation Loop**
+
+```
+User: "/code-foundations:code add email validation to signup"
+
+  PHASE 1: DESIGN LOOP (collaborate until ready)
+  ┌─────────────────────────────────────────────────────────────┐
+  │  PSEUDOCODE    Draft the flow and contracts                 │
+  │       ↓                                                     │
+  │  EXPLORE       Subagents research patterns, packages, etc   │
+  │       ↓                                                     │
+  │  TASKLIST      Track design decisions and open questions    │
+  │       ↓                                                     │
+  │  USER INPUT    "add X" / "what about Y?" / feedback         │
+  │       ↓                                                     │
+  │  REFINE        Update pseudocode, tasklist                  │
+  │       ↓                                                     │
+  │  ↺ REPEAT      When design feels complete → ask user        │
+  └─────────────────────────────────────────────────────────────┘
+                          ↓
+                   "Ready to build?"
+                          ↓
+  PHASE 2: IMPLEMENTATION LOOP (execute with subagents)
+  ┌─────────────────────────────────────────────────────────────┐
+  │  IMPLEMENT     Subagent codes from pseudocode               │
+  │  TEST          Unit tests → integration tests               │
+  │  COMMIT        Checkpoint with passing tests                │
+  │  ↺ NEXT TASK   User picks from tasklist                     │
+  └─────────────────────────────────────────────────────────────┘
+```
+
+### Phase 1: Design Loop
+
+Collaborative design with subagents and tasklist tracking. When the design feels complete, ask the user if they're ready to build.
+
+```
+/code-foundations:code add email validation to signup
+
+✅ Task #1 created: Design email validation flow
+
+PSEUDOCODE (draft 1):
+validateEmail(email: string) → boolean
+  if empty → return false
+  if no @ → return false
+  return true
+
+User: "should return error messages, not just boolean"
+
+✅ Task #1 updated: return ValidationResult with error messages
+
+PSEUDOCODE (draft 2):
+validateEmail(email: string) → ValidationResult
+  if empty → {valid: false, error: "Email is required"}
+  if no @ → {valid: false, error: "Invalid email format"}
+  return {valid: true}
+
+User: "what about disposable email domains?"
+
+✅ Task #2 created: Research disposable email handling
+
+→ Dispatching explore subagent...
+→ Found: disposable-email-domains npm package (10M downloads)
+→ Found: existing blocklist pattern in src/utils/spam.ts
+
+✅ Task #2 completed: use existing spam.ts pattern
+✅ Task #1 updated: add disposable domain check
+
+PSEUDOCODE (draft 3):
+validateEmail(email: string) → ValidationResult
+  if empty → {valid: false, error: "Email is required"}
+  if no @ → {valid: false, error: "Invalid email format"}
+  if domain in disposableList → {valid: false, error: "Please use permanent email"}
+  return {valid: true}
+
+disposableList: use existing pattern from spam.ts
+
+---
+Design looks complete. Ready to build?
+
+User: "yes"
+
+→ Design confirmed. Switching to implementation.
+```
+
+### Phase 2: Implementation Loop
+
+Execute the confirmed design. Subagents do the work, tasklist continues from design phase.
+
+```
+Tasklist from design:
+✅ #1 Design email validation flow
+✅ #2 Research disposable email handling
+
+Converting to implementation tasks...
+✅ Task #3 created: Implement validateEmail
+✅ Task #4 created: Unit tests
+✅ Task #5 created: Integration with SignupForm
+
+IMPLEMENT #3:
+→ Dispatching implementation subagent...
+→ Reads confirmed pseudocode
+→ Writes src/utils/validation.ts
+→ DONE
+
+✅ Task #3 completed
+
+TEST #4:
+→ Dispatching test subagent...
+→ Unit tests for each case:
+  ✓ rejects empty
+  ✓ rejects invalid format
+  ✓ rejects disposable domains
+  ✓ accepts valid email
+→ All pass
+
+✅ Task #4 completed
+
+COMMIT:
+→ git commit -m "feat: add email validation with disposable domain check"
+
+Current tasklist:
+✅ #1 Design email validation flow
+✅ #2 Research disposable email handling
+✅ #3 Implement validateEmail
+✅ #4 Unit tests
+◻ #5 Integration with SignupForm
+◻ #6 Add to password reset flow (added mid-session)
+
+What's next?
+
+User: "do #5, then #6"
+
+[continues...]
+```
+
+### Why Two Phases?
+
+| Single Loop | Design → Build |
+|-------------|----------------|
+| Design evolves during coding | **Design locked before code** |
+| "Actually, change the interface" | **Interface confirmed upfront** |
+| Rework when requirements shift | **Shifts happen in design phase (cheap)** |
+| User reviews code | **User reviews pseudocode (faster)** |
+
+The design loop is where changes are cheap. Once you say "let's build," the contract is set.
+
+### When to Use What
+
+| Situation | Use |
+|-----------|-----|
+| Know what to build, want to design together | `/code` |
+| Need to explore multiple approaches | `/whiteboarding` |
+| Have a plan file, need full gated execution | `/building` |
+| Technical uncertainty, prove feasibility | `/prototype` |
+
+---
 
 ## How It Works
-
-### HACK (TDD Mode)
-```
-User: "/code-foundations:hack add email validation"
-  → No planning, no ceremony
-  → RED: Write failing test
-  → GREEN: Minimum code to pass
-  → REFACTOR: Clean up
-  → REPEAT
-```
 
 ### DEBUG
 ```
@@ -49,33 +344,11 @@ User: "Clean this up with foundations"
   → CHECKER gates verify quality preserved
 ```
 
-### WHITEBOARDING (Plan Features)
-```
-User: "/code-foundations:whiteboarding add user notifications"
-  → Discovery questions to clarify scope
-  → 2-3 approaches with trade-offs
-  → Implementation-ready plan
-  → Saves to docs/plans/YYYY-MM-DD-<topic>.md
-```
-
-### BUILDING (Execute Plans)
-```
-User: "/code-foundations:building docs/plans/2024-01-15-notifications.md"
-  → Feature branch required
-  → For each phase:
-      DISCOVERY  → Explore subagent → docs/building/*-discovery.md
-      PRE-GATE   → Pseudocode agent → docs/building/*-pseudocode.md
-      IMPLEMENT  → code-foundations:implementation-agent reads files
-      POST-GATE  → code-foundations:*-reviewer agent → docs/building/*-review.md
-      CHECKPOINT → Commit only after PASS
-  → All artifacts persistent and reviewable
-```
-
-### CODE REVIEW (5 Parallel Agents)
+### CODE REVIEW (Parallel Agents)
 ```
 User: "/review-pr" (on feature branch)
   → Triage: Categorize files by change type
-  → Dispatch 5 agents IN PARALLEL:
+  → Dispatch agents IN PARALLEL:
       ┌──────────────────────────────────────────────────────────────────────┐
       │  code-foundations:defensive-reviewer    → security + error handling  │
       │  code-foundations:quality-reviewer      → design + readability       │
