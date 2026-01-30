@@ -22,7 +22,7 @@ check_status() {
   local ts_version parsers_count
 
   if ! command -v tree-sitter &>/dev/null; then
-    echo '{"available": false, "error": "tree-sitter CLI not found"}'
+    echo '{"available": false, "error": "tree-sitter CLI not found. Run: ./scripts/setup-tree-sitter.sh"}'
     exit 0
   fi
 
