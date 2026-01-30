@@ -1,12 +1,15 @@
 ---
 description: "Interactive code review - pick depth, categories, and focus areas"
-argument-hint: "[--staged | files...]"
+argument-hint: "[--staged | --profile <name> | files...]"
 allowed-tools: ["Bash", "Glob", "Grep", "Read", "Task", "Skill", "Write", "TaskCreate", "TaskUpdate", "TaskList", "AskUserQuestion"]
 ---
 
 # Interactive Review
 
 Configurable code review. Pick your depth, categories, and focus.
+
+**With saved profile:** `/review --profile <name>` loads from `.code-foundations/profiles/`
+**Manage profiles:** `/review-profile --setup`
 
 ---
 
@@ -402,13 +405,25 @@ Support flags to skip questions:
 | `--design` | Depth: Standard, Focus: Design Quality |
 | `--tests` | Depth: Standard, Focus: Correctness |
 | `--full` | Depth: Deep, Focus: All |
+| `--profile <name>` | Load saved profile from `.code-foundations/profiles/` |
 
 Example:
 ```bash
 /review --security --staged
 /review --quick src/api/
 /review --full
+/review --profile my-checks --staged
 ```
+
+### Profile Flag
+
+When `--profile <name>` is used:
+
+1. Load `.code-foundations/profiles/<name>.yaml`
+2. Skip STEP 1-3 (use profile config)
+3. Execute based on profile mode (quick or lens)
+
+If profile not found, error with: `Profile not found. Run /review-profile --setup <name> to create.`
 
 ---
 
@@ -436,10 +451,13 @@ Proceed? [Y/n]
 
 ## Quick Reference
 
-| Preset | Time | Skills | Checks | Best For |
-|--------|------|--------|--------|----------|
-| `--quick` | 2-3 min | 3 agents | 99 | Pre-commit sanity |
-| `--security` | 3-5 min | 4 | ~150 | Security-sensitive changes |
-| `--design` | 3-5 min | 5 | ~250 | Refactoring, new modules |
-| `--tests` | 3-5 min | 4 | ~180 | Test coverage review |
-| `--full` | 5-10 min | 9 | ~550 | PR review, major features |
+| Preset | Skills | Checks | Best For |
+|--------|--------|--------|----------|
+| `--quick` | 3 agents | 99 | Pre-commit sanity |
+| `--security` | 4 | ~150 | Security-sensitive changes |
+| `--design` | 5 | ~250 | Refactoring, new modules |
+| `--tests` | 4 | ~180 | Test coverage review |
+| `--full` | 9 | ~550 | PR review, major features |
+| `--profile` | varies | varies | Your saved configuration |
+
+**Manage profiles:** `/review-profile --setup`

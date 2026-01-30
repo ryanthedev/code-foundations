@@ -1,0 +1,20 @@
+name: test-profile
+description: "Defensive-focused review with multi-dimensional checks"
+created: 2026-01-29
+modified: 2026-01-29
+
+mode: lens
+
+categories:
+  defensive: true
+  quality: false
+  correctness: false
+  performance: false
+  documentation: false
+
+skills:
+  cc-defensive-programming: true
+  aposd-simplifying-complexity: true
+
+custom_checklists:
+  - .code-foundations/checklists/defensive-multidimensional.md
