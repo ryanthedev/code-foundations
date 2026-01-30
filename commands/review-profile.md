@@ -403,15 +403,45 @@ Or set as default: `/review-profile --use {PROFILE_NAME} --set-default`
 
 ---
 
-## STEP 5: EXECUTE PROFILE (Scaled Parallel Architecture)
+## STEP 5: EXECUTE PROFILE (Task-Driven Workflow)
 
-Designed for large diffs (100+ files) and many checks (1000+).
+Task-driven execution ensures no phases are skipped. The workflow:
+1. Creates ALL tasks upfront with dependencies
+2. Loops: check TaskList → execute unblocked → mark completed
+3. Completes when all tasks done
 
 ### 5.1 Setup
 
+**Generate descriptive folder name:**
+
+First, gather context:
 ```bash
-RUN_ID=$(date +%Y%m%d-%H%M%S)
-BASE_DIR="/tmp/profile-review-$RUN_ID"
+REPO_NAME=$(basename $(git rev-parse --show-toplevel))
+BRANCH=$(git branch --show-current)
+SHORT_ID=$(date +%H%M)  # Just HHMM for uniqueness
+```
+
+Then generate a descriptive name based on the changes:
+```
+# Look at the changed files and branch name to create a meaningful folder name
+# Examples:
+#   booking-trip-creation reviewing linked-pnr-validation → "booking-linked-pnr-validation-1423"
+#   my-app reviewing auth changes on feature/oauth → "myapp-oauth-feature-0915"
+#   api-service reviewing staged controller changes → "api-controller-updates-2201"
+
+FOLDER_NAME = generate_name(
+    repo: REPO_NAME,
+    branch: BRANCH,
+    changed_files: git diff --name-only,
+    profile: PROFILE_NAME
+)
+# Format: "{repo-short}-{feature-summary}-{HHMM}"
+# Keep it under 40 chars, lowercase, hyphens only
+```
+
+Create directory:
+```bash
+BASE_DIR="/tmp/$FOLDER_NAME"
 mkdir -p "$BASE_DIR"/{extraction,checking,investigation}
 ```
 
@@ -448,274 +478,299 @@ git diff {DIFF_ARGS} --name-only > $BASE_DIR/files.txt
 FILE_COUNT=$(wc -l < $BASE_DIR/files.txt)
 ```
 
-### 5.3 Create Task Hierarchy
+### 5.3 Task-Driven Execution Loop
 
-```
-TaskCreate("Profile review: {PROFILE_NAME}", "Parallel review with {N} skills, {FILE_COUNT} files")
+**Principle:** Create tasks per phase, execute, verify complete before next phase.
 
-# Extraction phase tasks (one per batch of 5-10 files)
-BATCH_SIZE = 10
-for batch_num in range(ceil(FILE_COUNT / BATCH_SIZE)):
-  TaskCreate("Extract batch {batch_num}", "Files {start}-{end}")
+```python
+# Main execution loop
+while not all_phases_complete:
+    tasks = TaskList()
 
-# Checking phase tasks (one per skill + custom checklists)
-for skill in ENABLED_SKILLS:
-  TaskCreate("Check: {skill}", "Run checklist against all units")
-for checklist in CUSTOM_CHECKLISTS:
-  TaskCreate("Check: {checklist_name}", "Run custom checklist")
+    # Find unblocked pending tasks
+    ready = [t for t in tasks if t.status == 'pending' and not has_incomplete_blockers(t)]
 
-# Set dependencies: checking blocked by all extraction
-TaskUpdate(each checking task, addBlockedBy: [all extraction task IDs])
+    if ready:
+        # Execute all ready tasks in parallel
+        for task in ready:
+            TaskUpdate(task.id, status='in_progress')
+        dispatch_parallel(ready)
+        for task in ready:
+            TaskUpdate(task.id, status='completed')
 
-# Aggregation task
-TaskCreate("Aggregate findings", "Merge, dedupe, identify low-confidence")
-TaskUpdate(aggregation task, addBlockedBy: [all checking task IDs])
-
-# Investigation tasks created dynamically after aggregation
-# Report task created after investigation
+    # Check if phase complete, create next phase tasks
+    check_phase_transitions()
 ```
 
 ---
 
 ### 5.4 Phase 1: EXTRACTION (Parallel by File Batch)
 
-Dispatch parallel haiku agents, one per batch of 5-10 files.
-
+**Create tasks:**
 ```
-for batch_num, file_batch in enumerate(batched(files, BATCH_SIZE)):
-  TaskUpdate(extraction_task[batch_num], status: "in_progress")
+# Max 5 files per haiku agent, scale agents as needed
+MAX_PER_AGENT = 5
+NUM_BATCHES = max(1, ceil(FILE_COUNT / MAX_PER_AGENT))
+FILES_PER_BATCH = ceil(FILE_COUNT / NUM_BATCHES)  # Balanced distribution
 
-  Task(
-    subagent_type: "general-purpose",
-    model: "haiku",
-    description: "Extract batch {batch_num}",
-    prompt: """
-    Extract semantic units from these files in {REPO_ROOT}:
-
-    FILES:
-    {file_batch as newline-separated list}
-
-    For each file, read it and identify:
-    - Functions/methods (name, line range, characteristics)
-    - Classes (name, line range)
-
-    Characteristics: has_try_catch, has_loops, has_async, has_null_checks,
-    has_validation, has_logging, nesting_depth
-
-    Write to: {BASE_DIR}/extraction/batch-{batch_num}.json
-
-    Format:
-    {"batch": N, "files": [{"path": "...", "units": [...]}]}
-    """
-  )
+for batch_num in range(NUM_BATCHES):
+    start = batch_num * FILES_PER_BATCH
+    end = min(start + FILES_PER_BATCH, FILE_COUNT)
+    TaskCreate(
+        subject: "Extract batch {batch_num + 1}",
+        description: "Files {start + 1}-{end} ({end - start} files)",
+        activeForm: "Extracting batch {batch_num + 1}"
+    )
 ```
 
-**Dispatch all extraction agents in parallel (single message, multiple Task calls).**
+**Execute (parallel haiku agents):**
+```
+# Dispatch ALL extraction tasks in single message
+# Use balanced batching to distribute work evenly
+batches = split_evenly(files, NUM_BATCHES)
+for batch_num, file_batch in enumerate(batches):
+    Task(
+        subagent_type: "general-purpose",
+        model: "haiku",
+        description: "Extract batch {batch_num}",
+        prompt: """
+        Extract semantic units from these files in {REPO_ROOT}:
 
-Wait for all extraction tasks to complete, then merge:
+        FILES: {file_batch}
 
+        Identify functions/methods/classes with characteristics:
+        has_try_catch, has_async, has_null_checks, has_validation, nesting_depth
+
+        WRITE TO: {BASE_DIR}/extraction/batch-{batch_num}.json
+        """
+    )
+```
+
+**Verify & transition:**
 ```bash
-# Merge all batch files into single units.json
+# Confirm all batch files exist
+ls $BASE_DIR/extraction/batch-*.json
+
+# Merge into units.json
 jq -s '{files: map(.files) | add}' $BASE_DIR/extraction/batch-*.json > $BASE_DIR/units.json
 ```
 
-Mark extraction tasks completed, unblock checking tasks.
+Mark all extraction tasks completed. Proceed to dependency detection.
+
+---
+
+### 5.4.5 Phase 1b: DEPENDENCY DETECTION
+
+After extraction, detect project type and prepare dependency resolution for investigation.
+
+**Create task:**
+```
+TaskCreate(
+    subject: "Detect project dependencies",
+    description: "Detect project type and prepare for external symbol resolution",
+    activeForm: "Detecting dependencies"
+)
+```
+
+**Execute (direct, no agent needed):**
+```bash
+# Detect project type
+SCRIPT_DIR=$(dirname $(realpath agents/lens/resolve-dependencies.sh))
+PROJECT_TYPE=$($SCRIPT_DIR/resolve-dependencies.sh --detect {REPO_ROOT} | jq -r '.type')
+
+# Write detection result for investigation phase
+echo "{\"project_type\": \"$PROJECT_TYPE\", \"repo_root\": \"{REPO_ROOT}\"}" > $BASE_DIR/project-context.json
+
+# Optional: Restore dependencies if not already present
+# This ensures external symbols can be resolved during investigation
+if [[ "$PROJECT_TYPE" != "unknown" ]]; then
+    $SCRIPT_DIR/resolve-dependencies.sh --restore {REPO_ROOT} 2>/dev/null || true
+fi
+```
+
+**Project types detected:**
+| Type | Markers | Resolution Method |
+|------|---------|-------------------|
+| dotnet | `*.csproj`, `*.sln` | NuGet + ilspycmd decompile |
+| java-maven | `pom.xml` | Source JARs + CFR decompile |
+| java-gradle | `build.gradle` | Gradle cache + CFR decompile |
+| typescript | `tsconfig.json` | node_modules (direct read) |
+| python | `pyproject.toml` | site-packages |
+| go | `go.mod` | GOMODCACHE |
+
+Mark dependency detection task completed. Proceed to Phase 2.
 
 ---
 
 ### 5.5 Phase 2: CHECKING (Parallel by Skill)
 
-Dispatch parallel agents (inherited model), one per skill.
-
+**Create tasks:**
 ```
 for skill in ENABLED_SKILLS:
-  TaskUpdate(checking_task[skill], status: "in_progress")
+    TaskCreate(
+        subject: "Check: {skill}",
+        description: "Run {skill} checklist",
+        activeForm: "Running {skill}"
+    )
 
-  Task(
-    subagent_type: "general-purpose",
-    # No model specified = inherits user's model
-    description: "Check: {skill}",
-    prompt: """
-    Run {skill} checklist against extracted units.
-
-    INPUTS:
-    - Read({BASE_DIR}/units.json) for semantic units
-    - Read(skills/{skill}/checklists.md) for checklist
-    - git diff {DIFF_ARGS} for actual code
-
-    For each unit, apply applicable checklist items.
-
-    For each finding, record:
-    - id: checklist item ID
-    - file, line, severity (CRITICAL/IMPORTANT/SUGGESTION)
-    - confidence: HIGH (clear violation) or LOW (needs context)
-    - issue, evidence, recommendation
-    - unknown: what context is missing (if LOW confidence)
-
-    Write to: {BASE_DIR}/checking/{skill}.json
-
-    Format:
-    {"skill": "{skill}", "findings": [...], "summary": {...}}
-    """
-  )
-
-# Also dispatch custom checklists
-for checklist_path in CUSTOM_CHECKLISTS:
-  checklist_name = basename(checklist_path)
-  Task(
-    subagent_type: "general-purpose",
-    description: "Check: {checklist_name}",
-    prompt: """
-    Run custom checklist against extracted units.
-
-    INPUTS:
-    - Read({BASE_DIR}/units.json)
-    - Read({checklist_path})
-    - git diff {DIFF_ARGS}
-
-    Write to: {BASE_DIR}/checking/{checklist_name}.json
-    """
-  )
+for checklist in CUSTOM_CHECKLISTS:
+    TaskCreate(
+        subject: "Check: {checklist_name}",
+        description: "Run custom checklist",
+        activeForm: "Running {checklist_name}"
+    )
 ```
 
-**Dispatch all checking agents in parallel.**
+**Execute (parallel, inherited model):**
+```
+# Dispatch ALL checking tasks in single message
+for skill in ENABLED_SKILLS + CUSTOM_CHECKLISTS:
+    Task(
+        subagent_type: "general-purpose",
+        # No model = inherits user's model
+        description: "Check: {skill}",
+        prompt: """
+        Run {skill} checklist against extracted units.
 
-Wait for all checking tasks to complete.
+        INPUTS:
+        - Read({BASE_DIR}/units.json)
+        - Read(skills/{skill}/checklists.md)  # or custom path
+        - git diff {DIFF_ARGS}
+
+        For each finding record:
+        - id, file, line, severity, confidence (HIGH/LOW)
+        - issue, evidence, recommendation
+        - unknown (if LOW confidence)
+
+        WRITE TO: {BASE_DIR}/checking/{skill}.json
+
+        **IMPORTANT: For EVERY finding, create an investigation task:**
+        ```
+        TaskCreate(
+            subject: "Investigate: {finding.id}",
+            description: "{finding.file}:{finding.line} - {finding.issue}",
+            activeForm: "Investigating {finding.id}",
+            metadata: {
+                "finding_id": "{finding.id}",
+                "file": "{finding.file}",
+                "line": "{finding.line}",
+                "issue": "{finding.issue}",
+                "confidence": "{finding.confidence}",
+                "severity": "{finding.severity}",
+                "skill": "{skill}"
+            }
+        )
+        ```
+
+        All findings get investigated - confidence level informs priority, not whether to verify.
+        """
+    )
+```
+
+**Verify & transition:**
+```bash
+# Confirm all checking files exist
+ls $BASE_DIR/checking/*.json
+```
+
+Mark all checking tasks completed. Investigation tasks already created by checkers.
 
 ---
 
-### 5.6 Phase 3: AGGREGATION
+### 5.6 Phase 3: INVESTIGATION (Main Agent Dispatches Directly)
 
-Single haiku agent merges all findings.
+**Why main agent, not orchestrator**: Main agent can dispatch multiple Task calls in a single message = true parallelism. An orchestrator subagent dispatches sequentially, creating a bottleneck.
 
+**Get pending investigation tasks:**
 ```
-TaskUpdate(aggregation_task, status: "in_progress")
+tasks = TaskList()
+investigate_tasks = [t for t in tasks if t.subject.startswith("Investigate:")]
+```
 
+**Batch into groups of max 5:**
+```
+MAX_PER_AGENT = 5
+NUM_BATCHES = ceil(len(investigate_tasks) / MAX_PER_AGENT)
+batches = split_evenly(investigate_tasks, NUM_BATCHES)
+```
+
+**Dispatch ALL investigation agents in ONE message (true parallel):**
+```
+# Single message with multiple Task calls = parallel execution
+for batch_num, batch in enumerate(batches):
+    Task(
+        subagent_type: "general-purpose",
+        model: "haiku",
+        description: "Investigate batch {batch_num + 1}",
+        prompt: """
+        Investigate these findings in {REPO_ROOT}:
+
+        {for task in batch:}
+        - **{task.metadata.finding_id}** [{task.metadata.severity}]
+          Issue: {task.metadata.issue}
+          File: {task.metadata.file}:{task.metadata.line}
+
+        For EACH:
+        1. Read the file and surrounding context
+        2. Determine: CONFIRMED, FALSE_POSITIVE, or NEEDS_CONTEXT
+        3. Explain why
+
+        WRITE TO: {BASE_DIR}/investigation/batch-{batch_num + 1}.json
+        Format: {"batch":N,"findings":[{"id":"...","verdict":"...","reason":"..."}]}
+        """
+    )
+```
+
+Mark all investigation tasks completed.
+
+---
+
+### 5.7 Phase 4: REPORT (Main Agent Dispatches Directly)
+
+**Dispatch report agent:**
+```
 Task(
-  subagent_type: "general-purpose",
-  model: "haiku",
-  description: "Aggregate findings",
-  prompt: """
-  Merge all findings from checking phase.
+    subagent_type: "general-purpose",
+    description: "Generate final report",
+    prompt: """
+    Generate the final review report.
 
-  INPUT: Read all files in {BASE_DIR}/checking/*.json
+    INPUTS:
+    - Read all {BASE_DIR}/extraction/*.json for changes summary
+    - Read all {BASE_DIR}/checking/*.json for findings
+    - Read all {BASE_DIR}/investigation/*.json for verdicts
 
-  TASKS:
-  1. Combine all findings into single list
-  2. Deduplicate (same file:line + same issue = keep higher severity)
-  3. Sort by: severity (CRITICAL first), then file, then line
-  4. Separate HIGH vs LOW confidence
-  5. Count totals
+    TASKS:
+    1. Summarize what changed (2-3 sentences + file table)
+    2. Apply verdicts: CONFIRMED→Findings, FALSE_POSITIVE→remove, NEEDS_CONTEXT→Questions
+    3. Group by severity (CRITICAL, IMPORTANT, SUGGESTION)
+    4. Add Positive Observations section
 
-  Write to: {BASE_DIR}/all-findings.json
-
-  Format:
-  {
-    "high_confidence": [...],
-    "low_confidence": [...],
-    "summary": {
-      "total": N, "critical": N, "important": N, "suggestion": N,
-      "high_confidence_count": N, "low_confidence_count": N
-    }
-  }
-  """
+    WRITE TO: {BASE_DIR}/REPORT.md
+    """
+)
 )
 ```
 
-After aggregation, create investigation tasks:
-
-```
-findings = Read({BASE_DIR}/all-findings.json)
-for finding in findings.low_confidence:
-  TaskCreate("Investigate: {finding.id}", "Verify {finding.file}:{finding.line}")
-```
+Mark orchestrator task completed when done.
 
 ---
 
-### 5.7 Phase 4: INVESTIGATION (Parallel by Finding)
-
-Dispatch parallel haiku investigators for each low-confidence finding.
-
-```
-for finding in low_confidence_findings:
-  TaskUpdate(investigation_task[finding.id], status: "in_progress")
-
-  Task(
-    subagent_type: "general-purpose",
-    model: "haiku",
-    description: "Investigate: {finding.id}",
-    prompt: """
-    Investigate this potential issue in {REPO_ROOT}:
-
-    **{finding.id}**: {finding.issue}
-    **File:** {finding.file}:{finding.line}
-    **Evidence:** {finding.evidence}
-    **Unknown:** {finding.unknown}
-
-    Read the file and surrounding context. Determine:
-    1. Is this a real issue or false positive?
-    2. If real, what's the impact?
-    3. If false positive, why?
-
-    Write to: {BASE_DIR}/investigation/{finding.id}.json
-
-    Format:
-    {"id": "{finding.id}", "verdict": "CONFIRMED|FALSE_POSITIVE|NEEDS_CONTEXT",
-     "reason": "...", "recommendation": "..."}
-    """
-  )
-```
-
-**Dispatch all investigators in parallel.**
-
-Wait for all investigation tasks to complete.
-
----
-
-### 5.8 Phase 5: FINAL REPORT
-
-Single agent (inherited model) produces the report.
-
-```
-Task(
-  subagent_type: "general-purpose",
-  description: "Generate final report",
-  prompt: """
-  Generate the final review report.
-
-  INPUTS:
-  - Read({BASE_DIR}/all-findings.json)
-  - Read all {BASE_DIR}/investigation/*.json
-
-  TASKS:
-  1. Update findings based on investigation verdicts:
-     - CONFIRMED → keep, upgrade to HIGH confidence
-     - FALSE_POSITIVE → remove
-     - NEEDS_CONTEXT → move to "Questions" section
-  2. Group by action type: Findings, Questions, Suggestions
-  3. Write full report with code evidence and fix recommendations
-
-  Write to: {BASE_DIR}/REPORT.md
-
-  NO emojis. Use labels: "Findings", "Questions", "Suggestions".
-
-  Also return terminal summary (counts + top 3 issues only).
-  """
-)
-```
-
-Mark all tasks completed.
-
----
-
-### 5.9 Terminal Summary
+### 5.7 Terminal Summary
 
 ```markdown
 ## Profile Review Complete
 
 **{PROFILE_NAME}** | **{N} files** | **{N} checks** | **{N} findings**
 
-Parallel execution: {N} extraction + {N} checking + {N} investigation agents
+### Changes Summary
+{Brief 2-3 sentence description of what changed and the apparent intent}
+
+### Phases Completed
+- Extraction: {N} batches
+- Checking: {N} skills
+- Investigation: {N} batches ({N} findings)
+- Report: generated
 
 ### Results
 - {N} findings
@@ -731,7 +786,7 @@ Parallel execution: {N} extraction + {N} checking + {N} investigation agents
 Full report: {BASE_DIR}/REPORT.md
 ```
 
-### 5.10 Offer Actions
+### 5.9 Offer Actions
 
 ```
 AskUserQuestion(
@@ -755,20 +810,30 @@ If "Fix All" → `Skill(code-foundations:whiteboarding, args: "Fix findings from
 
 ## Parallelization Summary
 
-| Phase | Agents | Model | Parallelization |
-|-------|--------|-------|-----------------|
-| Extraction | ceil(files/10) | haiku | By file batch |
-| Checking | len(skills) + len(custom) | inherited | By skill |
-| Aggregation | 1 | haiku | Sequential |
-| Investigation | len(low_confidence) | haiku | By finding |
-| Report | 1 | inherited | Sequential |
+| Phase | Agents | Model | Distribution |
+|-------|--------|-------|--------------|
+| Extraction | 1 per 5 files | haiku | Scales with file count |
+| Checking | 1 per skill | inherited | Creates investigation tasks |
+| Investigation | 1 per 5 findings | haiku | Scales with finding count |
+| Report | 1 | inherited | - |
 
-**Example scaling:**
-- 100 files, 10 skills, 20 low-confidence findings
-- Extraction: 10 parallel haiku agents
-- Checking: 10 parallel agents (your model)
-- Investigation: 20 parallel haiku agents
-- Total: 40 parallel agents (vs 3 sequential before)
+**Main agent dispatches everything directly** - no orchestrator bottleneck. Single message with multiple Task calls = true parallelism. All findings get verified.
+
+**Balanced batching**: Files/findings distributed evenly, not fixed sizes. Example: 13 files with 2 agents = 7 + 6, not 10 + 3.
+
+**Example: 100 files, 10 skills, 50 total findings**
+```
+Main Agent
+  ├─ Extraction: 1 haiku agent per 5 files
+  ├─ [wait]
+  ├─ Checking: 1 agent per skill (creates investigation tasks)
+  ├─ [wait, then TaskList() to get investigation tasks]
+  ├─ Investigation: 1 haiku agent per 5 findings
+  ├─ [wait]
+  └─ Report: 1 agent
+```
+- All dispatched by main agent (true parallelism)
+- Haiku agents scale with workload - no artificial caps
 
 ---
 
