@@ -1,5 +1,5 @@
-# Lens Review Configuration
-# Maps review types to skills. Each skill = one agent.
+# Review Configuration
+# Maps review types to skills and checklists. Each skill = one checklist agent.
 
 # Review type definitions
 reviews:

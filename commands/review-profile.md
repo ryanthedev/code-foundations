@@ -217,7 +217,7 @@ AskUserQuestion(
 
 ## STEP 3: CATEGORY SELECTION
 
-Skip if Quick mode (uses 3-agent pipeline, not lens system).
+Skip if Sanity mode (uses 3-agent pipeline).
 
 ```
 AskUserQuestion(
@@ -319,7 +319,7 @@ Show summary and offer changes:
 ```markdown
 ## Profile Summary: {PROFILE_NAME}
 
-**Mode:** {quick|lens}
+**Mode:** {sanity|pr}
 **Categories:** {list}
 **Skills:** {N} skills, ~{N} checks
 
@@ -367,7 +367,7 @@ description: "Custom review profile"
 created: {DATE}
 modified: {DATE}
 
-mode: lens  # or "quick"
+mode: pr  # or "sanity"
 
 categories:
   defensive: true
@@ -850,9 +850,9 @@ For each profile, show summary:
 
 | Profile | Mode | Skills | Checks | Modified |
 |---------|------|--------|--------|----------|
-| default | lens | 6 | ~382 | 2026-01-29 |
-| security | lens | 2 | 75 | 2026-01-28 |
-| quick-check | quick | 3 agents | 99 | 2026-01-27 |
+| default | pr | 6 | ~382 | 2026-01-29 |
+| security | pr | 2 | 75 | 2026-01-28 |
+| quick-check | sanity | 3 agents | 99 | 2026-01-27 |
 
 **Presets (built-in):**
 - `quick` - 99 checks, 3-agent pipeline

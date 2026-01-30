@@ -20,7 +20,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CONFIG_FILE="$SCRIPT_DIR/dependencies.yaml"
-CACHE_DIR="${LENS_CACHE_DIR:-/tmp/lens-dependencies}"
+CACHE_DIR="${REVIEW_CACHE_DIR:-/tmp/review-dependencies}"
 
 # Colors for logging (disable if not terminal)
 if [[ -t 1 ]]; then

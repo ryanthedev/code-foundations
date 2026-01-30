@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Code-foundations is a Claude Code plugin providing software engineering skills based on *Code Complete* (McConnell) and *A Philosophy of Software Design* (Ousterhout). It includes a lens-based code review system that dispatches one agent per skill for full checklist execution with evidence trails.
+Code-foundations is a Claude Code plugin providing software engineering skills based on *Code Complete* (McConnell) and *A Philosophy of Software Design* (Ousterhout). It includes a checklist-based code review system that dispatches one agent per skill for full checklist execution with evidence trails.
 
 ## Architecture
 
@@ -19,7 +19,7 @@ Code-foundations is a Claude Code plugin providing software engineering skills b
 
 - `skills/` - Individual skill definitions (SKILL.md + checklists.md)
 - `commands/` - User-invocable commands (slash commands)
-- `agents/` - Lens-based review system (config + agent template)
+- `agents/` - Checklist agent template and review configuration
 - `references/` - Shared reference materials (including `cc-foundations.md` for shared CC vocabulary)
 - `docs/` - Case study examples
 
@@ -46,7 +46,7 @@ Code-foundations is a Claude Code plugin providing software engineering skills b
 | **performance** | cc-performance-tuning, aposd-optimizing-critical-paths | 80 |
 | **documentation** | cc-documentation-quality | 26 |
 
-### Lens System Configuration
+### Review Configuration
 
 Edit `agents/config.yaml` to add/remove skills:
 
