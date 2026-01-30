@@ -23,15 +23,20 @@ Code-foundations is a Claude Code plugin providing software engineering skills b
 - `references/` - Shared reference materials (including `cc-foundations.md` for shared CC vocabulary)
 - `docs/` - Case study examples
 
-### Lens-Based Code Review System
+### Code Review System
 
-Reviews dispatch **one agent per skill**, each executing their full checklist with evidence.
+**Single entry point:** `/review` with depth selection or presets.
 
-| Level | Command | Skills | Agents | Checklist Items |
-|-------|---------|--------|--------|-----------------|
-| 1 | `/review-commit` | 0 | 0 | Quick scan (direct execution) |
-| 2 | `/review-changes` | 7 | 7 | ~360 |
-| 3 | `/review-pr` | 9 | 9 | ~548 |
+| Preset | Depth | Skills | Checks | Use Case |
+|--------|-------|--------|--------|----------|
+| `--quick` | Quick | 3 agents | 99 | Pre-commit sanity |
+| `--security` | Standard | 4 | ~150 | Security-sensitive changes |
+| `--design` | Standard | 5 | ~250 | Refactoring, new modules |
+| `--full` | Deep | 9 | ~550 | Major features, PR review |
+| `--profile <name>` | Custom | varies | varies | Saved configuration |
+
+**Interactive mode:** `/review` (no flags) asks for depth and focus.
+**Profile management:** `/review-profile --setup`
 
 ### Review Categories & Skills
 

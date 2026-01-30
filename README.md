@@ -216,15 +216,20 @@ The task list prevents rabbit holes, forgotten verifications, and lost context. 
 
 ---
 
-## Code Review — Lens-Based
+## Code Review
 
-**~550 checklist items across 9 skills.** One agent per skill, each running its full checklist with evidence.
+**Single command:** `/review` with depth selection or presets.
 
-| Command | Skills | Checks | Use When |
-|---------|--------|--------|----------|
-| `/review-commit` | — | quick | Sanity check before commit |
-| `/review-changes` | 7 | ~360 | Unstaged changes |
-| `/review-pr` | 9 | ~550 | Full PR review |
+| Preset | Skills | Checks | Use When |
+|--------|--------|--------|----------|
+| `--quick` | 3 agents | 99 | Pre-commit sanity |
+| `--security` | 4 | ~150 | Security-sensitive changes |
+| `--design` | 5 | ~250 | Refactoring, new modules |
+| `--full` | 9 | ~550 | Major features, PR review |
+| `--profile <name>` | varies | varies | Your saved configuration |
+
+**Interactive:** `/review` (no flags) asks for depth and focus.
+**Custom profiles:** `/review-profile --setup` to create reusable configurations.
 
 ### Extraction: AST + LLM Fallback
 

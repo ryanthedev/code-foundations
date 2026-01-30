@@ -1,71 +1,81 @@
-# Review Matrix Reference
+# Review Reference
 
-Three levels of code review, each building on the previous.
-
----
-
-## Level Overview
-
-| Level | Command | Scope | Time | Agents |
-|-------|---------|-------|------|--------|
-| **1** | `/review-commit` | Single commit | ~2 min | None (single pass) |
-| **2** | `/review-changes` | Staged/unstaged changes | ~5-10 min | 2-3 parallel |
-| **3** | `/review-pr` | Full PR (branch vs main) | ~15-30 min | 6+ parallel |
+Single entry point: `/review` with depth/focus selection or presets.
 
 ---
 
-## Dimension Coverage Matrix
+## Presets
 
-| Dimension | Check Commit | Review Changes | Review PR |
-|-----------|:------------:|:--------------:|:---------:|
-| **Big-O / Complexity** | ✓ Quick | ✓ | ✓ Full |
-| **Style / Layout** | ✓ Quick | ✓ | ✓ |
+| Preset | Depth | Skills | Checks | Best For |
+|--------|-------|--------|--------|----------|
+| `--quick` | Quick | 3 agents | 99 | Pre-commit sanity check |
+| `--security` | Standard | 4 | ~150 | Security-sensitive changes |
+| `--design` | Standard | 5 | ~250 | Refactoring, new modules |
+| `--full` | Deep | 9 | ~550 | Major features, PR review |
+| `--profile <name>` | Custom | varies | varies | Saved configuration |
+
+**Interactive:** `/review` (no flags) prompts for depth and focus.
+
+---
+
+## Depth Levels
+
+| Depth | Categories | Skills | Execution |
+|-------|------------|--------|-----------|
+| **Quick** | — | — | 3 subagents: extraction (haiku) → checker → reviewer |
+| **Standard** | defensive, quality, correctness | 7 | Parallel subagents |
+| **Deep** | All 5 | 9 | Parallel subagents |
+| **Custom** | User picks | User picks | Parallel subagents |
+
+---
+
+## Focus Areas
+
+| Focus | Priority Categories | Skills |
+|-------|---------------------|--------|
+| **Security & Errors** | defensive | cc-defensive-programming, aposd-simplifying-complexity |
+| **Design Quality** | quality | aposd-reviewing-module-design, cc-code-layout-and-style, cc-control-flow-quality |
+| **Correctness** | correctness | aposd-verifying-correctness, cc-quality-practices |
+| **All Areas** | balanced | All skills for selected depth |
+
+---
+
+## Dimension Coverage
+
+| Dimension | Quick | Standard | Deep |
+|-----------|:-----:|:--------:|:----:|
 | **Obvious Bugs** | ✓ | ✓ | ✓ |
-| **Design Depth** | - | ✓ | ✓ Full |
-| **Error Handling** | - | ✓ Quick | ✓ Full |
-| **Clarity / Naming** | - | ✓ | ✓ Full |
-| **Correctness** | - | ✓ | ✓ Full |
-| **Security** | - | - | ✓ Full |
-| **Performance** | - | - | ✓ Full |
-| **Maintainability** | - | - | ✓ Full |
-| **Tests** | - | - | ✓ If applicable |
-| **Types** | - | - | ✓ If applicable |
-| **Comments** | - | - | ✓ Full |
+| **Style / Layout** | ✓ | ✓ | ✓ |
+| **Error Handling** | ✓ | ✓ | ✓ Full |
+| **Design Depth** | — | ✓ | ✓ Full |
+| **Correctness** | — | ✓ | ✓ Full |
+| **Security** | — | — | ✓ Full |
+| **Performance** | — | — | ✓ Full |
+| **Documentation** | — | — | ✓ Full |
 
 ---
 
-## Agent → Skill Mapping
+## Custom Profiles
 
-| Agent | Code-Foundations Skills | Focus |
-|-------|------------------------|-------|
-| **security-reviewer** | cc-defensive-programming | Input validation, injection, auth, secrets |
-| **performance-reviewer** | cc-performance-tuning, aposd-optimizing-critical-paths | Big-O, algorithms, scaling |
-| **maintainability-reviewer** | aposd-reviewing-module-design, cc-routine-and-class-design | Complexity symptoms, cohesion, coupling |
-| **error-handling-reviewer** | cc-defensive-programming, aposd-simplifying-complexity | Silent failures, catch blocks, propagation |
-| **clarity-reviewer** | aposd-improving-code-clarity, cc-code-layout-and-style | Naming, comments, formatting |
-| **correctness-reviewer** | aposd-verifying-correctness | Requirements, concurrency, boundaries |
+Create reusable configurations:
 
----
+```bash
+/review-profile --setup my-profile
+```
 
-## Quick Reference: When to Use Each Level
+Profiles saved to `.code-foundations/profiles/<name>.yaml`.
 
-| Situation | Use |
-|-----------|-----|
-| Quick sanity check before commit | `/review-commit` |
-| Review work before staging | `/review-changes` |
-| Final check before PR creation | `/review-pr` |
-| Responding to PR feedback | `/review-changes` on specific files |
-| Comprehensive feature review | `/review-pr` |
+Use with:
+```bash
+/review --profile my-profile
+```
 
 ---
 
-## Output Severity Levels
-
-All levels use consistent severity classification:
+## Severity Levels
 
 | Severity | Meaning | Action |
 |----------|---------|--------|
 | **CRITICAL** | Blocks merge, security/correctness issue | Must fix |
 | **IMPORTANT** | Significant quality issue | Should fix |
 | **SUGGESTION** | Improvement opportunity | Consider |
-| **POSITIVE** | Good pattern observed | Acknowledge |
