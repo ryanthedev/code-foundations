@@ -378,31 +378,42 @@ cat {BASE_DIR}/REPORT.md
 
 End the review.
 
-### Standard/Deep/Custom Mode
+### Standard/Deep/Custom Mode (Task-Driven Workflow)
 
 Dispatches **one agent per skill**, each executing their full checklist with evidence.
 
-**Architecture:** Hybrid JSONL + TaskList coordination
-- **JSONL streaming**: Units and results flow through append-only files
-- **TaskList coordination**: Triage creates `triage:complete` task when done
-- **Parallel execution**: Triage + all skill agents dispatch simultaneously
+**Architecture:** Task-driven execution loop
+- **TaskCreate first**: All tasks created upfront with dependencies
+- **Batched extraction**: Max 5 files per haiku agent
+- **Checkers create investigation tasks**: Each finding becomes a task
+- **Main agent orchestrates**: Collects from TaskList, dispatches in batches
 
 #### Setup
 
 ```bash
-RUN_ID=$(date +%Y%m%d-%H%M%S)
-BASE_DIR="/tmp/review-$RUN_ID"
-mkdir -p "$BASE_DIR"/{defensive,quality,correctness,performance,documentation}
+# Generate descriptive folder name
+REPO_NAME=$(basename $(git rev-parse --show-toplevel))
+BRANCH=$(git branch --show-current)
+SHORT_ID=$(date +%H%M)
+# Format: "{repo-short}-{feature-summary}-{HHMM}"
+FOLDER_NAME="${REPO_NAME}-${BRANCH##*/}-$SHORT_ID"
+
+BASE_DIR="/tmp/$FOLDER_NAME"
+mkdir -p "$BASE_DIR"/{extraction,checking,investigation}
 ```
 
-Read config: `Read(agents/lens/config.yaml)`
+Get file list:
+```bash
+git diff {DIFF_ARGS} --name-only > $BASE_DIR/files.txt
+FILE_COUNT=$(wc -l < $BASE_DIR/files.txt)
+```
 
 #### Determine Skills from Depth
 
 | Depth | Categories | Skills |
 |-------|------------|--------|
-| **Standard** | defensive, quality, correctness | 7 skills, 8 agents |
-| **Deep** | All 5 | 9 skills, 10 agents |
+| **Standard** | defensive, quality, correctness | 7 skills |
+| **Deep** | All 5 | 9 skills |
 | **Custom** | User-selected | Varies |
 
 **Standard skills:**
@@ -414,107 +425,113 @@ Read config: `Read(agents/lens/config.yaml)`
 - performance: cc-performance-tuning, aposd-optimizing-critical-paths
 - documentation: cc-documentation-quality
 
-#### Dispatch Triage + Skill Agents (All Parallel)
+---
 
-**All agents start at once.** Triage writes to `units.jsonl`, skill agents read from it.
+#### Phase 1: EXTRACTION (Batched, Parallel)
 
-**Triage Agent (haiku):**
-
+**Create tasks:**
 ```
-Task(
-  subagent_type: "general-purpose",
-  model: "haiku",
-  description: "Triage: extract to JSONL",
-  prompt: """
-## Triage Agent
+# Max 5 files per haiku agent, scale agents as needed
+MAX_PER_AGENT = 5
+NUM_BATCHES = max(1, ceil(FILE_COUNT / MAX_PER_AGENT))
+FILES_PER_BATCH = ceil(FILE_COUNT / NUM_BATCHES)  # Balanced distribution
 
-Extract units and stream to JSONL file.
+for batch_num in range(NUM_BATCHES):
+    start = batch_num * FILES_PER_BATCH
+    end = min(start + FILES_PER_BATCH, FILE_COUNT)
+    TaskCreate(
+        subject: "Extract batch {batch_num + 1}",
+        description: "Files {start + 1}-{end} ({end - start} files)",
+        activeForm: "Extracting batch {batch_num + 1}"
+    )
+```
 
-### Step 1: Run AST Extraction
+**Execute (dispatch ALL in single message for true parallelism):**
+```
+batches = split_evenly(files, NUM_BATCHES)
+for batch_num, file_batch in enumerate(batches):
+    Task(
+        subagent_type: "general-purpose",
+        model: "haiku",
+        description: "Extract batch {batch_num + 1}",
+        prompt: """
+        Extract semantic units from these files in {REPO_ROOT}:
 
+        FILES: {file_batch}
+
+        For each file, identify functions/methods/classes with characteristics:
+        - has_try_catch, has_loops, has_async, has_io_calls, nesting_depth
+
+        WRITE TO: {BASE_DIR}/extraction/batch-{batch_num}.json
+        Format: {"batch": N, "files": [{"path": "...", "units": [...]}]}
+        """
+    )
+```
+
+**Verify & merge:**
 ```bash
-cd agents/lens
-./extract-units.sh {DIFF_ARGS}
+ls $BASE_DIR/extraction/batch-*.json
+jq -s '{files: map(.files) | add}' $BASE_DIR/extraction/batch-*.json > $BASE_DIR/units.json
 ```
 
-### Step 2: Write Units to JSONL
+Mark all extraction tasks completed.
 
-For each unit, append one JSON line to `{BASE_DIR}/units.jsonl`:
+---
 
-```jsonl
-{"file":"src/auth.ts","name":"validateInput","type":"function","lines":[10,25],"chars":{"has_try_catch":true,"has_loops":false,"has_async":false,"has_io_calls":true}}
+#### Phase 2: CHECKING (Parallel by Skill)
+
+**Create tasks:**
+```
+for skill in ENABLED_SKILLS:
+    TaskCreate(
+        subject: "Check: {skill}",
+        description: "Run {skill} checklist against extracted units",
+        activeForm: "Running {skill}"
+    )
 ```
 
-### Step 3: Signal Completion
-
+**Execute (dispatch ALL in single message):**
 ```
-TaskCreate(
-  subject: "triage:complete",
-  description: "Extraction done. {N} units in {BASE_DIR}/units.jsonl",
-  metadata: {total_units: N, total_files: N}
-)
-```
+for skill in ENABLED_SKILLS:
+    Task(
+        subagent_type: "general-purpose",
+        description: "Check: {skill}",
+        prompt: """
+        Run {skill} checklist against extracted units.
 
-Return: "{BASE_DIR}/units.jsonl"
-"""
-)
-```
+        INPUTS:
+        - Read({BASE_DIR}/units.json)
+        - Read(skills/{skill}/checklists.md)
+        - git diff {DIFF_ARGS} for actual code
 
-**Skill Agent Template:**
+        FILTER: {FILTER_FOR_SKILL}  # See routing table below
 
-```
-Task(
-  subagent_type: "general-purpose",
-  description: "Lens: {SKILL}",
-  prompt: """
-## Lens Agent: {SKILL}
+        For each finding record:
+        - id, file, line, severity (CRITICAL/IMPORTANT/SUGGESTION)
+        - confidence (HIGH/LOW), issue, evidence, recommendation
+        - unknown (if LOW confidence)
 
-### PHASE 1: LOAD SKILL
+        WRITE TO: {BASE_DIR}/checking/{skill}.json
 
-```
-Skill(code-foundations:{SKILL})
-Read(skills/{SKILL}/checklists.md)
-```
+        **CRITICAL: For EVERY finding, create an investigation task:**
+        TaskCreate(
+            subject: "Investigate: {finding.id}",
+            description: "{finding.file}:{finding.line} - {finding.issue}",
+            activeForm: "Investigating {finding.id}",
+            metadata: {
+                "finding_id": "{finding.id}",
+                "file": "{finding.file}",
+                "line": "{finding.line}",
+                "issue": "{finding.issue}",
+                "confidence": "{finding.confidence}",
+                "severity": "{finding.severity}",
+                "skill": "{skill}"
+            }
+        )
 
-### PHASE 2: READ UNITS
-
-Read `{BASE_DIR}/units.jsonl` and filter for units matching your criteria:
-
-**Your filter:** {FILTER_EXPRESSION}
-
-### PHASE 3: CHECK FOR COMPLETION
-
-```
-tasks = TaskList()
-triage_done = any(t.subject == "triage:complete" for t in tasks)
-```
-
-If `triage_done` is false and no units yet, wait briefly and re-read JSONL.
-If `triage_done` is true and no matching units, write "No units assigned - PASS" and return.
-
-### PHASE 4: EXECUTE CHECKLIST
-
-For each matching unit:
-1. Read the full file: `Read(unit.file)`
-2. Focus on lines `unit.lines[0]` to `unit.lines[1]`
-3. Execute EVERY checklist item
-4. Record PASS or FINDING for each
-
-### PHASE 5: APPEND RESULTS
-
-For each finding, append to `{BASE_DIR}/results.jsonl`:
-
-```jsonl
-{"skill":"{SKILL}","category":"{CATEGORY}","file":"src/auth.ts","line":15,"id":"CS-1","severity":"CRITICAL","action":"fix","issue":"...","evidence":"..."}
-```
-
-### PHASE 6: WRITE SUMMARY
-
-Write to `{BASE_DIR}/{CATEGORY}/{SKILL}.md`
-
-Return: "{BASE_DIR}/{CATEGORY}/{SKILL}.md"
-"""
-)
+        ALL findings get investigated - confidence informs priority, not whether to verify.
+        """
+    )
 ```
 
 **Routing Filters:**
@@ -532,56 +549,103 @@ Return: "{BASE_DIR}/{CATEGORY}/{SKILL}.md"
 | aposd-optimizing-critical-paths | `has_loops` OR `has_async` |
 | cc-documentation-quality | file matches `*.md`, `docs/`, `README*` |
 
-#### Wait and Aggregate
-
-Wait for all Task calls to return. Then aggregate from `results.jsonl`:
-
-```
-Task(
-  subagent_type: "general-purpose",
-  description: "Aggregate results",
-  prompt: """
-Read `{BASE_DIR}/results.jsonl` and aggregate:
-
-1. Group by category
-2. Group by action (fix, investigate, plan)
-3. Sort by severity (CRITICAL > IMPORTANT > SUGGESTION)
-
-Write category summaries to `{BASE_DIR}/{CATEGORY}/summary.md`
-Write final report to `{BASE_DIR}/REPORT.md`
-
-Return: "{BASE_DIR}/REPORT.md"
-"""
-)
-```
-
-#### Final Report Format
-
-```markdown
-# Review Report
-
-## Run Info
-- **Depth:** {DEPTH}
-- **Files:** [count]
-- **Skills Executed:** [count]
-
-## Overall Verdict: [READY / NEEDS WORK / BLOCKED]
-
-| Category | Verdict | Findings |
-|----------|---------|----------|
+Mark all checking tasks completed. Investigation tasks already created by checkers.
 
 ---
 
-## Fix (Execute Now)
-[CRITICAL/IMPORTANT findings with code fixes]
+#### Phase 3: INVESTIGATION (Main Agent Dispatches)
 
-## Investigate (Need Context)
-[Uncertain findings]
+**Why main agent**: Main agent can dispatch multiple Task calls in single message = true parallelism. Orchestrator subagent dispatches sequentially = bottleneck.
 
-## Plan (Spin Off)
-[Systemic issues → /code-foundations:whiteboarding]
+**Get pending investigation tasks:**
+```
+tasks = TaskList()
+investigate_tasks = [t for t in tasks if t.subject.startswith("Investigate:")]
+```
 
-Full evidence: {BASE_DIR}/{category}/{skill}.md
+**Batch into groups of max 5:**
+```
+MAX_PER_AGENT = 5
+NUM_BATCHES = ceil(len(investigate_tasks) / MAX_PER_AGENT)
+batches = split_evenly(investigate_tasks, NUM_BATCHES)
+```
+
+**Dispatch ALL in ONE message (true parallel):**
+```
+for batch_num, batch in enumerate(batches):
+    Task(
+        subagent_type: "general-purpose",
+        model: "haiku",
+        description: "Investigate batch {batch_num + 1}",
+        prompt: """
+        Investigate these findings in {REPO_ROOT}:
+
+        {for task in batch:}
+        - **{task.metadata.finding_id}** [{task.metadata.severity}]
+          Issue: {task.metadata.issue}
+          File: {task.metadata.file}:{task.metadata.line}
+
+        For EACH finding:
+        1. Read the file and surrounding context
+        2. Determine: CONFIRMED, FALSE_POSITIVE, or NEEDS_CONTEXT
+        3. Explain why
+
+        WRITE TO: {BASE_DIR}/investigation/batch-{batch_num + 1}.json
+        Format: {"batch": N, "findings": [{"id": "...", "verdict": "...", "reason": "..."}]}
+        """
+    )
+```
+
+Mark all investigation tasks completed.
+
+---
+
+#### Phase 4: REPORT
+
+**Dispatch report agent:**
+```
+Task(
+    subagent_type: "general-purpose",
+    description: "Generate final report",
+    prompt: """
+    Generate the final review report.
+
+    INPUTS:
+    - Read all {BASE_DIR}/extraction/*.json for file summary
+    - Read all {BASE_DIR}/checking/*.json for findings
+    - Read all {BASE_DIR}/investigation/*.json for verdicts
+
+    TASKS:
+    1. Summarize what changed (2-3 sentences + file table)
+    2. Apply verdicts: CONFIRMED→Findings, FALSE_POSITIVE→remove, NEEDS_CONTEXT→Questions
+    3. Group by severity (CRITICAL, IMPORTANT, SUGGESTION)
+
+    WRITE TO: {BASE_DIR}/REPORT.md
+    """
+)
+```
+
+---
+
+#### Terminal Summary
+
+```markdown
+## Review Complete
+
+**{DEPTH}** | **{N} files** | **{N} skills** | **{N} findings**
+
+### Phases Completed
+- Extraction: {N} batches ({N} files)
+- Checking: {N} skills ({N} findings created investigation tasks)
+- Investigation: {N} batches ({N} confirmed, {N} false positives)
+- Report: generated
+
+### Results
+- {N} confirmed findings
+- {N} questions (need context)
+- {N} false positives removed
+
+Full report: {BASE_DIR}/REPORT.md
 ```
 
 #### User Decision
