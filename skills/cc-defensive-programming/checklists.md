@@ -48,6 +48,13 @@ Items 7-10 from General
 - [ ] 6. "Does each exception include all relevant exception background information?"
 - [ ] 7. "Is the code free of empty catch blocks? (Or if an empty catch block truly is appropriate, is it documented?)"
 
+**Exception for Result types:** Catching generic `Exception` at infrastructure boundaries is acceptable when:
+- Method returns a Result/Either type (sum type, discriminated union, algebraic data type)
+- Exception is logged or attached to error
+- Returns typed domain error, not generic failure
+
+Common names: `Result<T,E>` (Rust/Swift/C#), `Either<L,R>` (Haskell/Scala/vavr), discriminated union (F#/TS), `(T, error)` (Go).
+
 ## Security Issues (p.212 + Modern Additions)
 
 ### Critical - Original (McConnell)
