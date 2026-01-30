@@ -218,18 +218,16 @@ The task list prevents rabbit holes, forgotten verifications, and lost context. 
 
 ## Code Review
 
-**Single command:** `/review` with depth selection or presets.
+**Single command:** `/code-foundations:review` with depth selection or presets.
 
 | Preset | Skills | Checks | Use When |
 |--------|--------|--------|----------|
-| `--quick` | 3 agents | 99 | Pre-commit sanity |
-| `--security` | 4 | ~150 | Security-sensitive changes |
-| `--design` | 5 | ~250 | Refactoring, new modules |
-| `--full` | 9 | ~550 | Major features, PR review |
+| `--sanity` | 3 agents | 99 | Pre-commit sanity |
+| `--pr` | 9 | ~550 | PR review, major features |
 | `--profile <name>` | varies | varies | Your saved configuration |
 
-**Interactive:** `/review` (no flags) asks for depth and focus.
-**Custom profiles:** `/review-profile --setup` to create reusable configurations.
+**Interactive:** `/code-foundations:review` (no flags) asks for depth.
+**Custom profiles:** `/code-foundations:review-profile --setup` to create reusable configurations.
 
 ### Extraction: AST + LLM Fallback
 
@@ -252,7 +250,7 @@ See [Wiki: Tree-sitter Setup](https://github.com/ryanthedev/code-foundations/wik
 | **performance** | cc-performance-tuning, aposd-optimizing-critical-paths | Algorithms, hot paths |
 | **documentation** | cc-documentation-quality | Docs, comments |
 
-Configure in `agents/lens/config.yaml` — add/remove skills without code changes.
+Configure in `agents/config.yaml` — add/remove skills without code changes.
 
 ---
 

@@ -2,7 +2,7 @@
 # Enables investigation agents to resolve symbols in external/compiled code
 #
 # How it works:
-# 1. During triage, detect project type from marker files
+# 1. During extraction, detect project type from marker files
 # 2. Run pre-resolution commands (download sources, cache decompiled code)
 # 3. Store resolved sources in {output.base_dir}/dependencies/
 # 4. Investigation agents read from cache when "unknown" field references external types
@@ -178,7 +178,7 @@ strategies:
 workflow:
   # When to run resolution
   triggers:
-    - on_triage_complete: true      # After units extracted, before skill agents
+    - on_extraction_complete: true   # After units extracted, before skill agents
     - on_investigation: true         # Before investigation agents (lazy resolution)
 
   # Cache settings

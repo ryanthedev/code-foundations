@@ -8,7 +8,7 @@
 #   ./resolve-dependencies.sh --resolve <type> <project_root> # Resolve a specific type/symbol
 #   ./resolve-dependencies.sh --cache-status                  # Show cache statistics
 #
-# Reads config from: agents/lens/dependencies.yaml
+# Reads config from: agents/dependencies.yaml
 #
 # Output:
 #   --detect:  {"type": "dotnet|java-maven|...", "markers": [...]}

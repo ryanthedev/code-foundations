@@ -297,7 +297,7 @@ main() {
   echo "│  Setup Complete!                       │"
   echo "│                                        │"
   echo "│  Next: source ~/.zshrc                 │"
-  echo "│  Then: /review --quick                 │"
+  echo "│  Then: /code-foundations:review --sanity                 │"
   echo "└────────────────────────────────────────┘"
   echo ""
 }

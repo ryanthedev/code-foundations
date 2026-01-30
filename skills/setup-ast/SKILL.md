@@ -100,7 +100,7 @@ GRAMMAR_DIR="${TREE_SITTER_GRAMMAR_DIR:-$HOME/repos/tree-sitter-grammars}"
 ls -la "$GRAMMAR_DIR" 2>/dev/null || echo "NOT_FOUND"
 
 # 3. Run extraction status check
-./agents/lens/extract-units.sh --status
+./agents/extract-units.sh --status
 
 # 4. Check shell config for TREE_SITTER_GRAMMAR_DIR
 grep -l "TREE_SITTER_GRAMMAR_DIR" ~/.zshrc ~/.bashrc ~/.bash_profile 2>/dev/null || echo "NOT_SET"
@@ -354,7 +354,7 @@ TaskCreate(
 
 ```bash
 # Run extraction status
-./agents/lens/extract-units.sh --status
+./agents/extract-units.sh --status
 
 # Test parsing a sample file for each language
 for lang in javascript typescript python go rust java ruby c cpp; do
@@ -375,7 +375,7 @@ done
 | Python | ❌ | Missing queries/tags.scm |
 
 ### Next Steps
-- Run `/review --quick` to test AST extraction
+- Run `/code-foundations:review --sanity` to test AST extraction
 - Python grammar needs manual fix (see troubleshooting below)
 ```
 

@@ -19,24 +19,22 @@ Code-foundations is a Claude Code plugin providing software engineering skills b
 
 - `skills/` - Individual skill definitions (SKILL.md + checklists.md)
 - `commands/` - User-invocable commands (slash commands)
-- `agents/lens/` - Lens-based review system (config + agent template)
+- `agents/` - Lens-based review system (config + agent template)
 - `references/` - Shared reference materials (including `cc-foundations.md` for shared CC vocabulary)
 - `docs/` - Case study examples
 
 ### Code Review System
 
-**Single entry point:** `/review` with depth selection or presets.
+**Single entry point:** `/code-foundations:review` with depth selection or presets.
 
 | Preset | Depth | Skills | Checks | Use Case |
 |--------|-------|--------|--------|----------|
-| `--quick` | Quick | 3 agents | 99 | Pre-commit sanity |
-| `--security` | Standard | 4 | ~150 | Security-sensitive changes |
-| `--design` | Standard | 5 | ~250 | Refactoring, new modules |
-| `--full` | Deep | 9 | ~550 | Major features, PR review |
+| `--sanity` | Sanity | 3 agents | 99 | Pre-commit sanity |
+| `--pr` | PR | 9 | ~550 | PR review, major features |
 | `--profile <name>` | Custom | varies | varies | Saved configuration |
 
-**Interactive mode:** `/review` (no flags) asks for depth and focus.
-**Profile management:** `/review-profile --setup`
+**Interactive mode:** `/code-foundations:review` (no flags) asks for depth.
+**Profile management:** `/code-foundations:review-profile --setup`
 
 ### Review Categories & Skills
 
@@ -50,7 +48,7 @@ Code-foundations is a Claude Code plugin providing software engineering skills b
 
 ### Lens System Configuration
 
-Edit `agents/lens/config.yaml` to add/remove skills:
+Edit `agents/config.yaml` to add/remove skills:
 
 ```yaml
 review-changes:

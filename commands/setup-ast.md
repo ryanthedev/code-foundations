@@ -318,7 +318,7 @@ test_grammar "cpp" "source.cpp"
 
 echo ""
 echo "=== Ready for AST Extraction ==="
-echo "Run: /review --quick   to test"
+echo "Run: /code-foundations:review --sanity   to test"
 ```
 
 ---
@@ -343,5 +343,5 @@ echo "Run: /review --quick   to test"
 
 ### Next Steps
 1. Open new terminal (or `source ~/.zshrc`)
-2. Run `/review --quick` to test AST extraction
+2. Run `/code-foundations:review --sanity` to test AST extraction
 ```

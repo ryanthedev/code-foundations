@@ -1,49 +1,6 @@
 # Lens Review Configuration
 # Maps review types to skills. Each skill = one agent.
 
-# Triage routing based on AST-extracted characteristics
-# See agents/lens/extract-units.sh for characteristic detection
-triage:
-  defensive:
-    # Units with error handling or I/O (attack surface)
-    characteristics:
-      - has_try_catch: true
-      - has_io_calls: true
-    file_patterns:
-      - "**/auth/**"
-      - "**/security/**"
-
-  quality:
-    # All units get quality review (catch-all)
-    default: true
-
-  correctness:
-    # Test files and test-type units
-    unit_types:
-      - test
-    file_patterns:
-      - "**/*_test.*"
-      - "**/*.test.*"
-      - "**/*.spec.*"
-      - "**/test/**"
-      - "**/tests/**"
-
-  performance:
-    # Units with loops, async, or deep nesting
-    characteristics:
-      - has_loops: true
-      - has_async: true
-      - nesting_depth: ">= 3"
-    file_patterns:
-      - "**/perf/**"
-      - "**/benchmark/**"
-
-  documentation:
-    file_patterns:
-      - "**/*.md"
-      - "**/docs/**"
-      - "**/README*"
-
 # Review type definitions
 reviews:
   # Level 2: Medium review (3 categories)

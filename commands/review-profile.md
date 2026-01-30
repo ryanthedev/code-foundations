@@ -14,12 +14,12 @@ Persistent review configurations. Create once, use forever.
 
 | Command | Action |
 |---------|--------|
-| `/review-profile --setup` | Create or edit a profile |
-| `/review-profile --setup security` | Create/edit named profile |
-| `/review-profile --list` | Show all profiles |
-| `/review-profile --use security` | Run review with profile |
-| `/review-profile --delete security` | Delete a profile |
-| `/review-profile` | Run with default (or setup if none) |
+| `/code-foundations:review-profile --setup` | Create or edit a profile |
+| `/code-foundations:review-profile --setup security` | Create/edit named profile |
+| `/code-foundations:review-profile --list` | Show all profiles |
+| `/code-foundations:review-profile --use security` | Run review with profile |
+| `/code-foundations:review-profile --delete security` | Delete a profile |
+| `/code-foundations:review-profile` | Run with default (or setup if none) |
 
 ---
 
@@ -66,7 +66,7 @@ custom_checklists:                   # Each custom checklist = 1 checking agent
 ### Execution Flow
 
 ```
-/review-profile --use my-profile
+/code-foundations:review-profile --use my-profile
 
 Profile loaded:
   skills: [cc-defensive, aposd-simplify]
@@ -397,8 +397,8 @@ Confirm:
 ```markdown
 Profile saved: `.code-foundations/profiles/{PROFILE_NAME}.yaml`
 
-Run with: `/review-profile --use {PROFILE_NAME}`
-Or set as default: `/review-profile --use {PROFILE_NAME} --set-default`
+Run with: `/code-foundations:review-profile --use {PROFILE_NAME}`
+Or set as default: `/code-foundations:review-profile --use {PROFILE_NAME} --set-default`
 ```
 
 ---
@@ -575,7 +575,7 @@ TaskCreate(
 **Execute (direct, no agent needed):**
 ```bash
 # Detect project type
-SCRIPT_DIR=$(dirname $(realpath agents/lens/resolve-dependencies.sh))
+SCRIPT_DIR=$(dirname $(realpath agents/resolve-dependencies.sh))
 PROJECT_TYPE=$($SCRIPT_DIR/resolve-dependencies.sh --detect {REPO_ROOT} | jq -r '.type')
 
 # Write detection result for investigation phase
@@ -886,10 +886,10 @@ rm .code-foundations/profiles/{PROFILE_NAME}.yaml
 
 ---
 
-## INTEGRATION WITH /review
+## INTEGRATION WITH /code-foundations:review
 
-Use profiles with `/review`:
+Use profiles with `/code-foundations:review`:
 ```
-/review --profile security --staged
-/review --profile fast
+/code-foundations:review --profile security --staged
+/code-foundations:review --profile fast
 ```

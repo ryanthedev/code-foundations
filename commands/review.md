@@ -8,8 +8,8 @@ allowed-tools: ["Bash", "Glob", "Grep", "Read", "Task", "Skill", "Write", "TaskC
 
 Configurable code review. Pick your depth, categories, and focus.
 
-**With saved profile:** `/review --profile <name>` loads from `.code-foundations/profiles/`
-**Manage profiles:** `/review-profile --setup`
+**With saved profile:** `/code-foundations:review --profile <name>` loads from `.code-foundations/profiles/`
+**Manage profiles:** `/code-foundations:review-profile --setup`
 
 ---
 
@@ -22,20 +22,9 @@ AskUserQuestion(
       header: "Depth",
       question: "How thorough should the review be?",
       options: [
-        {label: "Quick (2-3 min)", description: "Critical issues only. 99 checks. 3 subagents."},
-        {label: "Standard (3-5 min)", description: "3 categories, 7 skills, ~360 checks."},
-        {label: "Deep (5-10 min)", description: "5 categories, 9 skills, ~550 checks."},
+        {label: "Sanity", description: "I got 99 problems but a PR ain't one."},
+        {label: "PR", description: "5 categories, 9 skills, ~550 checks."},
         {label: "Custom", description: "Pick specific categories and skills."}
-      ]
-    },
-    {
-      header: "Focus",
-      question: "What matters most right now?",
-      options: [
-        {label: "Security & Errors", description: "Defensive programming, error handling, input validation."},
-        {label: "Design Quality", description: "Module design, complexity, patterns, clarity."},
-        {label: "Correctness", description: "Tests, edge cases, logic bugs."},
-        {label: "All Areas", description: "Balanced review across all categories."}
       ]
     }
   ]
@@ -50,19 +39,9 @@ AskUserQuestion(
 
 | Selection | Categories | Skills | Execution |
 |-----------|------------|--------|-----------|
-| **Quick** | - | - | 3 subagents: extraction (haiku) → checker → reviewer |
-| **Standard** | defensive, quality, correctness | 7 | Parallel subagents |
-| **Deep** | All 5 | 9 | Parallel subagents |
+| **Sanity** | - | - | 3 subagents: extraction (haiku) → checker → reviewer |
+| **PR** | All 5 | 9 | Parallel subagents |
 | **Custom** | → Ask follow-up | User picks | Parallel subagents |
-
-### Focus Mapping
-
-| Selection | Priority Categories | Priority Skills |
-|-----------|--------------------|-----------------|
-| **Security & Errors** | defensive | cc-defensive-programming, aposd-simplifying-complexity |
-| **Design Quality** | quality | aposd-reviewing-module-design, cc-code-layout-and-style, cc-control-flow-quality |
-| **Correctness** | correctness | aposd-verifying-correctness, cc-quality-practices |
-| **All Areas** | (balanced) | All skills for selected depth |
 
 ---
 
@@ -90,13 +69,17 @@ AskUserQuestion(
 
 ## STEP 4: EXECUTE BASED ON CONFIG
 
-### Quick Mode (3 Subagents)
+### Sanity Mode (3 Subagents)
 
 Dispatch extraction → checker → reviewer pipeline.
 
 ```bash
-RUN_ID=$(date +%Y%m%d-%H%M%S)
-BASE_DIR="/tmp/quick-review-$RUN_ID"
+REPO_NAME=$(basename $(git rev-parse --show-toplevel))
+BRANCH=$(git branch --show-current)
+SHORT_ID=$(date +%H%M)
+FOLDER_NAME="${REPO_NAME}-${BRANCH##*/}-sanity-$SHORT_ID"
+
+BASE_DIR="/tmp/$FOLDER_NAME"
 mkdir -p "$BASE_DIR"
 ```
 
@@ -108,7 +91,7 @@ Fast, cheap extraction of semantic units.
 Task(
   subagent_type: "general-purpose",
   model: "haiku",
-  description: "Quick: AST extraction",
+  description: "Sanity: AST extraction",
   prompt: """
 ## AST Extraction Agent
 
@@ -167,7 +150,7 @@ Runs 99 checks against units, outputs findings with confidence levels.
 ```
 Task(
   subagent_type: "general-purpose",
-  description: "Quick: 99 checks",
+  description: "Sanity: 99 checks",
   prompt: """
 ## Checker Agent
 
@@ -177,7 +160,7 @@ Run 99 critical checks against extracted units.
 
 ```
 Read({BASE_DIR}/units.json)
-Read(agents/lens/quick-checklist.md)
+Read(agents/quick-checklist.md)
 ```
 
 ### Step 2: For Each Unit
@@ -242,7 +225,7 @@ Reviews findings, dispatches investigators for low-confidence items, produces fi
 ```
 Task(
   subagent_type: "general-purpose",
-  description: "Quick: review & investigate",
+  description: "Sanity: review & investigate",
   prompt: """
 ## Reviewer Agent
 
@@ -310,7 +293,7 @@ Write detailed report to `{BASE_DIR}/REPORT.md` with:
 Return a minimal summary for terminal display:
 
 ```
-## Quick Review Complete
+## Sanity Review Complete
 
 **[N] units** across **[N] files** | **[N] findings** ([N] false positives removed)
 
@@ -378,7 +361,7 @@ cat {BASE_DIR}/REPORT.md
 
 End the review.
 
-### Standard/Deep/Custom Mode (Task-Driven Workflow)
+### PR/Custom Mode (Task-Driven Workflow)
 
 Dispatches **one agent per skill**, each executing their full checklist with evidence.
 
@@ -412,16 +395,13 @@ FILE_COUNT=$(wc -l < $BASE_DIR/files.txt)
 
 | Depth | Categories | Skills |
 |-------|------------|--------|
-| **Standard** | defensive, quality, correctness | 7 skills |
-| **Deep** | All 5 | 9 skills |
+| **PR** | All 5 | 9 skills |
 | **Custom** | User-selected | Varies |
 
-**Standard skills:**
+**PR skills:**
 - defensive: cc-defensive-programming, aposd-simplifying-complexity
 - quality: aposd-reviewing-module-design, cc-code-layout-and-style, cc-control-flow-quality
 - correctness: aposd-verifying-correctness, cc-quality-practices
-
-**Deep adds:**
 - performance: cc-performance-tuning, aposd-optimizing-critical-paths
 - documentation: cc-documentation-quality
 
@@ -650,7 +630,7 @@ Full report: {BASE_DIR}/REPORT.md
 
 #### User Decision
 
-Same as Quick mode: ask user which actions to execute (Fix/Investigate/Plan).
+Same as Sanity mode: ask user which actions to execute (Fix/Investigate/Plan).
 
 ---
 
@@ -660,19 +640,15 @@ Support flags to skip questions:
 
 | Flag | Equivalent To |
 |------|---------------|
-| `--quick` | Depth: Quick, Focus: All |
-| `--security` | Depth: Standard, Focus: Security & Errors |
-| `--design` | Depth: Standard, Focus: Design Quality |
-| `--tests` | Depth: Standard, Focus: Correctness |
-| `--full` | Depth: Deep, Focus: All |
+| `--sanity` | Sanity mode (99 checks) |
+| `--pr` | PR mode (9 skills, ~550 checks) |
 | `--profile <name>` | Load saved profile from `.code-foundations/profiles/` |
 
 Example:
 ```bash
-/review --security --staged
-/review --quick src/api/
-/review --full
-/review --profile my-checks --staged
+/code-foundations:review --sanity --staged
+/code-foundations:review --pr
+/code-foundations:review --profile my-checks --staged
 ```
 
 ### Profile Flag
@@ -680,10 +656,10 @@ Example:
 When `--profile <name>` is used:
 
 1. Load `.code-foundations/profiles/<name>.yaml`
-2. Skip STEP 1-3 (use profile config)
-3. Execute based on profile mode (quick or lens)
+2. Skip questions (use profile config)
+3. Execute based on profile mode (sanity or pr)
 
-If profile not found, error with: `Profile not found. Run /review-profile --setup <name> to create.`
+If profile not found, error with: `Profile not found. Run /code-foundations:review-profile --setup <name> to create.`
 
 ---
 
@@ -694,13 +670,9 @@ Before executing, confirm:
 ```markdown
 ## Review Configuration
 
-**Depth:** Standard (3-5 min)
-**Focus:** Security & Errors
-**Categories:** defensive, quality
-**Skills:**
-- cc-defensive-programming
-- aposd-simplifying-complexity
-- aposd-reviewing-module-design (filtered to security-relevant checks)
+**Depth:** PR
+**Categories:** All 5
+**Skills:** 9 skills, ~550 checks
 
 **Target:** --staged (12 files, 340 lines)
 
@@ -709,15 +681,12 @@ Proceed? [Y/n]
 
 ---
 
-## Quick Reference
+## Reference
 
 | Preset | Skills | Checks | Best For |
 |--------|--------|--------|----------|
-| `--quick` | 3 agents | 99 | Pre-commit sanity |
-| `--security` | 4 | ~150 | Security-sensitive changes |
-| `--design` | 5 | ~250 | Refactoring, new modules |
-| `--tests` | 4 | ~180 | Test coverage review |
-| `--full` | 9 | ~550 | PR review, major features |
+| `--sanity` | 3 agents | 99 | Pre-commit sanity |
+| `--pr` | 9 | ~550 | PR review, major features |
 | `--profile` | varies | varies | Your saved configuration |
 
-**Manage profiles:** `/review-profile --setup`
+**Manage profiles:** `/code-foundations:review-profile --setup`
