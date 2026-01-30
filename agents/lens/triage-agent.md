@@ -103,7 +103,7 @@ Write category files to `{BASE_DIR}/{category}.json`.
 
 ## Integration
 
-This triage step is called from `commands/lens-review.md` STEP 2.
+This triage step is called from `commands/review.md` (Standard/Deep mode).
 
 The extracted units with characteristics enable:
 - **Precise routing**: Only review loops in performance, only review error handling in defensive

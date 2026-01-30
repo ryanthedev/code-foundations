@@ -380,17 +380,213 @@ End the review.
 
 ### Standard/Deep/Custom Mode
 
-Dispatch to lens-review orchestrator:
+Dispatches **one agent per skill**, each executing their full checklist with evidence.
+
+**Architecture:** Hybrid JSONL + TaskList coordination
+- **JSONL streaming**: Units and results flow through append-only files
+- **TaskList coordination**: Triage creates `triage:complete` task when done
+- **Parallel execution**: Triage + all skill agents dispatch simultaneously
+
+#### Setup
+
+```bash
+RUN_ID=$(date +%Y%m%d-%H%M%S)
+BASE_DIR="/tmp/review-$RUN_ID"
+mkdir -p "$BASE_DIR"/{defensive,quality,correctness,performance,documentation}
+```
+
+Read config: `Read(agents/lens/config.yaml)`
+
+#### Determine Skills from Depth
+
+| Depth | Categories | Skills |
+|-------|------------|--------|
+| **Standard** | defensive, quality, correctness | 7 skills, 8 agents |
+| **Deep** | All 5 | 9 skills, 10 agents |
+| **Custom** | User-selected | Varies |
+
+**Standard skills:**
+- defensive: cc-defensive-programming, aposd-simplifying-complexity
+- quality: aposd-reviewing-module-design, cc-code-layout-and-style, cc-control-flow-quality
+- correctness: aposd-verifying-correctness, cc-quality-practices
+
+**Deep adds:**
+- performance: cc-performance-tuning, aposd-optimizing-critical-paths
+- documentation: cc-documentation-quality
+
+#### Dispatch Triage + Skill Agents (All Parallel)
+
+**All agents start at once.** Triage writes to `units.jsonl`, skill agents read from it.
+
+**Triage Agent (haiku):**
 
 ```
-Read(commands/lens-review.md)
+Task(
+  subagent_type: "general-purpose",
+  model: "haiku",
+  description: "Triage: extract to JSONL",
+  prompt: """
+## Triage Agent
 
-Execute with:
-- REVIEW_TYPE = "review-changes" (standard) or "review-pr" (deep)
-- CATEGORIES = selected categories
-- SKILLS = filtered by focus + categories
-- DIFF_ARGS = pass through from user
+Extract units and stream to JSONL file.
+
+### Step 1: Run AST Extraction
+
+```bash
+cd agents/lens
+./extract-units.sh {DIFF_ARGS}
 ```
+
+### Step 2: Write Units to JSONL
+
+For each unit, append one JSON line to `{BASE_DIR}/units.jsonl`:
+
+```jsonl
+{"file":"src/auth.ts","name":"validateInput","type":"function","lines":[10,25],"chars":{"has_try_catch":true,"has_loops":false,"has_async":false,"has_io_calls":true}}
+```
+
+### Step 3: Signal Completion
+
+```
+TaskCreate(
+  subject: "triage:complete",
+  description: "Extraction done. {N} units in {BASE_DIR}/units.jsonl",
+  metadata: {total_units: N, total_files: N}
+)
+```
+
+Return: "{BASE_DIR}/units.jsonl"
+"""
+)
+```
+
+**Skill Agent Template:**
+
+```
+Task(
+  subagent_type: "general-purpose",
+  description: "Lens: {SKILL}",
+  prompt: """
+## Lens Agent: {SKILL}
+
+### PHASE 1: LOAD SKILL
+
+```
+Skill(code-foundations:{SKILL})
+Read(skills/{SKILL}/checklists.md)
+```
+
+### PHASE 2: READ UNITS
+
+Read `{BASE_DIR}/units.jsonl` and filter for units matching your criteria:
+
+**Your filter:** {FILTER_EXPRESSION}
+
+### PHASE 3: CHECK FOR COMPLETION
+
+```
+tasks = TaskList()
+triage_done = any(t.subject == "triage:complete" for t in tasks)
+```
+
+If `triage_done` is false and no units yet, wait briefly and re-read JSONL.
+If `triage_done` is true and no matching units, write "No units assigned - PASS" and return.
+
+### PHASE 4: EXECUTE CHECKLIST
+
+For each matching unit:
+1. Read the full file: `Read(unit.file)`
+2. Focus on lines `unit.lines[0]` to `unit.lines[1]`
+3. Execute EVERY checklist item
+4. Record PASS or FINDING for each
+
+### PHASE 5: APPEND RESULTS
+
+For each finding, append to `{BASE_DIR}/results.jsonl`:
+
+```jsonl
+{"skill":"{SKILL}","category":"{CATEGORY}","file":"src/auth.ts","line":15,"id":"CS-1","severity":"CRITICAL","action":"fix","issue":"...","evidence":"..."}
+```
+
+### PHASE 6: WRITE SUMMARY
+
+Write to `{BASE_DIR}/{CATEGORY}/{SKILL}.md`
+
+Return: "{BASE_DIR}/{CATEGORY}/{SKILL}.md"
+"""
+)
+```
+
+**Routing Filters:**
+
+| Skill | Filter |
+|-------|--------|
+| cc-defensive-programming | `has_try_catch` OR `has_io_calls` OR file in `auth/`, `security/` |
+| aposd-simplifying-complexity | `has_try_catch` OR `has_io_calls` |
+| aposd-reviewing-module-design | ALL units |
+| cc-code-layout-and-style | ALL units |
+| cc-control-flow-quality | `nesting_depth >= 3` OR `has_loops` |
+| aposd-verifying-correctness | `type == "test"` OR file matches `*test*` |
+| cc-quality-practices | `type == "test"` OR file matches `*test*` |
+| cc-performance-tuning | `has_loops` OR `has_async` |
+| aposd-optimizing-critical-paths | `has_loops` OR `has_async` |
+| cc-documentation-quality | file matches `*.md`, `docs/`, `README*` |
+
+#### Wait and Aggregate
+
+Wait for all Task calls to return. Then aggregate from `results.jsonl`:
+
+```
+Task(
+  subagent_type: "general-purpose",
+  description: "Aggregate results",
+  prompt: """
+Read `{BASE_DIR}/results.jsonl` and aggregate:
+
+1. Group by category
+2. Group by action (fix, investigate, plan)
+3. Sort by severity (CRITICAL > IMPORTANT > SUGGESTION)
+
+Write category summaries to `{BASE_DIR}/{CATEGORY}/summary.md`
+Write final report to `{BASE_DIR}/REPORT.md`
+
+Return: "{BASE_DIR}/REPORT.md"
+"""
+)
+```
+
+#### Final Report Format
+
+```markdown
+# Review Report
+
+## Run Info
+- **Depth:** {DEPTH}
+- **Files:** [count]
+- **Skills Executed:** [count]
+
+## Overall Verdict: [READY / NEEDS WORK / BLOCKED]
+
+| Category | Verdict | Findings |
+|----------|---------|----------|
+
+---
+
+## Fix (Execute Now)
+[CRITICAL/IMPORTANT findings with code fixes]
+
+## Investigate (Need Context)
+[Uncertain findings]
+
+## Plan (Spin Off)
+[Systemic issues → /code-foundations:whiteboarding]
+
+Full evidence: {BASE_DIR}/{category}/{skill}.md
+```
+
+#### User Decision
+
+Same as Quick mode: ask user which actions to execute (Fix/Investigate/Plan).
 
 ---
 

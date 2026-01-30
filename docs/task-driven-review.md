@@ -1,6 +1,6 @@
 # Task-Driven Review Flow
 
-> **Note:** This was the initial design exploration. The actual implementation uses a hybrid approach - see `commands/lens-review.md`.
+> **Note:** This was the initial design exploration. The actual implementation uses a hybrid approach - see `commands/review.md` (Standard/Deep mode).
 >
 > **Final architecture:**
 > - JSONL for streaming units/results (handles large diffs)

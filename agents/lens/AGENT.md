@@ -11,7 +11,7 @@ When dispatching a lens agent, provide these parameters:
 | `SKILL` | Skill name to execute | `cc-defensive-programming` |
 | `CATEGORY` | Review category | `defensive` |
 | `RUN_ID` | Unique run identifier | `20260126-143052` |
-| `CHUNKS_FILE` | Path to assigned chunks JSON | `/tmp/lens-review-{RUN_ID}/{CATEGORY}.json` |
+| `CHUNKS_FILE` | Path to assigned chunks JSON | `/tmp/review-{RUN_ID}/{CATEGORY}.json` |
 
 ---
 
@@ -74,7 +74,7 @@ For EACH checklist item (every line starting with `- [ ]`):
 
 ### PHASE 3: OUTPUT RESULTS
 
-Write to `/tmp/lens-review-{RUN_ID}/{CATEGORY}/{SKILL}.md`:
+Write to `/tmp/review-{RUN_ID}/{CATEGORY}/{SKILL}.md`:
 
 ```markdown
 # Lens Review: {SKILL}
@@ -118,7 +118,7 @@ Write to `/tmp/lens-review-{RUN_ID}/{CATEGORY}/{SKILL}.md`:
 
 Return the output file path:
 ```
-/tmp/lens-review-{RUN_ID}/{CATEGORY}/{SKILL}.md
+/tmp/review-{RUN_ID}/{CATEGORY}/{SKILL}.md
 ```
 
 ---
@@ -170,7 +170,7 @@ You are a lens agent. Your job is to execute EVERY item in one skill's checklist
    Read(skills/cc-defensive-programming/checklists.md)
 
 3. Read assigned chunks:
-   Read(/tmp/lens-review-20260126-143052/defensive.json)
+   Read(/tmp/review-20260126-143052/defensive.json)
 
 ... [rest of template with parameters filled in]
 """

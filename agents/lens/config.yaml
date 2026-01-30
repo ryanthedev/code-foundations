@@ -108,8 +108,8 @@ agent:
 
 # Output paths
 output:
-  base_dir: /tmp/lens-review
-  # Per-run: /tmp/lens-review-{RUN_ID}/
+  base_dir: /tmp/review
+  # Per-run: /tmp/review-{RUN_ID}/
   #   {category}/
   #     {skill}.md        - Individual skill results
   #     summary.md        - Category summary
