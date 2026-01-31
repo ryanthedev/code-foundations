@@ -1,325 +1,261 @@
 # Code Foundations
 
-> **Experimental** - This plugin is under active development, currently incorporating knowledge from *Code Complete* and *A Philosophy of Software Design*, with more books planned. Subagent orchestration for plan execution is being fine-tuned to ensure reliable skill loading and phase execution. GitHub releases will be added once the plugin reaches a stable state.
-
-Software engineering skills for Claude Code based on *Code Complete* and *A Philosophy of Software Design*.
+**AI that codes like a senior engineer.** Checklists, quality gates, and verification built into every workflow.
 
 ---
 
-## `/code-foundations:whiteboarding` — Planning That Investigates First
+## Pick Your Workflow
 
-Most AI planning modes ask you questions, take your answers at face value, then generate a plan. **Whiteboarding inverts this:** it searches your codebase and researches technologies *before* asking anything.
+| Command | Purpose | When to Use |
+|---------|---------|-------------|
+| `/code-foundations:review` | Profile-driven code review | Pre-commit, PR review |
+| `/code-foundations:whiteboarding` | Create implementation-ready plans | Feature planning |
+| `/code-foundations:building` | Execute plans with quality gates | Implementing approved plans |
+| `/code-foundations:code` | Pseudocode-first development | Know what to build, want design collaboration |
+| `/code-foundations:prototype` | Quick feasibility proof | Technical uncertainty |
+| `/code-foundations:debug` | Scientific debugging with task tracking | Bug hunting |
+
+**Why this exists:** LLMs write code fast. Fast code without engineering discipline creates debt. This plugin loads proven checklists and mental models so Claude applies them automatically.
+
+---
+
+## Code Review System
+
+**Single command.** Profile-driven. Parallel subagents.
+
+```bash
+/code-foundations:review --sanity          # 99 checks, quick pre-commit
+/code-foundations:review --pr              # 548 checks, full PR review
+/code-foundations:review --profile <name>  # Custom profile
+```
+
+### Profiles
+
+| Profile | Checklists | Checks | Use Case |
+|---------|------------|--------|----------|
+| `--sanity` | 1 | 99 | Pre-commit sanity check |
+| `--pr` | 10 | 548 | Full PR review |
+| Custom | varies | varies | Your saved configuration |
+
+**Create custom profiles:** `/code-foundations:review-profile --setup`
+
+### Architecture: 4-Phase Pipeline
 
 ```
-User: "/code-foundations:whiteboarding preserve z-index when applying layout"
+┌──────────────┐     ┌──────────────┐     ┌───────────────┐     ┌──────────┐
+│  EXTRACTION  │ ──▶ │   CHECKING   │ ──▶ │ INVESTIGATION │ ──▶ │  REPORT  │
+│   (haiku)    │     │ (per checklist)│   │    (haiku)    │     │          │
+└──────────────┘     └──────────────┘     └───────────────┘     └──────────┘
+```
 
-  SEARCH FIRST (before any questions)
-  ├─ Grep for similar features
-  ├─ Read nearby files for patterns
-  ├─ Find how similar problems were solved
-  └─ Note naming conventions, error handling patterns
+| Phase | What Happens | Parallelism |
+|-------|--------------|-------------|
+| **Extraction** | Parse code into semantic units (functions, classes) | 1 agent per 5 files |
+| **Checking** | Run checklists against code, skills as agent personas | 1 agent per checklist |
+| **Investigation** | Verify findings, reduce false positives | 1 agent per 5 findings |
+| **Report** | Merge results, generate actionable output | Single agent |
 
-  ASK ONE QUESTION AT A TIME (not a wall of questions)
-  ├─ "What should 'preserving z-index' mean?"
-  │   ☐ Frontmost window gets focus
-  │   ☐ Preserve stacking order in cell
-  │   ☐ Both
+### Skills as Personas
+
+Each checklist loads skills that become the checking agent's persona:
+
+```yaml
+# Profile example
+checklists:
+  - path: skills/cc-defensive-programming/checklists.md
+    skills: [cc-defensive-programming]  # Agent adopts this expertise
+```
+
+The PR profile covers: defensive programming, complexity reduction, module design, code layout, control flow, correctness verification, quality practices, performance, optimization, and documentation.
+
+---
+
+## Planning and Execution: Whiteboarding to Building
+
+Two commands that work together. Whiteboarding creates the plan. Building executes it.
+
+```
+/code-foundations:whiteboarding "add notification system"
+     ↓
+docs/plans/2026-01-30-notifications.md
+     ↓
+/code-foundations:building docs/plans/2026-01-30-notifications.md
+```
+
+### `/code-foundations:whiteboarding` - Create the Plan
+
+**Discovery-oriented brainstorming.** Researches your codebase before asking questions.
+
+```
+User: "/code-foundations:whiteboarding add user notifications"
+
+  RESEARCH FIRST
+  ├─ Search codebase for existing patterns
+  ├─ Find similar implementations
+  └─ Note naming conventions, error handling
+
+  QUESTIONS (one at a time)
+  ├─ "What notification types do you need?"
+  │   ☐ Email only
+  │   ☐ Push + Email
+  │   ☐ In-app + Email
   └─ Wait for answer → ask next question
 
-  RESEARCH BEFORE PROPOSING (not guessing)
-  ├─ Check existing dependencies (don't propose new lib if similar exists)
-  ├─ Web search for current best practices
-  └─ User can push back: "you should research" → triggers deeper investigation
-
-  2-3 STRUCTURALLY DIFFERENT APPROACHES (not variations)
-  ├─ Option A: Server-side z-order field (recommended)
-  ├─ Option B: CLI requests z-order on-demand
-  └─ Option C: Infer from focus history
+  2-3 STRUCTURALLY DIFFERENT APPROACHES
+  ├─ Option A: Queue-based (recommended)
+  ├─ Option B: Synchronous
+  └─ Option C: Event-sourced
 
   → Saves to docs/plans/YYYY-MM-DD-<topic>.md
-  → Execute with /code-foundations:building
 ```
 
-### What Makes It Different
+**Skills loaded:** `cc-construction-prerequisites`, `aposd-designing-deep-modules`
 
-| Other Plan Modes | Whiteboarding |
-|-----------------|---------------|
-| Ask user about existing patterns | **Search codebase** — user may not know all patterns |
-| Batch questions into a wall | **One question at a time** — better answers |
-| Recommend based on training data | **Research first** — your codebase, current best practices |
-| First approach wins | **2-3 structurally different approaches** — comparison reveals trade-offs |
-| Plan lives in conversation | **Persistent plan file** — survives context refresh, enables `/code-foundations:building` execution |
+### `/code-foundations:building` - Execute the Plan
 
----
-
-## `/code-foundations:building` — Skill-Loaded Subagents Per Phase
-
-Most AI execution just runs through tasks sequentially. Building enforces **quality gates per phase** with **separate subagents** for discovery, implementation, and review — each with fresh context.
+**Gated execution with subagents.** Each phase has mandatory quality checks.
 
 ```
-User: "/code-foundations:building docs/plans/2026-01-24-preserve-zorder.md"
+User: "/code-foundations:building docs/plans/2026-01-30-notifications.md"
 
-  BRANCH GATE (mandatory)
-  ├─ On main? → STOP. Create feature branch first.
-  └─ Feature branch ensures per-phase commits can be rolled back
+  BRANCH GATE
+  └─ On main? → STOP. Create feature branch first.
 
   FOR EACH PHASE:
   ┌────────────────────────────────────────────────────────────┐
-  │  DISCOVERY (Explore subagent)                              │
-  │  ├─ Fresh agent explores codebase                          │
-  │  ├─ Writes findings to docs/building/*-discovery.md        │
-  │  └─ Returns: BUILD | SKIP | UPDATE_PLAN                    │
-  │                                                            │
-  │  ⛔ Cannot proceed until discovery complete                │
+  │  DISCOVERY     Explore subagent reads codebase             │
+  │       ⛔ Cannot proceed until discovery complete           │
   ├────────────────────────────────────────────────────────────┤
-  │  PRE-GATE (Pseudocode subagent)                            │
-  │  ├─ Loads cc-pseudocode-programming skill                  │
-  │  ├─ Reads discovery notes                                  │
-  │  └─ Writes pseudocode to docs/building/*-pseudocode.md     │
-  │                                                            │
-  │  ⛔ Cannot implement until pseudocode exists               │
+  │  PRE-GATE      Pseudocode subagent designs the solution    │
+  │       ⛔ Cannot implement until pseudocode exists          │
   ├────────────────────────────────────────────────────────────┤
-  │  IMPLEMENT (Implementation subagent)                       │
-  │  ├─ Reads discovery + pseudocode files                     │
-  │  ├─ Implements exactly what pseudocode specifies           │
-  │  └─ Returns: DONE | BLOCKED                                │
+  │  IMPLEMENT     Implementation subagent writes code         │
   ├────────────────────────────────────────────────────────────┤
-  │  POST-GATE (Reviewer subagent)                             │
-  │  ├─ Different agent reviews the implementation             │
-  │  ├─ Checks: matches pseudocode? requirements covered?      │
-  │  └─ Writes review to docs/building/*-review.md             │
-  │                                                            │
-  │  ⛔ Cannot commit until reviewer returns PASS              │
+  │  POST-GATE     Reviewer subagent checks quality            │
+  │       ⛔ Cannot commit until reviewer returns PASS         │
   ├────────────────────────────────────────────────────────────┤
-  │  CHECKPOINT                                                │
-  │  ├─ Commit with phase summary                              │
-  │  └─ Update execution log in plan file                      │
+  │  CHECKPOINT    Commit with phase summary                   │
   └────────────────────────────────────────────────────────────┘
-
-  → Per-phase commits enable rollback
-  → All artifacts in docs/building/ are reviewable
 ```
 
-### What Makes It Different
+### Quality Gates per Phase
 
-Engineering best practices are **automatically loaded** at each phase — not optional guidelines, but enforced checklists.
-
-| Phase | Skills Loaded | What Gets Enforced |
-|-------|---------------|-------------------|
+| Gate | Skills Loaded | What Gets Enforced |
+|------|---------------|-------------------|
 | PRE-GATE | `cc-pseudocode-programming` | Design before code, routine cohesion |
 | PRE-GATE | `aposd-designing-deep-modules` | Interface depth, information hiding |
 | POST-GATE | `aposd-verifying-correctness` | Requirements coverage, boundary conditions |
 | POST-GATE | `cc-defensive-programming` | Error handling, input validation |
 
-Subagents load these skills and execute their checklists.
+**Every artifact is saved** to `docs/building/` for review. Per-phase commits enable rollback.
 
 ---
 
-## `/code-foundations:code` — Pseudocode First, Then Implement (Experimental)
+## Getting Stuff Done: Code, Prototype, Debug
 
-You know what to build. You don't need a full whiteboarding session. But you want to work through the design together before code exists.
+### `/code-foundations:code` - Pseudocode First
 
-**Two phases: Design Loop → Implementation Loop**
+**Design loop, then implementation loop.** You know what to build. You want to collaborate on the design before code exists.
 
 ```
-User: "/code-foundations:code add email validation to signup"
+PHASE 1: DESIGN LOOP
+├─ Draft pseudocode (flow + contracts)
+├─ Explore subagent researches if needed
+├─ Tasklist tracks decisions
+├─ User feedback → refine
+└─ "Ready to build?" → explicit confirmation
 
-  PHASE 1: DESIGN LOOP (collaborate until ready)
-  ┌─────────────────────────────────────────────────────────────┐
-  │  PSEUDOCODE    Draft the flow and contracts                 │
-  │       ↓                                                     │
-  │  EXPLORE       Subagents research patterns, packages, etc   │
-  │       ↓                                                     │
-  │  TASKLIST      Track design decisions and open questions    │
-  │       ↓                                                     │
-  │  USER INPUT    "add X" / "what about Y?" / feedback         │
-  │       ↓                                                     │
-  │  REFINE        Update pseudocode, tasklist                  │
-  │       ↓                                                     │
-  │  ↺ REPEAT      When design feels complete → ask user        │
-  └─────────────────────────────────────────────────────────────┘
-                          ↓
-                   "Ready to build?"
-                          ↓
-  PHASE 2: IMPLEMENTATION LOOP (execute with subagents)
-  ┌─────────────────────────────────────────────────────────────┐
-  │  IMPLEMENT     Subagent codes from pseudocode               │
-  │  TEST          Unit tests → integration tests               │
-  │  COMMIT        Checkpoint with passing tests                │
-  │  ↺ NEXT TASK   User picks from tasklist                     │
-  └─────────────────────────────────────────────────────────────┘
+PHASE 2: IMPLEMENTATION LOOP
+├─ Subagent implements from pseudocode
+├─ Unit tests → integration tests
+├─ Commit checkpoint
+└─ User picks next task
 ```
 
-### Why Two Phases?
-
-| Single Loop | Design → Build |
-|-------------|----------------|
-| Design evolves during coding | **Design locked before code** |
-| "Actually, change the interface" | **Interface confirmed upfront** |
-| Rework when requirements shift | **Shifts happen in design phase (cheap)** |
-| User reviews code | **User reviews pseudocode (faster)** |
+**Skills loaded:** `cc-pseudocode-programming`, `cc-defensive-programming`
 
 The design loop is where changes are cheap. Once you say "let's build," the contract is set.
 
-### When to Use What
+### `/code-foundations:prototype` - Prove Feasibility
 
-| Situation | Use |
-|-----------|-----|
-| Know what to build, want to design together | `/code-foundations:code` |
-| Need to explore multiple approaches | `/code-foundations:whiteboarding` |
-| Have a plan file, need full gated execution | `/code-foundations:building` |
-| Technical uncertainty, prove feasibility | `/code-foundations:prototype` |
-| Bug hunting, predict → log → repeat | `/code-foundations:debug` |
-
----
-
-## `/code-foundations:debug` — Resolution Loop With Tasks
-
-You always have a **current task** — the question you're answering. Predict, log, run. Then resolve: either you answered it (next task) or you need more info (narrower task). The task list keeps you on track.
+**One question. Minimum code. Maximum learning.**
 
 ```
-User: "/code-foundations:debug login fails 20% of the time"
+User: "/code-foundations:prototype can I use WebSockets with this auth?"
 
-  Current task: "Investigate: login failure"
-  ┌──────────────────────────────────────────────────┐
-  │  PREDICT   What do I expect to see?              │
-  │  LOG       Add log to test prediction            │
-  │  RUN       Execute, check output                 │
-  │  RESOLVE   What did we learn?                    │
-  │     ├─ Need more info → TaskCreate (narrow)      │
-  │     ├─ Found cause   → TaskCreate (fix)          │
-  │     ├─ Applied fix   → TaskCreate (verify)       │
-  │     └─ Verified      → Done!                     │
-  └──────────────────────────────────────────────────┘
+  SCOPE: "Can I establish authenticated WebSocket connection?"
+  MINIMUM: <50 lines, happy path only
+  EXECUTE: Write code, run it
+  RESULT: YES / NO / PARTIAL
 
-  Task list = your debug trail:
-
-  #1 ✓ Investigate: login failure (20%)
-  #2 ✓ Narrow: validateToken result → race condition!
-  #3 ✓ Fix: request deduplication
-  #4 ✓ Verify: parallel logins work
-  Done.
+  → Saves to docs/prototypes/YYYY-MM-DD-<slug>.md
 ```
 
-### What Makes It Different
+**Skills loaded:** `cc-pseudocode-programming`, `aposd-reviewing-module-design`
 
-| Typical Debugging | /debug |
-|-------------------|--------|
-| Debug trail in your head | **Task list shows your reasoning** |
-| Add logs randomly | **Predict first, then log to test it** |
-| "It's probably X" → fix | **PREDICT + IF WRONG forces you to think** |
-| Fix, hope it works | **Verify task required before done** |
+**Chains into planning:** Prototype success flows into `/code-foundations:whiteboarding` for full planning.
 
-### Staying On Track
+### `/code-foundations:debug` - Scientific Debugging
 
-The task list prevents rabbit holes, forgotten verifications, and lost context. If you feel lost: `TaskList` — see where you are, what you've learned, what's next.
-
----
-
-## Code Review
-
-**Single command:** `/code-foundations:review` — profile-driven review.
-
-| Preset | Checklists | Checks | Use When |
-|--------|------------|--------|----------|
-| `--sanity` | 1 | 99 | Pre-commit sanity |
-| `--pr` | 10 | 548 | PR review, major features |
-| `--profile <name>` | varies | varies | Your saved configuration |
-
-**Interactive:** `/code-foundations:review` (no flags) asks for profile.
-**Custom profiles:** `/code-foundations:review-profile --setup` to create reusable configurations.
-
-### Architecture
+**Predict, log, run, resolve.** Task list keeps you on track.
 
 ```
-Extraction → Checking → Investigation → Report
-   haiku    1 per checklist   haiku       single
+/code-foundations:debug login fails 20% of the time
+
+  TASK #1: Investigate login failure
+  ├─ PREDICT: "All tokens should be valid"
+  ├─ LOG: Add at validateToken entry
+  ├─ RUN: 2 of 10 fail, tokens valid
+  └─ RESOLVE: Problem is downstream → narrow
+
+  TASK #2: Narrow: validateToken result
+  ├─ PREDICT: "Cache should HIT on second call"
+  ├─ LOG: Add at cache check
+  ├─ RUN: Two MISS within 10ms
+  └─ RESOLVE: Race condition found → fix
+
+  TASK #3: Fix: request deduplication
+  └─ RESOLVE: Fix applied → verify
+
+  TASK #4: Verify: parallel logins succeed
+  └─ RUN: 100 parallel → 0 failures → Done!
 ```
 
-**Profiles** define which checklists to run and which skills inform each. Each checklist spawns one checking agent.
+**Skill loaded:** `cc-debugging` (scientific debugging method)
 
-### Extraction: AST + LLM Fallback
+The task list prevents rabbit holes, forgotten verifications, and lost context.
 
-Code is parsed into semantic units (functions, classes, methods) before review:
+### When to Use Each
 
-- **Tree-sitter AST** — Fast, accurate extraction for supported languages
-- **LLM fallback** — Handles unsupported languages or missing grammars
-
-See [Wiki: Tree-sitter Setup](https://github.com/ryanthedev/code-foundations/wiki) for installation.
-
----
-
-## Skills
-
-| Skill | Purpose | Example |
-|-------|---------|---------|
-| **code-foundations** | Master dispatcher | "use foundations to [anything]" |
-| **cc-developer-character** | Mindset and discipline | "use dev character to check my approach" |
-| **cc-construction-prerequisites** | Requirements and planning | "use prereqs to review this plan" |
-| **cc-pseudocode-programming** | Design routines first | "use pseudocode to design this feature" |
-| **cc-quality-practices** | Reviews, testing, debugging | "use quality practices to review this code" |
-| **cc-routine-and-class-design** | High-quality interfaces | "use routine design to review this code" |
-| **cc-control-flow-quality** | Clean control structures | "use control flow to review this code" |
-| **cc-data-organization** | Variables, naming, types | "use data org to review this code" |
-| **cc-defensive-programming** | Error handling | "use defensive programming to review this code" |
-| **cc-code-layout-and-style** | Formatting and comments | "use layout style to review this code" |
-| **cc-refactoring-guidance** | Safe refactoring | "use refactoring to clean this up" |
-| **cc-integration-practices** | Integration and builds | "use integration to review this merge" |
-| **cc-performance-tuning** | Measure-first optimization | "use perf tuning, this is slow" |
-| **cc-documentation-quality** | README, comments, API docs | "use doc quality to review this" |
-| **cc-debugging** | Scientific debugging method | "debug this", "figure out why this fails" |
-| **cc-table-driven-methods** | Replace if/else with tables | "too many if statements", "switch growing" |
-
----
-
-## Skill Chain
-
-The skills chain together based on task type:
-
-```
-code-foundations (dispatcher)
-       │
-       ├── DEBUG ──→ cc-developer-character ──→ cc-debugging
-       │                                              │
-       │                                              └── Scientific Method
-       │                                                  (stabilize → hypothesize → experiment → fix)
-       │
-       ├── WRITE ──→ cc-developer-character ──→ cc-construction-prerequisites
-       │                                              │
-       │                                              └── cc-pseudocode-programming
-       │                                                  (design before code)
-       │
-       ├── REVIEW ─→ cc-quality-practices ──→ cc-routine-and-class-design
-       │                                              │
-       │                                              └── CHECKER mode
-       │                                                  (violations, warnings)
-       │
-       └── REFACTOR → cc-developer-character ──→ cc-refactoring-guidance
-                                                      │
-                                                      └── cc-control-flow-quality (CHECKER)
-                                                          cc-routine-and-class-design (CHECKER)
-```
+| Situation | Command |
+|-----------|---------|
+| Know what to build, want design collaboration | `/code-foundations:code` |
+| Technical uncertainty, prove it works | `/code-foundations:prototype` |
+| Need full feature planning | `/code-foundations:whiteboarding` |
+| Have approved plan, ready to implement | `/code-foundations:building` |
+| Bug hunting, need structured approach | `/code-foundations:debug` |
 
 ---
 
 ## Installation
 
 ```bash
-# Add marketplace (if not already added)
+# Add marketplace
 /plugin marketplace add ryanthedev/rtd-claude-inn
 
-# Install plugin
+# Install
 /plugin install code-foundations@rtd
 
-# Update to latest
+# Update
 /plugin update code-foundations@rtd
 ```
 
-## Source
+---
 
-Based on *Code Complete, 2nd Edition* by Steve McConnell.
+## Credits
+
+Based on *Code Complete, 2nd Edition* by Steve McConnell and *A Philosophy of Software Design* by John Ousterhout.
 
 ## License
 
 MIT
-
