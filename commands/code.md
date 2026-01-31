@@ -252,9 +252,9 @@ User: "we should also add rate limiting"
 
 | Situation | Action |
 |-----------|--------|
-| Design keeps changing | "Should we do `/whiteboarding` for this?" |
-| Technical uncertainty | "Should we `/prototype` first?" |
-| Scope exploding | "This is getting big. Want to `/whiteboarding`?" |
+| Design keeps changing | "Should we do `/code-foundations:whiteboarding` for this?" |
+| Technical uncertainty | "Should we `/code-foundations:prototype` first?" |
+| Scope exploding | "This is getting big. Want to `/code-foundations:whiteboarding`?" |
 | User wants to stop | Complete current task, commit, show summary |
 
 ---

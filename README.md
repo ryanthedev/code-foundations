@@ -48,7 +48,7 @@ User: "/code-foundations:whiteboarding preserve z-index when applying layout"
 | Batch questions into a wall | **One question at a time** — better answers |
 | Recommend based on training data | **Research first** — your codebase, current best practices |
 | First approach wins | **2-3 structurally different approaches** — comparison reveals trade-offs |
-| Plan lives in conversation | **Persistent plan file** — survives context refresh, enables `/building` execution |
+| Plan lives in conversation | **Persistent plan file** — survives context refresh, enables `/code-foundations:building` execution |
 
 ---
 
@@ -165,11 +165,11 @@ The design loop is where changes are cheap. Once you say "let's build," the cont
 
 | Situation | Use |
 |-----------|-----|
-| Know what to build, want to design together | `/code` |
-| Need to explore multiple approaches | `/whiteboarding` |
-| Have a plan file, need full gated execution | `/building` |
-| Technical uncertainty, prove feasibility | `/prototype` |
-| Bug hunting, predict → log → repeat | `/debug` |
+| Know what to build, want to design together | `/code-foundations:code` |
+| Need to explore multiple approaches | `/code-foundations:whiteboarding` |
+| Have a plan file, need full gated execution | `/code-foundations:building` |
+| Technical uncertainty, prove feasibility | `/code-foundations:prototype` |
+| Bug hunting, predict → log → repeat | `/code-foundations:debug` |
 
 ---
 
