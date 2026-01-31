@@ -18,17 +18,19 @@ When you see `CHECKER(skill-name)` in a checklist, dispatch a subagent to run th
 
 The subagent has no context about what code to review. **You must pass it.**
 
-| Method | When to Use |
-|--------|-------------|
-| **Inline code** | Small scope (1-2 files, <200 lines) |
-| **File paths** | Medium scope (known files) |
-| **Diff args** | Review scope (staged, branch, etc.) |
+| Method | When to Use | Capacity |
+|--------|-------------|----------|
+| **Inline code** | Known code, fastest | ~3,000 lines (50k tokens) |
+| **File paths** | Specific files | Unlimited (agent reads) |
+| **Diff args** | Review workflows | Unlimited (agent reads) |
+
+**Inline is preferred** when possible - no file I/O, no git commands, fastest execution.
 
 ---
 
-## Template: Inline Code
+## Template: Inline Code (Preferred)
 
-Best for WRITE/REFACTOR tasks where you know exactly what was just written.
+Best for most tasks. Subagents have 200k context - you can inline ~3,000 lines (50k tokens) comfortably while leaving room for skill, checklist, and response.
 
 ```
 Task(
@@ -67,7 +69,7 @@ Task(
 
 ## Template: File Paths
 
-Best when checking specific files.
+Use when code is too large to inline (>3,000 lines) or when you don't have the code in context.
 
 ```
 Task(
@@ -106,7 +108,7 @@ Task(
 
 ## Template: Diff Args
 
-Best for review workflows checking changed code.
+Use in review workflows where you're checking a git diff (staged, unstaged, branch comparison).
 
 ```
 Task(
