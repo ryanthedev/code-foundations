@@ -265,9 +265,7 @@ mkdir -p docs/prototypes
 
 ```bash
 git add .
-git commit -m "prototype: [scope] - [YES/NO/PARTIAL]
-
-Co-Authored-By: Claude Code <noreply@anthropic.com>"
+git commit -m "prototype: [scope] - [YES/NO/PARTIAL]"
 ```
 
 ---

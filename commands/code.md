@@ -196,9 +196,7 @@ After tests pass:
 
 ```bash
 git add [files]
-git commit -m "[type]: [description]
-
-Co-Authored-By: Claude Code <noreply@anthropic.com>"
+git commit -m "[type]: [description]"
 ```
 
 Update tasklist: mark completed, show remaining.

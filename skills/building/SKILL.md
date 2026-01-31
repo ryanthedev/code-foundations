@@ -443,9 +443,7 @@ git commit -m "Phase N: [name]
 
 - [summary of what was implemented]
 - PRE-GATE: pseudocode reviewed
-- POST-GATE: verification passed, reviewer approved
-
-Co-Authored-By: Claude Code <noreply@anthropic.com>"
+- POST-GATE: verification passed, reviewer approved"
 ```
 
 Update plan file execution log:
