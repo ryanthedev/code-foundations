@@ -152,18 +152,41 @@ AskUserQuestion(
         {label: "Staged changes (Recommended)", description: "git diff --staged"},
         {label: "Unstaged changes", description: "git diff"},
         {label: "All uncommitted", description: "git diff HEAD"},
-        {label: "Branch diff", description: "Diff against main/master"}
+        {label: "Branch diff", description: "Your changes only (excludes merged/rebased)"}
       ]
     }
   ]
 )
 ```
 
-Map selection to DIFF_ARGS:
-- Staged → `--staged`
-- Unstaged → (empty)
-- All uncommitted → `HEAD`
-- Branch diff → `main...HEAD` or `master...HEAD`
+Map selection to diff command:
+- Staged → `git diff --staged`
+- Unstaged → `git diff`
+- All uncommitted → `git diff HEAD`
+- Branch diff → Uses merge-base to exclude merged/rebased changes (see below)
+
+**Branch diff handling:**
+```bash
+# Detect base branch
+if git rev-parse --verify main >/dev/null 2>&1; then
+  BASE_BRANCH="main"
+elif git rev-parse --verify master >/dev/null 2>&1; then
+  BASE_BRANCH="master"
+else
+  BASE_BRANCH="origin/main"
+fi
+
+# Get merge-base (common ancestor) - this excludes merged-in and rebased changes
+MERGE_BASE=$(git merge-base $BASE_BRANCH HEAD)
+
+# Diff from merge-base to HEAD (your changes only)
+DIFF_CMD="git diff $MERGE_BASE HEAD"
+```
+
+This ensures:
+- Merge commits from upstream are excluded
+- Rebased-in changes are excluded
+- Only YOUR changes since branching are reviewed
 
 ---
 
@@ -180,8 +203,10 @@ FOLDER_NAME="${REPO_NAME}-${BRANCH##*/}-${SHORT_ID}"
 BASE_DIR="/tmp/$FOLDER_NAME"
 mkdir -p "$BASE_DIR"/{extraction,checking,investigation}
 
-# Get file list
-git diff {DIFF_ARGS} --name-only > $BASE_DIR/files.txt
+# Get file list (using DIFF_CMD from STEP 3)
+# For staged/unstaged/HEAD: git diff {DIFF_ARGS} --name-only
+# For branch diff: git diff $MERGE_BASE HEAD --name-only
+${DIFF_CMD} --name-only > $BASE_DIR/files.txt
 FILE_COUNT=$(wc -l < $BASE_DIR/files.txt | tr -d ' ')
 ```
 
@@ -337,7 +362,7 @@ You are a checklist agent. Execute EVERY item in the checklist against the code.
 4. Get the diff:
    ```bash
    cd {REPO_ROOT}
-   git diff {DIFF_ARGS}
+   {DIFF_CMD}
    ```
 
 5. Read changed files for full context.
