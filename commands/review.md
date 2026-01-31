@@ -122,6 +122,10 @@ Parse profile:
 ```yaml
 name: <profile_name>
 description: <description>
+models:                    # Optional - defaults if not specified
+  checking: haiku
+  investigation: haiku
+  report: sonnet
 checklists:
   - path: <checklist_path>
     skills: [<skill1>, <skill2>]
@@ -130,6 +134,13 @@ checklists:
 **Validation:**
 
 ```python
+# Extract model configuration (with defaults)
+MODELS = {
+    "checking": profile.get("models", {}).get("checking", "haiku"),
+    "investigation": profile.get("models", {}).get("investigation", "haiku"),
+    "report": profile.get("models", {}).get("report", "sonnet")
+}
+
 CHECKLISTS = []
 for checklist in profile.checklists:
     # Resolve path: user paths (.code-foundations/) stay as-is, plugin paths get PLUGIN_ROOT
@@ -358,7 +369,7 @@ for checklist in CHECKLISTS:
 
     Task(
         subagent_type="general-purpose",
-        model="haiku",  # Haiku for cost efficiency - checklist execution is systematic, not deep reasoning
+        model=MODELS["checking"],  # From profile config (default: haiku)
         description=f"Check: {checklist_name}",
         prompt=f"""
 ## Checklist Agent: {checklist_name}
@@ -493,7 +504,7 @@ batches = split_evenly(investigate_tasks, NUM_BATCHES)
 for batch_num, batch in enumerate(batches):
     Task(
         subagent_type="general-purpose",
-        model="haiku",
+        model=MODELS["investigation"],  # From profile config (default: haiku)
         description=f"Investigate batch {batch_num + 1}",
         prompt=f"""
 ## Investigation Agent
@@ -554,6 +565,7 @@ for task in investigate_tasks:
 ```python
 Task(
     subagent_type="general-purpose",
+    model=MODELS["report"],  # From profile config (default: sonnet)
     description="Generate final report",
     prompt=f"""
 ## Report Agent
@@ -701,8 +713,8 @@ cat {BASE_DIR}/REPORT.md
 | Phase | Agents | Model | Scaling |
 |-------|--------|-------|---------|
 | Extraction | 1 per 5 files | haiku | `ceil(files / 5)` |
-| Checking | 1 per checklist | haiku | `len(profile.checklists)` |
-| Investigation | 1 per 5 findings | haiku | `ceil(findings / 5)` |
-| Report | 1 | inherited | Fixed |
+| Checking | 1 per checklist | `profile.models.checking` (default: haiku) | `len(profile.checklists)` |
+| Investigation | 1 per 5 findings | `profile.models.investigation` (default: haiku) | `ceil(findings / 5)` |
+| Report | 1 | `profile.models.report` (default: sonnet) | Fixed |
 
 **All dispatched by main agent** - single message with multiple Task calls = true parallelism.

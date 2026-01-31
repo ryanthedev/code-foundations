@@ -4,6 +4,12 @@
 name: sanity
 description: "Quick pre-commit sanity check - 99 critical checks"
 
+# Model configuration (optional - defaults shown)
+models:
+  checking: haiku       # Single checklist, fast execution
+  investigation: haiku  # Quick verification
+  report: haiku         # Simple report for sanity check
+
 checklists:
   - path: agents/quick-checklist.md
     skills: []  # Self-contained checklist, no skill persona needed

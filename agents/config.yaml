@@ -9,8 +9,9 @@ agent:
     max_files_per_agent: 5
 
   # Checking: one agent per checklist
+  # Model configurable per profile (default: haiku)
   checking:
-    model: haiku  # Checklist execution is systematic, not deep reasoning
+    default_model: haiku  # Checklist execution is systematic, not deep reasoning
 
   # Investigation: haiku agents, batched by findings
   investigation:
