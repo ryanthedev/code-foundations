@@ -4,32 +4,44 @@ Source: Code Complete 2nd Edition, pp. 233-234
 
 ---
 
-## Checklist: The Pseudocode Programming Process
+## Prerequisites
 
-### Prerequisites
-- [ ] Have you checked that the prerequisites have been satisfied?
-- [ ] Have you defined the problem that the class will solve?
+- [ ] PR-1: "Have you checked that the prerequisites have been satisfied?"
+- [ ] PR-2: "Have you defined the problem that the class will solve?" → Red flag: Fuzzy requirements
 
-### Design Quality
-- [ ] Is the high-level design clear enough to give the class and each of its routines a good name?
-- [ ] Have you thought about how to test the class and each of its routines?
-- [ ] Have you checked the standard libraries and other code libraries for applicable routines or components?
-- [ ] Have you checked reference books for helpful algorithms?
+---
 
-### Pseudocode Quality
-- [ ] Have you designed each routine by using detailed pseudocode?
-- [ ] Have you mentally checked the pseudocode? Is it easy to understand?
-- [ ] Is the pseudocode at the right level of detail (not too high, not language-specific)?
-- [ ] Is the pseudocode language-independent (no target language syntax)?
+## Design Quality
 
-### Implementation
-- [ ] Did you translate the pseudocode to code accurately?
-- [ ] Did you apply the PPP recursively, breaking routines into smaller routines when needed?
-- [ ] Have you chosen the best of several iterations, rather than merely stopping after your first iteration?
+- [ ] DQ-1: "Is the high-level design clear enough to give the class and each of its routines a good name?" → Red flag: If naming is hard, design is unclear
+- [ ] DQ-2: "Have you thought about how to test the class and each of its routines?" (Good: Test plan exists, Bad: "I'll figure it out later")
+- [ ] DQ-3: "Have you checked the standard libraries and other code libraries for applicable routines or components?" → Red flag: Reinventing the wheel
+- [ ] DQ-4: "Have you checked reference books for helpful algorithms?" → Red flag: Guessing at approach
 
-### Understanding
-- [ ] Do you thoroughly understand your code? Is it easy to understand?
-- [ ] Can you explain why the code works (not just that it works)?
+---
+
+## Pseudocode Quality
+
+- [ ] PQ-1: "Have you designed each routine by using detailed pseudocode?"
+- [ ] PQ-2: "Have you mentally checked the pseudocode? Is it easy to understand?"
+- [ ] PQ-3: "Is the pseudocode at the right level of detail?" (Good: Level of intent, Bad: Too high-level or language-specific)
+- [ ] PQ-4: "Is the pseudocode language-independent?" → Red flag: Target language syntax in pseudocode
+
+---
+
+## Implementation
+
+- [ ] IM-1: "Did you translate the pseudocode to code accurately?" (Good: Pseudocode becomes comments, Bad: Comments diverge from code)
+- [ ] IM-2: "Did you apply the PPP recursively, breaking routines into smaller routines when needed?"
+- [ ] IM-3: "Have you chosen the best of several iterations?" → Red flag: Stopping after first iteration only
+- [ ] IM-4: "Did you compile clean with ALL warnings eliminated?" → Red flag: "Warnings don't matter" attitude
+
+---
+
+## Understanding
+
+- [ ] UN-1: "Do you thoroughly understand your code? Is it easy to understand?"
+- [ ] UN-2: "Can you explain WHY the code works, not just that it works?" → Red flag: Works but mysterious
 
 ---
 
@@ -84,4 +96,19 @@ When full PPP is impractical, these 4 items are MANDATORY:
 
 ---
 
-Total checklist items: 15
+## Red Flags
+
+- [ ] RF-1: "Coded into a corner?" - Logic tangled, hard to extend → Design wasn't thought through
+- [ ] RF-2: "Endless compile-debug loop?" - Just One More Compile syndrome → Coding before understanding
+- [ ] RF-3: "Mysterious code?" - Works but you don't know why → Probably doesn't really work
+- [ ] RF-4: "Can't name routine?" - No clear name works → Routine has unclear purpose
+- [ ] RF-5: "Pseudocode has target language syntax?" - `for i in range()` instead of `for each item` → Too low-level
+- [ ] RF-6: "Skipped alternative approaches?" - First design only → Missing potentially better solutions
+- [ ] RF-7: "Comments diverge from code?" - Pseudocode comments don't match implementation → Translation failed
+- [ ] RF-8: "Ignoring compiler warnings?" - "Warnings don't matter" attitude → Hasty, unconsidered code
+- [ ] RF-9: "No test plan?" - "I'll figure it out later" → Will lead to untestable code
+- [ ] RF-10: "Reinventing the wheel?" - Didn't check libraries → Wasting time on solved problems
+
+---
+
+Total items: 26
