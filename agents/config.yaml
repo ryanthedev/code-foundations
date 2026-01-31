@@ -1,73 +1,39 @@
-# Review Configuration
-# Maps review types to skills and checklists. Each skill = one checklist agent.
+# Review Agent Configuration
+# Settings for the unified review workflow
 
-# Review type definitions
-reviews:
-  # Level 2: Medium review (3 categories)
-  review-changes:
-    categories:
-      defensive:
-        skills:
-          - cc-defensive-programming
-          - aposd-simplifying-complexity
-        verdict_scale: [VULNERABLE, FRAGILE, ADEQUATE, HARDENED]
-
-      quality:
-        skills:
-          - aposd-reviewing-module-design
-          - cc-code-layout-and-style
-          - cc-control-flow-quality
-        verdict_scale: [POOR, ADEQUATE, GOOD, EXCELLENT]
-
-      correctness:
-        skills:
-          - aposd-verifying-correctness
-          - cc-quality-practices
-        verdict_scale: [BUGGY, UNCERTAIN, LIKELY_CORRECT, VERIFIED]
-
-  # Level 3: Full PR review (5 categories)
-  review-pr:
-    categories:
-      defensive:
-        skills:
-          - cc-defensive-programming
-          - aposd-simplifying-complexity
-        verdict_scale: [VULNERABLE, FRAGILE, ADEQUATE, HARDENED]
-
-      quality:
-        skills:
-          - aposd-reviewing-module-design
-          - cc-code-layout-and-style
-          - cc-control-flow-quality
-        verdict_scale: [POOR, ADEQUATE, GOOD, EXCELLENT]
-
-      correctness:
-        skills:
-          - aposd-verifying-correctness
-          - cc-quality-practices
-        verdict_scale: [BUGGY, UNCERTAIN, LIKELY_CORRECT, VERIFIED]
-
-      performance:
-        skills:
-          - cc-performance-tuning
-          - aposd-optimizing-critical-paths
-        verdict_scale: [SLOW, ACCEPTABLE, OPTIMIZED, EXCELLENT]
-
-      documentation:
-        skills:
-          - cc-documentation-quality
-        verdict_scale: [MISSING, INCOMPLETE, ADEQUATE, EXCELLENT]
-
-# Agent configuration
+# Agent settings
 agent:
-  # model: inherited from user's configured model (no override)
-  max_checklist_items: 120  # Per agent soft limit
+  # Extraction: haiku agents, batched by files
+  extraction:
+    model: haiku
+    max_files_per_agent: 5
+
+  # Checking: one agent per checklist (inherits user model)
+  checking:
+    # model: inherited from user
+
+  # Investigation: haiku agents, batched by findings
+  investigation:
+    model: haiku
+    max_findings_per_agent: 5
+
+  # Report: single agent (inherits user model)
+  report:
+    # model: inherited from user
+
+# Profile locations
+profiles:
+  # Built-in profiles (shipped with plugin)
+  builtin: agents/profiles/
+
+  # User profiles (created via review-profile setup)
+  user: .code-foundations/profiles/
 
 # Output paths
 output:
-  base_dir: /tmp/review
-  # Per-run: /tmp/review-{RUN_ID}/
-  #   {category}/
-  #     {skill}.md        - Individual skill results
-  #     summary.md        - Category summary
-  #   REPORT.md           - Final merged report
+  base_dir: /tmp
+  # Per-run: /tmp/{repo}-{branch}-{HHMM}/
+  #   extraction/    - Batch extraction results
+  #   checking/      - Per-checklist findings
+  #   investigation/ - Investigation verdicts
+  #   REPORT.md      - Final merged report

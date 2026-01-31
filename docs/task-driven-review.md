@@ -1,10 +1,10 @@
 # Task-Driven Review Flow
 
-> **Note:** This was the initial design exploration. The actual implementation uses a hybrid approach - see `commands/review.md` (Standard/Deep mode).
+> **Note:** This was the initial design exploration. The actual implementation uses a profile-driven approach - see `commands/review.md`.
 >
 > **Final architecture:**
-> - JSONL for streaming units/results (handles large diffs)
-> - TaskList only for coordination (`triage:complete` signal)
+> - Profile-driven (each checklist = 1 agent)
+> - Extraction → Checking → Investigation → Report flow
 
 ## Initial Design (Superseded)
 

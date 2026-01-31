@@ -1,43 +1,64 @@
 # Review Reference
 
-Single entry point: `/code-foundations:review` with depth selection or presets.
+Profile-driven code review: `/code-foundations:review`
 
 ---
 
 ## Presets
 
-| Preset | Depth | Skills | Checks | Best For |
-|--------|-------|--------|--------|----------|
-| `--sanity` | Sanity | 3 agents | 99 | Pre-commit sanity check |
-| `--pr` | PR | 9 | ~550 | PR review, major features |
-| `--profile <name>` | Custom | varies | varies | Saved configuration |
+| Preset | Checklists | Checks | Best For |
+|--------|------------|--------|----------|
+| `--sanity` | 1 | 99 | Pre-commit sanity check |
+| `--pr` | 10 | 548 | PR review, major features |
+| `--profile <name>` | varies | varies | Saved configuration |
 
-**Interactive:** `/code-foundations:review` (no flags) prompts for depth.
-
----
-
-## Depth Levels
-
-| Depth | Categories | Skills | Execution |
-|-------|------------|--------|-----------|
-| **Sanity** | — | — | 3 subagents: extraction (haiku) → checker → reviewer |
-| **PR** | All 5 | 9 | Parallel subagents |
-| **Custom** | User picks | User picks | Parallel subagents |
+**Interactive:** `/code-foundations:review` (no flags) prompts for profile.
 
 ---
 
-## Dimension Coverage
+## Architecture
 
-| Dimension | Sanity | PR |
-|-----------|:------:|:--:|
-| **Obvious Bugs** | ✓ | ✓ |
-| **Style / Layout** | ✓ | ✓ |
-| **Error Handling** | ✓ | ✓ Full |
-| **Design Depth** | — | ✓ Full |
-| **Correctness** | — | ✓ Full |
-| **Security** | — | ✓ Full |
-| **Performance** | — | ✓ Full |
-| **Documentation** | — | ✓ Full |
+```
+Extraction → Checking → Investigation → Report
+   haiku    1 per checklist   haiku       single
+```
+
+| Phase | Agents | Model |
+|-------|--------|-------|
+| Extraction | 1 per 5 files | haiku |
+| Checking | 1 per checklist | inherited |
+| Investigation | 1 per 5 findings | haiku |
+| Report | 1 | inherited |
+
+---
+
+## Built-in Profiles
+
+### sanity
+
+Single quick-checklist with 99 curated critical checks.
+
+Location: `agents/profiles/sanity.yaml`
+
+### pr
+
+Full review with 10 skill checklists:
+
+| Skill | Checks |
+|-------|--------|
+| cc-defensive-programming | 31 |
+| aposd-simplifying-complexity | 44 |
+| aposd-reviewing-module-design | 42 |
+| cc-code-layout-and-style | 85 |
+| cc-control-flow-quality | 94 |
+| aposd-verifying-correctness | 39 |
+| cc-quality-practices | 107 |
+| cc-performance-tuning | 40 |
+| aposd-optimizing-critical-paths | 40 |
+| cc-documentation-quality | 26 |
+| **Total** | **548** |
+
+Location: `agents/profiles/pr.yaml`
 
 ---
 
@@ -58,10 +79,17 @@ Use with:
 
 ---
 
-## Severity Levels
+## Profile Structure
 
-| Severity | Meaning | Action |
-|----------|---------|--------|
-| **CRITICAL** | Blocks merge, security/correctness issue | Must fix |
-| **IMPORTANT** | Significant quality issue | Should fix |
-| **SUGGESTION** | Improvement opportunity | Consider |
+```yaml
+name: my-profile
+description: "Description"
+
+checklists:
+  - path: skills/cc-defensive-programming/checklists.md
+    skills: [cc-defensive-programming]
+  - path: .code-foundations/checklists/custom.md
+    skills: [cc-defensive-programming]
+```
+
+Each checklist spawns one checking agent during review.

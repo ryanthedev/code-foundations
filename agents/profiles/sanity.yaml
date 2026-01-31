@@ -1,0 +1,9 @@
+# Sanity Profile - Quick pre-commit check
+# 99 curated critical checks in a single checklist
+
+name: sanity
+description: "Quick pre-commit sanity check - 99 critical checks"
+
+checklists:
+  - path: agents/quick-checklist.md
+    skills: []  # Self-contained checklist, no skill persona needed

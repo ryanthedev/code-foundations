@@ -1,204 +1,140 @@
 # Checklist Agent Template
 
-A flexible template for review agents. Separates **skills** (persona/mindset) from **checklists** (what to check), so you can mix and match.
+A template for checking agents in the profile-driven review workflow.
 
-## Parameters
+## How It Works
 
-| Parameter | Description | Example |
-|-----------|-------------|---------|
-| `SKILLS` | Skills to load for persona/context | `["cc-defensive-programming"]` |
-| `CHECKLISTS` | Checklist files to execute | `["skills/cc-defensive-programming/checklists.md"]` |
-| `BASE_DIR` | Review output directory | `/tmp/myapp-feature-1423` |
-| `DIFF_ARGS` | Git diff arguments | `--staged` or `HEAD` |
-| `OUTPUT_NAME` | Output file name (no extension) | `defensive` or `owasp-custom` |
+During review, one checking agent is spawned **per checklist** in the profile:
 
-## Use Cases
+```yaml
+# Profile example
+checklists:
+  - path: skills/cc-defensive-programming/checklists.md
+    skills: [cc-defensive-programming]        # → Agent 1
+  - path: .code-foundations/checklists/owasp.md
+    skills: [cc-defensive-programming]        # → Agent 2
+```
 
-| Scenario | SKILLS | CHECKLISTS |
-|----------|--------|------------|
-| Standard skill review | `["cc-defensive-programming"]` | `["skills/cc-defensive-programming/checklists.md"]` |
-| Custom checklist with skill persona | `["cc-defensive-programming"]` | `[".code-foundations/checklists/owasp-top-10.md"]` |
-| Multiple skills, single output | `["cc-defensive-programming", "aposd-simplifying-complexity"]` | Both skill checklists |
-| Pure custom (no skill persona) | `[]` | `[".code-foundations/checklists/my-team-standards.md"]` |
-
----
+Each agent:
+1. Loads the specified skill(s) for persona/context
+2. Reads the checklist
+3. Executes every check against the code
+4. Creates investigation tasks for findings
 
 ## Agent Prompt Template
 
 ```
 Task(
   subagent_type: "general-purpose",
-  description: "Check: {OUTPUT_NAME}",
+  description: "Check: {CHECKLIST_NAME}",
   prompt: """
-## Checklist Agent: {OUTPUT_NAME}
+## Checklist Agent: {CHECKLIST_NAME}
 
-You are a checklist agent. Execute EVERY item in the provided checklists against the code, recording PASS or FINDING for each.
+You are a checklist agent. Execute EVERY item in the checklist against the code.
 
 ### PHASE 1: LOAD CONTEXT
 
-1. Load skills for persona and educational context:
+1. Load skills for persona and mental models:
    {for skill in SKILLS:}
    ```
    Skill(code-foundations:{skill})
    ```
    {end}
 
-   These skills inform HOW you think about the code - their principles, red flags, and mental models.
+   These skills inform HOW you think about the code.
 
-2. Read the checklists to execute:
-   {for checklist in CHECKLISTS:}
+2. Read the checklist:
    ```
-   Read({checklist})
+   Read({CHECKLIST_PATH})
    ```
-   {end}
 
-3. Get the diff to review:
+3. Read extracted units:
+   ```
+   Read({BASE_DIR}/units.json)
+   ```
+
+4. Get the diff:
    ```bash
+   cd {REPO_ROOT}
    git diff {DIFF_ARGS}
    ```
 
-4. Read changed files for full context.
+5. Read changed files for full context.
 
-### PHASE 2: EXECUTE CHECKLISTS
+### PHASE 2: EXECUTE CHECKLIST
 
 For EACH checklist item (every line starting with `- [ ]`):
 
-1. Extract the item ID and check (e.g., `DP-1: "Is input validated at trust boundaries?"`)
-
-2. Apply the check to the code:
-   - Use the loaded skill personas to guide your analysis
-   - Read relevant code sections
-   - Look for violations or confirmations
-
+1. Extract the item ID and check
+2. Apply the check to the code
 3. Record result:
    - **PASS**: Check satisfied. One-line evidence.
    - **FINDING**: Check failed. Include:
      - File:line reference
      - Specific evidence from code
-     - Severity (CRITICAL/IMPORTANT/SUGGESTION)
      - Confidence (HIGH/LOW)
-     - Suggested fix if high confidence
+     - Recommendation
 
 4. For EVERY finding, create an investigation task:
    ```
    TaskCreate(
-     subject: "Investigate: {finding.id}",
-     description: "{finding.file}:{finding.line} - {finding.issue}",
-     activeForm: "Investigating {finding.id}",
-     metadata: {
+     subject="Investigate: {finding.id}",
+     description="{finding.file}:{finding.line} - {finding.issue}",
+     activeForm="Investigating {finding.id}",
+     metadata={
        "finding_id": "{finding.id}",
        "file": "{finding.file}",
        "line": "{finding.line}",
        "issue": "{finding.issue}",
        "confidence": "{finding.confidence}",
-       "severity": "{finding.severity}",
-       "source": "{OUTPUT_NAME}"
+              "checklist": "{CHECKLIST_NAME}"
      }
    )
    ```
 
-### PHASE 3: OUTPUT RESULTS
+### PHASE 3: OUTPUT
 
-Write to `{BASE_DIR}/checking/{OUTPUT_NAME}.json`:
+Write to `{BASE_DIR}/checking/{CHECKLIST_NAME}.json`:
 
 ```json
 {
-  "name": "{OUTPUT_NAME}",
-  "skills_loaded": [{SKILLS}],
-  "checklists_executed": [{CHECKLISTS}],
-  "items_checked": [count],
+  "checklist": "{CHECKLIST_PATH}",
+  "skills_loaded": ["{SKILLS}"],
+  "items_checked": <count>,
   "findings": [
     {
-      "id": "DP-1",
-      "checklist": "skills/cc-defensive-programming/checklists.md",
+      "id": "SEC-1",
       "file": "src/auth.ts",
       "line": 42,
-      "issue": "User input passed directly to SQL query",
-      "severity": "CRITICAL",
-      "confidence": "HIGH",
-      "evidence": "query(`SELECT * FROM users WHERE id = ${userId}`)",
-      "recommendation": "Use parameterized query"
+      "issue": "User input not validated",
+            "confidence": "HIGH",
+      "evidence": "...",
+      "recommendation": "..."
     }
   ],
   "passes": [
-    {"id": "DP-2", "checklist": "...", "evidence": "All external calls wrapped in try/catch"}
+    {"id": "SEC-2", "evidence": "All inputs sanitized"}
   ]
 }
 ```
 
-### PHASE 4: RETURN
-
-Return the output file path:
-```
-{BASE_DIR}/checking/{OUTPUT_NAME}.json
-```
+Return: `{BASE_DIR}/checking/{CHECKLIST_NAME}.json`
 """
 )
 ```
 
----
+## Confidence Guide
 
-## Examples
-
-### Standard Skill Review
-
-```
-Task(
-  description: "Check: defensive",
-  prompt: "...
-  SKILLS: [cc-defensive-programming]
-  CHECKLISTS: [skills/cc-defensive-programming/checklists.md]
-  OUTPUT_NAME: defensive
-  ..."
-)
-```
-
-### Custom OWASP Checklist with Defensive Skill Persona
-
-```
-Task(
-  description: "Check: owasp",
-  prompt: "...
-  SKILLS: [cc-defensive-programming]
-  CHECKLISTS: [.code-foundations/checklists/owasp-top-10.md]
-  OUTPUT_NAME: owasp
-  ..."
-)
-```
-
-### Combined Defensive Review (Multiple Skills + Checklists)
-
-```
-Task(
-  description: "Check: defensive-full",
-  prompt: "...
-  SKILLS: [cc-defensive-programming, aposd-simplifying-complexity]
-  CHECKLISTS: [
-    skills/cc-defensive-programming/checklists.md,
-    skills/aposd-simplifying-complexity/checklists.md
-  ]
-  OUTPUT_NAME: defensive-full
-  ..."
-)
-```
-
----
-
-## Severity Guide
-
-| Condition | Severity |
-|-----------|----------|
-| Security vulnerability, data loss risk | CRITICAL |
-| Bug, incorrect behavior, missing validation | CRITICAL |
-| Design problem, maintainability issue | IMPORTANT |
-| Unclear code, missing docs, style issue | SUGGESTION |
-
----
+| Condition | Confidence |
+|-----------|------------|
+| Clear violation, obvious evidence | HIGH |
+| Might be intentional, needs context | LOW |
+| Uncertain, multiple interpretations | LOW |
 
 ## Key Rules
 
 1. **Execute EVERY checklist item** - No skipping
 2. **Record evidence for EVERY item** - PASS needs evidence too
-3. **Use skill personas** - They inform how you analyze, not what you check
+3. **Use skill personas** - They inform analysis, not what to check
 4. **Create investigation tasks** - Every finding gets verified
-5. **State confidence** - HIGH if obvious, LOW if needs context
+5. **State confidence** - HIGH if obvious, LOW if uncertain

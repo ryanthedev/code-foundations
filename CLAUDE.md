@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Code-foundations is a Claude Code plugin providing software engineering skills based on *Code Complete* (McConnell) and *A Philosophy of Software Design* (Ousterhout). It includes a checklist-based code review system that dispatches one agent per skill for full checklist execution with evidence trails.
+Code-foundations is a Claude Code plugin providing software engineering skills based on *Code Complete* (McConnell) and *A Philosophy of Software Design* (Ousterhout). It includes a profile-driven code review system that dispatches one agent per checklist.
 
 ## Architecture
 
@@ -19,48 +19,94 @@ Code-foundations is a Claude Code plugin providing software engineering skills b
 
 - `skills/` - Individual skill definitions (SKILL.md + checklists.md)
 - `commands/` - User-invocable commands (slash commands)
-- `agents/` - Checklist agent template and review configuration
-- `references/` - Shared reference materials (including `cc-foundations.md` for shared CC vocabulary)
+- `agents/` - Agent templates, profiles, and configuration
+  - `agents/profiles/` - Built-in profiles (sanity.yaml, pr.yaml)
+  - `agents/config.yaml` - Agent settings
+  - `agents/AGENT.md` - Checklist agent template
+- `references/` - Shared reference materials
 - `docs/` - Case study examples
 
 ### Code Review System
 
-**Single entry point:** `/code-foundations:review` with depth selection or presets.
+**Single entry point:** `/code-foundations:review`
 
-| Preset | Depth | Skills | Checks | Use Case |
-|--------|-------|--------|--------|----------|
-| `--sanity` | Sanity | 3 agents | 99 | Pre-commit sanity |
-| `--pr` | PR | 9 | ~550 | PR review, major features |
-| `--profile <name>` | Custom | varies | varies | Saved configuration |
+**Profile-driven architecture:** One unified flow, configurable via profiles.
 
-**Interactive mode:** `/code-foundations:review` (no flags) asks for depth.
-**Profile management:** `/code-foundations:review-profile --setup`
-
-### Review Categories & Skills
-
-| Category | Skills | Items |
-|----------|--------|-------|
-| **defensive** | cc-defensive-programming, aposd-simplifying-complexity | 75 |
-| **quality** | aposd-reviewing-module-design, cc-code-layout-and-style, cc-control-flow-quality | 221 |
-| **correctness** | aposd-verifying-correctness, cc-quality-practices | 146 |
-| **performance** | cc-performance-tuning, aposd-optimizing-critical-paths | 80 |
-| **documentation** | cc-documentation-quality | 26 |
-
-### Review Configuration
-
-Edit `agents/config.yaml` to add/remove skills:
-
-```yaml
-review-changes:
-  categories:
-    quality:
-      skills:
-        - aposd-reviewing-module-design
-        - cc-code-layout-and-style
-        - new-skill  # ← add here
+```
+┌──────────────┐     ┌──────────────┐     ┌───────────────┐     ┌──────────┐
+│  EXTRACTION  │ ──▶ │   CHECKING   │ ──▶ │ INVESTIGATION │ ──▶ │  REPORT  │
+│   (haiku)    │     │ (per checklist)│    │    (haiku)    │     │          │
+└──────────────┘     └──────────────┘     └───────────────┘     └──────────┘
 ```
 
-No code changes needed when modifying skills.
+| Preset | Checklists | Checks | Use Case |
+|--------|------------|--------|----------|
+| `--sanity` | 1 | 99 | Pre-commit sanity |
+| `--pr` | 10 | 548 | Full PR review |
+| `--profile <name>` | varies | varies | Custom configuration |
+
+**Interactive mode:** `/code-foundations:review` (no flags) asks for profile.
+**Profile management:** `/code-foundations:review-profile --setup`
+
+### Profile Structure
+
+Profiles define which checklists to run and which skills inform each:
+
+```yaml
+# agents/profiles/pr.yaml or .code-foundations/profiles/custom.yaml
+name: my-profile
+description: "Description"
+
+checklists:
+  # Skill checklist with its persona
+  - path: skills/cc-defensive-programming/checklists.md
+    skills: [cc-defensive-programming]
+
+  # Custom checklist with skill persona
+  - path: .code-foundations/checklists/owasp.md
+    skills: [cc-defensive-programming]
+
+  # Self-contained checklist
+  - path: agents/quick-checklist.md
+    skills: []
+```
+
+**Each checklist = 1 checking agent** during review.
+
+### Built-in Profiles
+
+| Profile | Location | Checklists | Checks |
+|---------|----------|------------|--------|
+| sanity | `agents/profiles/sanity.yaml` | 1 | 99 |
+| pr | `agents/profiles/pr.yaml` | 10 | 548 |
+
+### Skill Checklist Counts
+
+| Skill | Checks |
+|-------|--------|
+| cc-defensive-programming | 31 |
+| aposd-simplifying-complexity | 44 |
+| aposd-reviewing-module-design | 42 |
+| cc-code-layout-and-style | 85 |
+| cc-control-flow-quality | 94 |
+| aposd-verifying-correctness | 39 |
+| cc-quality-practices | 107 |
+| cc-performance-tuning | 40 |
+| aposd-optimizing-critical-paths | 40 |
+| cc-documentation-quality | 26 |
+| **Total (PR profile)** | **548** |
+
+### Review Execution Flow
+
+1. **Load profile** → Parse checklists and skills
+2. **Validate** → Check checklist paths exist, warn on missing skills
+3. **Get target** → Ask for diff args (staged, unstaged, branch)
+4. **Extraction** → Parallel haiku agents (batch by files)
+5. **Checking** → Parallel agents (1 per checklist, loads skills)
+6. **Investigation** → Parallel haiku agents (batch by findings)
+7. **Report** → Single agent merges results
+
+**Main agent orchestrates** - dispatches all agents directly for true parallelism.
 
 ### Master Dispatcher Flow
 
@@ -162,60 +208,19 @@ skills/<skill-name>/
 Reviews are **grouped by action type** (what to do next):
 
 ```markdown
-## Fix
-High confidence. Apply now.
-1. 🔴 [CRITICAL] file:line - Issue (agent)
-   ```lang
-   [code to apply]
-   ```
+## Findings
+Confirmed issues.
+1. **[ID]** file:line - Issue
+   Evidence: ...
+   Fix: ...
 
-## Investigate
-Low confidence. Need context first.
-1. 🟡 [IMPORTANT] file:line - Issue (agent)
-   Check: [what to investigate]
+## Questions
+Need more context.
+1. **[ID]** file:line - Issue
    **Unknown**: [missing context]
-
-## Plan
-Systemic. Spin off to whiteboarding.
-1. 🔴 [CRITICAL] Multiple files - Issue
-   → `/code-foundations:whiteboarding "[topic]"`
-
-## Decide
-Trade-off needing human judgment.
-1. 🟡 [IMPORTANT] file:line - Issue (agent)
-   Options: A vs B
-   **Unknown**: [what would inform decision]
 ```
 
-### Action Types
-
-| Action | When | Output |
-|--------|------|--------|
-| **Fix** | High confidence, localized | Code snippet |
-| **Investigate** | Low confidence | What to check |
-| **Plan** | Systemic (many files) | `/code-foundations:whiteboarding` topic |
-| **Decide** | Trade-off | Options for human |
-
 **Key principle**: State what you DON'T know (**Unknown** section).
-
-### Execution (THE LAW)
-
-After review, **execute to completion**:
-
-| Action | Execution |
-|--------|-----------|
-| **Fix** | Dispatch subagent with `code-foundations` → implement → verify |
-| **Investigate** | Dispatch subagent with `cc-debugging` → resolve → fix or escalate |
-| **Plan** | Output ready-to-copy prompt for new `/code-foundations:whiteboarding` session |
-| **Decide** | Ask user → execute based on response |
-
-**Do not stop until all items are resolved.**
-
-## Severity Levels
-
-- **CRITICAL** 🔴 - Blocks merge (security, correctness)
-- **IMPORTANT** 🟡 - Should fix (design, quality)
-- **SUGGESTION** 🟢 - Consider (improvements)
 
 ## Key Concepts
 
@@ -232,7 +237,7 @@ After review, **execute to completion**:
 **CC Skills (15 total):**
 All CC skills reference `references/cc-foundations.md` for shared vocabulary (cohesion spectrum, coupling criteria, key metrics).
 
-New skills added:
+Additional skills:
 - `cc-debugging` - Scientific debugging (Chapter 23): STABILIZE → LOCATE → HYPOTHESIZE → EXPERIMENT → FIX → TEST → SEARCH
 - `cc-table-driven-methods` - Replace complex logic with tables (Chapter 18): direct access, indexed access, stair-step access
 

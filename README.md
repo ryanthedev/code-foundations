@@ -218,16 +218,25 @@ The task list prevents rabbit holes, forgotten verifications, and lost context. 
 
 ## Code Review
 
-**Single command:** `/code-foundations:review` with depth selection or presets.
+**Single command:** `/code-foundations:review` — profile-driven review.
 
-| Preset | Skills | Checks | Use When |
-|--------|--------|--------|----------|
-| `--sanity` | 3 agents | 99 | Pre-commit sanity |
-| `--pr` | 9 | ~550 | PR review, major features |
+| Preset | Checklists | Checks | Use When |
+|--------|------------|--------|----------|
+| `--sanity` | 1 | 99 | Pre-commit sanity |
+| `--pr` | 10 | 548 | PR review, major features |
 | `--profile <name>` | varies | varies | Your saved configuration |
 
-**Interactive:** `/code-foundations:review` (no flags) asks for depth.
+**Interactive:** `/code-foundations:review` (no flags) asks for profile.
 **Custom profiles:** `/code-foundations:review-profile --setup` to create reusable configurations.
+
+### Architecture
+
+```
+Extraction → Checking → Investigation → Report
+   haiku    1 per checklist   haiku       single
+```
+
+**Profiles** define which checklists to run and which skills inform each. Each checklist spawns one checking agent.
 
 ### Extraction: AST + LLM Fallback
 
@@ -236,21 +245,7 @@ Code is parsed into semantic units (functions, classes, methods) before review:
 - **Tree-sitter AST** — Fast, accurate extraction for supported languages
 - **LLM fallback** — Handles unsupported languages or missing grammars
 
-Each unit is analyzed for characteristics (loops, async, I/O, nesting depth) and routed to relevant reviewers.
-
 See [Wiki: Tree-sitter Setup](https://github.com/ryanthedev/code-foundations/wiki) for installation.
-
-### Categories
-
-| Category | Skills | Focus |
-|----------|--------|-------|
-| **defensive** | cc-defensive-programming, aposd-simplifying-complexity | Security, error handling |
-| **quality** | aposd-reviewing-module-design, cc-code-layout-and-style, cc-control-flow-quality | Design, readability |
-| **correctness** | aposd-verifying-correctness, cc-quality-practices | Bugs, test coverage |
-| **performance** | cc-performance-tuning, aposd-optimizing-critical-paths | Algorithms, hot paths |
-| **documentation** | cc-documentation-quality | Docs, comments |
-
-Configure in `agents/config.yaml` — add/remove skills without code changes.
 
 ---
 

@@ -107,15 +107,12 @@ description: "Classify code tasks and execute task-specific checklists with qual
 - [ ] Names precise? (Can someone guess meaning in isolation?)
 - [ ] Names consistent? (Same name = same thing everywhere?)
 
-### Verification Phase
-- [ ] INVOKE cc-routine-and-class-design (CHECKER)
-- [ ] Cohesion: Does each routine do ONE thing?
-- [ ] Parameters: ≤7 per routine?
-- [ ] Inheritance: "Is-a" literally true? (If not, use containment)
-- [ ] INVOKE cc-defensive-programming (CHECKER)
-- [ ] External input validated?
-- [ ] No empty catch blocks?
-- [ ] Error handling consistent with architecture?
+### Verification Phase (Parallel Subagents)
+
+- [ ] CHECKER(cc-routine-and-class-design)
+- [ ] CHECKER(cc-defensive-programming)
+
+See [references/checker-dispatch.md](../../references/checker-dispatch.md)
 
 ### Pre-Commit
 - [ ] Run Phase 4 checklist
@@ -156,39 +153,35 @@ description: "Classify code tasks and execute task-specific checklists with qual
 
 **Goal:** Detect design problems and complexity
 
-### Setup
-- [ ] INVOKE cc-quality-practices (review mode)
-- [ ] INVOKE aposd-reviewing-module-design
+> **CHECKER pattern:** See [references/checker-dispatch.md](../../references/checker-dispatch.md)
 
-### Complexity Symptoms (Check All)
+### Quick Checks (Inline)
+
+**Complexity Symptoms:**
 - [ ] Change amplification? (Simple change = many modifications?)
 - [ ] Cognitive load? (Must know too much to work here?)
 - [ ] Unknown unknowns? (Unclear what code/info is needed?) **← Worst**
 
-### Module Depth (Check All)
+**Module Depth:**
 - [ ] Interface simpler than implementation?
 - [ ] Few methods (not many small ones)?
 - [ ] Information hidden (not leaked across modules)?
-- [ ] Common case simple to use?
 
-### Red Flags (Flag If Present)
+**Red Flags:**
 - [ ] Shallow module (interface ≈ implementation)
-- [ ] Classitis (many tiny classes)
 - [ ] Information leakage (same knowledge in multiple places)
 - [ ] Pass-through methods (just delegates to another)
-- [ ] Conjoined methods (can't understand one without the other)
 
-### CC Metrics
-- [ ] INVOKE cc-routine-and-class-design (CHECKER)
-- [ ] Cohesion adequate?
-- [ ] Coupling minimized?
-- [ ] Inheritance depth < 3?
-- [ ] Parameters ≤ 7?
+### Full Checklists (Parallel Subagents)
+
+- [ ] CHECKER(aposd-reviewing-module-design)
+- [ ] CHECKER(cc-routine-and-class-design)
+- [ ] CHECKER(cc-quality-practices)
 
 ### Output
-- [ ] List Critical issues (must fix)
-- [ ] List Moderate issues (should fix)
-- [ ] List Observations (consider)
+
+- [ ] List Findings (from all agents)
+- [ ] List Questions (need more context)
 - [ ] Note Positive patterns
 
 ---
@@ -252,9 +245,14 @@ description: "Classify code tasks and execute task-specific checklists with qual
 - [ ] Commit if tests pass
 - [ ] Repeat for next refactoring
 
-### Verification
-- [ ] INVOKE cc-control-flow-quality (CHECKER)
-- [ ] INVOKE cc-routine-and-class-design (CHECKER)
+### Verification (Parallel Subagents)
+
+- [ ] CHECKER(cc-control-flow-quality)
+- [ ] CHECKER(cc-routine-and-class-design)
+
+See [references/checker-dispatch.md](../../references/checker-dispatch.md)
+
+**Quick Checks:**
 - [ ] Behavior preserved? (Same tests pass)
 - [ ] Design improved? (Simpler interfaces, less duplication)
 
@@ -301,11 +299,16 @@ For each error condition:
 
 **Goal:** Protect against malicious or malformed input
 
-### Analysis
-- [ ] INVOKE cc-defensive-programming (CHECKER)
-- [ ] INVOKE aposd-simplifying-complexity (error reduction)
-- [ ] Identify all external input sources
-- [ ] Identify trust boundaries
+### Analysis (Parallel Subagents)
+
+- [ ] CHECKER(cc-defensive-programming)
+- [ ] INVOKE aposd-simplifying-complexity (error reduction context)
+
+See [references/checker-dispatch.md](../../references/checker-dispatch.md)
+
+**Identify:**
+- [ ] All external input sources
+- [ ] Trust boundaries
 
 ### Validation (For Each External Input)
 - [ ] Input validated before use?
