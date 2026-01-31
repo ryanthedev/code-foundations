@@ -10,11 +10,25 @@ When you see `CHECKER(skill-name)` in a checklist, dispatch a subagent to run th
 - [ ] CHECKER(cc-defensive-programming)
 ```
 
-**Means:** Dispatch a subagent that loads the skill, reads its checklist, and reports findings.
+**Means:** Dispatch a subagent with the skill's checklist AND the code to check.
 
 ---
 
-## Dispatch Template
+## Context Is Required
+
+The subagent has no context about what code to review. **You must pass it.**
+
+| Method | When to Use |
+|--------|-------------|
+| **Inline code** | Small scope (1-2 files, <200 lines) |
+| **File paths** | Medium scope (known files) |
+| **Diff args** | Review scope (staged, branch, etc.) |
+
+---
+
+## Template: Inline Code
+
+Best for WRITE/REFACTOR tasks where you know exactly what was just written.
 
 ```
 Task(
@@ -23,9 +37,14 @@ Task(
   prompt: """
 ## Checklist Agent: {skill-name}
 
-Run the full checklist for this skill against the code under review.
+### Code to Review
 
-### Step 1: Load Context
+```{language}
+// {file_path}
+{THE_ACTUAL_CODE}
+```
+
+### Instructions
 
 1. Load skill:
    Skill(code-foundations:{skill-name})
@@ -33,26 +52,95 @@ Run the full checklist for this skill against the code under review.
 2. Read checklist:
    Read(skills/{skill-name}/checklists.md)
 
-3. Read the code being reviewed.
+3. Execute EVERY checklist item against the code above.
 
-### Step 2: Execute Checklist
+4. For each item, record:
+   - **PASS**: One-line evidence
+   - **FINDING**: file:line, issue, evidence, confidence (HIGH/LOW)
 
-For each item in the checklist:
-- Apply check to code
-- Record PASS (with evidence) or FINDING
+5. Return findings summary.
+"""
+)
+```
 
-For findings, record:
-- file:line
-- issue description
-- evidence from code
-- confidence (HIGH/LOW)
+---
 
-### Step 3: Return Summary
+## Template: File Paths
 
-Return:
-- Total items checked
-- Findings list (file:line, issue, confidence)
-- Overall assessment
+Best when checking specific files.
+
+```
+Task(
+  subagent_type: "general-purpose",
+  description: "Check: {skill-name}",
+  prompt: """
+## Checklist Agent: {skill-name}
+
+### Files to Review
+
+- {REPO_ROOT}/src/auth.ts
+- {REPO_ROOT}/src/validation.ts
+
+### Instructions
+
+1. Load skill:
+   Skill(code-foundations:{skill-name})
+
+2. Read checklist:
+   Read(skills/{skill-name}/checklists.md)
+
+3. Read each file listed above.
+
+4. Execute EVERY checklist item against the code.
+
+5. For each item, record:
+   - **PASS**: One-line evidence
+   - **FINDING**: file:line, issue, evidence, confidence (HIGH/LOW)
+
+6. Return findings summary.
+"""
+)
+```
+
+---
+
+## Template: Diff Args
+
+Best for review workflows checking changed code.
+
+```
+Task(
+  subagent_type: "general-purpose",
+  description: "Check: {skill-name}",
+  prompt: """
+## Checklist Agent: {skill-name}
+
+### Code to Review
+
+Run in {REPO_ROOT}:
+```bash
+git diff {DIFF_ARGS}
+```
+
+Read the changed files for full context.
+
+### Instructions
+
+1. Load skill:
+   Skill(code-foundations:{skill-name})
+
+2. Read checklist:
+   Read(skills/{skill-name}/checklists.md)
+
+3. Get the diff and read changed files.
+
+4. Execute EVERY checklist item against the changed code.
+
+5. For each item, record:
+   - **PASS**: One-line evidence
+   - **FINDING**: file:line, issue, evidence, confidence (HIGH/LOW)
+
+6. Return findings summary.
 """
 )
 ```
@@ -61,7 +149,7 @@ Return:
 
 ## Multiple CHECKERs
 
-When multiple CHECKERs appear together, dispatch them in parallel:
+Dispatch in parallel with a single message:
 
 ```markdown
 ### Verification Phase
@@ -69,10 +157,10 @@ When multiple CHECKERs appear together, dispatch them in parallel:
 - [ ] CHECKER(cc-defensive-programming)
 ```
 
-**Dispatch in single message:**
+**Both get the same context:**
 ```
-Task(...cc-routine-and-class-design...)
-Task(...cc-defensive-programming...)
+Task(...cc-routine-and-class-design... Code: {same context})
+Task(...cc-defensive-programming... Code: {same context})
 ```
 
 ---
