@@ -20,7 +20,19 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CONFIG_FILE="$SCRIPT_DIR/dependencies.yaml"
-CACHE_DIR="${REVIEW_CACHE_DIR:-/tmp/review-dependencies}"
+
+# Cross-platform temp directory
+if [ -n "$REVIEW_CACHE_DIR" ]; then
+  CACHE_DIR="$REVIEW_CACHE_DIR"
+elif [ -n "$TMPDIR" ]; then
+  CACHE_DIR="$TMPDIR/review-dependencies"
+elif [ -n "$TEMP" ]; then
+  CACHE_DIR="$TEMP/review-dependencies"
+elif [ -n "$TMP" ]; then
+  CACHE_DIR="$TMP/review-dependencies"
+else
+  CACHE_DIR="/tmp/review-dependencies"
+fi
 
 # Colors for logging (disable if not terminal)
 if [[ -t 1 ]]; then

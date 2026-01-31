@@ -31,8 +31,9 @@ profiles:
 
 # Output paths
 output:
-  base_dir: /tmp
-  # Per-run: /tmp/{repo}-{branch}-{HHMM}/
+  # Base directory for review output (cross-platform)
+  # Uses first available: $TMPDIR (macOS), $TEMP (Windows), $TMP, /tmp
+  # Per-run: {base}/{repo}-{branch}-{HHMM}/
   #   extraction/    - Batch extraction results
   #   checking/      - Per-checklist findings
   #   investigation/ - Investigation verdicts

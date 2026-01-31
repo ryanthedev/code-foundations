@@ -207,19 +207,32 @@ This ensures:
 ```bash
 # Generate descriptive folder name
 REPO_ROOT=$(git rev-parse --show-toplevel)
-REPO_NAME=$(basename $REPO_ROOT)
+REPO_NAME=$(basename "$REPO_ROOT")
 BRANCH=$(git branch --show-current)
 SHORT_ID=$(date +%H%M)
-FOLDER_NAME="${REPO_NAME}-${BRANCH##*/}-${SHORT_ID}"
+# Extract last component of branch name (feature/foo -> foo)
+BRANCH_SHORT=$(echo "$BRANCH" | sed 's:.*/::')
+FOLDER_NAME="${REPO_NAME}-${BRANCH_SHORT}-${SHORT_ID}"
 
-BASE_DIR="/tmp/$FOLDER_NAME"
-mkdir -p "$BASE_DIR"/{extraction,checking,investigation}
+# Cross-platform temp directory (works on Unix, macOS, Windows Git Bash)
+if [ -n "$TMPDIR" ]; then
+  TEMP_BASE="$TMPDIR"
+elif [ -n "$TEMP" ]; then
+  TEMP_BASE="$TEMP"
+elif [ -n "$TMP" ]; then
+  TEMP_BASE="$TMP"
+else
+  TEMP_BASE="/tmp"
+fi
+
+BASE_DIR="$TEMP_BASE/$FOLDER_NAME"
+mkdir -p "$BASE_DIR/extraction"
+mkdir -p "$BASE_DIR/checking"
+mkdir -p "$BASE_DIR/investigation"
 
 # Get file list (using DIFF_CMD from STEP 3)
-# For staged/unstaged/HEAD: git diff {DIFF_ARGS} --name-only
-# For branch diff: git diff $MERGE_BASE HEAD --name-only
-${DIFF_CMD} --name-only > $BASE_DIR/files.txt
-FILE_COUNT=$(wc -l < $BASE_DIR/files.txt | tr -d ' ')
+${DIFF_CMD} --name-only > "$BASE_DIR/files.txt"
+FILE_COUNT=$(wc -l < "$BASE_DIR/files.txt" | tr -d ' ')
 ```
 
 **Show configuration:**
