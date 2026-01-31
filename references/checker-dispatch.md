@@ -4,6 +4,20 @@ When you see `CHECKER(skill-name)` in a checklist, dispatch a subagent to run th
 
 ---
 
+## Find Plugin Root First
+
+Plugin files (skills, checklists) are in the plugin directory, not the user's project. Find the plugin root:
+
+```
+Glob("**/code-foundations/skills/code-foundations/SKILL.md")
+```
+
+Extract `PLUGIN_ROOT` from the result (everything before `/skills/code-foundations/SKILL.md`).
+
+Then use `{PLUGIN_ROOT}/skills/{skill-name}/checklists.md` for checklist paths.
+
+---
+
 ## Pattern
 
 ```
@@ -52,7 +66,7 @@ Task(
    Skill(code-foundations:{skill-name})
 
 2. Read checklist:
-   Read(skills/{skill-name}/checklists.md)
+   Read({PLUGIN_ROOT}/skills/{skill-name}/checklists.md)
 
 3. Execute EVERY checklist item against the code above.
 
@@ -89,7 +103,7 @@ Task(
    Skill(code-foundations:{skill-name})
 
 2. Read checklist:
-   Read(skills/{skill-name}/checklists.md)
+   Read({PLUGIN_ROOT}/skills/{skill-name}/checklists.md)
 
 3. Read each file listed above.
 
@@ -132,7 +146,7 @@ Read the changed files for full context.
    Skill(code-foundations:{skill-name})
 
 2. Read checklist:
-   Read(skills/{skill-name}/checklists.md)
+   Read({PLUGIN_ROOT}/skills/{skill-name}/checklists.md)
 
 3. Get the diff and read changed files.
 
