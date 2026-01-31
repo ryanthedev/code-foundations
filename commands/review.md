@@ -32,14 +32,17 @@ Unified review workflow. One flow, driven by profile configuration.
 
 **Main agent orchestrates everything** - dispatches all agents directly for true parallelism.
 
-**IMPORTANT - Main agent responsibilities:**
-- ✅ Parse arguments, load profiles, setup directories
-- ✅ Dispatch extraction, checking, investigation, and report agents
-- ✅ Merge JSON outputs between phases
-- ✅ Display terminal summary
-- ❌ DO NOT read the diff content (checking agents do this)
-- ❌ DO NOT read changed files (subagents do this)
-- ❌ DO NOT create investigation tasks (checking agents do this)
+**Main agent MUST:**
+- Parse arguments, load profiles, setup directories
+- Dispatch extraction, checking, investigation, and report agents
+- Merge JSON outputs between phases
+- Mark investigation tasks complete after STEP 7
+- Display terminal summary
+
+**Main agent MUST NOT:**
+- Read the diff content (subagents do this)
+- Read changed files (subagents do this)
+- Create investigation tasks (checking agents create these)
 
 ---
 
@@ -436,17 +439,13 @@ Return: `{BASE_DIR}/checking/{checklist_name}.json`
 
 **Wait for all checking agents.**
 
-Mark all checking tasks completed.
-
-**IMPORTANT:** Investigation tasks were already created by the checking agents. Do NOT create new ones - proceed directly to STEP 7 to query and dispatch investigation agents.
+Mark all checking tasks completed. Proceed directly to STEP 7 - investigation tasks were already created by checkers.
 
 ---
 
 ## STEP 7: PHASE 3 - INVESTIGATION (Parallel Haiku)
 
 **Purpose:** Verify all findings. Reduce false positives.
-
-**IMPORTANT:** Do NOT create new investigation tasks. They were already created by the checking agents.
 
 **Get pending investigation tasks:**
 ```python
@@ -521,18 +520,17 @@ Write to `{BASE_DIR}/investigation/batch-{batch_num + 1}.json`:
   ]
 }}
 ```
-
-### Mark Tasks Complete
-
-After writing results, mark each investigated task as completed:
-{chr(10).join(f'''
-TaskUpdate(taskId="{task.id}", status="completed")
-''' for task in batch)}
 """
     )
 ```
 
 **Wait for all investigation agents.**
+
+**Mark investigation tasks complete (main agent responsibility):**
+```python
+for task in investigate_tasks:
+    TaskUpdate(taskId=task.id, status="completed")
+```
 
 ---
 
