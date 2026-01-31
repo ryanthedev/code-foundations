@@ -180,10 +180,16 @@ What would you like to do with these findings?
 
 ## Token Usage
 
-This review used approximately:
-- Extraction: ~112k tokens
-- Checking: ~1M tokens (10 parallel agents)
-- Investigation: ~60k tokens
-- Report: ~85k tokens
+With haiku for extraction, checking, and investigation (v3.0.7+):
+- Extraction: ~112k tokens (haiku)
+- Checking: ~1M tokens (10 haiku agents)
+- Investigation: ~60k tokens (haiku)
+- Report: ~85k tokens (inherited)
 
-Total: ~1.25M tokens for a 14-file PR review.
+**Cost comparison:**
+| Model for Checking | Estimated Cost |
+|-------------------|----------------|
+| Opus (v3.0.6) | $20-50+ |
+| Haiku (v3.0.7+) | ~$2-5 |
+
+Haiku handles systematic checklist execution well - deep reasoning is only needed for report synthesis.

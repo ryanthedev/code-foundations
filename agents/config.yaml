@@ -8,9 +8,9 @@ agent:
     model: haiku
     max_files_per_agent: 5
 
-  # Checking: one agent per checklist (inherits user model)
+  # Checking: one agent per checklist
   checking:
-    # model: inherited from user
+    model: haiku  # Checklist execution is systematic, not deep reasoning
 
   # Investigation: haiku agents, batched by findings
   investigation:

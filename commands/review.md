@@ -358,7 +358,7 @@ for checklist in CHECKLISTS:
 
     Task(
         subagent_type="general-purpose",
-        # No model = inherits user's model
+        model="haiku",  # Haiku for cost efficiency - checklist execution is systematic, not deep reasoning
         description=f"Check: {checklist_name}",
         prompt=f"""
 ## Checklist Agent: {checklist_name}
@@ -701,7 +701,7 @@ cat {BASE_DIR}/REPORT.md
 | Phase | Agents | Model | Scaling |
 |-------|--------|-------|---------|
 | Extraction | 1 per 5 files | haiku | `ceil(files / 5)` |
-| Checking | 1 per checklist | inherited | `len(profile.checklists)` |
+| Checking | 1 per checklist | haiku | `len(profile.checklists)` |
 | Investigation | 1 per 5 findings | haiku | `ceil(findings / 5)` |
 | Report | 1 | inherited | Fixed |
 
