@@ -34,21 +34,37 @@ Unified review workflow. One flow, driven by profile configuration.
 
 ---
 
+## STEP 0: FIND PLUGIN DIRECTORY
+
+The plugin files are installed in a plugins directory, not the user's project. Find the plugin root first:
+
+```
+# Use Glob to find a known plugin file
+Glob("**/code-foundations/agents/profiles/sanity.yaml")
+```
+
+Extract `PLUGIN_ROOT` from the result (everything before `/agents/profiles/sanity.yaml`).
+
+Example: If Glob returns `/Users/r/.claude/plugins/code-foundations/agents/profiles/sanity.yaml`
+Then `PLUGIN_ROOT = /Users/r/.claude/plugins/code-foundations`
+
+---
+
 ## STEP 1: PARSE ARGUMENTS & LOAD PROFILE
 
 ```python
 # Parse flags
 if "--sanity" in args:
-    PROFILE_PATH = "agents/profiles/sanity.yaml"
+    PROFILE_PATH = f"{PLUGIN_ROOT}/agents/profiles/sanity.yaml"
 elif "--pr" in args:
-    PROFILE_PATH = "agents/profiles/pr.yaml"
+    PROFILE_PATH = f"{PLUGIN_ROOT}/agents/profiles/pr.yaml"
 elif "--profile" in args:
     name = args["--profile"]
-    # Try user profiles first, then built-in
+    # Try user profiles first (in project), then built-in (in plugin)
     if exists(f".code-foundations/profiles/{name}.yaml"):
         PROFILE_PATH = f".code-foundations/profiles/{name}.yaml"
-    elif exists(f"agents/profiles/{name}.yaml"):
-        PROFILE_PATH = f"agents/profiles/{name}.yaml"
+    elif exists(f"{PLUGIN_ROOT}/agents/profiles/{name}.yaml"):
+        PROFILE_PATH = f"{PLUGIN_ROOT}/agents/profiles/{name}.yaml"
     else:
         error(f"Profile not found: {name}")
         print("Available profiles:")
@@ -104,16 +120,19 @@ checklists:
 ```python
 CHECKLISTS = []
 for checklist in profile.checklists:
+    # Resolve path: user paths (.code-foundations/) stay as-is, plugin paths get PLUGIN_ROOT
+    if checklist.path.startswith(".code-foundations/"):
+        resolved_path = checklist.path
+    else:
+        resolved_path = f"{PLUGIN_ROOT}/{checklist.path}"
+
     # Validate checklist exists
-    if not file_exists(checklist.path):
-        error(f"Checklist not found: {checklist.path}")
+    if not file_exists(resolved_path):
+        error(f"Checklist not found: {resolved_path}")
         exit()
 
-    # Validate skills exist (will fail at runtime if not, but warn early)
-    for skill in checklist.skills:
-        # Skills are validated when Skill() is called
-        pass
-
+    # Store resolved path
+    checklist.resolved_path = resolved_path
     CHECKLISTS.append(checklist)
 
 TOTAL_CHECKLISTS = len(CHECKLISTS)
@@ -307,7 +326,7 @@ You are a checklist agent. Execute EVERY item in the checklist against the code.
 
 2. Read the checklist:
    ```
-   Read({checklist.path})
+   Read({checklist.resolved_path})
    ```
 
 3. Read extracted units:
