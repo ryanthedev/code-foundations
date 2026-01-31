@@ -2,6 +2,8 @@
 
 **AI that codes like a senior engineer.** Checklists, quality gates, and verification built into every workflow.
 
+> **Experimental** - This plugin is under active development, currently incorporating knowledge from *Code Complete* and *A Philosophy of Software Design*, with more books planned. Subagent orchestration for plan execution is being fine-tuned to ensure reliable skill loading and phase execution. GitHub releases will be added once the plugin reaches a stable state.
+
 ---
 
 ## Pick Your Workflow
