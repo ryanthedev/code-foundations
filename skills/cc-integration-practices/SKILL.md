@@ -1,6 +1,6 @@
 ---
 name: cc-integration-practices
-description: "Use when integrating components, planning integration strategy, setting up build processes, or debugging integration failures. Symptoms: integration hell, late-stage defects, unclear integration order, no daily build, broken builds lasting days."
+description: "Audit integration strategy and daily build processes (CHECKER) or select optimal integration approach and configure CI/CD (APPLIER). Use when integrating components, planning integration order, setting up build processes, or diagnosing integration failures. Triggers on: integration hell, late-stage defects, unclear integration order, no daily build, broken builds, Big Bang integration, smoke test stale. Produce integration strategy recommendations, build process configuration, 13-item checklist assessment with severity ratings."
 ---
 
 # Skill: cc-integration-practices

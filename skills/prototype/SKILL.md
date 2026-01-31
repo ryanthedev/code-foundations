@@ -1,6 +1,6 @@
 ---
 name: prototype
-description: "Quick proof-of-concept to validate an idea with minimum code. Use when asking 'can I do X?' before committing to full implementation. Triggers on: prototype, POC, prove this works, quick hack, spike, demo this, can I do X. Produces surgical code that informs production design."
+description: "Validate technical feasibility with minimum code before full implementation. Prove ONE atomic question ('Can I X?') through 6-phase workflow: SCOPE, CONTEXT, MINIMUM, EXECUTE, VERIFY, CAPTURE. Use when facing technical uncertainty, unsure if something is possible, or need proof before planning. Triggers on: prototype, POC, prove this works, spike, demo this, can I do X, is it possible, feasibility check. Produce prototype log in docs/prototypes/ with YES/NO/PARTIAL verdict and chain to whiteboarding."
 ---
 
 # Skill: prototype
@@ -265,9 +265,7 @@ mkdir -p docs/prototypes
 
 ```bash
 git add .
-git commit -m "prototype: [scope] - [YES/NO/PARTIAL]
-
-Co-Authored-By: Claude Code <noreply@anthropic.com>"
+git commit -m "prototype: [scope] - [YES/NO/PARTIAL]"
 ```
 
 ---

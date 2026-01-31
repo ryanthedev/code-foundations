@@ -1,10 +1,17 @@
 ---
 description: "Discovery-oriented brainstorming to create implementation-ready plans. Saves to docs/plans/ for /code-foundations:building execution."
 argument-hint: "[feature description or user story]"
-allowed-tools: ["Read", "Glob", "Grep", "Write", "Bash", "AskUserQuestion", "Skill", "Task"]
+allowed-tools: ["Read", "Glob", "Grep", "Write", "Bash", "AskUserQuestion", "Skill", "Task", "EnterPlanMode"]
 ---
 
 # /whiteboarding
+
+## FIRST - Enter Plan Mode
+
+Before doing anything else, use the `EnterPlanMode` tool to enter plan mode.
+This ensures all whiteboarding happens without accidental code changes.
+
+---
 
 ## STOP - Load Skills First
 
@@ -75,11 +82,15 @@ mkdir -p docs/plans
 
 ### 6. Handoff
 
-```
-Plan saved. Next steps:
-1. Refresh context → /code-foundations:building <plan-path> (recommended for complex)
-2. Continue now → /code-foundations:building (OK for simple)
-```
+After saving the plan, use `AskUserQuestion` to ask how to proceed:
+
+**Question:** "How would you like to proceed?"
+
+**Options:**
+1. **Clear conversation and build** (Recommended) - Execute `/clear` then run `/code-foundations:building <plan-path>`
+2. **Tell me what to do** - Provide step-by-step instructions to execute manually
+
+If user selects option 1: Execute `/clear` command, then immediately run `/code-foundations:building <plan-path>`
 
 ---
 

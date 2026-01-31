@@ -1,6 +1,6 @@
 ---
 name: cc-developer-character
-description: "Use when stuck in debugging, considering skipping reviews, feeling pressure on estimates, or working past fatigue. Symptoms: gonzo programming, compiling to see what happens, ignoring warnings, 90% complete for weeks."
+description: "Enforce developer discipline under pressure by detecting rationalization patterns and providing counter-arguments. Use when stuck debugging, considering skipping reviews, feeling overconfident about technical decisions, resisting unfamiliar techniques, or treating methodology as dogma. Triggers on: just compile and see, ignoring warnings, 90% complete for weeks, gonzo programming, I don't need to test this, unrealistic estimates."
 ---
 
 # Skill: cc-developer-character

@@ -1,6 +1,6 @@
 ---
 name: aposd-designing-deep-modules
-description: "Use when designing interfaces before implementation, creating new classes or services, or asked to 'design', 'create class', 'add module', or 'implement feature'. Complements cc-routine-and-class-design with interface depth philosophy."
+description: "Enforce Design-It-Twice workflow: generate 2-3 radically different approaches, compare them, then implement. Use when designing modules, APIs, or classes before implementation. Triggers on: design, create class, add module, implement feature, new service, API design, before implementing. Produces structured design document with approaches, comparison table, choice rationale, and depth check."
 ---
 
 # Skill: aposd-designing-deep-modules

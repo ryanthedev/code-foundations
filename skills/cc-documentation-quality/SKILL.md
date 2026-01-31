@@ -1,6 +1,6 @@
 ---
 name: cc-documentation-quality
-description: "Review documentation quality including README, comments, API docs, changelog, and AI documentation (CLAUDE.md, .cursorrules, copilot-instructions, etc.). Use when checking if documentation matches code, comments are fresh, or new features lack documentation. Based on Code Complete Ch. 32 and APOSD comments philosophy."
+description: "Review documentation quality across README, comments, API docs, changelog, and AI documentation (CLAUDE.md, .cursorrules, copilot-instructions). Use when checking if documentation matches code, comments are stale, new features lack docs, or reviewing PR documentation. Triggers on: review docs, stale comments, update changelog, documentation debt, README accuracy, PR documentation review, missing docs."
 ---
 
 # Documentation Quality

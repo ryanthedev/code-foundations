@@ -1,0 +1,39 @@
+# Review Agent Configuration
+# Settings for the unified review workflow
+
+# Agent settings
+agent:
+  # Extraction: haiku agents, batched by files
+  extraction:
+    model: haiku
+    max_files_per_agent: 5
+
+  # Checking: one agent per checklist (inherits user model)
+  checking:
+    # model: inherited from user
+
+  # Investigation: haiku agents, batched by findings
+  investigation:
+    model: haiku
+    max_findings_per_agent: 5
+
+  # Report: single agent (inherits user model)
+  report:
+    # model: inherited from user
+
+# Profile locations
+profiles:
+  # Built-in profiles (shipped with plugin)
+  builtin: agents/profiles/
+
+  # User profiles (created via review-profile setup)
+  user: .code-foundations/profiles/
+
+# Output paths
+output:
+  base_dir: /tmp
+  # Per-run: /tmp/{repo}-{branch}-{HHMM}/
+  #   extraction/    - Batch extraction results
+  #   checking/      - Per-checklist findings
+  #   investigation/ - Investigation verdicts
+  #   REPORT.md      - Final merged report

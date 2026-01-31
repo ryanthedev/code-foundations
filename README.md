@@ -1,260 +1,263 @@
 # Code Foundations
 
-> **Experimental** - This plugin is under active development, currently incorporating knowledge from *Code Complete* and *A Philosophy of Software Design*, with more books planned. Subagent orchestration for plan execution is being fine-tuned to ensure reliable skill loading and phase execution. GitHub releases will be added once the plugin reaches a stable state.
+**AI that codes like a senior engineer.** Checklists, quality gates, and verification built into every workflow.
 
-Code Complete-based software engineering skills for Claude Code.
+> **Experimental** - This plugin is under active development. Subagent orchestration for plan execution is being fine-tuned to ensure reliable skill loading and phase execution. GitHub releases will be added once the plugin reaches a stable state.
 
-## How It Works
+---
 
-### HACK (TDD Mode)
-```
-User: "/code-foundations:hack add email validation"
-  → No planning, no ceremony
-  → RED: Write failing test
-  → GREEN: Minimum code to pass
-  → REFACTOR: Clean up
-  → REPEAT
-```
+## Pick Your Workflow
 
-### DEBUG
-```
-User: "X isn't working, use foundations to debug it"
-  → code-foundations classifies as DEBUG
-  → cc-developer-character checks mindset
-  → cc-debugging: stabilize → hypothesize → experiment → fix
-```
+| Command | Purpose | When to Use |
+|---------|---------|-------------|
+| `/code-foundations:review` | Profile-driven code review | Pre-commit, PR review |
+| `/code-foundations:whiteboarding` | Create implementation-ready plans | Feature planning |
+| `/code-foundations:building` | Execute plans with quality gates | Implementing approved plans |
+| `/code-foundations:code` | Pseudocode-first development | Know what to build, want design collaboration |
+| `/code-foundations:prototype` | Quick feasibility proof | Technical uncertainty |
+| `/code-foundations:debug` | Scientific debugging with task tracking | Bug hunting |
 
-### WRITE
-```
-User: "Build feature X with foundations"
-  → code-foundations classifies as WRITE
-  → cc-construction-prerequisites: requirements check
-  → cc-pseudocode-programming: design first
-  → CHECKER gates before done
+**Why this exists:** LLMs write code fast. Fast code without engineering discipline creates debt. This plugin loads proven checklists and mental models so Claude applies them automatically.
+
+---
+
+## Code Review System
+
+**Single command.** Profile-driven. Parallel subagents.
+
+```bash
+/code-foundations:review --sanity          # 99 checks, quick pre-commit
+/code-foundations:review --pr              # 548 checks, full PR review
+/code-foundations:review --profile <name>  # Custom profile
 ```
 
-### REVIEW
+### Profiles
+
+| Profile | Checklists | Checks | Use Case |
+|---------|------------|--------|----------|
+| `--sanity` | 1 | 99 | Pre-commit sanity check |
+| `--pr` | 10 | 548 | Full PR review |
+| Custom | varies | varies | Your saved configuration |
+
+**Create custom profiles:** `/code-foundations:review-profile --setup`
+
+### Architecture: 4-Phase Pipeline
+
 ```
-User: "Use foundations to review this code"
-  → cc-quality-practices (CHECKER mode)
-  → cc-routine-and-class-design (CHECKER mode)
-  → Output: violations, warnings, fixes
+┌──────────────┐     ┌──────────────┐     ┌───────────────┐     ┌──────────┐
+│  EXTRACTION  │ ──▶ │   CHECKING   │ ──▶ │ INVESTIGATION │ ──▶ │  REPORT  │
+│   (haiku)    │     │ (per checklist)│   │    (haiku)    │     │          │
+└──────────────┘     └──────────────┘     └───────────────┘     └──────────┘
 ```
 
-### REFACTOR
-```
-User: "Clean this up with foundations"
-  → cc-refactoring-guidance: plan steps
-  → Execute one change at a time
-  → CHECKER gates verify quality preserved
+| Phase | What Happens | Parallelism |
+|-------|--------------|-------------|
+| **Extraction** | Parse code into semantic units (functions, classes) | 1 agent per 5 files |
+| **Checking** | Run checklists against code, skills as agent personas | 1 agent per checklist |
+| **Investigation** | Verify findings, reduce false positives | 1 agent per 5 findings |
+| **Report** | Merge results, generate actionable output | Single agent |
+
+### Skills as Personas
+
+Each checklist loads skills that become the checking agent's persona:
+
+```yaml
+# Profile example
+checklists:
+  - path: skills/cc-defensive-programming/checklists.md
+    skills: [cc-defensive-programming]  # Agent adopts this expertise
 ```
 
-### WHITEBOARDING (Plan Features)
+The PR profile covers: defensive programming, complexity reduction, module design, code layout, control flow, correctness verification, quality practices, performance, optimization, and documentation.
+
+---
+
+## Planning and Execution: Whiteboarding to Building
+
+Two commands that work together. Whiteboarding creates the plan. Building executes it.
+
+```
+/code-foundations:whiteboarding "add notification system"
+     ↓
+docs/plans/2026-01-30-notifications.md
+     ↓
+/code-foundations:building docs/plans/2026-01-30-notifications.md
+```
+
+### `/code-foundations:whiteboarding` - Create the Plan
+
+**Discovery-oriented brainstorming.** Researches your codebase before asking questions.
+
 ```
 User: "/code-foundations:whiteboarding add user notifications"
-  → Discovery questions to clarify scope
-  → 2-3 approaches with trade-offs
-  → Implementation-ready plan
+
+  RESEARCH FIRST
+  ├─ Search codebase for existing patterns
+  ├─ Find similar implementations
+  └─ Note naming conventions, error handling
+
+  QUESTIONS (one at a time)
+  ├─ "What notification types do you need?"
+  │   ☐ Email only
+  │   ☐ Push + Email
+  │   ☐ In-app + Email
+  └─ Wait for answer → ask next question
+
+  2-3 STRUCTURALLY DIFFERENT APPROACHES
+  ├─ Option A: Queue-based (recommended)
+  ├─ Option B: Synchronous
+  └─ Option C: Event-sourced
+
   → Saves to docs/plans/YYYY-MM-DD-<topic>.md
 ```
 
-### BUILDING (Execute Plans)
+**Skills loaded:** `cc-construction-prerequisites`, `aposd-designing-deep-modules`
+
+### `/code-foundations:building` - Execute the Plan
+
+**Gated execution with subagents.** Each phase has mandatory quality checks.
+
 ```
-User: "/code-foundations:building docs/plans/2024-01-15-notifications.md"
-  → Feature branch required
-  → For each phase:
-      DISCOVERY  → Explore subagent → docs/building/*-discovery.md
-      PRE-GATE   → Pseudocode agent → docs/building/*-pseudocode.md
-      IMPLEMENT  → code-foundations:implementation-agent reads files
-      POST-GATE  → code-foundations:*-reviewer agent → docs/building/*-review.md
-      CHECKPOINT → Commit only after PASS
-  → All artifacts persistent and reviewable
+User: "/code-foundations:building docs/plans/2026-01-30-notifications.md"
+
+  BRANCH GATE
+  └─ On main? → STOP. Create feature branch first.
+
+  FOR EACH PHASE:
+  ┌────────────────────────────────────────────────────────────┐
+  │  DISCOVERY     Explore subagent reads codebase             │
+  │       ⛔ Cannot proceed until discovery complete           │
+  ├────────────────────────────────────────────────────────────┤
+  │  PRE-GATE      Pseudocode subagent designs the solution    │
+  │       ⛔ Cannot implement until pseudocode exists          │
+  ├────────────────────────────────────────────────────────────┤
+  │  IMPLEMENT     Implementation subagent writes code         │
+  ├────────────────────────────────────────────────────────────┤
+  │  POST-GATE     Reviewer subagent checks quality            │
+  │       ⛔ Cannot commit until reviewer returns PASS         │
+  ├────────────────────────────────────────────────────────────┤
+  │  CHECKPOINT    Commit with phase summary                   │
+  └────────────────────────────────────────────────────────────┘
 ```
 
-### CODE REVIEW (5 Parallel Agents)
-```
-User: "/review-pr" (on feature branch)
-  → Triage: Categorize files by change type
-  → Dispatch 5 agents IN PARALLEL:
-      ┌──────────────────────────────────────────────────────────────────────┐
-      │  code-foundations:defensive-reviewer    → security + error handling  │
-      │  code-foundations:quality-reviewer      → design + readability       │
-      │  code-foundations:correctness-reviewer  → bugs + test coverage       │
-      │  code-foundations:performance-reviewer  → algorithms + hot paths     │
-      │  code-foundations:documentation-reviewer → docs + comments           │
-      └──────────────────────────────────────────────────────────────────────┘
-  → Aggregate findings by action type:
-      Fix         → Apply immediately
-      Investigate → Spin off research
-      Plan        → /code-foundations:whiteboarding for design work
-```
+### Quality Gates per Phase
+
+| Gate | Skills Loaded | What Gets Enforced |
+|------|---------------|-------------------|
+| PRE-GATE | `cc-pseudocode-programming` | Design before code, routine cohesion |
+| PRE-GATE | `aposd-designing-deep-modules` | Interface depth, information hiding |
+| POST-GATE | `aposd-verifying-correctness` | Requirements coverage, boundary conditions |
+| POST-GATE | `cc-defensive-programming` | Error handling, input validation |
+
+**Every artifact is saved** to `docs/building/` for review. Per-phase commits enable rollback.
 
 ---
 
-## Skills
+## Getting Stuff Done: Code, Prototype, Debug
 
-| Skill | Purpose | Example |
-|-------|---------|---------|
-| **code-foundations** | Master dispatcher | "use foundations to [anything]" |
-| **cc-developer-character** | Mindset and discipline | "use dev character to check my approach" |
-| **cc-construction-prerequisites** | Requirements and planning | "use prereqs to review this plan" |
-| **cc-pseudocode-programming** | Design routines first | "use pseudocode to design this feature" |
-| **cc-quality-practices** | Reviews, testing, debugging | "use quality practices to review this code" |
-| **cc-routine-and-class-design** | High-quality interfaces | "use routine design to review this code" |
-| **cc-control-flow-quality** | Clean control structures | "use control flow to review this code" |
-| **cc-data-organization** | Variables, naming, types | "use data org to review this code" |
-| **cc-defensive-programming** | Error handling | "use defensive programming to review this code" |
-| **cc-code-layout-and-style** | Formatting and comments | "use layout style to review this code" |
-| **cc-refactoring-guidance** | Safe refactoring | "use refactoring to clean this up" |
-| **cc-integration-practices** | Integration and builds | "use integration to review this merge" |
-| **cc-performance-tuning** | Measure-first optimization | "use perf tuning, this is slow" |
-| **cc-documentation-quality** | README, comments, API docs | "use doc quality to review this" |
-| **cc-debugging** | Scientific debugging method | "debug this", "figure out why this fails" |
-| **cc-table-driven-methods** | Replace if/else with tables | "too many if statements", "switch growing" |
+### `/code-foundations:code` - Pseudocode First
 
----
-
-## Three-Level Code Review System
-
-| Level | Command | Agents | Use Case |
-|-------|---------|--------|----------|
-| 1 | `/review-commit` | 1 (quick) | Pre-commit sanity check |
-| 2 | `/review-changes` | 3 (parallel) | Medium review for changes |
-| 3 | `/review-pr` | 5 (parallel) | Full PR review |
-
-### 5 Consolidated Agents (Dual Roles)
-
-| Agent | Combines | Skills |
-|-------|----------|--------|
-| **defensive-reviewer** | security + error-handling | cc-defensive-programming, aposd-simplifying-complexity |
-| **quality-reviewer** | maintainability + clarity | aposd-reviewing-module-design, cc-code-layout-and-style |
-| **correctness-reviewer** | bugs + test coverage | aposd-verifying-correctness, cc-quality-practices |
-| **performance-reviewer** | algorithms + hot paths | cc-performance-tuning, aposd-optimizing-critical-paths |
-| **documentation-reviewer** | docs + comments | cc-documentation-quality |
-
-### Output Format
-
-Issues are grouped by action type:
-````markdown
-## Fix
-1. 🔴 [CRITICAL] Handler.cs:84 - Memory amplification (defensive)
-   ```csharp
-   if (encoded.Length > MaxDecodedSize / 1.34) return null;
-   ```
-
-2. 🟡 [IMPORTANT] Handler.cs:58 - Silent failure (defensive)
-   Fix: Add logging
-
-## Investigate
-1. 🟡 [IMPORTANT] UserService.cs:200 - Race condition? (correctness)
-   Check: Is this called concurrently?
-   **Unknown**: Thread safety requirements
-
-## Plan
-1. 🔴 [CRITICAL] Auth missing from 5 endpoints
-   → `/code-foundations:whiteboarding "auth middleware"`
-````
-
-**Workflow**: Apply "Fix" → Spin off "Investigate" → `/code-foundations:whiteboarding` for "Plan"
-
----
-
-## Example
-
-**Question:**
-> "The picker text is overflowing into the icons on the right side"
-
-**Result:**
-```
-Step 1: Task Classification
-  → DEBUG (signals: "overflowing", visual bug)
-
-Step 2: Developer Character Check ✓
-
-Step 3: Root Cause Analysis
-  | Location        | Uses maxWidth? |
-  |-----------------|----------------|
-  | ResultRow       | ✓ maxWidth set |
-  | PickerTextField | ✗ No maxWidth  |
-
-  Root cause: PickerTextField missing the pattern already used elsewhere.
-
-Step 4: Surgical Fix
-  → Add maxWidth: "calc(100% - iconSpace)" to PickerTextField
-  → Done in 57 seconds
-```
-
----
-
-## Skill Chain
-
-The skills chain together based on task type:
+**Design loop, then implementation loop.** You know what to build. You want to collaborate on the design before code exists.
 
 ```
-code-foundations (dispatcher)
-       │
-       ├── DEBUG ──→ cc-developer-character ──→ cc-debugging
-       │                                              │
-       │                                              └── Scientific Method
-       │                                                  (stabilize → hypothesize → experiment → fix)
-       │
-       ├── WRITE ──→ cc-developer-character ──→ cc-construction-prerequisites
-       │                                              │
-       │                                              └── cc-pseudocode-programming
-       │                                                  (design before code)
-       │
-       ├── REVIEW ─→ cc-quality-practices ──→ cc-routine-and-class-design
-       │                                              │
-       │                                              └── CHECKER mode
-       │                                                  (violations, warnings)
-       │
-       └── REFACTOR → cc-developer-character ──→ cc-refactoring-guidance
-                                                      │
-                                                      └── cc-control-flow-quality (CHECKER)
-                                                          cc-routine-and-class-design (CHECKER)
+PHASE 1: DESIGN LOOP
+├─ Draft pseudocode (flow + contracts)
+├─ Explore subagent researches if needed
+├─ Tasklist tracks decisions
+├─ User feedback → refine
+└─ "Ready to build?" → explicit confirmation
+
+PHASE 2: IMPLEMENTATION LOOP
+├─ Subagent implements from pseudocode
+├─ Unit tests → integration tests
+├─ Commit checkpoint
+└─ User picks next task
 ```
+
+**Skills loaded:** `cc-pseudocode-programming`, `cc-defensive-programming`
+
+The design loop is where changes are cheap. Once you say "let's build," the contract is set.
+
+### `/code-foundations:prototype` - Prove Feasibility
+
+**One question. Minimum code. Maximum learning.**
+
+```
+User: "/code-foundations:prototype can I use WebSockets with this auth?"
+
+  SCOPE: "Can I establish authenticated WebSocket connection?"
+  MINIMUM: <50 lines, happy path only
+  EXECUTE: Write code, run it
+  RESULT: YES / NO / PARTIAL
+
+  → Saves to docs/prototypes/YYYY-MM-DD-<slug>.md
+```
+
+**Skills loaded:** `cc-pseudocode-programming`, `aposd-reviewing-module-design`
+
+**Chains into planning:** Prototype success flows into `/code-foundations:whiteboarding` for full planning.
+
+### `/code-foundations:debug` - Scientific Debugging
+
+**Predict, log, run, resolve.** Task list keeps you on track.
+
+```
+/code-foundations:debug login fails 20% of the time
+
+  TASK #1: Investigate login failure
+  ├─ PREDICT: "All tokens should be valid"
+  ├─ LOG: Add at validateToken entry
+  ├─ RUN: 2 of 10 fail, tokens valid
+  └─ RESOLVE: Problem is downstream → narrow
+
+  TASK #2: Narrow: validateToken result
+  ├─ PREDICT: "Cache should HIT on second call"
+  ├─ LOG: Add at cache check
+  ├─ RUN: Two MISS within 10ms
+  └─ RESOLVE: Race condition found → fix
+
+  TASK #3: Fix: request deduplication
+  └─ RESOLVE: Fix applied → verify
+
+  TASK #4: Verify: parallel logins succeed
+  └─ RUN: 100 parallel → 0 failures → Done!
+```
+
+**Skill loaded:** `cc-debugging` (scientific debugging method)
+
+The task list prevents rabbit holes, forgotten verifications, and lost context.
+
+### When to Use Each
+
+| Situation | Command |
+|-----------|---------|
+| Know what to build, want design collaboration | `/code-foundations:code` |
+| Technical uncertainty, prove it works | `/code-foundations:prototype` |
+| Need full feature planning | `/code-foundations:whiteboarding` |
+| Have approved plan, ready to implement | `/code-foundations:building` |
+| Bug hunting, need structured approach | `/code-foundations:debug` |
 
 ---
 
 ## Installation
 
 ```bash
-# Add marketplace (if not already added)
+# Add marketplace
 /plugin marketplace add ryanthedev/rtd-claude-inn
 
-# Install plugin
+# Install
 /plugin install code-foundations@rtd
 
-# Update to latest
+# Update
 /plugin update code-foundations@rtd
 ```
 
-## Documentation
+---
 
-For guides and detailed documentation, visit the **[Wiki](https://github.com/ryanthedev/code-foundations/wiki)**.
+## Credits
 
-## Case Studies
-
-Ranked by how well they demonstrate the skills:
-
-| # | Example | Type | Shows |
-|---|---------|------|-------|
-| 1 | [Z-Index Preservation](docs/whiteboarding-example-zindex-preservation.md) ⭐ | WHITEBOARD→BUILD | Full workflow: explore, pushback, research, 3-phase gated execution |
-| 2 | [Two-Tier Review Comparison](docs/review-example-two-tier-comparison.md) | REVIEW | Quick vs full review, context window trade-offs |
-| 3 | [Picker History Review](docs/review-example-picker-history-plan.md) | REVIEW | Multi-skill chaining, 4 violations, 3 warnings |
-| 4 | [Comment Renumbering](docs/refactor-example-comment-renumbering.md) | REFACTOR | Most concise—systematic table, one change at a time |
-| 5 | [Critical Path Review](docs/perf-example-critical-path-review.md) | OPTIMIZE | Measure-first—correctly decides NOT to optimize |
-| 6 | [Border Window Cleanup](docs/refactor-example-border-cleanup.md) | REFACTOR | CHECKER gates, McCabe complexity |
-| 7 | [Picker Text Overflow](docs/debug-flow-example-picker-overflow.md) | DEBUG | Root cause analysis, pattern matching |
-| 8 | [Tab Indicator Removal](docs/refactor-example-tab-indicator-removal.md) | REFACTOR | Discipline recovery, systematic removal |
-| 9 | [Picker Focus Bug](docs/debug-flow-example-picker-focus.md) | DEBUG | Scientific debugging method |
-| 10 | [Window Picker Plan](docs/prerequisites-example-window-picker-plan.md) | PLAN | Phased plan with checkpoints |
-
-## Source
-
-Based on *Code Complete, 2nd Edition* by Steve McConnell.
+Based on *Code Complete, 2nd Edition* by Steve McConnell and *A Philosophy of Software Design* by John Ousterhout.
 
 ## License
 
 MIT
-
