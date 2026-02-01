@@ -331,9 +331,9 @@ else:
 
 ---
 
-## SANITY STEP 1: EXTRACTION (Parallel Haiku)
+## SANITY STEP 1: EXTRACTION (Single Script Call)
 
-**Purpose:** Extract semantic units from changed files. Fast haiku agents batch by files.
+**Purpose:** Extract semantic units from changed files using tree-sitter extraction.
 
 **Mark phase in_progress:**
 
@@ -343,33 +343,41 @@ phase1_id = next(t.id for t in tasks if "Phase 1" in t.subject)
 TaskUpdate(taskId=phase1_id, status="in_progress")
 ```
 
-**Dispatch extraction agents:**
+**Execute extraction script:**
 
-```python
-MAX_PER_AGENT = 5
-files = read_lines(f"{BASE_DIR}/files.txt")
-NUM_BATCHES = max(1, ceil(len(files) / MAX_PER_AGENT))
-batches = split_evenly(files, NUM_BATCHES)
+```bash
+# Define script path and output location
+SCRIPT_PATH="{PLUGIN_ROOT}/agents/extract-with-diff.sh"
+OUTPUT_FILE="{BASE_DIR}/units.jsonl"
 
-# Dispatch in waves (respect MAX_PARALLELISM)
-for wave in waves:
-    for batch_num, file_batch in wave:
-        Task(
-            subagent_type="code-foundations:extraction-agent",
-            description=f"Extract batch {batch_num + 1}",
-            prompt=f"""
-FILES:
-{chr(10).join(file_batch)}
+# Execute extraction script from repository root
+cd "{REPO_ROOT}" && "{SCRIPT_PATH}" {DIFF_ARGS} > "{OUTPUT_FILE}" 2>&1
+EXIT_CODE=$?
 
-DIFF_CMD: {DIFF_CMD}
-PLUGIN_ROOT: {PLUGIN_ROOT}
-BASE_DIR: {BASE_DIR}
-"""
-        )
-    # WAIT for wave to complete
+# Handle errors
+if [ $EXIT_CODE -ne 0 ]; then
+  echo "Extraction failed. Exit code: $EXIT_CODE"
+  echo "Check that tree-sitter-cli is installed: npm install -g tree-sitter-cli"
+  echo "Script output shown above"
+  exit 1
+fi
+
+# Verify output exists and count units
+if [ ! -f "{OUTPUT_FILE}" ] || [ ! -s "{OUTPUT_FILE}" ]; then
+  FILE_COUNT=$(wc -l < "{BASE_DIR}/files.txt" | tr -d ' ')
+  if [ "$FILE_COUNT" -eq 0 ]; then
+    echo "No files to extract. Review target has no changes."
+  else
+    echo "Extraction produced no units from $FILE_COUNT files."
+    echo "This may indicate unsupported file types or extraction error."
+  fi
+else
+  UNIT_COUNT=$(wc -l < "{OUTPUT_FILE}" | tr -d ' ')
+  echo "Extracted $UNIT_COUNT units from changed files."
+fi
 ```
 
-**Mark complete (no merge needed):**
+**Mark phase complete:**
 
 ```python
 TaskUpdate(taskId=phase1_id, status="completed")
@@ -693,60 +701,46 @@ TaskUpdate(taskId=phase6_id, status="completed")
 
 ---
 
-## STEP 5: PHASE 1 - EXTRACTION (Parallel Haiku)
+## STEP 5: PHASE 1 - EXTRACTION (Single Script Call)
 
-**Purpose:** Extract semantic units from changed files for targeted checking.
+**Purpose:** Extract semantic units from changed files using tree-sitter extraction.
 
-**Create tasks:**
-```python
-MAX_PER_AGENT = 5
-NUM_BATCHES = max(1, ceil(FILE_COUNT / MAX_PER_AGENT))
-
-for batch_num in range(NUM_BATCHES):
-    TaskCreate(
-        subject=f"Extract batch {batch_num + 1}",
-        description=f"Extract semantic units from files",
-        activeForm=f"Extracting batch {batch_num + 1}"
-    )
-```
-
-**Execute (respect MAX_PARALLELISM):**
+**Mark phase in_progress:**
 
 ```python
-files = read_lines(f"{BASE_DIR}/files.txt")
-batches = split_evenly(files, NUM_BATCHES)
-indexed_batches = list(enumerate(batches))  # [(0, files), (1, files), ...]
-
-# Split into waves based on MAX_PARALLELISM
-if MAX_PARALLELISM == 0:
-    # Unlimited: all in one wave
-    waves = [indexed_batches]
-else:
-    # Limited: chunk into waves
-    waves = [indexed_batches[i:i+MAX_PARALLELISM]
-             for i in range(0, len(indexed_batches), MAX_PARALLELISM)]
-
-for wave in waves:
-    # Dispatch all agents in this wave in a SINGLE MESSAGE (true parallelism)
-    for batch_num, file_batch in wave:
-        Task(
-            subagent_type="code-foundations:extraction-agent",
-            description=f"Extract batch {batch_num + 1}",
-            prompt=f"""
-FILES:
-{chr(10).join(file_batch)}
-
-DIFF_CMD: {DIFF_CMD}
-PLUGIN_ROOT: {PLUGIN_ROOT}
-BASE_DIR: {BASE_DIR}
-"""
-        )
-    # WAIT for this wave to complete before starting next wave
+tasks = TaskList()
+phase1_id = next(t.id for t in tasks if "Phase 1" in t.subject)
+TaskUpdate(taskId=phase1_id, status="in_progress")
 ```
 
-**Mark extraction complete (no merge needed):**
+**Execute extraction script:**
 
-Mark all extraction tasks completed.
+```bash
+# Define script path and output location
+SCRIPT_PATH="{PLUGIN_ROOT}/agents/extract-with-diff.sh"
+OUTPUT_FILE="{BASE_DIR}/units.jsonl"
+
+# Execute extraction script from repository root
+cd "{REPO_ROOT}" && "{SCRIPT_PATH}" {DIFF_ARGS} > "{OUTPUT_FILE}" 2>&1
+EXIT_CODE=$?
+
+# Handle errors
+if [ $EXIT_CODE -ne 0 ]; then
+  echo "Extraction failed. Exit code: $EXIT_CODE"
+  echo "Ensure tree-sitter-cli is installed globally."
+  exit 1
+fi
+
+# Count extracted units for progress display
+UNIT_COUNT=$(wc -l < "{OUTPUT_FILE}" | tr -d ' ')
+echo "Extracted $UNIT_COUNT units."
+```
+
+**Mark phase complete:**
+
+```python
+TaskUpdate(taskId=phase1_id, status="completed")
+```
 
 ---
 
