@@ -56,6 +56,9 @@ Profiles define which checklists to run and which skills inform each:
 name: my-profile
 description: "Description"
 
+# Parallelism (optional - default: unlimited)
+max_parallelism: 5      # Max concurrent agents per phase (0 = unlimited)
+
 # Model configuration (optional - all default to haiku)
 models:
   checking: haiku       # Checklist execution

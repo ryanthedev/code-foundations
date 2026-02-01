@@ -4,6 +4,9 @@
 name: pr
 description: "Full PR review - 10 skills, 614 checks"
 
+# Parallelism (optional - default: unlimited)
+# max_parallelism: 5  # Max concurrent agents per phase
+
 # Model configuration (optional - defaults shown)
 models:
   checking: haiku       # Checklist execution - systematic, not deep reasoning

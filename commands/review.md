@@ -137,6 +137,9 @@ checklists:
 **Validation:**
 
 ```python
+# Extract parallelism configuration (default: unlimited = 0)
+MAX_PARALLELISM = profile.get("max_parallelism", 0)  # 0 means unlimited
+
 # Extract model configuration (with defaults)
 MODELS = {
     "checking": profile.get("models", {}).get("checking", "haiku"),
@@ -287,19 +290,30 @@ for batch_num in range(NUM_BATCHES):
     )
 ```
 
-**Execute (dispatch ALL in single message):**
+**Execute (respect MAX_PARALLELISM):**
 
 ```python
 files = read_lines(f"{BASE_DIR}/files.txt")
 batches = split_evenly(files, NUM_BATCHES)
+indexed_batches = list(enumerate(batches))  # [(0, files), (1, files), ...]
 
-# Single message with multiple Task calls = true parallelism
-for batch_num, file_batch in enumerate(batches):
-    Task(
-        subagent_type="general-purpose",
-        model="haiku",
-        description=f"Extract batch {batch_num + 1}",
-        prompt=f"""
+# Split into waves based on MAX_PARALLELISM
+if MAX_PARALLELISM == 0:
+    # Unlimited: all in one wave
+    waves = [indexed_batches]
+else:
+    # Limited: chunk into waves
+    waves = [indexed_batches[i:i+MAX_PARALLELISM]
+             for i in range(0, len(indexed_batches), MAX_PARALLELISM)]
+
+for wave in waves:
+    # Dispatch all agents in this wave in a SINGLE MESSAGE (true parallelism)
+    for batch_num, file_batch in wave:
+        Task(
+            subagent_type="general-purpose",
+            model="haiku",
+            description=f"Extract batch {batch_num + 1}",
+            prompt=f"""
 ## Extraction Agent
 
 Extract semantic units from these files in {REPO_ROOT}:
@@ -337,7 +351,8 @@ Write to `{BASE_DIR}/extraction/batch-{batch_num + 1}.json`:
 }}
 ```
 """
-    )
+        )
+    # WAIT for this wave to complete before starting next wave
 ```
 
 **Wait for all extraction agents, then merge:**
@@ -369,18 +384,29 @@ for checklist in CHECKLISTS:
     )
 ```
 
-**Execute (dispatch ALL in single message):**
+**Execute (respect MAX_PARALLELISM):**
 
 ```python
-for checklist in CHECKLISTS:
-    checklist_name = basename(checklist.path, ".md")
-    skills_to_load = checklist.skills
+indexed_checklists = list(enumerate(CHECKLISTS))
 
-    Task(
-        subagent_type="general-purpose",
-        model=MODELS["checking"],  # From profile config (default: haiku)
-        description=f"Check: {checklist_name}",
-        prompt=f"""
+# Split into waves based on MAX_PARALLELISM
+if MAX_PARALLELISM == 0:
+    waves = [indexed_checklists]
+else:
+    waves = [indexed_checklists[i:i+MAX_PARALLELISM]
+             for i in range(0, len(indexed_checklists), MAX_PARALLELISM)]
+
+for wave in waves:
+    # Dispatch all agents in this wave in a SINGLE MESSAGE
+    for _, checklist in wave:
+        checklist_name = basename(checklist.path, ".md")
+        skills_to_load = checklist.skills
+
+        Task(
+            subagent_type="general-purpose",
+            model=MODELS["checking"],  # From profile config (default: haiku)
+            description=f"Check: {checklist_name}",
+            prompt=f"""
 ## Checklist Agent: {checklist_name}
 
 You are a checklist agent. Execute EVERY item in the checklist against the code.
@@ -468,7 +494,8 @@ Write to `{BASE_DIR}/checking/{checklist_name}.json`:
 
 Return: `{BASE_DIR}/checking/{checklist_name}.json`
 """
-    )
+        )
+    # WAIT for this wave to complete before starting next wave
 ```
 
 **Wait for all checking agents.**
@@ -574,19 +601,28 @@ if len(investigate_tasks) == 0:
 
 **Purpose:** Verify findings in parallel. Each agent handles one batch. Capture code context and diff for report.
 
-**Dispatch ALL in single message:**
+**Execute (respect MAX_PARALLELISM):**
 
 ```python
-for task in investigate_tasks:
-    batch_num = task.metadata["batch"]
-    findings = task.metadata["findings"]
-    files = list(set(f["file"] for f in findings))
+# Split into waves based on MAX_PARALLELISM
+if MAX_PARALLELISM == 0:
+    waves = [investigate_tasks]
+else:
+    waves = [investigate_tasks[i:i+MAX_PARALLELISM]
+             for i in range(0, len(investigate_tasks), MAX_PARALLELISM)]
 
-    Task(
-        subagent_type="general-purpose",
-        model=MODELS["investigation"],  # From profile config (default: haiku)
-        description=f"Investigate batch {batch_num}",
-        prompt=f"""
+for wave in waves:
+    # Dispatch all agents in this wave in a SINGLE MESSAGE
+    for task in wave:
+        batch_num = task.metadata["batch"]
+        findings = task.metadata["findings"]
+        files = list(set(f["file"] for f in findings))
+
+        Task(
+            subagent_type="general-purpose",
+            model=MODELS["investigation"],  # From profile config (default: haiku)
+            description=f"Investigate batch {batch_num}",
+            prompt=f"""
 ## Investigation Agent
 
 Verify these findings in {REPO_ROOT}:
@@ -664,7 +700,8 @@ Write to `{BASE_DIR}/investigation/batch-{batch_num}.json`:
 
 **Important:** Always include `code_context` with ~10 lines around the finding. Include `diff_hunk` if the finding is in changed code, otherwise null.
 """
-    )
+        )
+    # WAIT for this wave to complete before starting next wave
 ```
 
 **Wait for all investigation agents.**
@@ -975,6 +1012,26 @@ Skill(code-foundations:whiteboarding, args: "Fix review findings from {BASE_DIR}
 | Report | 1 | `profile.models.report` | Fixed |
 
 **All dispatched by main agent** - single message with multiple Task calls = true parallelism.
+
+### max_parallelism
+
+Control concurrent agents per phase via profile config:
+
+```yaml
+max_parallelism: 5  # Max concurrent agents (default: unlimited)
+```
+
+| Setting | Behavior |
+|---------|----------|
+| `0` or omitted | Unlimited - dispatch all agents at once |
+| `1` | Sequential - one agent at a time |
+| `N` | Dispatch in waves of N agents, wait between waves |
+
+**Example:** PR profile with 10 checklists, `max_parallelism: 3`:
+- Wave 1: checklists 1-3 (wait)
+- Wave 2: checklists 4-6 (wait)
+- Wave 3: checklists 7-9 (wait)
+- Wave 4: checklist 10 (wait)
 
 ## SCALING ANALYSIS (100k Line PR)
 
