@@ -9,9 +9,9 @@ max_parallelism: 3  # Max concurrent agents per phase
 
 # Model configuration (optional - defaults shown)
 models:
-  checking: haiku       # Single checklist, fast execution
-  investigation: haiku  # Quick verification
-  report: haiku         # Simple report for sanity check
+  checking: sonnet       # Needs reasoning depth for accurate checks
+  investigation: sonnet  # Needs reasoning depth for verification
+  report: haiku          # Simple report for sanity check
 
 # Custom dashboard generation
 dashboard:

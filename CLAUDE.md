@@ -32,10 +32,14 @@ Code-foundations is a Claude Code plugin providing software engineering skills b
 **Profile-driven architecture:** One unified flow, configurable via profiles.
 
 ```
-┌────────────┐   ┌──────────┐   ┌─────────────┐   ┌───────────────┐   ┌────────┐
-│ EXTRACTION │ → │ CHECKING │ → │ ORCHESTRATE │ → │ INVESTIGATION │ → │ REPORT │
-│  (haiku)   │   │ (haiku)  │   │   (haiku)   │   │    (haiku)    │   │(haiku) │
-└────────────┘   └──────────┘   └─────────────┘   └───────────────┘   └────────┘
+┌────────────┐   ┌─────────────┐   ┌───────────┐   ┌─────────────┐   ┌───────────────┐   ┌────────┐
+│ EXTRACTION │ → │ CHECK ORCH  │ → │ CHECKING  │ → │ ORCHESTRATE │ → │ INVESTIGATION │ → │ REPORT │
+│  (haiku)   │   │   (haiku)   │   │ (sonnet)  │   │   (haiku)   │   │   (sonnet)    │   │(haiku) │
+└────────────┘   └─────────────┘   └───────────┘   └─────────────┘   └───────────────┘   └────────┘
+      ↑                ↑                 ↑                ↑                  ↑               ↑
+   Batch by        Group by         1 agent per      Dedupe &          1 agent per      Verdicts
+   files (5)       ID prefix        prefix group     batch             5 findings       only
+                   (GC-, EH-...)    + ALL skills
 ```
 
 | Preset | Checklists | Checks | Use Case |
@@ -59,11 +63,11 @@ description: "Description"
 # Parallelism (default: 3)
 max_parallelism: 3      # Max concurrent agents per phase (0 = unlimited)
 
-# Model configuration (optional - all default to haiku)
+# Model configuration (optional - defaults shown)
 models:
-  checking: haiku       # Checklist execution
-  investigation: haiku  # Finding verification
-  report: haiku         # JSON compilation
+  checking: sonnet       # Checklist execution
+  investigation: sonnet  # Finding verification
+  report: haiku          # JSON compilation
 
 # Custom dashboard (optional - generates project-specific HTML)
 dashboard:
@@ -84,7 +88,7 @@ checklists:
     skills: []
 ```
 
-**Each checklist = 1 checking agent** during review.
+**1 prefix group = 1 checking agent** during review (e.g., all `GC-` checks together). Orchestrator picks 1-3 relevant skills per group.
 
 ### Built-in Profiles
 
@@ -115,10 +119,11 @@ checklists:
 2. **Validate** → Check checklist paths exist, warn on missing skills
 3. **Get target** → Ask for diff args (staged, unstaged, branch)
 4. **Extraction** → Parallel haiku agents (batch by files)
-5. **Checking** → Parallel agents (1 per checklist, loads skills)
-6. **Orchestrate** → Single haiku agent batches findings, creates investigation tasks
-7. **Investigation** → Parallel haiku agents (1 per 5 findings), verify and filter
-8. **Report** → Single haiku agent compiles findings into JSON report
+5. **Check Orchestrate** → Single haiku agent parses checklists, groups by ID prefix, writes prompt + picks skills per group
+6. **Checking** → Parallel sonnet agents (1 per prefix group like `GC-`, `EH-`, loads group-specific skills)
+7. **Orchestrate** → Single haiku agent batches findings, creates investigation tasks
+8. **Investigation** → Parallel sonnet agents (1 per 5 findings), verify and filter
+9. **Report** → Single haiku agent compiles findings into JSON report
 
 **Main agent orchestrates** - dispatches all agents directly for true parallelism.
 

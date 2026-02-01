@@ -21,14 +21,14 @@ Unified review workflow. One flow, driven by profile configuration.
 ## ARCHITECTURE
 
 ```
-┌────────────┐   ┌────────────┐   ┌─────────────┐   ┌───────────────┐   ┌────────┐
-│ EXTRACTION │ → │  CHECKING  │ → │ ORCHESTRATE │ → │ INVESTIGATION │ → │ REPORT │
-│  (haiku)   │   │  (haiku)   │   │   (haiku)   │   │    (haiku)    │   │(haiku) │
-└────────────┘   └────────────┘   └─────────────┘   └───────────────┘   └────────┘
-      ↑                ↑                 ↑                  ↑               ↑
-   Batch by        1 agent per       1 agent:           1 agent per     Verdicts
-   files (5)       checklist         batches &          5 findings      only
-                                     creates tasks
+┌────────────┐   ┌─────────────┐   ┌───────────┐   ┌─────────────┐   ┌───────────────┐   ┌────────┐
+│ EXTRACTION │ → │ CHECK ORCH  │ → │ CHECKING  │ → │ ORCHESTRATE │ → │ INVESTIGATION │ → │ REPORT │
+│  (haiku)   │   │   (haiku)   │   │ (sonnet)  │   │   (haiku)   │   │   (sonnet)    │   │(haiku) │
+└────────────┘   └─────────────┘   └───────────┘   └─────────────┘   └───────────────┘   └────────┘
+      ↑                ↑                 ↑                ↑                  ↑               ↑
+   Batch by        Group by         1 agent per      Dedupe &          1 agent per      Verdicts
+   files (5)       ID prefix        prefix group     batch             5 findings       only
+                   (GC-, EH-...)    + ALL skills
 ```
 
 **Main agent orchestrates everything** - dispatches all agents directly for true parallelism.
@@ -369,114 +369,216 @@ Mark all extraction tasks completed.
 
 ---
 
-## STEP 6: PHASE 2 - CHECKING (Parallel per Checklist)
+## STEP 6: PHASE 2a - CHECK ORCHESTRATION (Single Haiku)
 
-**Purpose:** Run each checklist against the code. One agent per checklist.
+**Purpose:** Parse all checklists, extract checks, and group by ID prefix (e.g., `GC-`, `EH-`, `OP-`).
+
+**Available checker skills** (orchestrator picks per group):
+- `cc-defensive-programming` - input validation, assertions, error handling
+- `cc-performance-tuning` - optimization, profiling, bottlenecks
+- `cc-code-layout-and-style` - formatting, readability, visual structure
+- `cc-control-flow-quality` - conditionals, loops, nesting, complexity
+- `cc-quality-practices` - testing, debugging, code review
+- `cc-documentation-quality` - comments, docs, naming
+- `aposd-reviewing-module-design` - abstraction, interfaces, dependencies
+- `aposd-simplifying-complexity` - complexity symptoms, deep modules
+- `aposd-verifying-correctness` - correctness, edge cases, invariants
+- `aposd-optimizing-critical-paths` - performance design, critical paths
+
+**Dispatch orchestrator:**
+```python
+Task(
+    subagent_type="general-purpose",
+    model="haiku",
+    description="Orchestrate checks",
+    prompt=f"""
+## Check Orchestrator
+
+Parse all checklists, extract checks, and group by ID prefix.
+
+### Checklists to Parse
+
+{chr(10).join(f"- {c.resolved_path}" for c in CHECKLISTS)}
+
+### Instructions
+
+For each checklist:
+1. Read the file
+2. Extract every check item (lines starting with `- [ ]` followed by an ID like `GC-1`, `EH-2`, `OP-3`)
+3. Group checks by their prefix (the letters before the hyphen)
+
+### Output
+
+Write to `{BASE_DIR}/checks.json`:
+
+```json
+{{
+  "total_checks": 614,
+  "groups": {{
+    "GC": {{
+      "name": "General Critical",
+      "prompt": "Hunt for unvalidated inputs and missing assertions. Red flags: external data trusted without validation, no precondition checks at routine entry, assertions used for normal error handling instead of impossible conditions.",
+      "skills": ["cc-defensive-programming"],
+      "checks": [
+        {{
+          "id": "GC-1",
+          "check": "Does the routine protect itself from bad input data?",
+          "section": "General",
+          "source_checklist": "skills/cc-defensive-programming/checklists.md"
+        }}
+      ]
+    }},
+    "EH": {{
+      "name": "Exceptions High",
+      "prompt": "Focus on exception hygiene. Red flags: exceptions for control flow, empty catch blocks, implementation details leaking through exception types, exceptions in constructors/destructors.",
+      "skills": ["cc-defensive-programming", "aposd-simplifying-complexity"],
+      "checks": [...]
+    }},
+    "OP": {{
+      "name": "Overall Program Performance",
+      "prompt": "Look for optimization anti-patterns. Red flags: micro-optimizing before measuring, I/O in tight loops, ignoring algorithmic improvements in favor of code tuning.",
+      "skills": ["cc-performance-tuning", "aposd-optimizing-critical-paths"],
+      "checks": [...]
+    }}
+  }}
+}}
+```
+
+**For each group:**
+
+1. **`prompt`**: Write a focused hunting prompt:
+   - Summarizes what this group is hunting for (1 sentence)
+   - Lists 2-3 specific red flags to watch for
+   - Is actionable and specific to the checks in that group
+
+2. **`skills`**: Pick 1-3 most relevant skills from this list:
+   - `cc-defensive-programming` - input validation, assertions, error handling
+   - `cc-performance-tuning` - optimization, profiling, bottlenecks
+   - `cc-code-layout-and-style` - formatting, readability, visual structure
+   - `cc-control-flow-quality` - conditionals, loops, nesting, complexity
+   - `cc-quality-practices` - testing, debugging, code review
+   - `cc-documentation-quality` - comments, docs, naming
+   - `aposd-reviewing-module-design` - abstraction, interfaces, dependencies
+   - `aposd-simplifying-complexity` - complexity symptoms, deep modules
+   - `aposd-verifying-correctness` - correctness, edge cases, invariants
+   - `aposd-optimizing-critical-paths` - performance design, critical paths
+
+   Pick based on what the checks are actually examining. Don't load unrelated skills.
+
+The `name` field should be inferred from the section header where these checks appear.
+
+Return the total check count and number of groups.
+"""
+)
+```
+
+**Wait for orchestrator. Then read checks:**
+```python
+checks_data = read_json(f"{BASE_DIR}/checks.json")
+TOTAL_CHECKS = checks_data["total_checks"]
+CHECK_GROUPS = checks_data["groups"]  # Dict of prefix -> {name, checks}
+```
+
+---
+
+## STEP 6b: PHASE 2b - CHECKING (Parallel, 1 Agent per Prefix Group)
+
+**Purpose:** Run checks against the code. Each agent handles one prefix group and loads ALL checker skills.
 
 **Create tasks:**
 ```python
-for checklist in CHECKLISTS:
-    checklist_name = basename(checklist.path, ".md")
+for prefix, group in CHECK_GROUPS.items():
     TaskCreate(
-        subject=f"Check: {checklist_name}",
-        description=f"Run {checklist.path} checklist",
-        activeForm=f"Running {checklist_name}"
+        subject=f"Check: {prefix}",
+        description=f"Run {len(group['checks'])} {group['name']} checks",
+        activeForm=f"Checking {prefix}"
     )
 ```
 
 **Execute (respect MAX_PARALLELISM):**
 
 ```python
-indexed_checklists = list(enumerate(CHECKLISTS))
+indexed_groups = list(CHECK_GROUPS.items())
 
 # Split into waves based on MAX_PARALLELISM
 if MAX_PARALLELISM == 0:
-    waves = [indexed_checklists]
+    waves = [indexed_groups]
 else:
-    waves = [indexed_checklists[i:i+MAX_PARALLELISM]
-             for i in range(0, len(indexed_checklists), MAX_PARALLELISM)]
+    waves = [indexed_groups[i:i+MAX_PARALLELISM]
+             for i in range(0, len(indexed_groups), MAX_PARALLELISM)]
 
 for wave in waves:
     # Dispatch all agents in this wave in a SINGLE MESSAGE
-    for _, checklist in wave:
-        checklist_name = basename(checklist.path, ".md")
-        skills_to_load = checklist.skills
+    for prefix, group in wave:
+        checks = group["checks"]
+        group_name = group["name"]
+        group_prompt = group["prompt"]
+        group_skills = group["skills"]
 
         Task(
             subagent_type="general-purpose",
-            model=MODELS["checking"],  # From profile config (default: haiku)
-            description=f"Check: {checklist_name}",
+            model=MODELS["checking"],  # From profile config
+            description=f"Check: {prefix}",
             prompt=f"""
-## Checklist Agent: {checklist_name}
+## Checker Agent: {prefix} ({group_name})
 
-You are a checklist agent. Execute EVERY item in the checklist against the code.
+You are a checker agent. Execute all {len(checks)} checks in the {prefix} group.
 
-### PHASE 1: LOAD CONTEXT
+### YOUR FOCUS
 
-1. Load skills for persona and mental models:
-{"".join(f'''
-   ```
-   Skill(code-foundations:{skill})
-   ```
-''' for skill in skills_to_load) if skills_to_load else "   (No skills - self-contained checklist)"}
+{group_prompt}
 
-2. Read the checklist:
-   ```
-   Read({checklist.resolved_path})
-   ```
+### PHASE 1: LOAD SKILLS
 
-3. Read extracted units:
+Load skills for this group's expertise:
+
+{chr(10).join(f'''```
+Skill(code-foundations:{skill})
+```''' for skill in group_skills)}
+
+### PHASE 2: LOAD CODE CONTEXT
+
+1. Read extracted units:
    ```
    Read({BASE_DIR}/units.json)
    ```
 
-4. Get the diff:
+2. Get the diff:
    ```bash
    cd {REPO_ROOT}
    {DIFF_CMD}
    ```
 
-5. Read changed files for full context.
+3. Read changed files for full context.
 
-### PHASE 2: EXECUTE CHECKLIST
+### PHASE 3: EXECUTE CHECKS
 
-Process the checklist **section by section**. For each section:
+Your assigned checks ({prefix} group - {group_name}):
 
-1. Log the section header
-2. For EACH checklist item (every line starting with `- [ ]`):
-   - Extract the item ID
-   - Log the check message (the question being asked)
-   - Apply the check to the code
-   - Record and log result:
-     - **PASS**: Check satisfied. One-line evidence.
-     - **FINDING**: Check failed. Include file:line, evidence, confidence, recommendation.
+{chr(10).join(f'''**{c["id"]}**: {c["check"]}''' for c in checks)}
 
-3. After completing the section, log a section summary:
-   ```
-   ## {{SECTION_NAME}}
+For EACH check:
+1. Apply the check to the changed code
+2. Record result:
+   - **PASS**: Check satisfied. One-line evidence.
+   - **FINDING**: Check failed. Include file:line, evidence, confidence, recommendation.
 
-   - {{ID-1}}: "{{check message}}" → PASS (evidence)
-   - {{ID-2}}: "{{check message}}" → FINDING: {{file}}:{{line}} - {{issue}}
+### PHASE 4: OUTPUT
 
-   Section: {{pass_count}} passed, {{finding_count}} findings
-   ```
-
-### PHASE 3: OUTPUT
-
-Write to `{BASE_DIR}/checking/{checklist_name}.json`:
+Write to `{BASE_DIR}/checking/{prefix}.json`:
 
 ```json
 {{
-  "checklist": "{checklist.path}",
-  "skills_loaded": {json.dumps(skills_to_load)},
-  "items_checked": <count>,
+  "prefix": "{prefix}",
+  "group_name": "{group_name}",
+  "checks_run": {len(checks)},
   "findings": [
     {{
-      "id": "SEC-1",
-      "check": "Is input validated before use?",
+      "id": "{prefix}-1",
+      "check": "...",
       "file": "src/auth.ts",
       "line": 42,
-      "issue": "User input not validated",
+      "issue": "...",
       "confidence": "HIGH",
       "evidence": "...",
       "recommendation": "..."
@@ -484,21 +586,21 @@ Write to `{BASE_DIR}/checking/{checklist_name}.json`:
   ],
   "passes": [
     {{
-      "id": "SEC-2",
-      "check": "Are all inputs sanitized?",
-      "evidence": "All inputs sanitized via sanitize() at entry points"
+      "id": "{prefix}-2",
+      "check": "...",
+      "evidence": "..."
     }}
   ]
 }}
 ```
 
-Return: `{BASE_DIR}/checking/{checklist_name}.json`
+Return: `{BASE_DIR}/checking/{prefix}.json`
 """
         )
     # WAIT for this wave to complete before starting next wave
 ```
 
-**Wait for all checking agents.**
+**Wait for all checker agents.**
 
 ---
 
@@ -1049,12 +1151,17 @@ Skill(code-foundations:whiteboarding, args: "Fix review findings from {BASE_DIR}
 | Phase | Agents | Model | Scaling |
 |-------|--------|-------|---------|
 | Extraction | 1 per 5 files | haiku | `ceil(files / 5)` |
-| Checking | 1 per checklist | `profile.models.checking` | `len(checklists)` |
+| Check Orchestrate | 1 | haiku | Fixed |
+| Checking | 1 per prefix group | `profile.models.checking` | `len(unique_prefixes)` |
 | Orchestrate | 1 | haiku | Fixed |
 | Investigation | 1 per 5 findings | `profile.models.investigation` | `ceil(findings / 5)` |
 | Report | 1 | `profile.models.report` | Fixed |
 
 **All dispatched by main agent** - single message with multiple Task calls = true parallelism.
+
+**Checker agents load group-specific skills** - orchestrator picks 1-3 relevant skills per prefix group.
+
+**Prefix groups** - checks are grouped by ID prefix (e.g., `GC-`, `EH-`, `OP-`, `CT-`). Each prefix = 1 agent.
 
 ### max_parallelism
 
@@ -1070,18 +1177,19 @@ max_parallelism: 5  # Max concurrent agents (default: 3)
 | `1` | Sequential - one agent at a time |
 | `N` | Dispatch in waves of N agents, wait between waves |
 
-**Example:** PR profile with 10 checklists, `max_parallelism: 3`:
-- Wave 1: checklists 1-3 (wait)
-- Wave 2: checklists 4-6 (wait)
-- Wave 3: checklists 7-9 (wait)
-- Wave 4: checklist 10 (wait)
+**Example:** PR profile with ~30 prefix groups, `max_parallelism: 3`:
+- Wave 1: GC, GH, GS (wait)
+- Wave 2: EH, EC, SC (wait)
+- Wave 3: OP, CT, SS (wait)
+- ...
 
 ## SCALING ANALYSIS (100k Line PR)
 
 | Phase | Agents | Context per Agent | Notes |
 |-------|--------|-------------------|-------|
 | Extraction | ~200 | Small (5 files) | Parallel, fast |
-| Checking | 10 | Medium (units.json) | Fixed by profile |
+| Check Orchestrate | 1 | Small (parse checklists) | Just text parsing |
+| Checking | ~30 | Medium (prefix group + all skills + code) | Semantic grouping |
 | Orchestrate | 1 | Medium (all findings) | Just batching |
 | Investigation | ~40 | Small (5 findings + files) | Bounded context |
 | Report | 1 | Small (verdicts only) | No raw code |

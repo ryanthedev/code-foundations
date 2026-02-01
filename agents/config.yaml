@@ -9,18 +9,18 @@ agent:
     max_files_per_agent: 5
 
   # Checking: one agent per checklist
-  # Model configurable per profile (default: haiku)
+  # Model configurable per profile (default: sonnet)
   checking:
-    default_model: haiku  # Checklist execution is systematic
+    default_model: sonnet  # Checklist execution needs reasoning depth
 
   # Orchestrate: single agent, batches findings and creates tasks
   orchestrate:
     model: haiku  # Just batching, no deep reasoning
 
   # Investigation: one agent per batch of findings
-  # Model configurable per profile (default: haiku)
+  # Model configurable per profile (default: sonnet)
   investigation:
-    default_model: haiku
+    default_model: sonnet  # Verification needs reasoning depth
     max_findings_per_agent: 5
 
   # Report: single agent, compiles findings into JSON
