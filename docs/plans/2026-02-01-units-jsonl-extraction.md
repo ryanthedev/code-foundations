@@ -1,6 +1,6 @@
 # units.jsonl Extraction System
 
-Status: in-progress
+Status: complete
 Spec: /Users/r/repos/code-foundations/docs/specs/units-jsonl-spec.md
 
 ## Objective
