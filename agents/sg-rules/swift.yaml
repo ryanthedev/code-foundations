@@ -1,0 +1,227 @@
+# Swift extraction rules for ast-grep
+# Extracts: functions, throwing functions, classes, structs, protocols, extensions,
+#           enums, actors, typealiases, init, deinit, closures, properties
+#
+# Swift AST notes:
+# - class_declaration covers class, struct, extension, enum, actor (use declaration_kind field)
+# - function_declaration has name field as simple_identifier
+# - init_declaration and deinit_declaration are separate node kinds
+# - visibility_modifier contains: public, private, internal, fileprivate, open
+# - throws keyword appears directly in function_declaration
+# - inheritance_specifier contains parent types
+# - lambda_literal is used for closures
+
+id: swift-function
+language: swift
+rule:
+  all:
+    - kind: function_declaration
+    - has:
+        field: name
+        kind: simple_identifier
+        pattern: $NAME
+        stopBy: end
+
+---
+id: swift-throwing-function
+language: swift
+rule:
+  all:
+    - kind: function_declaration
+    - has:
+        field: name
+        kind: simple_identifier
+        pattern: $NAME
+        stopBy: end
+    - has:
+        kind: throws
+        stopBy: neighbor
+
+---
+id: swift-public-function
+language: swift
+rule:
+  all:
+    - kind: function_declaration
+    - has:
+        field: name
+        kind: simple_identifier
+        pattern: $NAME
+        stopBy: end
+    - has:
+        kind: modifiers
+        has:
+          kind: visibility_modifier
+          regex: public|open
+        stopBy: neighbor
+
+---
+id: swift-private-function
+language: swift
+rule:
+  all:
+    - kind: function_declaration
+    - has:
+        field: name
+        kind: simple_identifier
+        pattern: $NAME
+        stopBy: end
+    - has:
+        kind: modifiers
+        has:
+          kind: visibility_modifier
+          regex: private|fileprivate
+        stopBy: neighbor
+
+---
+id: swift-class
+language: swift
+rule:
+  all:
+    - kind: class_declaration
+    - has:
+        field: declaration_kind
+        regex: ^class$
+        stopBy: neighbor
+    - has:
+        field: name
+        kind: type_identifier
+        pattern: $NAME
+        stopBy: end
+
+---
+id: swift-class-with-inheritance
+language: swift
+rule:
+  all:
+    - kind: class_declaration
+    - has:
+        field: declaration_kind
+        regex: ^class$
+        stopBy: neighbor
+    - has:
+        field: name
+        kind: type_identifier
+        pattern: $NAME
+        stopBy: end
+    - has:
+        kind: inheritance_specifier
+        stopBy: neighbor
+
+---
+id: swift-struct
+language: swift
+rule:
+  all:
+    - kind: class_declaration
+    - has:
+        field: declaration_kind
+        regex: ^struct$
+        stopBy: neighbor
+    - has:
+        field: name
+        kind: type_identifier
+        pattern: $NAME
+        stopBy: end
+
+---
+id: swift-protocol
+language: swift
+rule:
+  all:
+    - kind: protocol_declaration
+    - has:
+        field: name
+        kind: type_identifier
+        pattern: $NAME
+        stopBy: end
+
+---
+id: swift-extension
+language: swift
+rule:
+  all:
+    - kind: class_declaration
+    - has:
+        field: declaration_kind
+        regex: ^extension$
+        stopBy: neighbor
+    - has:
+        field: name
+        kind: user_type
+        stopBy: end
+
+---
+id: swift-enum
+language: swift
+rule:
+  all:
+    - kind: class_declaration
+    - has:
+        field: declaration_kind
+        regex: ^enum$
+        stopBy: neighbor
+    - has:
+        field: name
+        kind: type_identifier
+        pattern: $NAME
+        stopBy: end
+
+---
+id: swift-actor
+language: swift
+rule:
+  all:
+    - kind: class_declaration
+    - has:
+        field: declaration_kind
+        regex: ^actor$
+        stopBy: neighbor
+    - has:
+        field: name
+        kind: type_identifier
+        pattern: $NAME
+        stopBy: end
+
+---
+id: swift-typealias
+language: swift
+rule:
+  all:
+    - kind: typealias_declaration
+    - has:
+        field: name
+        kind: type_identifier
+        pattern: $NAME
+        stopBy: end
+
+---
+id: swift-init
+language: swift
+rule:
+  kind: init_declaration
+
+---
+id: swift-deinit
+language: swift
+rule:
+  kind: deinit_declaration
+
+---
+id: swift-closure
+language: swift
+rule:
+  kind: lambda_literal
+
+---
+id: swift-property
+language: swift
+rule:
+  all:
+    - kind: property_declaration
+    - has:
+        kind: pattern
+        has:
+          kind: simple_identifier
+          pattern: $NAME
+        stopBy: end

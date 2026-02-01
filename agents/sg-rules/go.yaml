@@ -1,0 +1,107 @@
+# Go extraction rules for ast-grep
+# Extracts: functions, methods, structs, interfaces
+# Characteristics detection: loops, goroutines, defer, panic/recover
+
+id: go-function
+language: go
+rule:
+  all:
+    - kind: function_declaration
+    - has:
+        field: name
+        pattern: $NAME
+        stopBy: end
+---
+id: go-method
+language: go
+rule:
+  all:
+    - kind: method_declaration
+    - has:
+        field: name
+        pattern: $NAME
+        stopBy: end
+---
+id: go-struct
+language: go
+rule:
+  all:
+    - kind: type_declaration
+    - has:
+        kind: type_spec
+        has:
+          kind: struct_type
+          stopBy: end
+        stopBy: end
+    - has:
+        kind: type_spec
+        has:
+          field: name
+          pattern: $NAME
+          stopBy: end
+        stopBy: end
+---
+id: go-interface
+language: go
+rule:
+  all:
+    - kind: type_declaration
+    - has:
+        kind: type_spec
+        has:
+          kind: interface_type
+          stopBy: end
+        stopBy: end
+    - has:
+        kind: type_spec
+        has:
+          field: name
+          pattern: $NAME
+          stopBy: end
+        stopBy: end
+---
+# Characteristic detection rules - for detecting features within functions/methods
+
+id: go-has-for-loop
+language: go
+rule:
+  kind: for_statement
+---
+id: go-has-goroutine
+language: go
+rule:
+  kind: go_statement
+---
+id: go-has-defer
+language: go
+rule:
+  kind: defer_statement
+---
+id: go-has-panic
+language: go
+rule:
+  all:
+    - kind: call_expression
+    - has:
+        field: function
+        regex: ^panic$
+        stopBy: end
+---
+id: go-has-recover
+language: go
+rule:
+  all:
+    - kind: call_expression
+    - has:
+        field: function
+        regex: ^recover$
+        stopBy: end
+---
+id: go-has-range-loop
+language: go
+rule:
+  all:
+    - kind: for_statement
+    - has:
+        kind: range_clause
+        stopBy: end

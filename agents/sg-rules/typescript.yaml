@@ -1,0 +1,44 @@
+# TypeScript extraction rules for ast-grep
+# Extracts: functions, arrow functions, methods, classes
+
+id: ts-function
+language: typescript
+rule:
+  all:
+    - kind: function_declaration
+    - pattern: $$$HEAD function $NAME($$$PARAMS) $$$REST
+---
+id: ts-arrow-const
+language: typescript
+rule:
+  all:
+    - kind: lexical_declaration
+    - pattern: const $NAME = $$$HEAD ($$$PARAMS) $$$REST => $BODY
+---
+id: ts-arrow-let
+language: typescript
+rule:
+  all:
+    - kind: lexical_declaration
+    - pattern: let $NAME = $$$HEAD ($$$PARAMS) $$$REST => $BODY
+---
+id: ts-method
+language: typescript
+rule:
+  all:
+    - kind: method_definition
+    - pattern: $$$HEAD $NAME($$$PARAMS) $$$REST
+---
+id: ts-class
+language: typescript
+rule:
+  all:
+    - kind: class_declaration
+    - pattern: class $NAME $$$REST
+---
+id: ts-interface
+language: typescript
+rule:
+  all:
+    - kind: interface_declaration
+    - pattern: interface $NAME $$$REST

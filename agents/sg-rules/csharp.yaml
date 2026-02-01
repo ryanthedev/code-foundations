@@ -1,0 +1,391 @@
+# C# extraction rules for ast-grep
+# Extracts: methods, async methods, classes, interfaces, constructors, properties,
+#           records, enums, primary constructors, operator overloads
+
+id: cs-method
+language: csharp
+rule:
+  all:
+    - kind: method_declaration
+    - has:
+        field: name
+        pattern: $NAME
+        stopBy: end
+    - has:
+        field: returns
+        pattern: $RET
+        stopBy: end
+    - has:
+        field: parameters
+        pattern: $PARAMS
+        stopBy: end
+---
+id: cs-async-method
+language: csharp
+rule:
+  all:
+    - kind: method_declaration
+    - has:
+        field: name
+        pattern: $NAME
+        stopBy: end
+    - has:
+        field: returns
+        pattern: $RET
+        stopBy: end
+    - has:
+        field: parameters
+        pattern: $PARAMS
+        stopBy: end
+    - has:
+        kind: modifier
+        regex: async
+        stopBy: neighbor
+---
+id: cs-class
+language: csharp
+rule:
+  all:
+    - kind: class_declaration
+    - has:
+        field: name
+        pattern: $NAME
+        stopBy: end
+---
+id: cs-interface
+language: csharp
+rule:
+  all:
+    - kind: interface_declaration
+    - has:
+        field: name
+        pattern: $NAME
+        stopBy: end
+---
+id: cs-constructor
+language: csharp
+rule:
+  all:
+    - kind: constructor_declaration
+    - has:
+        field: name
+        pattern: $NAME
+        stopBy: end
+    - has:
+        field: parameters
+        pattern: $PARAMS
+        stopBy: end
+---
+id: cs-property
+language: csharp
+rule:
+  all:
+    - kind: property_declaration
+    - has:
+        field: name
+        pattern: $NAME
+        stopBy: end
+    - has:
+        field: type
+        pattern: $TYPE
+        stopBy: end
+---
+id: cs-record
+language: csharp
+rule:
+  all:
+    - kind: record_declaration
+    - has:
+        field: name
+        pattern: $NAME
+        stopBy: end
+---
+id: cs-enum
+language: csharp
+rule:
+  all:
+    - kind: enum_declaration
+    - has:
+        field: name
+        pattern: $NAME
+        stopBy: end
+---
+id: cs-primary-constructor
+language: csharp
+rule:
+  all:
+    - kind: class_declaration
+    - has:
+        field: name
+        pattern: $NAME
+        stopBy: end
+    - has:
+        kind: parameter_list
+        pattern: $PARAMS
+        stopBy: neighbor
+---
+id: cs-operator
+language: csharp
+rule:
+  all:
+    - kind: operator_declaration
+    - has:
+        field: type
+        pattern: $TYPE
+        stopBy: end
+    - has:
+        field: parameters
+        pattern: $PARAMS
+        stopBy: end
+---
+# =============================================================================
+# C# 12-14 Modern Feature Extraction Rules
+# =============================================================================
+# NOTE: collection_expression and spread_element require tree-sitter-c-sharp
+# grammar update (PR #402). Rules are included for when the grammar updates.
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# C# 12: Collection Expressions [1, 2, 3]
+# PENDING: Requires tree-sitter-c-sharp PR #402 to merge
+# Uncomment when grammar update is available:
+# -----------------------------------------------------------------------------
+# id: cs-collection-expression
+# language: csharp
+# rule:
+#   kind: collection_expression
+# ---
+# -----------------------------------------------------------------------------
+# C# 12: Spread Element ..array
+# PENDING: Requires tree-sitter-c-sharp PR #402 to merge
+# Uncomment when grammar update is available:
+# -----------------------------------------------------------------------------
+# id: cs-spread
+# language: csharp
+# rule:
+#   kind: spread_element
+# ---
+# -----------------------------------------------------------------------------
+# C# 14: Extension Blocks (extension type declarations)
+# PENDING: Requires future tree-sitter-c-sharp grammar update
+# Uncomment when grammar update is available:
+# -----------------------------------------------------------------------------
+# id: cs-extension-block
+# language: csharp
+# rule:
+#   kind: extension_declaration
+# ---
+
+# -----------------------------------------------------------------------------
+# C# 13: Partial Properties
+# Works with current grammar via modifier detection
+# -----------------------------------------------------------------------------
+id: cs-partial-property
+language: csharp
+rule:
+  all:
+    - kind: property_declaration
+    - has:
+        field: name
+        pattern: $NAME
+        stopBy: end
+    - has:
+        field: type
+        pattern: $TYPE
+        stopBy: end
+    - has:
+        kind: modifier
+        regex: partial
+        stopBy: neighbor
+---
+# -----------------------------------------------------------------------------
+# C# 12: Compound Assignment Operators (+=, -=, etc.)
+# Detects operator declarations with compound assignment syntax
+# -----------------------------------------------------------------------------
+id: cs-compound-assignment-op
+language: csharp
+rule:
+  all:
+    - kind: operator_declaration
+    - has:
+        field: parameters
+        pattern: $PARAMS
+        stopBy: end
+    - any:
+        - has:
+            regex: '\+='
+            stopBy: neighbor
+        - has:
+            regex: '-='
+            stopBy: neighbor
+        - has:
+            regex: '\*='
+            stopBy: neighbor
+        - has:
+            regex: '/='
+            stopBy: neighbor
+        - has:
+            regex: '%='
+            stopBy: neighbor
+        - has:
+            regex: '&='
+            stopBy: neighbor
+        - has:
+            regex: '\|='
+            stopBy: neighbor
+        - has:
+            regex: '\^='
+            stopBy: neighbor
+---
+# -----------------------------------------------------------------------------
+# C# 12: ref readonly Parameters
+# Detects parameters with ref readonly modifier combination
+# -----------------------------------------------------------------------------
+id: cs-ref-readonly-param
+language: csharp
+rule:
+  all:
+    - kind: parameter
+    - has:
+        kind: ref_type
+        stopBy: neighbor
+    - has:
+        kind: modifier
+        regex: readonly
+        stopBy: neighbor
+---
+# -----------------------------------------------------------------------------
+# C# 12: Inline Arrays ([InlineArray] attribute on structs)
+# Detects structs with InlineArray attribute
+# -----------------------------------------------------------------------------
+id: cs-inline-array
+language: csharp
+rule:
+  all:
+    - kind: struct_declaration
+    - has:
+        field: name
+        pattern: $NAME
+        stopBy: end
+    - has:
+        kind: attribute_list
+        has:
+          kind: attribute
+          has:
+            regex: InlineArray
+            stopBy: end
+        stopBy: neighbor
+---
+# -----------------------------------------------------------------------------
+# C# 13: Partial Events
+# Works with current grammar via modifier detection
+# -----------------------------------------------------------------------------
+id: cs-partial-event
+language: csharp
+rule:
+  all:
+    - kind: event_declaration
+    - has:
+        kind: modifier
+        regex: partial
+        stopBy: neighbor
+---
+# -----------------------------------------------------------------------------
+# C# 14: Partial Constructors
+# Works with current grammar via modifier detection
+# -----------------------------------------------------------------------------
+id: cs-partial-constructor
+language: csharp
+rule:
+  all:
+    - kind: constructor_declaration
+    - has:
+        field: name
+        pattern: $NAME
+        stopBy: end
+    - has:
+        field: parameters
+        pattern: $PARAMS
+        stopBy: end
+    - has:
+        kind: modifier
+        regex: partial
+        stopBy: neighbor
+---
+# =============================================================================
+# Basic C# Constructs (Gap Fill)
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Local Functions (C# 7+)
+# Functions declared inside other methods
+# -----------------------------------------------------------------------------
+id: cs-local-function
+language: csharp
+rule:
+  kind: local_function_statement
+---
+# -----------------------------------------------------------------------------
+# Conversion Operators (implicit/explicit)
+# e.g., public static implicit operator int(MyClass c) => c.Value;
+# -----------------------------------------------------------------------------
+id: cs-conversion-operator
+language: csharp
+rule:
+  all:
+    - kind: conversion_operator_declaration
+    - has:
+        field: type
+        pattern: $TYPE
+        stopBy: end
+---
+# -----------------------------------------------------------------------------
+# Delegates
+# e.g., delegate void MyCallback(string message);
+# -----------------------------------------------------------------------------
+id: cs-delegate
+language: csharp
+rule:
+  all:
+    - kind: delegate_declaration
+    - has:
+        field: name
+        pattern: $NAME
+        stopBy: end
+---
+# -----------------------------------------------------------------------------
+# Structs
+# e.g., struct Point { public int X, Y; }
+# -----------------------------------------------------------------------------
+id: cs-struct
+language: csharp
+rule:
+  all:
+    - kind: struct_declaration
+    - has:
+        field: name
+        pattern: $NAME
+        stopBy: end
+---
+# -----------------------------------------------------------------------------
+# Events
+# e.g., public event EventHandler OnClick;
+# -----------------------------------------------------------------------------
+id: cs-event
+language: csharp
+rule:
+  all:
+    - kind: event_declaration
+    - has:
+        field: name
+        pattern: $NAME
+        stopBy: end
+---
+# -----------------------------------------------------------------------------
+# Indexers
+# e.g., public int this[int index] { get => items[index]; }
+# -----------------------------------------------------------------------------
+id: cs-indexer
+language: csharp
+rule:
+  kind: indexer_declaration

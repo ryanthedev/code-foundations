@@ -1,0 +1,203 @@
+# Python extraction rules for ast-grep
+# Extracts: functions, async functions, methods, classes, decorated definitions
+# Characteristics: has_try_except, has_with, has_yield, has_await
+
+id: py-function
+language: python
+rule:
+  all:
+    - kind: function_definition
+    - has:
+        field: name
+        pattern: $NAME
+        stopBy: end
+    - has:
+        field: parameters
+        pattern: $PARAMS
+        stopBy: end
+    - not:
+        inside:
+          kind: class_definition
+          stopBy: end
+---
+id: py-function-typed
+language: python
+rule:
+  all:
+    - kind: function_definition
+    - has:
+        field: name
+        pattern: $NAME
+        stopBy: end
+    - has:
+        field: parameters
+        pattern: $PARAMS
+        stopBy: end
+    - has:
+        field: return_type
+        pattern: $RET
+        stopBy: end
+    - not:
+        inside:
+          kind: class_definition
+          stopBy: end
+---
+id: py-async-function
+language: python
+rule:
+  all:
+    - kind: function_definition
+    - has:
+        field: name
+        pattern: $NAME
+        stopBy: end
+    - has:
+        field: parameters
+        pattern: $PARAMS
+        stopBy: end
+    - regex: ^async\s+def
+    - not:
+        inside:
+          kind: class_definition
+          stopBy: end
+---
+id: py-method
+language: python
+rule:
+  all:
+    - kind: function_definition
+    - has:
+        field: name
+        pattern: $NAME
+        stopBy: end
+    - has:
+        field: parameters
+        pattern: $PARAMS
+        stopBy: end
+    - inside:
+        kind: class_definition
+        stopBy: end
+---
+id: py-method-typed
+language: python
+rule:
+  all:
+    - kind: function_definition
+    - has:
+        field: name
+        pattern: $NAME
+        stopBy: end
+    - has:
+        field: parameters
+        pattern: $PARAMS
+        stopBy: end
+    - has:
+        field: return_type
+        pattern: $RET
+        stopBy: end
+    - inside:
+        kind: class_definition
+        stopBy: end
+---
+id: py-async-method
+language: python
+rule:
+  all:
+    - kind: function_definition
+    - has:
+        field: name
+        pattern: $NAME
+        stopBy: end
+    - has:
+        field: parameters
+        pattern: $PARAMS
+        stopBy: end
+    - regex: ^async\s+def
+    - inside:
+        kind: class_definition
+        stopBy: end
+---
+id: py-class
+language: python
+rule:
+  all:
+    - kind: class_definition
+    - has:
+        field: name
+        pattern: $NAME
+        stopBy: end
+---
+id: py-class-with-bases
+language: python
+rule:
+  all:
+    - kind: class_definition
+    - has:
+        field: name
+        pattern: $NAME
+        stopBy: end
+    - has:
+        field: superclasses
+        pattern: $BASES
+        stopBy: end
+---
+id: py-decorated
+language: python
+rule:
+  all:
+    - kind: decorated_definition
+    - has:
+        kind: decorator
+        stopBy: neighbor
+---
+id: py-has-try-except
+language: python
+rule:
+  all:
+    - kind: function_definition
+    - has:
+        field: name
+        pattern: $NAME
+        stopBy: end
+    - has:
+        kind: try_statement
+        stopBy: end
+---
+id: py-has-with
+language: python
+rule:
+  all:
+    - kind: function_definition
+    - has:
+        field: name
+        pattern: $NAME
+        stopBy: end
+    - has:
+        kind: with_statement
+        stopBy: end
+---
+id: py-has-yield
+language: python
+rule:
+  all:
+    - kind: function_definition
+    - has:
+        field: name
+        pattern: $NAME
+        stopBy: end
+    - has:
+        kind: yield
+        stopBy: end
+---
+id: py-has-await
+language: python
+rule:
+  all:
+    - kind: function_definition
+    - has:
+        field: name
+        pattern: $NAME
+        stopBy: end
+    - has:
+        kind: await
+        stopBy: end
