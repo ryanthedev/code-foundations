@@ -28,7 +28,7 @@ Unified review workflow. One flow, driven by profile configuration.
 │  (haiku)   │   │  (sonnet)   │   │ (sonnet)  │   │   (sonnet)    │
 └────────────┘   └─────────────┘   └───────────┘   └───────────────┘
       ↓                 ↓                 ↓                  ↓
-  1 per 5 files   • Triage files    1 agent per      1 agent per
+  1 per 5 files   • Smart batching  1 agent per      1 agent per
   Extract units   • Smart batching  batch, runs      5 findings,
   + diffs                           14 core checks   provides fixes
 ```
@@ -293,7 +293,7 @@ Proceed? [Y/n]
 if PROFILE_NAME == "sanity":
     # Sanity flow phases
     TaskCreate(subject="Phase 1: Extraction", description="Extract semantic units from files", activeForm="Extracting units")
-    TaskCreate(subject="Phase 2: Orchestrate", description="Triage files, build batches", activeForm="Orchestrating review")
+    TaskCreate(subject="Phase 2: Orchestrate", description="Build intelligent batches from units", activeForm="Orchestrating review")
     TaskCreate(subject="Phase 3: Checking", description="Run 14 core checks on each batch", activeForm="Running checks")
     TaskCreate(subject="Phase 4: Collect Findings", description="Parse checker output, count findings", activeForm="Collecting findings")
     TaskCreate(subject="Phase 5: Investigation", description="Verify findings, provide fixes", activeForm="Investigating findings")
@@ -379,7 +379,7 @@ TaskUpdate(taskId=phase1_id, status="completed")
 
 ## SANITY STEP 2: ORCHESTRATE (Single Sonnet)
 
-**Purpose:** Triage files, build intelligent batches from extracted units.
+**Purpose:** Build intelligent batches from extracted units.
 
 **Mark phase in_progress:**
 
@@ -393,85 +393,11 @@ TaskUpdate(taskId=phase2_id, status="in_progress")
 
 ```python
 Task(
-    subagent_type="general-purpose",
+    subagent_type="code-foundations:orchestrate-checking-agent",
     model="sonnet",
-    description="Orchestrate review",
+    description="Orchestrate checking batches",
     prompt=f"""
-## Review Orchestrator
-
-Build intelligent batches from extracted units.
-
-### Step 1: Read Extracted Units
-
-```bash
-# Read all units from JSONL (one unit per line)
-cat {BASE_DIR}/units.jsonl
-```
-
-Each line is a JSON object with: file, name, type, lines, diff, summary, has_loops, has_async, has_try_catch
-
-### Step 2: Triage Files
-
-Categorize each file:
-
-**SKIP** (don't review):
-- `*.lock`, `*-lock.json` → lockfiles
-- `*.generated.*`, `*.pb.*`, `*_generated.*` → generated code
-- `*.min.js`, `*.bundle.js` → bundled/minified
-- `__snapshots__/*` → test snapshots
-- `vendor/*`, `node_modules/*` → dependencies
-
-**REVIEW** (everything else)
-
-### Step 3: Build Intelligent Batches
-
-Group **units** for checking. Each batch → one checker agent.
-
-**Batching strategy:**
-1. **By directory** - units from same dir share context
-2. **By size** - combine small units until ~4k tokens, large units alone
-3. **By relationship** - keep `foo.ts` + `foo.test.ts` together
-4. **By imports** - units that call each other → same batch
-
-Target: ~4k tokens of diff per batch
-
-### Output
-
-Write to `{BASE_DIR}/orchestrate.json`:
-
-```json
-{{
-  "stats": {{
-    "total_files": 18,
-    "review": 13,
-    "skip": 5
-  }},
-  "skip": [
-    {{"file": "package-lock.json", "reason": "lockfile"}}
-  ],
-  "batches": [
-    {{
-      "id": 1,
-      "shared_context": "User module - files import from each other",
-      "units": [
-        {{
-          "file": "src/user/api.ts",
-          "name": "createUser",
-          "type": "function",
-          "lines": [10, 45],
-          "has_loops": false,
-          "has_async": true,
-          "has_try_catch": false,
-          "diff": "@@ -10,6 +10,15 @@..."
-        }}
-      ],
-      "total_diff_tokens": 850
-    }}
-  ]
-}}
-```
-
-Return batch count and file counts.
+BASE_DIR: {BASE_DIR}
 """
 )
 ```
@@ -479,7 +405,7 @@ Return batch count and file counts.
 **Wait for orchestrator. Read result and mark phase complete:**
 
 ```python
-orch = read_json(f"{BASE_DIR}/orchestrate.json")
+orch = read_json(f"{BASE_DIR}/checking-batches.json")
 BATCHES = orch["batches"]
 NUM_BATCHES = len(BATCHES)
 
