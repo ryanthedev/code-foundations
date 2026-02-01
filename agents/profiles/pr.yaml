@@ -1,14 +1,14 @@
 # PR Profile - Full review
-# 10 skills, 548 checks across all categories
+# 10 skills, 614 checks across all categories
 
 name: pr
-description: "Full PR review - 10 skills, 548 checks"
+description: "Full PR review - 10 skills, 614 checks"
 
 # Model configuration (optional - defaults shown)
 models:
   checking: haiku       # Checklist execution - systematic, not deep reasoning
-  investigation: haiku  # Verification - binary pass/fail decisions
-  report: sonnet        # Synthesis - needs reasoning, but not opus-level
+  investigation: haiku  # Verification - confirm/reject findings
+  report: haiku         # JSON compilation - no deep reasoning needed
 
 checklists:
   # Defensive (75 checks)
@@ -17,7 +17,7 @@ checklists:
   - path: skills/aposd-simplifying-complexity/checklists.md
     skills: [aposd-simplifying-complexity]
 
-  # Quality (221 checks)
+  # Quality (245 checks)
   - path: skills/aposd-reviewing-module-design/checklists.md
     skills: [aposd-reviewing-module-design]
   - path: skills/cc-code-layout-and-style/checklists.md
@@ -25,18 +25,18 @@ checklists:
   - path: skills/cc-control-flow-quality/checklists.md
     skills: [cc-control-flow-quality]
 
-  # Correctness (146 checks)
+  # Correctness (155 checks)
   - path: skills/aposd-verifying-correctness/checklists.md
     skills: [aposd-verifying-correctness]
   - path: skills/cc-quality-practices/checklists.md
     skills: [cc-quality-practices]
 
-  # Performance (80 checks)
+  # Performance (90 checks)
   - path: skills/cc-performance-tuning/checklists.md
     skills: [cc-performance-tuning]
   - path: skills/aposd-optimizing-critical-paths/checklists.md
     skills: [aposd-optimizing-critical-paths]
 
-  # Documentation (26 checks)
+  # Documentation (49 checks)
   - path: skills/cc-documentation-quality/checklists.md
     skills: [cc-documentation-quality]

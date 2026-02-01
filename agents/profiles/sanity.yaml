@@ -10,6 +10,11 @@ models:
   investigation: haiku  # Quick verification
   report: haiku         # Simple report for sanity check
 
+# Custom dashboard generation
+dashboard:
+  enabled: true         # Generate project-specific dashboard
+  model: sonnet         # Needs creativity for unique design
+
 checklists:
   - path: agents/quick-checklist.md
     skills: []  # Self-contained checklist, no skill persona needed

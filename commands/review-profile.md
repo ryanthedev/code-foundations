@@ -71,7 +71,7 @@ Usage:
 
 Built-in profiles (read-only):
   sanity  - 99 critical checks (agents/profiles/sanity.yaml)
-  pr      - 548 checks, 10 skills (agents/profiles/pr.yaml)
+  pr      - 614 checks, 10 skills (agents/profiles/pr.yaml)
 """)
 ```
 
@@ -108,7 +108,7 @@ AskUserQuestion(
       options: [
         {label: "From scratch", description: "Empty profile, add checklists one by one"},
         {label: "Copy sanity", description: "Start with 99-check quick checklist"},
-        {label: "Copy pr", description: "Start with all 10 skill checklists (548 checks)"},
+        {label: "Copy pr", description: "Start with all 10 skill checklists (614 checks)"},
         {label: "Pick skills", description: "Choose which skill checklists to include"}
       ]
     }
@@ -301,7 +301,7 @@ ls -la .code-foundations/profiles/ 2>/dev/null || echo "  (none)"
 | Profile | Checklists | Checks | Description |
 |---------|------------|--------|-------------|
 | sanity | 1 | 99 | Quick pre-commit sanity check |
-| pr | 10 | 548 | Full PR review |
+| pr | 10 | 614 | Full PR review |
 
 ### User Profiles
 

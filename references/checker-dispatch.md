@@ -181,20 +181,6 @@ Task(...cc-defensive-programming... Code: {same context})
 
 ---
 
-## Investigation Tasks
-
-If a finding has LOW confidence, create an investigation task:
-
-```
-TaskCreate(
-  subject: "Investigate: {finding.id}",
-  description: "{file}:{line} - {issue}",
-  activeForm: "Investigating {finding.id}"
-)
-```
-
----
-
 ## Example Output
 
 ```
@@ -204,10 +190,14 @@ TaskCreate(
 **Findings:** 2
 
 1. **DP-7** src/auth.ts:42 - Empty catch block
+   Check: "Is there a reasonable explanation for empty catch blocks?"
    Evidence: `catch (e) {}`
    Confidence: HIGH
 
 2. **DP-12** src/api.ts:89 - User input not validated
+   Check: "Is input validated before use?"
    Evidence: `query(req.body.id)`
-   Confidence: LOW → Investigation task created
+   Confidence: LOW
 ```
+
+Findings are written to JSON and passed to the orchestrate phase, which batches them for investigation agents to verify.

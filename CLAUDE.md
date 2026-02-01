@@ -22,7 +22,6 @@ Code-foundations is a Claude Code plugin providing software engineering skills b
 - `agents/` - Agent templates, profiles, and configuration
   - `agents/profiles/` - Built-in profiles (sanity.yaml, pr.yaml)
   - `agents/config.yaml` - Agent settings
-  - `agents/AGENT.md` - Checklist agent template
 - `references/` - Shared reference materials
 - `docs/` - Case study examples
 
@@ -33,16 +32,16 @@ Code-foundations is a Claude Code plugin providing software engineering skills b
 **Profile-driven architecture:** One unified flow, configurable via profiles.
 
 ```
-┌──────────────┐     ┌──────────────┐     ┌───────────────┐     ┌──────────┐
-│  EXTRACTION  │ ──▶ │   CHECKING   │ ──▶ │ INVESTIGATION │ ──▶ │  REPORT  │
-│   (haiku)    │     │ (per checklist)│    │    (haiku)    │     │          │
-└──────────────┘     └──────────────┘     └───────────────┘     └──────────┘
+┌────────────┐   ┌──────────┐   ┌─────────────┐   ┌───────────────┐   ┌────────┐
+│ EXTRACTION │ → │ CHECKING │ → │ ORCHESTRATE │ → │ INVESTIGATION │ → │ REPORT │
+│  (haiku)   │   │ (haiku)  │   │   (haiku)   │   │    (haiku)    │   │(haiku) │
+└────────────┘   └──────────┘   └─────────────┘   └───────────────┘   └────────┘
 ```
 
 | Preset | Checklists | Checks | Use Case |
 |--------|------------|--------|----------|
 | `--sanity` | 1 | 99 | Pre-commit sanity |
-| `--pr` | 10 | 548 | Full PR review |
+| `--pr` | 10 | 614 | Full PR review |
 | `--profile <name>` | varies | varies | Custom configuration |
 
 **Interactive mode:** `/code-foundations:review` (no flags) asks for profile.
@@ -56,6 +55,17 @@ Profiles define which checklists to run and which skills inform each:
 # agents/profiles/pr.yaml or .code-foundations/profiles/custom.yaml
 name: my-profile
 description: "Description"
+
+# Model configuration (optional - all default to haiku)
+models:
+  checking: haiku       # Checklist execution
+  investigation: haiku  # Finding verification
+  report: haiku         # JSON compilation
+
+# Custom dashboard (optional - generates project-specific HTML)
+dashboard:
+  enabled: true         # Set true for custom dashboard
+  model: sonnet         # Needs creativity
 
 checklists:
   # Skill checklist with its persona
@@ -78,7 +88,7 @@ checklists:
 | Profile | Location | Checklists | Checks |
 |---------|----------|------------|--------|
 | sanity | `agents/profiles/sanity.yaml` | 1 | 99 |
-| pr | `agents/profiles/pr.yaml` | 10 | 548 |
+| pr | `agents/profiles/pr.yaml` | 10 | 614 |
 
 ### Skill Checklist Counts
 
@@ -86,15 +96,15 @@ checklists:
 |-------|--------|
 | cc-defensive-programming | 31 |
 | aposd-simplifying-complexity | 44 |
-| aposd-reviewing-module-design | 42 |
+| aposd-reviewing-module-design | 36 |
 | cc-code-layout-and-style | 85 |
-| cc-control-flow-quality | 94 |
-| aposd-verifying-correctness | 39 |
-| cc-quality-practices | 107 |
-| cc-performance-tuning | 40 |
+| cc-control-flow-quality | 124 |
+| aposd-verifying-correctness | 40 |
+| cc-quality-practices | 115 |
+| cc-performance-tuning | 50 |
 | aposd-optimizing-critical-paths | 40 |
-| cc-documentation-quality | 26 |
-| **Total (PR profile)** | **548** |
+| cc-documentation-quality | 49 |
+| **Total (PR profile)** | **614** |
 
 ### Review Execution Flow
 
@@ -103,8 +113,9 @@ checklists:
 3. **Get target** → Ask for diff args (staged, unstaged, branch)
 4. **Extraction** → Parallel haiku agents (batch by files)
 5. **Checking** → Parallel agents (1 per checklist, loads skills)
-6. **Investigation** → Parallel haiku agents (batch by findings)
-7. **Report** → Single agent merges results
+6. **Orchestrate** → Single haiku agent batches findings, creates investigation tasks
+7. **Investigation** → Parallel haiku agents (1 per 5 findings), verify and filter
+8. **Report** → Single haiku agent compiles findings into JSON report
 
 **Main agent orchestrates** - dispatches all agents directly for true parallelism.
 

@@ -1,0 +1,1210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Code Review Report</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-deep: #0a0a0b;
+      --bg-panel: #111113;
+      --bg-elevated: #18181b;
+      --bg-hover: #1f1f23;
+      --bg-code: #0d0d0e;
+      --border-subtle: #27272a;
+      --border-active: #3f3f46;
+      --text-primary: #fafafa;
+      --text-secondary: #a1a1aa;
+      --text-muted: #71717a;
+      --accent-confirmed: #ef4444;
+      --accent-confirmed-dim: #7f1d1d;
+      --accent-false: #22c55e;
+      --accent-false-dim: #14532d;
+      --accent-context: #eab308;
+      --accent-context-dim: #713f12;
+      --accent-blue: #3b82f6;
+      --accent-blue-dim: #1e3a5f;
+      --diff-add: #22c55e;
+      --diff-add-bg: rgba(34, 197, 94, 0.1);
+      --diff-del: #ef4444;
+      --diff-del-bg: rgba(239, 68, 68, 0.1);
+      --diff-header: #71717a;
+      --highlight-line-bg: rgba(234, 179, 8, 0.08);
+      --highlight-line-border: #eab308;
+      --font-mono: 'JetBrains Mono', monospace;
+      --font-sans: 'Instrument Sans', sans-serif;
+      --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+      --ease-out-back: cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      font-size: 16px;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background: var(--bg-deep);
+      color: var(--text-primary);
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    /* Noise texture overlay */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+      opacity: 0.015;
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    /* Scanline effect */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0, 0, 0, 0.03) 2px,
+        rgba(0, 0, 0, 0.03) 4px
+      );
+      pointer-events: none;
+      z-index: 9998;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        padding: 1rem;
+      }
+    }
+
+    /* Header */
+    .header {
+      margin-bottom: 2.5rem;
+      animation: slideDown 0.6s var(--ease-out-expo) both;
+    }
+
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .header-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .logo-section {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .logo {
+      width: 48px;
+      height: 48px;
+      background: linear-gradient(135deg, var(--accent-blue) 0%, #8b5cf6 100%);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-mono);
+      font-weight: 700;
+      font-size: 1.25rem;
+      color: white;
+      box-shadow: 0 4px 24px rgba(59, 130, 246, 0.3);
+    }
+
+    .title-block h1 {
+      font-family: var(--font-mono);
+      font-size: 1.5rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.125rem;
+    }
+
+    .title-block .subtitle {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .meta-info {
+      display: flex;
+      gap: 1.5rem;
+      font-family: var(--font-mono);
+      font-size: 0.8125rem;
+      color: var(--text-secondary);
+    }
+
+    .meta-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .meta-item::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      background: var(--accent-blue);
+      border-radius: 50%;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    /* Stats Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .stat-card {
+      background: var(--bg-panel);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 1.25rem;
+      position: relative;
+      overflow: hidden;
+      animation: fadeInUp 0.5s var(--ease-out-expo) both;
+    }
+
+    .stat-card:nth-child(1) { animation-delay: 0.1s; }
+    .stat-card:nth-child(2) { animation-delay: 0.15s; }
+    .stat-card:nth-child(3) { animation-delay: 0.2s; }
+    .stat-card:nth-child(4) { animation-delay: 0.25s; }
+    .stat-card:nth-child(5) { animation-delay: 0.3s; }
+    .stat-card:nth-child(6) { animation-delay: 0.35s; }
+    .stat-card:nth-child(7) { animation-delay: 0.4s; }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(16px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: var(--stat-accent, var(--accent-blue));
+    }
+
+    .stat-card.confirmed { --stat-accent: var(--accent-confirmed); }
+    .stat-card.false_positive { --stat-accent: var(--accent-false); }
+    .stat-card.needs_context { --stat-accent: var(--accent-context); }
+
+    .stat-value {
+      font-family: var(--font-mono);
+      font-size: 2rem;
+      font-weight: 700;
+      line-height: 1;
+      margin-bottom: 0.375rem;
+      background: linear-gradient(180deg, var(--text-primary) 0%, var(--text-secondary) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .stat-label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* Filter Tabs */
+    .filter-section {
+      margin-bottom: 1.5rem;
+      animation: fadeInUp 0.5s var(--ease-out-expo) 0.4s both;
+    }
+
+    .filter-tabs {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .filter-tab {
+      font-family: var(--font-mono);
+      font-size: 0.8125rem;
+      font-weight: 500;
+      padding: 0.625rem 1rem;
+      background: var(--bg-panel);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.2s var(--ease-out-expo);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .filter-tab:hover {
+      background: var(--bg-hover);
+      border-color: var(--border-active);
+      color: var(--text-primary);
+    }
+
+    .filter-tab.active {
+      background: var(--bg-elevated);
+      border-color: var(--tab-accent, var(--accent-blue));
+      color: var(--text-primary);
+      box-shadow: 0 0 0 1px var(--tab-accent, var(--accent-blue));
+    }
+
+    .filter-tab[data-filter="all"] { --tab-accent: var(--accent-blue); }
+    .filter-tab[data-filter="confirmed"] { --tab-accent: var(--accent-confirmed); }
+    .filter-tab[data-filter="false_positive"] { --tab-accent: var(--accent-false); }
+    .filter-tab[data-filter="needs_context"] { --tab-accent: var(--accent-context); }
+
+    .filter-count {
+      font-size: 0.6875rem;
+      padding: 0.125rem 0.375rem;
+      background: var(--bg-elevated);
+      border-radius: 4px;
+      color: var(--text-muted);
+    }
+
+    .filter-tab.active .filter-count {
+      background: var(--tab-accent, var(--accent-blue));
+      color: white;
+    }
+
+    /* Findings List */
+    .findings-section {
+      animation: fadeInUp 0.5s var(--ease-out-expo) 0.5s both;
+    }
+
+    .findings-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .findings-title {
+      font-family: var(--font-mono);
+      font-size: 0.875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-secondary);
+    }
+
+    .findings-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .finding-card {
+      background: var(--bg-panel);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      overflow: hidden;
+      transition: all 0.3s var(--ease-out-expo);
+    }
+
+    .finding-card:hover {
+      border-color: var(--border-active);
+      transform: translateY(-1px);
+    }
+
+    .finding-card.expanded {
+      border-color: var(--finding-accent, var(--border-active));
+    }
+
+    .finding-card.confirmed { --finding-accent: var(--accent-confirmed); --finding-accent-dim: var(--accent-confirmed-dim); }
+    .finding-card.false_positive { --finding-accent: var(--accent-false); --finding-accent-dim: var(--accent-false-dim); }
+    .finding-card.needs_context { --finding-accent: var(--accent-context); --finding-accent-dim: var(--accent-context-dim); }
+
+    .finding-header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem 1.25rem;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .finding-header:hover {
+      background: var(--bg-hover);
+    }
+
+    .finding-badge {
+      font-family: var(--font-mono);
+      font-size: 0.6875rem;
+      font-weight: 600;
+      padding: 0.25rem 0.5rem;
+      background: var(--finding-accent-dim);
+      color: var(--finding-accent);
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      flex-shrink: 0;
+    }
+
+    .finding-id {
+      font-family: var(--font-mono);
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--finding-accent);
+      flex-shrink: 0;
+      min-width: 60px;
+    }
+
+    .finding-location {
+      font-family: var(--font-mono);
+      font-size: 0.8125rem;
+      color: var(--text-secondary);
+      flex-shrink: 0;
+    }
+
+    .finding-location .line {
+      color: var(--accent-blue);
+    }
+
+    .finding-summary {
+      flex: 1;
+      font-size: 0.875rem;
+      color: var(--text-primary);
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .finding-chevron {
+      width: 20px;
+      height: 20px;
+      color: var(--text-muted);
+      transition: transform 0.3s var(--ease-out-expo);
+      flex-shrink: 0;
+    }
+
+    .finding-card.expanded .finding-chevron {
+      transform: rotate(180deg);
+    }
+
+    .finding-body {
+      display: grid;
+      grid-template-rows: 0fr;
+      transition: grid-template-rows 0.3s var(--ease-out-expo);
+    }
+
+    .finding-card.expanded .finding-body {
+      grid-template-rows: 1fr;
+    }
+
+    .finding-body-inner {
+      overflow: hidden;
+    }
+
+    .finding-content {
+      padding: 0 1.25rem 1.25rem;
+      display: grid;
+      gap: 1rem;
+    }
+
+    .finding-field {
+      display: grid;
+      gap: 0.375rem;
+    }
+
+    .field-label {
+      font-family: var(--font-mono);
+      font-size: 0.6875rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .field-value {
+      font-size: 0.875rem;
+      color: var(--text-primary);
+      line-height: 1.6;
+    }
+
+    .field-value.code {
+      font-family: var(--font-mono);
+      font-size: 0.8125rem;
+      background: var(--bg-deep);
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      border-left: 3px solid var(--finding-accent);
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .field-value.recommendation {
+      background: var(--accent-blue-dim);
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      border-left: 3px solid var(--accent-blue);
+    }
+
+    /* Code Context Block */
+    .code-context-block {
+      background: var(--bg-code);
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid var(--border-subtle);
+    }
+
+    .code-context-header {
+      font-family: var(--font-mono);
+      font-size: 0.6875rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      padding: 0.625rem 1rem;
+      background: var(--bg-elevated);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .code-context-lines {
+      font-family: var(--font-mono);
+      font-size: 0.8125rem;
+      line-height: 1.6;
+      overflow-x: auto;
+    }
+
+    .code-line {
+      display: flex;
+      padding: 0 1rem;
+      transition: background 0.15s ease;
+    }
+
+    .code-line:hover {
+      background: var(--bg-hover);
+    }
+
+    .code-line.highlighted {
+      background: var(--highlight-line-bg);
+      border-left: 3px solid var(--highlight-line-border);
+      padding-left: calc(1rem - 3px);
+    }
+
+    .code-line-number {
+      color: var(--text-muted);
+      min-width: 3rem;
+      padding-right: 1rem;
+      text-align: right;
+      user-select: none;
+      flex-shrink: 0;
+    }
+
+    .code-line-content {
+      color: var(--text-primary);
+      white-space: pre;
+    }
+
+    /* Diff Hunk Block */
+    .diff-hunk-block {
+      background: var(--bg-code);
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid var(--border-subtle);
+    }
+
+    .diff-hunk-header {
+      font-family: var(--font-mono);
+      font-size: 0.6875rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      padding: 0.625rem 1rem;
+      background: var(--bg-elevated);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .diff-hunk-lines {
+      font-family: var(--font-mono);
+      font-size: 0.8125rem;
+      line-height: 1.6;
+      overflow-x: auto;
+    }
+
+    .diff-line {
+      padding: 0 1rem;
+      white-space: pre;
+    }
+
+    .diff-line.diff-header-line {
+      color: var(--diff-header);
+      background: var(--bg-elevated);
+    }
+
+    .diff-line.diff-add {
+      color: var(--diff-add);
+      background: var(--diff-add-bg);
+    }
+
+    .diff-line.diff-del {
+      color: var(--diff-del);
+      background: var(--diff-del-bg);
+      text-decoration: line-through;
+      text-decoration-color: var(--diff-del);
+    }
+
+    .diff-line.diff-context {
+      color: var(--text-secondary);
+    }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: var(--text-muted);
+    }
+
+    .empty-icon {
+      width: 64px;
+      height: 64px;
+      margin: 0 auto 1rem;
+      opacity: 0.3;
+    }
+
+    .empty-title {
+      font-family: var(--font-mono);
+      font-size: 1rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .empty-text {
+      font-size: 0.875rem;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .header-top {
+        flex-direction: column;
+      }
+
+      .meta-info {
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .finding-header {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+      }
+
+      .finding-summary {
+        width: 100%;
+        order: 10;
+        white-space: normal;
+      }
+
+      .finding-location {
+        margin-left: auto;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Loading shimmer */
+    @keyframes shimmer {
+      0% {
+        background-position: -200% 0;
+      }
+      100% {
+        background-position: 200% 0;
+      }
+    }
+
+    .loading {
+      background: linear-gradient(
+        90deg,
+        var(--bg-panel) 25%,
+        var(--bg-elevated) 50%,
+        var(--bg-panel) 75%
+      );
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <div class="header-top">
+        <div class="logo-section">
+          <div class="logo">CF</div>
+          <div class="title-block">
+            <h1>Code Review Report</h1>
+            <div class="subtitle">Code Foundations</div>
+          </div>
+        </div>
+        <div class="meta-info">
+          <div class="meta-item" id="profile-meta">
+            <span>Profile: <strong id="profile-name">--</strong></span>
+          </div>
+          <div class="meta-item" id="timestamp-meta">
+            <span id="timestamp">--</span>
+          </div>
+          <a href="review-dashboard.html" class="meta-item" style="color: var(--accent-blue); text-decoration: none; cursor: pointer;">← Dashboard</a>
+        </div>
+      </div>
+    </header>
+
+    <section class="stats-grid" id="stats-grid">
+      <!-- Stats populated by JS -->
+    </section>
+
+    <section class="filter-section">
+      <div class="filter-tabs" id="filter-tabs">
+        <!-- Filters populated by JS -->
+      </div>
+    </section>
+
+    <section class="findings-section">
+      <div class="findings-header">
+        <h2 class="findings-title">Findings</h2>
+      </div>
+      <div class="findings-list" id="findings-list">
+        <!-- Findings populated by JS -->
+      </div>
+    </section>
+  </div>
+
+  <script>
+    // Demo data - replace with fetch('/report.json') for production
+    const DEMO_DATA = {
+      "profile": "pr",
+      "timestamp": "2024-01-15T14:30:00Z",
+      "stats": {
+        "files_reviewed": 14,
+        "checklists_run": 10,
+        "items_checked": 614,
+        "total_findings": 7,
+        "confirmed": 6,
+        "false_positives": 1,
+        "needs_context": 0
+      },
+      "findings": [
+        {
+          "id": "SEC-1",
+          "verdict": "confirmed",
+          "file": "src/auth.ts",
+          "line": 42,
+          "check": "Is input validated before use?",
+          "issue": "User input not validated",
+          "evidence": "req.body.id passed directly to query()",
+          "recommendation": "Use parameterized query or input validation library",
+          "reason": "User input from request.body passed directly to SQL query without sanitization",
+          "code_context": {
+            "start_line": 39,
+            "lines": [
+              "async function handleRequest(req: Request) {",
+              "  const user = await getSession(req);",
+              "  const id = req.body.id;",
+              "  const result = db.query(`SELECT * FROM users WHERE id = ${id}`);",
+              "  return result;",
+              "}"
+            ]
+          },
+          "diff_hunk": "@@ -40,6 +42,8 @@\n async function handleRequest(req: Request) {\n+  const id = req.body.id;\n+  const result = db.query(`SELECT * FROM users WHERE id = ${id}`);\n   return result;"
+        },
+        {
+          "id": "SEC-2",
+          "verdict": "confirmed",
+          "file": "src/auth.ts",
+          "line": 78,
+          "check": "Are credentials stored securely?",
+          "issue": "Password stored in plain text log",
+          "evidence": "console.log(`Login attempt: ${email}:${password}`)",
+          "recommendation": "Remove password from log output, use structured logging without sensitive data",
+          "reason": "Credentials are written to stdout which may be captured in log files",
+          "code_context": {
+            "start_line": 75,
+            "lines": [
+              "async function login(email: string, password: string) {",
+              "  // Debug logging",
+              "  console.log(`Login attempt: ${email}:${password}`);",
+              "  const user = await findUser(email);",
+              "  return verifyPassword(user, password);",
+              "}"
+            ]
+          },
+          "diff_hunk": "@@ -73,4 +75,7 @@\n async function login(email: string, password: string) {\n+  // Debug logging\n+  console.log(`Login attempt: ${email}:${password}`);\n   const user = await findUser(email);"
+        },
+        {
+          "id": "DP-3",
+          "verdict": "false_positive",
+          "file": "src/api.ts",
+          "line": 89,
+          "check": "Is error handling present?",
+          "issue": "Missing try-catch around async operation",
+          "reason": "Validation occurs in middleware before this function is called. The express error handler catches any unhandled rejections."
+        },
+        {
+          "id": "CF-4",
+          "verdict": "confirmed",
+          "file": "src/utils/parser.ts",
+          "line": 156,
+          "check": "Is the loop termination condition correct?",
+          "issue": "Loop variable modified inside loop body",
+          "evidence": "for (let i = 0; i < items.length; i++) { ... items.push(newItem); }",
+          "recommendation": "Iterate over a copy of the array or use a while loop with explicit termination",
+          "reason": "Modifying the array being iterated can cause infinite loops or skipped elements",
+          "code_context": {
+            "start_line": 153,
+            "lines": [
+              "function processItems(items: Item[]) {",
+              "  const results = [];",
+              "  for (let i = 0; i < items.length; i++) {",
+              "    const item = items[i];",
+              "    if (item.needsExpansion) {",
+              "      items.push(expandItem(item));",
+              "    }",
+              "    results.push(transform(item));",
+              "  }",
+              "  return results;",
+              "}"
+            ]
+          },
+          "diff_hunk": "@@ -150,6 +153,11 @@\n function processItems(items: Item[]) {\n   const results = [];\n+  for (let i = 0; i < items.length; i++) {\n+    const item = items[i];\n+    if (item.needsExpansion) {\n+      items.push(expandItem(item));\n+    }"
+        },
+        {
+          "id": "CF-5",
+          "verdict": "confirmed",
+          "file": "src/handlers/webhook.ts",
+          "line": 203,
+          "check": "Are switch cases properly terminated?",
+          "issue": "Missing break statement causes fall-through",
+          "evidence": "case 'update': processUpdate(data);\ncase 'delete': processDelete(data);",
+          "recommendation": "Add break statement after processUpdate(data) or add explicit fall-through comment",
+          "reason": "Unintentional fall-through will execute delete logic for update events",
+          "code_context": {
+            "start_line": 199,
+            "lines": [
+              "function handleEvent(type: string, data: any) {",
+              "  switch (type) {",
+              "    case 'create':",
+              "      processCreate(data);",
+              "      break;",
+              "    case 'update':",
+              "      processUpdate(data);",
+              "    case 'delete':",
+              "      processDelete(data);",
+              "      break;",
+              "  }",
+              "}"
+            ]
+          },
+          "diff_hunk": null
+        },
+        {
+          "id": "QP-6",
+          "verdict": "confirmed",
+          "file": "src/services/cache.ts",
+          "line": 45,
+          "check": "Is the function doing one thing?",
+          "issue": "Function handles caching, logging, and metric reporting",
+          "evidence": "async function getCachedData(key) { log.info(...); metrics.increment(...); ... }",
+          "recommendation": "Extract logging and metrics to decorators or middleware",
+          "reason": "Multiple responsibilities make the function harder to test and modify"
+        },
+        {
+          "id": "QP-7",
+          "verdict": "confirmed",
+          "file": "src/config.ts",
+          "line": 12,
+          "check": "Are magic numbers replaced with named constants?",
+          "issue": "Hardcoded timeout values",
+          "evidence": "setTimeout(retry, 3000); // and setTimeout(cleanup, 86400000);",
+          "recommendation": "Extract to named constants: RETRY_DELAY_MS = 3000, CLEANUP_INTERVAL_MS = 86400000",
+          "reason": "Magic numbers obscure intent and make changes error-prone",
+          "code_context": {
+            "start_line": 9,
+            "lines": [
+              "export function initRetry() {",
+              "  let attempts = 0;",
+              "  const retry = () => {",
+              "    if (attempts++ < 5) {",
+              "      setTimeout(retry, 3000);",
+              "    }",
+              "  };",
+              "  setTimeout(cleanup, 86400000);",
+              "}"
+            ]
+          },
+          "diff_hunk": "@@ -8,3 +9,9 @@\n export function initRetry() {\n+  let attempts = 0;\n+  const retry = () => {\n+    if (attempts++ < 5) {\n+      setTimeout(retry, 3000);\n+    }\n+  };"
+        }
+      ]
+    };
+
+    // State
+    let currentFilter = 'all';
+    let reportData = null;
+
+    // DOM helpers - safe element creation
+    function createElement(tag, className, textContent) {
+      const el = document.createElement(tag);
+      if (className) el.className = className;
+      if (textContent) el.textContent = textContent;
+      return el;
+    }
+
+    function createSvg(pathD) {
+      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg.setAttribute('class', 'finding-chevron');
+      svg.setAttribute('viewBox', '0 0 24 24');
+      svg.setAttribute('fill', 'none');
+      svg.setAttribute('stroke', 'currentColor');
+      svg.setAttribute('stroke-width', '2');
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('d', pathD);
+      svg.appendChild(path);
+      return svg;
+    }
+
+    // Initialize
+    async function init() {
+      try {
+        // Try to load external report.json, fall back to demo data
+        const response = await fetch('report.json').catch(() => null);
+        reportData = response?.ok ? await response.json() : DEMO_DATA;
+      } catch {
+        reportData = DEMO_DATA;
+      }
+
+      renderReport(reportData);
+    }
+
+    function renderReport(data) {
+      renderMeta(data);
+      renderStats(data.stats);
+      renderFilters(data.findings);
+      renderFindings(data.findings);
+    }
+
+    function renderMeta(data) {
+      document.getElementById('profile-name').textContent = data.profile.toUpperCase();
+
+      const date = new Date(data.timestamp);
+      const formatted = date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+      document.getElementById('timestamp').textContent = formatted;
+    }
+
+    function renderStats(stats) {
+      const grid = document.getElementById('stats-grid');
+      grid.replaceChildren(); // Clear safely
+
+      const items = [
+        { value: stats.files_reviewed, label: 'Files Reviewed', class: '' },
+        { value: stats.checklists_run, label: 'Checklists Run', class: '' },
+        { value: stats.items_checked, label: 'Items Checked', class: '' },
+        { value: stats.total_findings, label: 'Total Findings', class: '' },
+        { value: stats.confirmed, label: 'Confirmed', class: 'confirmed' },
+        { value: stats.false_positives, label: 'False Positives', class: 'false_positive' },
+        { value: stats.needs_context, label: 'Needs Context', class: 'needs_context' }
+      ];
+
+      items.forEach(item => {
+        const card = createElement('div', 'stat-card ' + item.class);
+        card.appendChild(createElement('div', 'stat-value', String(item.value)));
+        card.appendChild(createElement('div', 'stat-label', item.label));
+        grid.appendChild(card);
+      });
+    }
+
+    function renderFilters(findings) {
+      const tabs = document.getElementById('filter-tabs');
+      tabs.replaceChildren(); // Clear safely
+
+      const counts = {
+        all: findings.length,
+        confirmed: findings.filter(f => f.verdict === 'confirmed').length,
+        false_positive: findings.filter(f => f.verdict === 'false_positive').length,
+        needs_context: findings.filter(f => f.verdict === 'needs_context').length
+      };
+
+      const filters = [
+        { key: 'all', label: 'All' },
+        { key: 'confirmed', label: 'Confirmed' },
+        { key: 'false_positive', label: 'False Positive' },
+        { key: 'needs_context', label: 'Needs Context' }
+      ];
+
+      filters.forEach(f => {
+        const btn = createElement('button', 'filter-tab' + (f.key === currentFilter ? ' active' : ''));
+        btn.setAttribute('data-filter', f.key);
+        btn.appendChild(document.createTextNode(f.label + ' '));
+        const countSpan = createElement('span', 'filter-count', String(counts[f.key]));
+        btn.appendChild(countSpan);
+        btn.addEventListener('click', () => setFilter(f.key));
+        tabs.appendChild(btn);
+      });
+    }
+
+    function setFilter(filter) {
+      currentFilter = filter;
+      renderFilters(reportData.findings);
+      renderFindings(reportData.findings);
+    }
+
+    function formatVerdict(verdict) {
+      const labels = {
+        confirmed: 'Confirmed',
+        false_positive: 'False Positive',
+        needs_context: 'Needs Context'
+      };
+      return labels[verdict] || verdict;
+    }
+
+    // Render code context block
+    function renderCodeContext(codeContext, findingLine) {
+      const block = createElement('div', 'code-context-block');
+
+      const header = createElement('div', 'code-context-header', 'Code Context');
+      block.appendChild(header);
+
+      const linesContainer = createElement('div', 'code-context-lines');
+
+      codeContext.lines.forEach((lineContent, index) => {
+        const lineNumber = codeContext.start_line + index;
+        const lineEl = createElement('div', 'code-line');
+
+        // Highlight the finding line
+        if (lineNumber === findingLine) {
+          lineEl.classList.add('highlighted');
+        }
+
+        const lineNumEl = createElement('span', 'code-line-number', String(lineNumber));
+        lineEl.appendChild(lineNumEl);
+
+        const lineContentEl = createElement('span', 'code-line-content', lineContent);
+        lineEl.appendChild(lineContentEl);
+
+        linesContainer.appendChild(lineEl);
+      });
+
+      block.appendChild(linesContainer);
+      return block;
+    }
+
+    // Render diff hunk block
+    function renderDiffHunk(diffHunk) {
+      const block = createElement('div', 'diff-hunk-block');
+
+      const header = createElement('div', 'diff-hunk-header', 'Diff');
+      block.appendChild(header);
+
+      const linesContainer = createElement('div', 'diff-hunk-lines');
+
+      // Split the diff hunk by newlines
+      const lines = diffHunk.split('\n');
+
+      lines.forEach(line => {
+        const lineEl = createElement('div', 'diff-line');
+
+        if (line.startsWith('@@')) {
+          lineEl.classList.add('diff-header-line');
+        } else if (line.startsWith('+')) {
+          lineEl.classList.add('diff-add');
+        } else if (line.startsWith('-')) {
+          lineEl.classList.add('diff-del');
+        } else {
+          lineEl.classList.add('diff-context');
+        }
+
+        lineEl.textContent = line;
+        linesContainer.appendChild(lineEl);
+      });
+
+      block.appendChild(linesContainer);
+      return block;
+    }
+
+    function renderFindings(findings) {
+      const list = document.getElementById('findings-list');
+      list.replaceChildren(); // Clear safely
+
+      const filtered = currentFilter === 'all'
+        ? findings
+        : findings.filter(f => f.verdict === currentFilter);
+
+      if (filtered.length === 0) {
+        const emptyState = createElement('div', 'empty-state');
+
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.setAttribute('class', 'empty-icon');
+        svg.setAttribute('viewBox', '0 0 24 24');
+        svg.setAttribute('fill', 'none');
+        svg.setAttribute('stroke', 'currentColor');
+        svg.setAttribute('stroke-width', '1.5');
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('d', 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z');
+        svg.appendChild(path);
+        emptyState.appendChild(svg);
+
+        emptyState.appendChild(createElement('div', 'empty-title', 'No findings'));
+        emptyState.appendChild(createElement('div', 'empty-text', 'No items match the current filter'));
+        list.appendChild(emptyState);
+        return;
+      }
+
+      filtered.forEach(finding => {
+        const card = createElement('article', 'finding-card ' + finding.verdict);
+        card.setAttribute('data-id', finding.id);
+
+        // Header
+        const header = createElement('div', 'finding-header');
+        header.addEventListener('click', () => toggleFinding(finding.id));
+
+        header.appendChild(createElement('span', 'finding-badge', formatVerdict(finding.verdict)));
+        header.appendChild(createElement('span', 'finding-id', finding.id));
+
+        const location = createElement('span', 'finding-location');
+        location.appendChild(document.createTextNode(finding.file + ':'));
+        const lineSpan = createElement('span', 'line', String(finding.line));
+        location.appendChild(lineSpan);
+        header.appendChild(location);
+
+        header.appendChild(createElement('span', 'finding-summary', finding.issue));
+        header.appendChild(createSvg('M19 9l-7 7-7-7'));
+
+        card.appendChild(header);
+
+        // Body
+        const body = createElement('div', 'finding-body');
+        const bodyInner = createElement('div', 'finding-body-inner');
+        const content = createElement('div', 'finding-content');
+
+        // Check field
+        const checkField = createElement('div', 'finding-field');
+        checkField.appendChild(createElement('div', 'field-label', 'Check'));
+        checkField.appendChild(createElement('div', 'field-value', finding.check));
+        content.appendChild(checkField);
+
+        // Issue field
+        const issueField = createElement('div', 'finding-field');
+        issueField.appendChild(createElement('div', 'field-label', 'Issue'));
+        issueField.appendChild(createElement('div', 'field-value', finding.issue));
+        content.appendChild(issueField);
+
+        // Evidence field (optional)
+        if (finding.evidence) {
+          const evidenceField = createElement('div', 'finding-field');
+          evidenceField.appendChild(createElement('div', 'field-label', 'Evidence'));
+          evidenceField.appendChild(createElement('div', 'field-value code', finding.evidence));
+          content.appendChild(evidenceField);
+        }
+
+        // Recommendation field (optional)
+        if (finding.recommendation) {
+          const recField = createElement('div', 'finding-field');
+          recField.appendChild(createElement('div', 'field-label', 'Recommendation'));
+          recField.appendChild(createElement('div', 'field-value recommendation', finding.recommendation));
+          content.appendChild(recField);
+        }
+
+        // Reason field
+        const reasonField = createElement('div', 'finding-field');
+        reasonField.appendChild(createElement('div', 'field-label', 'Reason'));
+        reasonField.appendChild(createElement('div', 'field-value', finding.reason));
+        content.appendChild(reasonField);
+
+        // Code Context (optional)
+        if (finding.code_context && finding.code_context.lines && finding.code_context.lines.length > 0) {
+          const codeContextField = createElement('div', 'finding-field');
+          codeContextField.appendChild(renderCodeContext(finding.code_context, finding.line));
+          content.appendChild(codeContextField);
+        }
+
+        // Diff Hunk (optional)
+        if (finding.diff_hunk) {
+          const diffHunkField = createElement('div', 'finding-field');
+          diffHunkField.appendChild(renderDiffHunk(finding.diff_hunk));
+          content.appendChild(diffHunkField);
+        }
+
+        bodyInner.appendChild(content);
+        body.appendChild(bodyInner);
+        card.appendChild(body);
+
+        list.appendChild(card);
+      });
+    }
+
+    function toggleFinding(id) {
+      const card = document.querySelector('.finding-card[data-id="' + id + '"]');
+      if (card) card.classList.toggle('expanded');
+    }
+
+    // Start
+    init();
+  </script>
+</body>
+</html>

@@ -1,0 +1,1909 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Review Dashboard - Code Foundations</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-deep: #0a0a0b;
+      --bg-panel: #111113;
+      --bg-elevated: #18181b;
+      --bg-hover: #1f1f23;
+      --bg-code: #0d0d0e;
+      --border-subtle: #27272a;
+      --border-active: #3f3f46;
+      --text-primary: #fafafa;
+      --text-secondary: #a1a1aa;
+      --text-muted: #71717a;
+      --accent-confirmed: #ef4444;
+      --accent-confirmed-dim: #7f1d1d;
+      --accent-false: #22c55e;
+      --accent-false-dim: #14532d;
+      --accent-context: #eab308;
+      --accent-context-dim: #713f12;
+      --accent-blue: #3b82f6;
+      --accent-blue-dim: #1e3a5f;
+      --accent-purple: #8b5cf6;
+      --accent-purple-dim: #4c1d95;
+      --accent-cyan: #06b6d4;
+      --accent-cyan-dim: #164e63;
+      --accent-orange: #f97316;
+      --accent-orange-dim: #7c2d12;
+      --diff-add: #22c55e;
+      --diff-add-bg: rgba(34, 197, 94, 0.1);
+      --diff-del: #ef4444;
+      --diff-del-bg: rgba(239, 68, 68, 0.1);
+      --font-mono: 'JetBrains Mono', monospace;
+      --font-sans: 'Instrument Sans', sans-serif;
+      --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      font-size: 16px;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background: var(--bg-deep);
+      color: var(--text-primary);
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    /* Noise texture overlay */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+      opacity: 0.015;
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    /* Scanline effect */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0, 0, 0, 0.03) 2px,
+        rgba(0, 0, 0, 0.03) 4px
+      );
+      pointer-events: none;
+      z-index: 9998;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    /* Header */
+    .header {
+      margin-bottom: 2rem;
+      animation: slideDown 0.6s var(--ease-out-expo) both;
+    }
+
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .header-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .logo-section {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .logo {
+      width: 48px;
+      height: 48px;
+      background: linear-gradient(135deg, var(--accent-blue) 0%, var(--accent-purple) 100%);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-mono);
+      font-weight: 700;
+      font-size: 1.25rem;
+      color: white;
+      box-shadow: 0 4px 24px rgba(59, 130, 246, 0.3);
+    }
+
+    .title-block h1 {
+      font-family: var(--font-mono);
+      font-size: 1.5rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.125rem;
+    }
+
+    .title-block .subtitle {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 0.75rem;
+    }
+
+    .btn {
+      font-family: var(--font-mono);
+      font-size: 0.8125rem;
+      font-weight: 500;
+      padding: 0.625rem 1rem;
+      background: var(--bg-panel);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.2s var(--ease-out-expo);
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .btn:hover {
+      background: var(--bg-hover);
+      border-color: var(--border-active);
+      color: var(--text-primary);
+    }
+
+    .btn-primary {
+      background: var(--accent-blue-dim);
+      border-color: var(--accent-blue);
+      color: var(--accent-blue);
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-blue);
+      color: white;
+    }
+
+    /* Tabs Navigation */
+    .tabs-nav {
+      display: flex;
+      gap: 0.25rem;
+      margin-bottom: 1.5rem;
+      background: var(--bg-panel);
+      padding: 0.375rem;
+      border-radius: 12px;
+      border: 1px solid var(--border-subtle);
+      animation: fadeInUp 0.5s var(--ease-out-expo) 0.1s both;
+      overflow-x: auto;
+    }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .tab-btn {
+      font-family: var(--font-mono);
+      font-size: 0.8125rem;
+      font-weight: 500;
+      padding: 0.75rem 1.25rem;
+      background: transparent;
+      border: none;
+      border-radius: 8px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.2s var(--ease-out-expo);
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .tab-btn:hover {
+      color: var(--text-primary);
+      background: var(--bg-hover);
+    }
+
+    .tab-btn.active {
+      background: var(--bg-elevated);
+      color: var(--text-primary);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    }
+
+    .tab-btn .tab-badge {
+      font-size: 0.6875rem;
+      padding: 0.125rem 0.5rem;
+      background: var(--bg-deep);
+      border-radius: 4px;
+      color: var(--text-muted);
+    }
+
+    .tab-btn.active .tab-badge {
+      background: var(--accent-blue);
+      color: white;
+    }
+
+    .tab-btn[data-tab="report"] .tab-badge { background: var(--accent-confirmed-dim); color: var(--accent-confirmed); }
+    .tab-btn[data-tab="report"].active .tab-badge { background: var(--accent-confirmed); color: white; }
+
+    .tab-btn[data-tab="extraction"] .tab-badge { background: var(--accent-cyan-dim); color: var(--accent-cyan); }
+    .tab-btn[data-tab="extraction"].active .tab-badge { background: var(--accent-cyan); color: white; }
+
+    .tab-btn[data-tab="checking"] .tab-badge { background: var(--accent-orange-dim); color: var(--accent-orange); }
+    .tab-btn[data-tab="checking"].active .tab-badge { background: var(--accent-orange); color: white; }
+
+    .tab-btn[data-tab="orchestrate"] .tab-badge { background: var(--accent-purple-dim); color: var(--accent-purple); }
+    .tab-btn[data-tab="orchestrate"].active .tab-badge { background: var(--accent-purple); color: white; }
+
+    .tab-btn[data-tab="investigation"] .tab-badge { background: var(--accent-false-dim); color: var(--accent-false); }
+    .tab-btn[data-tab="investigation"].active .tab-badge { background: var(--accent-false); color: white; }
+
+    /* Tab Content */
+    .tab-content {
+      display: none;
+      animation: fadeInUp 0.4s var(--ease-out-expo) both;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    /* Stats Summary */
+    .stats-summary {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .stat-card {
+      background: var(--bg-panel);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 1.25rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: var(--stat-accent, var(--accent-blue));
+    }
+
+    .stat-card.cyan { --stat-accent: var(--accent-cyan); }
+    .stat-card.orange { --stat-accent: var(--accent-orange); }
+    .stat-card.purple { --stat-accent: var(--accent-purple); }
+    .stat-card.green { --stat-accent: var(--accent-false); }
+    .stat-card.red { --stat-accent: var(--accent-confirmed); }
+
+    .stat-value {
+      font-family: var(--font-mono);
+      font-size: 2rem;
+      font-weight: 700;
+      line-height: 1;
+      margin-bottom: 0.375rem;
+      background: linear-gradient(180deg, var(--text-primary) 0%, var(--text-secondary) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .stat-label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* Section Panel */
+    .section-panel {
+      background: var(--bg-panel);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 1rem;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 1.25rem;
+      background: var(--bg-elevated);
+      border-bottom: 1px solid var(--border-subtle);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .section-header:hover {
+      background: var(--bg-hover);
+    }
+
+    .section-title {
+      font-family: var(--font-mono);
+      font-size: 0.875rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .section-icon {
+      width: 20px;
+      height: 20px;
+      color: var(--text-muted);
+    }
+
+    .section-chevron {
+      width: 20px;
+      height: 20px;
+      color: var(--text-muted);
+      transition: transform 0.3s var(--ease-out-expo);
+    }
+
+    .section-panel.collapsed .section-chevron {
+      transform: rotate(-90deg);
+    }
+
+    .section-body {
+      display: grid;
+      grid-template-rows: 1fr;
+      transition: grid-template-rows 0.3s var(--ease-out-expo);
+    }
+
+    .section-panel.collapsed .section-body {
+      grid-template-rows: 0fr;
+    }
+
+    .section-body-inner {
+      overflow: hidden;
+    }
+
+    .section-content {
+      padding: 1.25rem;
+    }
+
+    /* Data Table */
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.875rem;
+    }
+
+    .data-table th {
+      font-family: var(--font-mono);
+      font-size: 0.6875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      text-align: left;
+      padding: 0.75rem 1rem;
+      background: var(--bg-deep);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .data-table td {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--border-subtle);
+      vertical-align: top;
+    }
+
+    .data-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .data-table tr:hover td {
+      background: var(--bg-hover);
+    }
+
+    .data-table .mono {
+      font-family: var(--font-mono);
+      font-size: 0.8125rem;
+    }
+
+    .data-table .path {
+      color: var(--accent-blue);
+    }
+
+    .data-table .count {
+      color: var(--accent-cyan);
+    }
+
+    /* Unit List */
+    .unit-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .unit-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.5rem 0.75rem;
+      background: var(--bg-deep);
+      border-radius: 6px;
+      font-family: var(--font-mono);
+      font-size: 0.8125rem;
+    }
+
+    .unit-name {
+      color: var(--text-primary);
+    }
+
+    .unit-type {
+      font-size: 0.6875rem;
+      padding: 0.125rem 0.375rem;
+      background: var(--accent-purple-dim);
+      color: var(--accent-purple);
+      border-radius: 4px;
+    }
+
+    .unit-lines {
+      color: var(--text-muted);
+      margin-left: auto;
+    }
+
+    .unit-chars {
+      display: flex;
+      gap: 0.375rem;
+    }
+
+    .char-badge {
+      font-size: 0.625rem;
+      padding: 0.125rem 0.375rem;
+      border-radius: 3px;
+      background: var(--bg-elevated);
+      color: var(--text-muted);
+    }
+
+    .char-badge.active {
+      background: var(--accent-cyan-dim);
+      color: var(--accent-cyan);
+    }
+
+    /* Finding Card */
+    .finding-card {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .finding-card:last-child {
+      margin-bottom: 0;
+    }
+
+    .finding-card.confirmed { border-left: 3px solid var(--accent-confirmed); }
+    .finding-card.needs_context { border-left: 3px solid var(--accent-context); }
+    .finding-card.false_positive { border-left: 3px solid var(--accent-false); }
+
+    .finding-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .finding-id {
+      font-family: var(--font-mono);
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--accent-blue);
+    }
+
+    .finding-confidence {
+      font-family: var(--font-mono);
+      font-size: 0.6875rem;
+      padding: 0.125rem 0.5rem;
+      border-radius: 4px;
+      text-transform: uppercase;
+    }
+
+    .finding-confidence.high {
+      background: var(--accent-confirmed-dim);
+      color: var(--accent-confirmed);
+    }
+
+    .finding-confidence.medium {
+      background: var(--accent-context-dim);
+      color: var(--accent-context);
+    }
+
+    .finding-confidence.low {
+      background: var(--bg-elevated);
+      color: var(--text-muted);
+    }
+
+    .finding-location {
+      font-family: var(--font-mono);
+      font-size: 0.8125rem;
+      color: var(--text-secondary);
+      margin-left: auto;
+    }
+
+    .finding-location .line {
+      color: var(--accent-cyan);
+    }
+
+    .finding-check {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      margin-bottom: 0.5rem;
+    }
+
+    .finding-issue {
+      font-size: 0.9375rem;
+      color: var(--text-primary);
+      margin-bottom: 0.75rem;
+    }
+
+    .finding-evidence {
+      font-family: var(--font-mono);
+      font-size: 0.8125rem;
+      background: var(--bg-code);
+      padding: 0.75rem 1rem;
+      border-radius: 6px;
+      border-left: 3px solid var(--accent-orange);
+      color: var(--text-secondary);
+      margin-bottom: 0.75rem;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .finding-recommendation {
+      font-size: 0.875rem;
+      background: var(--accent-blue-dim);
+      padding: 0.75rem 1rem;
+      border-radius: 6px;
+      border-left: 3px solid var(--accent-blue);
+      color: var(--text-primary);
+    }
+
+    /* Verdict Badge */
+    .verdict-badge {
+      font-family: var(--font-mono);
+      font-size: 0.6875rem;
+      font-weight: 600;
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      text-transform: uppercase;
+    }
+
+    .verdict-badge.confirmed {
+      background: var(--accent-confirmed-dim);
+      color: var(--accent-confirmed);
+    }
+
+    .verdict-badge.false_positive {
+      background: var(--accent-false-dim);
+      color: var(--accent-false);
+    }
+
+    .verdict-badge.needs_context {
+      background: var(--accent-context-dim);
+      color: var(--accent-context);
+    }
+
+    /* Investigation Result */
+    .investigation-result {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .investigation-result:last-child {
+      margin-bottom: 0;
+    }
+
+    .investigation-result.confirmed { border-left: 3px solid var(--accent-confirmed); }
+    .investigation-result.false_positive { border-left: 3px solid var(--accent-false); }
+    .investigation-result.needs_context { border-left: 3px solid var(--accent-context); }
+
+    .investigation-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .investigation-reason {
+      font-size: 0.875rem;
+      color: var(--text-primary);
+      margin-bottom: 0.75rem;
+    }
+
+    .code-context-block {
+      background: var(--bg-code);
+      border-radius: 6px;
+      overflow: hidden;
+      border: 1px solid var(--border-subtle);
+      margin-bottom: 0.75rem;
+    }
+
+    .code-context-header {
+      font-family: var(--font-mono);
+      font-size: 0.6875rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      padding: 0.5rem 0.75rem;
+      background: var(--bg-elevated);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .code-context-lines {
+      font-family: var(--font-mono);
+      font-size: 0.8125rem;
+      line-height: 1.6;
+      overflow-x: auto;
+    }
+
+    .code-line {
+      display: flex;
+      padding: 0 0.75rem;
+    }
+
+    .code-line-number {
+      color: var(--text-muted);
+      min-width: 2.5rem;
+      padding-right: 0.75rem;
+      text-align: right;
+      user-select: none;
+    }
+
+    .code-line-content {
+      color: var(--text-primary);
+      white-space: pre;
+    }
+
+    /* Diff Block */
+    .diff-block {
+      background: var(--bg-code);
+      border-radius: 6px;
+      overflow: hidden;
+      border: 1px solid var(--border-subtle);
+    }
+
+    .diff-header {
+      font-family: var(--font-mono);
+      font-size: 0.6875rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      padding: 0.5rem 0.75rem;
+      background: var(--bg-elevated);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .diff-lines {
+      font-family: var(--font-mono);
+      font-size: 0.8125rem;
+      line-height: 1.6;
+      overflow-x: auto;
+    }
+
+    .diff-line {
+      padding: 0 0.75rem;
+      white-space: pre;
+    }
+
+    .diff-line.add {
+      background: var(--diff-add-bg);
+      color: var(--diff-add);
+    }
+
+    .diff-line.del {
+      background: var(--diff-del-bg);
+      color: var(--diff-del);
+    }
+
+    .diff-line.header {
+      background: var(--bg-elevated);
+      color: var(--text-muted);
+    }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 3rem 2rem;
+      color: var(--text-muted);
+    }
+
+    .empty-icon {
+      width: 48px;
+      height: 48px;
+      margin: 0 auto 1rem;
+      opacity: 0.4;
+    }
+
+    .empty-title {
+      font-family: var(--font-mono);
+      font-size: 0.875rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .empty-text {
+      font-size: 0.8125rem;
+    }
+
+    /* Loading State */
+    .loading-state {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+      padding: 2rem;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      font-size: 0.875rem;
+    }
+
+    .loading-spinner {
+      width: 20px;
+      height: 20px;
+      border: 2px solid var(--border-subtle);
+      border-top-color: var(--accent-blue);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Report Tab Styles */
+    .report-summary {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    @media (max-width: 768px) {
+      .report-summary {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .report-card {
+      background: var(--bg-panel);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 1.5rem;
+    }
+
+    .report-card-title {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      margin-bottom: 1rem;
+    }
+
+    .report-stat-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .report-stat-row:last-child {
+      border-bottom: none;
+    }
+
+    .report-stat-label {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+    }
+
+    .report-stat-value {
+      font-family: var(--font-mono);
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .report-stat-value.confirmed { color: var(--accent-confirmed); }
+    .report-stat-value.false_positive { color: var(--accent-false); }
+    .report-stat-value.needs_context { color: var(--accent-context); }
+
+    /* Checklist summary in checking tab */
+    .checklist-summary {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.75rem 1rem;
+      background: var(--bg-elevated);
+      border-radius: 8px;
+      margin-bottom: 1rem;
+    }
+
+    .checklist-name {
+      font-family: var(--font-mono);
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      flex: 1;
+    }
+
+    .checklist-skills {
+      display: flex;
+      gap: 0.375rem;
+    }
+
+    .skill-badge {
+      font-family: var(--font-mono);
+      font-size: 0.625rem;
+      padding: 0.125rem 0.5rem;
+      background: var(--accent-purple-dim);
+      color: var(--accent-purple);
+      border-radius: 4px;
+    }
+
+    .checklist-stats {
+      display: flex;
+      gap: 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+    }
+
+    .checklist-stats .count {
+      color: var(--accent-cyan);
+    }
+
+    .checklist-stats .findings {
+      color: var(--accent-orange);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .container {
+        padding: 1rem;
+      }
+
+      .header-top {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .tabs-nav {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+      }
+
+      .tabs-nav::-webkit-scrollbar {
+        display: none;
+      }
+
+      .stats-summary {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <div class="header-top">
+        <div class="logo-section">
+          <div class="logo">CF</div>
+          <div class="title-block">
+            <h1>Review Dashboard</h1>
+            <div class="subtitle">Code Foundations</div>
+          </div>
+        </div>
+        <div class="header-actions">
+          <a href="report-viewer.html" class="btn btn-primary" id="open-report-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+              <polyline points="15,3 21,3 21,9"/>
+              <line x1="10" y1="14" x2="21" y2="3"/>
+            </svg>
+            Open Report Viewer
+          </a>
+          <button class="btn" id="load-data-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="17,8 12,3 7,8"/>
+              <line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+            Load Directory
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <nav class="tabs-nav" id="tabs-nav">
+      <button class="tab-btn active" data-tab="report">
+        Report
+        <span class="tab-badge" id="report-badge">--</span>
+      </button>
+      <button class="tab-btn" data-tab="extraction">
+        Extraction
+        <span class="tab-badge" id="extraction-badge">--</span>
+      </button>
+      <button class="tab-btn" data-tab="checking">
+        Checking
+        <span class="tab-badge" id="checking-badge">--</span>
+      </button>
+      <button class="tab-btn" data-tab="orchestrate">
+        Orchestrate
+        <span class="tab-badge" id="orchestrate-badge">--</span>
+      </button>
+      <button class="tab-btn" data-tab="investigation">
+        Investigation
+        <span class="tab-badge" id="investigation-badge">--</span>
+      </button>
+    </nav>
+
+    <main id="main-content">
+      <!-- Report Tab -->
+      <section class="tab-content active" id="tab-report">
+        <div id="report-content">
+          <div class="loading-state">
+            <div class="loading-spinner"></div>
+            Loading report data...
+          </div>
+        </div>
+      </section>
+
+      <!-- Extraction Tab -->
+      <section class="tab-content" id="tab-extraction">
+        <div id="extraction-content">
+          <div class="loading-state">
+            <div class="loading-spinner"></div>
+            Loading extraction data...
+          </div>
+        </div>
+      </section>
+
+      <!-- Checking Tab -->
+      <section class="tab-content" id="tab-checking">
+        <div id="checking-content">
+          <div class="loading-state">
+            <div class="loading-spinner"></div>
+            Loading checking data...
+          </div>
+        </div>
+      </section>
+
+      <!-- Orchestrate Tab -->
+      <section class="tab-content" id="tab-orchestrate">
+        <div id="orchestrate-content">
+          <div class="loading-state">
+            <div class="loading-spinner"></div>
+            Loading orchestrate data...
+          </div>
+        </div>
+      </section>
+
+      <!-- Investigation Tab -->
+      <section class="tab-content" id="tab-investigation">
+        <div id="investigation-content">
+          <div class="loading-state">
+            <div class="loading-spinner"></div>
+            Loading investigation data...
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    // Demo data for fallback
+    const DEMO_DATA = {
+      report: {
+        profile: "pr",
+        timestamp: "2024-01-15T14:30:00Z",
+        stats: {
+          files_reviewed: 14,
+          checklists_run: 10,
+          items_checked: 614,
+          total_findings: 7,
+          confirmed: 6,
+          false_positives: 1,
+          needs_context: 0
+        }
+      },
+      extraction: [
+        {
+          batch: 1,
+          files: [
+            {
+              path: "src/auth.ts",
+              units: [
+                { name: "validateInput", type: "function", lines: [10, 25], chars: { has_try_catch: true, has_loops: false } },
+                { name: "handleRequest", type: "function", lines: [39, 45], chars: { has_try_catch: false, has_loops: false } },
+                { name: "login", type: "function", lines: [75, 81], chars: { has_try_catch: false, has_loops: false } }
+              ]
+            },
+            {
+              path: "src/api.ts",
+              units: [
+                { name: "fetchData", type: "function", lines: [15, 35], chars: { has_try_catch: true, has_loops: true } },
+                { name: "parseResponse", type: "function", lines: [40, 60], chars: { has_try_catch: true, has_loops: false } }
+              ]
+            }
+          ]
+        },
+        {
+          batch: 2,
+          files: [
+            {
+              path: "src/utils/parser.ts",
+              units: [
+                { name: "processItems", type: "function", lines: [153, 163], chars: { has_try_catch: false, has_loops: true } }
+              ]
+            },
+            {
+              path: "src/handlers/webhook.ts",
+              units: [
+                { name: "handleEvent", type: "function", lines: [199, 211], chars: { has_try_catch: false, has_loops: false } }
+              ]
+            }
+          ]
+        }
+      ],
+      checking: [
+        {
+          checklist: "skills/cc-defensive-programming/checklists.md",
+          skills_loaded: ["cc-defensive-programming"],
+          items_checked: 31,
+          findings: [
+            { id: "DP-7", check: "Is input validated before use?", file: "src/auth.ts", line: 42, issue: "User input not validated", confidence: "HIGH", evidence: "req.body.id passed directly to query()", recommendation: "Use parameterized query" }
+          ],
+          passes: [
+            { id: "DP-1", check: "Are all error codes accounted for?", evidence: "Error handling present in all paths" }
+          ]
+        },
+        {
+          checklist: "skills/aposd-simplifying-complexity/checklists.md",
+          skills_loaded: ["aposd-simplifying-complexity"],
+          items_checked: 44,
+          findings: [
+            { id: "SC-12", check: "Does the module have deep interface?", file: "src/services/cache.ts", line: 45, issue: "Function handles too many responsibilities", confidence: "MEDIUM", evidence: "Caching, logging, and metrics in one function", recommendation: "Extract to separate concerns" }
+          ],
+          passes: []
+        },
+        {
+          checklist: "skills/cc-control-flow-quality/checklists.md",
+          skills_loaded: ["cc-control-flow-quality"],
+          items_checked: 124,
+          findings: [
+            { id: "CF-4", check: "Is the loop termination condition correct?", file: "src/utils/parser.ts", line: 156, issue: "Loop variable modified inside loop body", confidence: "HIGH", evidence: "items.push() inside for loop", recommendation: "Iterate over copy" },
+            { id: "CF-5", check: "Are switch cases properly terminated?", file: "src/handlers/webhook.ts", line: 203, issue: "Missing break statement causes fall-through", confidence: "HIGH", evidence: "case 'update': processUpdate(data); case 'delete':", recommendation: "Add break statement" }
+          ],
+          passes: []
+        }
+      ],
+      orchestrate: {
+        total_findings: 7,
+        unique_findings: 6,
+        duplicates_removed: 1,
+        batches_created: 2,
+        findings_per_batch: [5, 1]
+      },
+      investigation: [
+        {
+          batch: 1,
+          results: [
+            {
+              id: "SEC-1",
+              verdict: "CONFIRMED",
+              reason: "User input from request.body passed directly to SQL query without sanitization",
+              recommendation: "Use parameterized query or input validation library",
+              code_context: { start_line: 39, lines: ["async function handleRequest(req: Request) {", "  const user = await getSession(req);", "  const id = req.body.id;", "  const result = db.query(`SELECT * FROM users WHERE id = ${id}`);", "  return result;", "}"] },
+              diff_hunk: "@@ -40,6 +42,8 @@\n async function handleRequest(req: Request) {\n+  const id = req.body.id;\n+  const result = db.query(`SELECT * FROM users WHERE id = ${id}`);\n   return result;"
+            },
+            {
+              id: "SEC-2",
+              verdict: "CONFIRMED",
+              reason: "Credentials are written to stdout which may be captured in log files",
+              recommendation: "Remove password from log output",
+              code_context: { start_line: 75, lines: ["async function login(email: string, password: string) {", "  // Debug logging", "  console.log(`Login attempt: ${email}:${password}`);", "  const user = await findUser(email);", "  return verifyPassword(user, password);", "}"] }
+            },
+            {
+              id: "DP-3",
+              verdict: "FALSE_POSITIVE",
+              reason: "Validation occurs in middleware before this function is called"
+            },
+            {
+              id: "CF-4",
+              verdict: "CONFIRMED",
+              reason: "Modifying the array being iterated can cause infinite loops or skipped elements",
+              recommendation: "Iterate over a copy of the array"
+            },
+            {
+              id: "CF-5",
+              verdict: "CONFIRMED",
+              reason: "Unintentional fall-through will execute delete logic for update events",
+              recommendation: "Add break statement after processUpdate(data)"
+            }
+          ]
+        },
+        {
+          batch: 2,
+          results: [
+            {
+              id: "QP-6",
+              verdict: "CONFIRMED",
+              reason: "Multiple responsibilities make the function harder to test and modify",
+              recommendation: "Extract logging and metrics to decorators or middleware"
+            }
+          ]
+        }
+      ]
+    };
+
+    // State
+    let currentTab = 'report';
+    let loadedData = {
+      report: null,
+      extraction: [],
+      checking: [],
+      orchestrate: null,
+      investigation: []
+    };
+    let basePath = '';
+
+    // Utility functions
+    function createElement(tag, className, textContent) {
+      const el = document.createElement(tag);
+      if (className) el.className = className;
+      if (textContent !== undefined) el.textContent = textContent;
+      return el;
+    }
+
+    function createSvg(pathD, className) {
+      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      if (className) svg.setAttribute('class', className);
+      svg.setAttribute('viewBox', '0 0 24 24');
+      svg.setAttribute('fill', 'none');
+      svg.setAttribute('stroke', 'currentColor');
+      svg.setAttribute('stroke-width', '2');
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('d', pathD);
+      svg.appendChild(path);
+      return svg;
+    }
+
+    function createChevronSvg() {
+      return createSvg('M6 9l6 6 6-6', 'section-chevron');
+    }
+
+    function createFileIconSvg() {
+      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg.setAttribute('class', 'section-icon');
+      svg.setAttribute('viewBox', '0 0 24 24');
+      svg.setAttribute('fill', 'none');
+      svg.setAttribute('stroke', 'currentColor');
+      svg.setAttribute('stroke-width', '2');
+
+      const path1 = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path1.setAttribute('d', 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z');
+      svg.appendChild(path1);
+
+      const path2 = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+      path2.setAttribute('points', '14,2 14,8 20,8');
+      svg.appendChild(path2);
+
+      return svg;
+    }
+
+    function createCheckIconSvg() {
+      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg.setAttribute('class', 'section-icon');
+      svg.setAttribute('viewBox', '0 0 24 24');
+      svg.setAttribute('fill', 'none');
+      svg.setAttribute('stroke', 'currentColor');
+      svg.setAttribute('stroke-width', '2');
+
+      const path1 = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path1.setAttribute('d', 'M9 11l3 3L22 4');
+      svg.appendChild(path1);
+
+      const path2 = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path2.setAttribute('d', 'M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11');
+      svg.appendChild(path2);
+
+      return svg;
+    }
+
+    function createSearchIconSvg() {
+      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg.setAttribute('class', 'section-icon');
+      svg.setAttribute('viewBox', '0 0 24 24');
+      svg.setAttribute('fill', 'none');
+      svg.setAttribute('stroke', 'currentColor');
+      svg.setAttribute('stroke-width', '2');
+
+      const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      circle.setAttribute('cx', '11');
+      circle.setAttribute('cy', '11');
+      circle.setAttribute('r', '8');
+      svg.appendChild(circle);
+
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('d', 'M21 21l-4.35-4.35');
+      svg.appendChild(path);
+
+      return svg;
+    }
+
+    function createEmptyIconSvg() {
+      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg.setAttribute('class', 'empty-icon');
+      svg.setAttribute('viewBox', '0 0 24 24');
+      svg.setAttribute('fill', 'none');
+      svg.setAttribute('stroke', 'currentColor');
+      svg.setAttribute('stroke-width', '1.5');
+
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('d', 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4');
+      svg.appendChild(path);
+
+      return svg;
+    }
+
+    // Tab navigation
+    document.getElementById('tabs-nav').addEventListener('click', (e) => {
+      const btn = e.target.closest('.tab-btn');
+      if (!btn) return;
+
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+      btn.classList.add('active');
+      currentTab = btn.dataset.tab;
+      document.getElementById('tab-' + currentTab).classList.add('active');
+    });
+
+    // Section collapse toggle
+    document.addEventListener('click', (e) => {
+      const header = e.target.closest('.section-header');
+      if (!header) return;
+      header.closest('.section-panel').classList.toggle('collapsed');
+    });
+
+    // Load directory button
+    document.getElementById('load-data-btn').addEventListener('click', () => {
+      const path = prompt('Enter base directory path (e.g., /tmp/review-123):', basePath || '/tmp/review');
+      if (path) {
+        basePath = path.replace(/\/$/, '');
+        loadAllData();
+      }
+    });
+
+    // Data loading functions
+    async function fetchJson(path) {
+      try {
+        const response = await fetch(path);
+        if (!response.ok) return null;
+        return await response.json();
+      } catch {
+        return null;
+      }
+    }
+
+    async function loadAllData() {
+      // Try to load from specified path, fall back to demo data
+      const report = await fetchJson(basePath + '/report.json');
+      const orchestrate = await fetchJson(basePath + '/orchestrate.json');
+
+      // Load extraction batches
+      const extraction = [];
+      for (let i = 1; i <= 10; i++) {
+        const batch = await fetchJson(basePath + '/extraction/batch-' + i + '.json');
+        if (batch) extraction.push(batch);
+        else break;
+      }
+
+      // Load checking files (try common checklist names)
+      const checking = [];
+      const checklistNames = [
+        'cc-defensive-programming',
+        'aposd-simplifying-complexity',
+        'aposd-reviewing-module-design',
+        'cc-code-layout-and-style',
+        'cc-control-flow-quality',
+        'aposd-verifying-correctness',
+        'cc-quality-practices',
+        'cc-performance-tuning',
+        'aposd-optimizing-critical-paths',
+        'cc-documentation-quality'
+      ];
+      for (const name of checklistNames) {
+        const check = await fetchJson(basePath + '/checking/' + name + '.json');
+        if (check) checking.push(check);
+      }
+
+      // Load investigation batches
+      const investigation = [];
+      for (let i = 1; i <= 10; i++) {
+        const batch = await fetchJson(basePath + '/investigation/batch-' + i + '.json');
+        if (batch) investigation.push(batch);
+        else break;
+      }
+
+      // Use loaded data or fall back to demo
+      loadedData = {
+        report: report || DEMO_DATA.report,
+        extraction: extraction.length > 0 ? extraction : DEMO_DATA.extraction,
+        checking: checking.length > 0 ? checking : DEMO_DATA.checking,
+        orchestrate: orchestrate || DEMO_DATA.orchestrate,
+        investigation: investigation.length > 0 ? investigation : DEMO_DATA.investigation
+      };
+
+      renderAll();
+    }
+
+    // Render functions
+    function renderAll() {
+      updateBadges();
+      renderReport();
+      renderExtraction();
+      renderChecking();
+      renderOrchestrate();
+      renderInvestigation();
+    }
+
+    function updateBadges() {
+      const data = loadedData;
+
+      // Report badge - findings count
+      const reportFindings = data.report?.stats?.total_findings ?? '--';
+      document.getElementById('report-badge').textContent = reportFindings;
+
+      // Extraction badge - total files
+      const extractionFiles = data.extraction.reduce((sum, b) => sum + (b.files?.length || 0), 0);
+      document.getElementById('extraction-badge').textContent = extractionFiles || '--';
+
+      // Checking badge - total checklists
+      document.getElementById('checking-badge').textContent = data.checking.length || '--';
+
+      // Orchestrate badge - batches
+      document.getElementById('orchestrate-badge').textContent = data.orchestrate?.batches_created ?? '--';
+
+      // Investigation badge - total results
+      const investigationResults = data.investigation.reduce((sum, b) => sum + (b.results?.length || 0), 0);
+      document.getElementById('investigation-badge').textContent = investigationResults || '--';
+    }
+
+    function renderEmptyState(title, text) {
+      const container = createElement('div', 'empty-state');
+      container.appendChild(createEmptyIconSvg());
+      container.appendChild(createElement('div', 'empty-title', title));
+      container.appendChild(createElement('div', 'empty-text', text));
+      return container;
+    }
+
+    function renderReport() {
+      const container = document.getElementById('report-content');
+      const data = loadedData.report;
+      container.replaceChildren();
+
+      if (!data) {
+        container.appendChild(renderEmptyState('No Report Data', 'Load a review directory to see the report summary'));
+        return;
+      }
+
+      const stats = data.stats || {};
+
+      // Stats summary
+      const statsGrid = createElement('div', 'stats-summary');
+      const statItems = [
+        { value: stats.files_reviewed ?? '--', label: 'Files Reviewed', color: '' },
+        { value: stats.checklists_run ?? '--', label: 'Checklists Run', color: '' },
+        { value: stats.items_checked ?? '--', label: 'Items Checked', color: 'cyan' },
+        { value: stats.total_findings ?? '--', label: 'Total Findings', color: 'orange' },
+        { value: stats.confirmed ?? '--', label: 'Confirmed', color: 'red' },
+        { value: stats.false_positives ?? '--', label: 'False Positives', color: 'green' },
+        { value: stats.needs_context ?? '--', label: 'Needs Context', color: 'purple' }
+      ];
+
+      statItems.forEach(item => {
+        const card = createElement('div', 'stat-card ' + item.color);
+        card.appendChild(createElement('div', 'stat-value', String(item.value)));
+        card.appendChild(createElement('div', 'stat-label', item.label));
+        statsGrid.appendChild(card);
+      });
+      container.appendChild(statsGrid);
+
+      // Report cards
+      const reportSummary = createElement('div', 'report-summary');
+
+      // Profile info
+      const profileCard = createElement('div', 'report-card');
+      profileCard.appendChild(createElement('div', 'report-card-title', 'Review Info'));
+
+      const profileRow = createElement('div', 'report-stat-row');
+      profileRow.appendChild(createElement('span', 'report-stat-label', 'Profile'));
+      profileRow.appendChild(createElement('span', 'report-stat-value', (data.profile || 'Unknown').toUpperCase()));
+      profileCard.appendChild(profileRow);
+
+      const timestampRow = createElement('div', 'report-stat-row');
+      timestampRow.appendChild(createElement('span', 'report-stat-label', 'Timestamp'));
+      const timestamp = data.timestamp ? new Date(data.timestamp).toLocaleString() : '--';
+      timestampRow.appendChild(createElement('span', 'report-stat-value', timestamp));
+      profileCard.appendChild(timestampRow);
+
+      reportSummary.appendChild(profileCard);
+
+      // Verdicts breakdown
+      const verdictsCard = createElement('div', 'report-card');
+      verdictsCard.appendChild(createElement('div', 'report-card-title', 'Verdicts Breakdown'));
+
+      const confirmedRow = createElement('div', 'report-stat-row');
+      confirmedRow.appendChild(createElement('span', 'report-stat-label', 'Confirmed Issues'));
+      confirmedRow.appendChild(createElement('span', 'report-stat-value confirmed', String(stats.confirmed ?? 0)));
+      verdictsCard.appendChild(confirmedRow);
+
+      const fpRow = createElement('div', 'report-stat-row');
+      fpRow.appendChild(createElement('span', 'report-stat-label', 'False Positives'));
+      fpRow.appendChild(createElement('span', 'report-stat-value false_positive', String(stats.false_positives ?? 0)));
+      verdictsCard.appendChild(fpRow);
+
+      const ncRow = createElement('div', 'report-stat-row');
+      ncRow.appendChild(createElement('span', 'report-stat-label', 'Needs Context'));
+      ncRow.appendChild(createElement('span', 'report-stat-value needs_context', String(stats.needs_context ?? 0)));
+      verdictsCard.appendChild(ncRow);
+
+      reportSummary.appendChild(verdictsCard);
+      container.appendChild(reportSummary);
+    }
+
+    function renderExtraction() {
+      const container = document.getElementById('extraction-content');
+      const batches = loadedData.extraction;
+      container.replaceChildren();
+
+      if (!batches || batches.length === 0) {
+        container.appendChild(renderEmptyState('No Extraction Data', 'No extraction batches found'));
+        return;
+      }
+
+      batches.forEach(batch => {
+        const panel = createElement('div', 'section-panel');
+
+        // Header
+        const header = createElement('div', 'section-header');
+        const title = createElement('div', 'section-title');
+        title.appendChild(createFileIconSvg());
+        title.appendChild(document.createTextNode('Batch ' + batch.batch + ' (' + (batch.files?.length || 0) + ' files)'));
+        header.appendChild(title);
+        header.appendChild(createChevronSvg());
+        panel.appendChild(header);
+
+        // Body
+        const body = createElement('div', 'section-body');
+        const bodyInner = createElement('div', 'section-body-inner');
+        const content = createElement('div', 'section-content');
+
+        if (batch.files && batch.files.length > 0) {
+          batch.files.forEach(file => {
+            const filePanel = createElement('div', 'section-panel collapsed');
+
+            const fileHeader = createElement('div', 'section-header');
+            const fileTitle = createElement('div', 'section-title');
+            const pathSpan = createElement('span', 'mono path', file.path);
+            fileTitle.appendChild(pathSpan);
+            const unitCount = createElement('span', 'tab-badge', String(file.units?.length || 0) + ' units');
+            fileTitle.appendChild(unitCount);
+            fileHeader.appendChild(fileTitle);
+            fileHeader.appendChild(createChevronSvg());
+            filePanel.appendChild(fileHeader);
+
+            const fileBody = createElement('div', 'section-body');
+            const fileBodyInner = createElement('div', 'section-body-inner');
+            const fileContent = createElement('div', 'section-content');
+
+            if (file.units && file.units.length > 0) {
+              const unitList = createElement('div', 'unit-list');
+              file.units.forEach(unit => {
+                const unitItem = createElement('div', 'unit-item');
+                unitItem.appendChild(createElement('span', 'unit-name', unit.name));
+                unitItem.appendChild(createElement('span', 'unit-type', unit.type));
+                unitItem.appendChild(createElement('span', 'unit-lines', 'L' + unit.lines[0] + '-' + unit.lines[1]));
+
+                if (unit.chars) {
+                  const chars = createElement('div', 'unit-chars');
+                  if (unit.chars.has_try_catch !== undefined) {
+                    const badge = createElement('span', 'char-badge' + (unit.chars.has_try_catch ? ' active' : ''), 'try/catch');
+                    chars.appendChild(badge);
+                  }
+                  if (unit.chars.has_loops !== undefined) {
+                    const badge = createElement('span', 'char-badge' + (unit.chars.has_loops ? ' active' : ''), 'loops');
+                    chars.appendChild(badge);
+                  }
+                  unitItem.appendChild(chars);
+                }
+                unitList.appendChild(unitItem);
+              });
+              fileContent.appendChild(unitList);
+            }
+
+            fileBodyInner.appendChild(fileContent);
+            fileBody.appendChild(fileBodyInner);
+            filePanel.appendChild(fileBody);
+            content.appendChild(filePanel);
+          });
+        }
+
+        bodyInner.appendChild(content);
+        body.appendChild(bodyInner);
+        panel.appendChild(body);
+        container.appendChild(panel);
+      });
+    }
+
+    function renderChecking() {
+      const container = document.getElementById('checking-content');
+      const checklists = loadedData.checking;
+      container.replaceChildren();
+
+      if (!checklists || checklists.length === 0) {
+        container.appendChild(renderEmptyState('No Checking Data', 'No checklist results found'));
+        return;
+      }
+
+      checklists.forEach(checklist => {
+        const panel = createElement('div', 'section-panel');
+
+        // Header
+        const header = createElement('div', 'section-header');
+        const title = createElement('div', 'section-title');
+        title.appendChild(createCheckIconSvg());
+
+        // Extract checklist name from path
+        const checklistName = checklist.checklist?.split('/').pop()?.replace('.md', '') || 'Unknown';
+        title.appendChild(document.createTextNode(checklistName));
+        header.appendChild(title);
+        header.appendChild(createChevronSvg());
+        panel.appendChild(header);
+
+        // Body
+        const body = createElement('div', 'section-body');
+        const bodyInner = createElement('div', 'section-body-inner');
+        const content = createElement('div', 'section-content');
+
+        // Summary
+        const summary = createElement('div', 'checklist-summary');
+        summary.appendChild(createElement('span', 'checklist-name', checklist.checklist || 'Unknown'));
+
+        if (checklist.skills_loaded && checklist.skills_loaded.length > 0) {
+          const skills = createElement('div', 'checklist-skills');
+          checklist.skills_loaded.forEach(skill => {
+            skills.appendChild(createElement('span', 'skill-badge', skill));
+          });
+          summary.appendChild(skills);
+        }
+
+        const stats = createElement('div', 'checklist-stats');
+        const countSpan = createElement('span', 'count', (checklist.items_checked || 0) + ' checks');
+        const findingsSpan = createElement('span', 'findings', (checklist.findings?.length || 0) + ' findings');
+        stats.appendChild(countSpan);
+        stats.appendChild(findingsSpan);
+        summary.appendChild(stats);
+
+        content.appendChild(summary);
+
+        // Findings
+        if (checklist.findings && checklist.findings.length > 0) {
+          checklist.findings.forEach(finding => {
+            const card = createElement('div', 'finding-card');
+
+            const findingHeader = createElement('div', 'finding-header');
+            findingHeader.appendChild(createElement('span', 'finding-id', finding.id));
+
+            if (finding.confidence) {
+              const conf = createElement('span', 'finding-confidence ' + finding.confidence.toLowerCase(), finding.confidence);
+              findingHeader.appendChild(conf);
+            }
+
+            const location = createElement('span', 'finding-location');
+            location.appendChild(document.createTextNode((finding.file || '') + ':'));
+            const lineSpan = createElement('span', 'line', String(finding.line || '?'));
+            location.appendChild(lineSpan);
+            findingHeader.appendChild(location);
+
+            card.appendChild(findingHeader);
+
+            if (finding.check) {
+              card.appendChild(createElement('div', 'finding-check', finding.check));
+            }
+            if (finding.issue) {
+              card.appendChild(createElement('div', 'finding-issue', finding.issue));
+            }
+            if (finding.evidence) {
+              card.appendChild(createElement('div', 'finding-evidence', finding.evidence));
+            }
+            if (finding.recommendation) {
+              card.appendChild(createElement('div', 'finding-recommendation', finding.recommendation));
+            }
+
+            content.appendChild(card);
+          });
+        }
+
+        // Passes summary (collapsed by default)
+        if (checklist.passes && checklist.passes.length > 0) {
+          const passesPanel = createElement('div', 'section-panel collapsed');
+          passesPanel.style.marginTop = '1rem';
+
+          const passesHeader = createElement('div', 'section-header');
+          const passesTitle = createElement('div', 'section-title');
+          const passesLabel = createElement('span', null, checklist.passes.length + ' Passing Checks');
+          passesLabel.style.color = 'var(--accent-false)';
+          passesTitle.appendChild(passesLabel);
+          passesHeader.appendChild(passesTitle);
+          passesHeader.appendChild(createChevronSvg());
+          passesPanel.appendChild(passesHeader);
+
+          const passesBody = createElement('div', 'section-body');
+          const passesBodyInner = createElement('div', 'section-body-inner');
+          const passesContent = createElement('div', 'section-content');
+
+          checklist.passes.forEach(pass => {
+            const passItem = createElement('div', 'finding-card');
+            passItem.style.borderLeftColor = 'var(--accent-false)';
+            const passHeader = createElement('div', 'finding-header');
+            passHeader.appendChild(createElement('span', 'finding-id', pass.id));
+            passItem.appendChild(passHeader);
+            if (pass.check) {
+              passItem.appendChild(createElement('div', 'finding-check', pass.check));
+            }
+            if (pass.evidence) {
+              passItem.appendChild(createElement('div', 'finding-evidence', pass.evidence));
+            }
+            passesContent.appendChild(passItem);
+          });
+
+          passesBodyInner.appendChild(passesContent);
+          passesBody.appendChild(passesBodyInner);
+          passesPanel.appendChild(passesBody);
+          content.appendChild(passesPanel);
+        }
+
+        bodyInner.appendChild(content);
+        body.appendChild(bodyInner);
+        panel.appendChild(body);
+        container.appendChild(panel);
+      });
+    }
+
+    function renderOrchestrate() {
+      const container = document.getElementById('orchestrate-content');
+      const data = loadedData.orchestrate;
+      container.replaceChildren();
+
+      if (!data) {
+        container.appendChild(renderEmptyState('No Orchestrate Data', 'No orchestration data found'));
+        return;
+      }
+
+      // Stats
+      const statsGrid = createElement('div', 'stats-summary');
+      const statItems = [
+        { value: data.total_findings ?? '--', label: 'Total Findings', color: 'orange' },
+        { value: data.unique_findings ?? '--', label: 'Unique Findings', color: 'cyan' },
+        { value: data.duplicates_removed ?? '--', label: 'Duplicates Removed', color: 'purple' },
+        { value: data.batches_created ?? '--', label: 'Batches Created', color: 'green' }
+      ];
+
+      statItems.forEach(item => {
+        const card = createElement('div', 'stat-card ' + item.color);
+        card.appendChild(createElement('div', 'stat-value', String(item.value)));
+        card.appendChild(createElement('div', 'stat-label', item.label));
+        statsGrid.appendChild(card);
+      });
+      container.appendChild(statsGrid);
+
+      // Batch distribution
+      if (data.findings_per_batch && data.findings_per_batch.length > 0) {
+        const panel = createElement('div', 'section-panel');
+
+        const header = createElement('div', 'section-header');
+        const title = createElement('div', 'section-title');
+        title.textContent = 'Findings Distribution';
+        header.appendChild(title);
+        header.appendChild(createChevronSvg());
+        panel.appendChild(header);
+
+        const body = createElement('div', 'section-body');
+        const bodyInner = createElement('div', 'section-body-inner');
+        const content = createElement('div', 'section-content');
+
+        const table = createElement('table', 'data-table');
+        const thead = createElement('thead');
+        const headerRow = createElement('tr');
+        headerRow.appendChild(createElement('th', null, 'Batch'));
+        headerRow.appendChild(createElement('th', null, 'Findings'));
+        thead.appendChild(headerRow);
+        table.appendChild(thead);
+
+        const tbody = createElement('tbody');
+        data.findings_per_batch.forEach((count, index) => {
+          const tr = createElement('tr');
+          tr.appendChild(createElement('td', 'mono', 'Batch ' + (index + 1)));
+          const countTd = createElement('td', 'mono count', String(count));
+          tr.appendChild(countTd);
+          tbody.appendChild(tr);
+        });
+        table.appendChild(tbody);
+        content.appendChild(table);
+
+        bodyInner.appendChild(content);
+        body.appendChild(bodyInner);
+        panel.appendChild(body);
+        container.appendChild(panel);
+      }
+    }
+
+    function renderInvestigation() {
+      const container = document.getElementById('investigation-content');
+      const batches = loadedData.investigation;
+      container.replaceChildren();
+
+      if (!batches || batches.length === 0) {
+        container.appendChild(renderEmptyState('No Investigation Data', 'No investigation batches found'));
+        return;
+      }
+
+      // Summary stats
+      const allResults = batches.flatMap(b => b.results || []);
+      const confirmed = allResults.filter(r => r.verdict?.toUpperCase() === 'CONFIRMED').length;
+      const fp = allResults.filter(r => r.verdict?.toUpperCase() === 'FALSE_POSITIVE').length;
+      const nc = allResults.filter(r => r.verdict?.toUpperCase() === 'NEEDS_CONTEXT').length;
+
+      const statsGrid = createElement('div', 'stats-summary');
+      const statItems = [
+        { value: allResults.length, label: 'Total Investigated', color: '' },
+        { value: confirmed, label: 'Confirmed', color: 'red' },
+        { value: fp, label: 'False Positives', color: 'green' },
+        { value: nc, label: 'Needs Context', color: 'purple' }
+      ];
+
+      statItems.forEach(item => {
+        const card = createElement('div', 'stat-card ' + item.color);
+        card.appendChild(createElement('div', 'stat-value', String(item.value)));
+        card.appendChild(createElement('div', 'stat-label', item.label));
+        statsGrid.appendChild(card);
+      });
+      container.appendChild(statsGrid);
+
+      // Batches
+      batches.forEach(batch => {
+        const panel = createElement('div', 'section-panel');
+
+        const header = createElement('div', 'section-header');
+        const title = createElement('div', 'section-title');
+        title.appendChild(createSearchIconSvg());
+        title.appendChild(document.createTextNode('Batch ' + batch.batch + ' (' + (batch.results?.length || 0) + ' results)'));
+        header.appendChild(title);
+        header.appendChild(createChevronSvg());
+        panel.appendChild(header);
+
+        const body = createElement('div', 'section-body');
+        const bodyInner = createElement('div', 'section-body-inner');
+        const content = createElement('div', 'section-content');
+
+        if (batch.results && batch.results.length > 0) {
+          batch.results.forEach(result => {
+            const verdictClass = result.verdict?.toLowerCase().replace('_', '_') || '';
+            const card = createElement('div', 'investigation-result ' + verdictClass);
+
+            const resultHeader = createElement('div', 'investigation-header');
+            resultHeader.appendChild(createElement('span', 'finding-id', result.id));
+            resultHeader.appendChild(createElement('span', 'verdict-badge ' + verdictClass, result.verdict?.replace('_', ' ') || 'UNKNOWN'));
+            card.appendChild(resultHeader);
+
+            if (result.reason) {
+              card.appendChild(createElement('div', 'investigation-reason', result.reason));
+            }
+
+            if (result.recommendation) {
+              card.appendChild(createElement('div', 'finding-recommendation', result.recommendation));
+            }
+
+            // Code context
+            if (result.code_context && result.code_context.lines && result.code_context.lines.length > 0) {
+              const codeBlock = createElement('div', 'code-context-block');
+              codeBlock.appendChild(createElement('div', 'code-context-header', 'Code Context (L' + result.code_context.start_line + ')'));
+
+              const codeLines = createElement('div', 'code-context-lines');
+              result.code_context.lines.forEach((line, index) => {
+                const lineEl = createElement('div', 'code-line');
+                lineEl.appendChild(createElement('span', 'code-line-number', String(result.code_context.start_line + index)));
+                lineEl.appendChild(createElement('span', 'code-line-content', line));
+                codeLines.appendChild(lineEl);
+              });
+              codeBlock.appendChild(codeLines);
+              card.appendChild(codeBlock);
+            }
+
+            // Diff hunk
+            if (result.diff_hunk) {
+              const diffBlock = createElement('div', 'diff-block');
+              diffBlock.appendChild(createElement('div', 'diff-header', 'Diff Hunk'));
+
+              const diffLines = createElement('div', 'diff-lines');
+              result.diff_hunk.split('\n').forEach(line => {
+                const lineEl = createElement('div', 'diff-line');
+                if (line.startsWith('@@')) lineEl.classList.add('header');
+                else if (line.startsWith('+')) lineEl.classList.add('add');
+                else if (line.startsWith('-')) lineEl.classList.add('del');
+                lineEl.textContent = line;
+                diffLines.appendChild(lineEl);
+              });
+              diffBlock.appendChild(diffLines);
+              card.appendChild(diffBlock);
+            }
+
+            content.appendChild(card);
+          });
+        }
+
+        bodyInner.appendChild(content);
+        body.appendChild(bodyInner);
+        panel.appendChild(body);
+        container.appendChild(panel);
+      });
+    }
+
+    // Initialize with demo data
+    loadedData = {
+      report: DEMO_DATA.report,
+      extraction: DEMO_DATA.extraction,
+      checking: DEMO_DATA.checking,
+      orchestrate: DEMO_DATA.orchestrate,
+      investigation: DEMO_DATA.investigation
+    };
+
+    renderAll();
+  </script>
+</body>
+</html>

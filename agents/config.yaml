@@ -11,16 +11,27 @@ agent:
   # Checking: one agent per checklist
   # Model configurable per profile (default: haiku)
   checking:
-    default_model: haiku  # Checklist execution is systematic, not deep reasoning
+    default_model: haiku  # Checklist execution is systematic
 
-  # Investigation: haiku agents, batched by findings
+  # Orchestrate: single agent, batches findings and creates tasks
+  orchestrate:
+    model: haiku  # Just batching, no deep reasoning
+
+  # Investigation: one agent per batch of findings
+  # Model configurable per profile (default: haiku)
   investigation:
-    model: haiku
+    default_model: haiku
     max_findings_per_agent: 5
 
-  # Report: single agent (inherits user model)
+  # Report: single agent, compiles findings into JSON
   report:
-    # model: inherited from user
+    default_model: haiku  # Just compilation, no deep reasoning
+
+  # Dashboard Designer: generates custom HTML dashboard per repo
+  # Only runs if dashboard.enabled: true in profile
+  dashboard:
+    default_model: sonnet  # Needs creativity for unique design
+    skill: frontend-design  # Skill loaded for design expertise
 
 # Profile locations
 profiles:
@@ -37,5 +48,7 @@ output:
   # Per-run: {base}/{repo}-{branch}-{HHMM}/
   #   extraction/    - Batch extraction results
   #   checking/      - Per-checklist findings
-  #   investigation/ - Investigation verdicts
-  #   REPORT.md      - Final merged report
+  #   orchestrate.json - Batching summary
+  #   investigation/ - Per-batch verdicts
+  #   report.json    - Final report data
+  #   dashboard.html - Custom dashboard (if enabled)

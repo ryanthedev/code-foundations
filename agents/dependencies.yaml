@@ -5,7 +5,7 @@
 # 1. During extraction, detect project type from marker files
 # 2. Run pre-resolution commands (download sources, cache decompiled code)
 # 3. Store resolved sources in {output.base_dir}/dependencies/
-# 4. Investigation agents read from cache when "unknown" field references external types
+# 4. Investigation agents read from cache when verifying findings that reference external types
 
 # Project type detection (first match wins)
 detection:
@@ -178,7 +178,7 @@ strategies:
 workflow:
   # When to run resolution
   triggers:
-    - on_extraction_complete: true   # After units extracted, before skill agents
+    - on_extraction_complete: true   # After units extracted, before checking agents
     - on_investigation: true         # Before investigation agents (lazy resolution)
 
   # Cache settings
@@ -192,7 +192,7 @@ workflow:
     # Resolve all imports upfront (thorough but slow)
     eager: false
 
-    # Resolve only when investigation needs it (fast, on-demand)
+    # Resolve only when investigation agents need it (fast, on-demand)
     lazy: true
 
     # Prioritize these namespaces (common internal/shared libraries)
@@ -204,10 +204,10 @@ workflow:
 
 # Investigation agent enrichment
 investigation:
-  # When an investigation finding has "unknown" mentioning a type:
-  # 1. Parse the type name from the unknown field
+  # When verifying findings that reference external types:
+  # 1. Parse the type name from the finding
   # 2. Find it in cached dependencies
-  # 3. Add resolved source to investigation context
+  # 3. Add resolved source to investigation agent context
 
   # Max lines of resolved source to include per type
   max_context_lines: 100

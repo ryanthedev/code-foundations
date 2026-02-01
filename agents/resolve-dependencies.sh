@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Resolve external dependencies for investigation agents.
+# Resolve external dependencies for investigation agent verification.
 #
 # Usage:
 #   ./resolve-dependencies.sh --detect <project_root>         # Detect project type

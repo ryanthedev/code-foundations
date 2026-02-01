@@ -1,6 +1,6 @@
 # Example: Full PR Review
 
-This shows a complete `/code-foundations:review --pr` run with 10 checklists and 548 checks.
+This shows a complete `/code-foundations:review --pr` run with 10 checklists and 614 checks.
 
 ---
 
@@ -11,7 +11,7 @@ This shows a complete `/code-foundations:review --pr` run with 10 checklists and
 
 ❯ /code-foundations:review --pr
 
-⏺ Starting PR review with the full 548-check profile.
+⏺ Starting PR review with the full 614-check profile.
 
   PLUGIN_ROOT: /Users/user/.claude/plugins/cache/rtd/code-foundations/3.0.5
 
@@ -31,7 +31,7 @@ This shows a complete `/code-foundations:review --pr` run with 10 checklists and
 
 ⏺ Review Configuration
 
-  Profile: pr - Full PR review - 10 skills, 548 checks
+  Profile: pr - Full PR review - 10 skills, 614 checks
   Checklists: 10
   Target: Branch diff from main (14 files)
   Output: /tmp/PricingAPI-x-features-header-toggle-1237
@@ -111,7 +111,7 @@ This shows a complete `/code-foundations:review --pr` run with 10 checklists and
   Phases
 
   - Extraction: 3 batches (14 files)
-  - Checking: 10 checklists (548 items)
+  - Checking: 10 checklists (614 items)
   - Investigation: 2 batches (7 findings → 6 confirmed, 1 false positive)
   - Report: generated
 
@@ -168,15 +168,15 @@ What would you like to do with these findings?
 |-----------|--------|-------|
 | cc-defensive-programming | 31 | Error handling, validation |
 | aposd-simplifying-complexity | 44 | Complexity reduction |
-| aposd-reviewing-module-design | 42 | Module depth, information hiding |
+| aposd-reviewing-module-design | 36 | Module depth, information hiding |
 | cc-code-layout-and-style | 85 | Formatting, readability |
-| cc-control-flow-quality | 94 | Loops, conditionals, nesting |
-| aposd-verifying-correctness | 39 | Requirements coverage, edge cases |
-| cc-quality-practices | 107 | Testing, debugging |
-| cc-performance-tuning | 40 | Performance issues |
+| cc-control-flow-quality | 124 | Loops, conditionals, nesting |
+| aposd-verifying-correctness | 40 | Requirements coverage, edge cases |
+| cc-quality-practices | 115 | Testing, debugging |
+| cc-performance-tuning | 50 | Performance issues |
 | aposd-optimizing-critical-paths | 40 | Hot paths, optimization |
-| cc-documentation-quality | 26 | Comments, API docs |
-| **Total** | **548** | |
+| cc-documentation-quality | 49 | Comments, API docs |
+| **Total** | **614** | |
 
 ## Token Usage
 

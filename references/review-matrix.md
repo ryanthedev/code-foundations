@@ -9,7 +9,7 @@ Profile-driven code review: `/code-foundations:review`
 | Preset | Checklists | Checks | Best For |
 |--------|------------|--------|----------|
 | `--sanity` | 1 | 99 | Pre-commit sanity check |
-| `--pr` | 10 | 548 | PR review, major features |
+| `--pr` | 10 | 614 | PR review, major features |
 | `--profile <name>` | varies | varies | Saved configuration |
 
 **Interactive:** `/code-foundations:review` (no flags) prompts for profile.
@@ -19,16 +19,17 @@ Profile-driven code review: `/code-foundations:review`
 ## Architecture
 
 ```
-Extraction → Checking → Investigation → Report
-   haiku    1 per checklist   haiku       single
+Extraction → Checking → Orchestrate → Investigation → Report
+   haiku      haiku        haiku         haiku        sonnet
 ```
 
-| Phase | Agents | Model |
-|-------|--------|-------|
-| Extraction | 1 per 5 files | haiku |
-| Checking | 1 per checklist | inherited |
-| Investigation | 1 per 5 findings | haiku |
-| Report | 1 | inherited |
+| Phase | Agents | Model | Scaling |
+|-------|--------|-------|---------|
+| Extraction | 1 per 5 files | haiku | `ceil(files / 5)` |
+| Checking | 1 per checklist | haiku | `len(checklists)` |
+| Orchestrate | 1 | haiku | Fixed |
+| Investigation | 1 per 5 findings | haiku | `ceil(findings / 5)` |
+| Report | 1 | haiku | Fixed |
 
 ---
 
@@ -48,15 +49,15 @@ Full review with 10 skill checklists:
 |-------|--------|
 | cc-defensive-programming | 31 |
 | aposd-simplifying-complexity | 44 |
-| aposd-reviewing-module-design | 42 |
+| aposd-reviewing-module-design | 36 |
 | cc-code-layout-and-style | 85 |
-| cc-control-flow-quality | 94 |
-| aposd-verifying-correctness | 39 |
-| cc-quality-practices | 107 |
-| cc-performance-tuning | 40 |
+| cc-control-flow-quality | 124 |
+| aposd-verifying-correctness | 40 |
+| cc-quality-practices | 115 |
+| cc-performance-tuning | 50 |
 | aposd-optimizing-critical-paths | 40 |
-| cc-documentation-quality | 26 |
-| **Total** | **548** |
+| cc-documentation-quality | 49 |
+| **Total** | **614** |
 
 Location: `agents/profiles/pr.yaml`
 
