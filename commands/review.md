@@ -355,22 +355,36 @@ Categorize each file:
 - Config files
 - Migrations
 
-### Step 3: Build Intelligent Batches
+### Step 3: Extract Units & Get Diffs
 
-Group files for token efficiency:
+For each file to REVIEW:
+1. Read the file
+2. Get the diff:
+   ```bash
+   {DIFF_CMD} -- <file>
+   ```
+3. Identify units (functions/methods/classes) with:
+   - name, type, lines
+   - has_loops, has_async, has_try_catch
+   - The actual diff hunks that touch this unit
 
-1. **By directory** - files in same dir share context
-2. **By size** - combine small files until ~4k tokens, large files alone
-3. **By relationship** - keep `foo.ts` + `foo.test.ts` together
-4. **By imports** - files that import each other → same batch
+### Step 4: Build Intelligent Batches
 
-Target: 3-6 files per batch, ~4k tokens of code
+Group **units** (not just files) for checking. Each batch goes to one checker agent.
 
-### Step 4: Extract Units
+**Hybrid batching strategy:**
 
-For each file in REVIEW, identify:
-- Functions/methods (name, lines, has_loops, has_async, has_try_catch)
-- Classes (name, lines, methods)
+1. **By directory** - units from same dir share context (imports, types)
+2. **By size** - combine small units until ~4k tokens of diff, large units alone
+3. **By relationship** - keep `foo.ts` units + `foo.test.ts` units together
+4. **By imports** - units that call each other → same batch
+
+**Each batch contains:**
+- List of units to check
+- The diff hunks for those units
+- Shared context description
+
+Target: ~4k tokens of diff per batch
 
 ### Output
 
@@ -390,21 +404,41 @@ Write to `{BASE_DIR}/orchestrate.json`:
   "batches": [
     {{
       "id": 1,
-      "files": ["src/user/api.ts", "src/user/service.ts", "src/user/types.ts"],
-      "total_lines": 280,
       "shared_context": "User module - files import from each other",
       "units": [
-        {{"file": "src/user/api.ts", "name": "createUser", "type": "function", "lines": [10, 45], "has_loops": false, "has_async": true}},
-        {{"file": "src/user/api.ts", "name": "getUser", "type": "function", "lines": [47, 72], "has_loops": false, "has_async": true}},
-        {{"file": "src/user/service.ts", "name": "UserService", "type": "class", "lines": [5, 120]}}
-      ]
+        {{
+          "file": "src/user/api.ts",
+          "name": "createUser",
+          "type": "function",
+          "lines": [10, 45],
+          "has_loops": false,
+          "has_async": true,
+          "diff": "@@ -10,6 +10,15 @@\n function createUser(data) {\n+  const validated = validate(data);\n+  if (!validated) return null;\n   ..."
+        }},
+        {{
+          "file": "src/user/api.ts",
+          "name": "getUser",
+          "type": "function",
+          "lines": [47, 72],
+          "has_loops": false,
+          "has_async": true,
+          "diff": "@@ -50,3 +50,8 @@\n async function getUser(id) {\n+  const user = await db.find(id);\n   ..."
+        }},
+        {{
+          "file": "src/user/service.ts",
+          "name": "UserService",
+          "type": "class",
+          "lines": [5, 120],
+          "diff": "@@ -20,4 +20,10 @@\n class UserService {\n+  async save(user) {\n   ..."
+        }}
+      ],
+      "total_diff_tokens": 850
     }},
     {{
       "id": 2,
-      "files": ["src/order/api.ts"],
-      "total_lines": 450,
       "shared_context": null,
-      "units": [...]
+      "units": [...],
+      "total_diff_tokens": 1200
     }}
   ]
 }}
@@ -426,7 +460,7 @@ NUM_BATCHES = len(BATCHES)
 
 ## SANITY STEP 2: CHECKING (1 Agent per Batch)
 
-**Purpose:** Run 14 core checks against each batch. Per-file evaluation with PASS/FINDING/N/A.
+**Purpose:** Run 14 core checks against each unit in the batch. Diffs are provided inline.
 
 **Execute (respect MAX_PARALLELISM):**
 
@@ -447,26 +481,35 @@ for wave in waves:
             prompt=f"""
 ## Checker Agent: Batch {batch['id']}
 
-Review these files using the 14 core checks.
+Review these units using the 14 core checks. Diffs are provided inline.
 
 ### Context
 
-**Files:** {', '.join(batch['files'])}
 **Shared context:** {batch['shared_context'] or 'None'}
 
-**Units in this batch:**
-{chr(10).join(f"- {u['file']}: {u['name']} ({u['type']}, lines {u['lines'][0]}-{u['lines'][1]})" for u in batch['units'])}
+### Units to Check
+
+{chr(10).join(f'''
+**{u['name']}** ({u['type']}) - {u['file']}:{u['lines'][0]}-{u['lines'][1]}
+- has_loops: {u.get('has_loops', False)}
+- has_async: {u.get('has_async', False)}
+- has_try_catch: {u.get('has_try_catch', False)}
+
+```diff
+{u['diff']}
+```
+''' for u in batch['units'])}
 
 ### Instructions
 
-1. Read each file
-2. Get the diff for context:
-   ```bash
-   cd {REPO_ROOT}
-   {DIFF_CMD} -- {' '.join(batch['files'])}
-   ```
+For EACH unit above, evaluate ALL 14 checks.
 
-3. For EACH file, evaluate ALL 14 checks:
+If you need more context around a diff, read the file:
+```
+Read({u['file']})
+```
+
+For EACH unit, evaluate:
 
 **Error Handling:**
 - ERR-3: Are all error-return codes checked?
@@ -494,10 +537,10 @@ Review these files using the 14 core checks.
 
 ### Evaluation Format
 
-For each file, for each check:
+For each unit, for each check:
 - **PASS**: Check satisfied
 - **FINDING**: Check failed - include line numbers and issue
-- **N/A**: Check doesn't apply (no loops, no arrays, etc.)
+- **N/A**: Check doesn't apply (use unit metadata: has_loops=false → LOGIC-1 is N/A)
 
 ### Output
 
@@ -506,24 +549,32 @@ Write to `{BASE_DIR}/checking/batch-{batch['id']}.json`:
 ```json
 {{
   "batch": {batch['id']},
-  "files": {json.dumps(batch['files'])},
-  "results": {{
-    "src/user/api.ts": {{
-      "ERR-3": {{"verdict": "FINDING", "locations": [{{"line": 42, "issue": "createUser ignores db.insert error"}}]}},
-      "ERR-8": {{"verdict": "PASS"}},
-      "NULL-2": {{"verdict": "FINDING", "locations": [{{"line": 23, "issue": "userId not checked"}}, {{"line": 67, "issue": "response.data not checked"}}]}},
-      "NULL-4": {{"verdict": "N/A", "reason": "no array access"}},
-      ...
+  "results": [
+    {{
+      "unit": "createUser",
+      "file": "src/user/api.ts",
+      "lines": [10, 45],
+      "checks": {{
+        "ERR-3": {{"verdict": "FINDING", "locations": [{{"line": 42, "issue": "ignores db.insert error"}}]}},
+        "ERR-8": {{"verdict": "PASS"}},
+        "NULL-2": {{"verdict": "FINDING", "locations": [{{"line": 23, "issue": "userId not checked"}}]}},
+        "NULL-4": {{"verdict": "N/A", "reason": "no array access"}},
+        "LOGIC-1": {{"verdict": "N/A", "reason": "has_loops: false"}}
+      }}
     }},
-    "src/user/service.ts": {{
-      ...
+    {{
+      "unit": "getUser",
+      "file": "src/user/api.ts",
+      "lines": [47, 72],
+      "checks": {{...}}
     }}
-  }},
+  ],
   "summary": {{
-    "total_checks": 28,
-    "pass": 20,
-    "findings": 6,
-    "na": 2
+    "units_checked": 3,
+    "total_checks": 42,
+    "pass": 30,
+    "findings": 8,
+    "na": 4
   }}
 }}
 ```
@@ -544,13 +595,14 @@ Write to `{BASE_DIR}/checking/batch-{batch['id']}.json`:
 findings = []
 for batch in BATCHES:
     result = read_json(f"{BASE_DIR}/checking/batch-{batch['id']}.json")
-    for file, checks in result["results"].items():
-        for check_id, check_result in checks.items():
+    for unit_result in result["results"]:
+        for check_id, check_result in unit_result["checks"].items():
             if check_result["verdict"] == "FINDING":
                 for loc in check_result["locations"]:
                     findings.append({
                         "id": check_id,
-                        "file": file,
+                        "unit": unit_result["unit"],
+                        "file": unit_result["file"],
                         "line": loc["line"],
                         "issue": loc["issue"]
                     })
