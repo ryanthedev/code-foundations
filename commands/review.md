@@ -1033,13 +1033,20 @@ Return: `{BASE_DIR}/report.json`
 
 ## STEP 9.5: DASHBOARD DESIGNER (Optional)
 
-**Purpose:** Generate a customized HTML dashboard tailored to the specific repo. Only runs if `dashboard.enabled: true` in profile.
+**Purpose:** Generate a customized HTML dashboard tailored to the specific repo.
+
+**CRITICAL: Check `dashboard.enabled` in the profile FIRST.**
+- If `dashboard.enabled: false` → SKIP this entire step, go directly to STEP 10
+- If `dashboard.enabled: true` → Run the Task below
 
 ```python
+# CHECK THIS FIRST - most profiles have dashboard disabled
 if not DASHBOARD["enabled"]:
-    print("Dashboard generation disabled. Skipping to summary.")
+    print("Dashboard generation disabled (dashboard.enabled: false). Skipping to STEP 10.")
+    # DO NOT dispatch any Task - go directly to STEP 10
     goto STEP 10
 
+# Only reach here if dashboard.enabled: true
 Task(
     subagent_type="general-purpose",
     model=DASHBOARD["model"],  # From profile config (default: sonnet)
@@ -1158,61 +1165,23 @@ AskUserQuestion(
 
 **If "Open Dashboard":**
 
+**IMPORTANT: Do NOT dispatch a Task agent for this. Execute these steps directly.**
+
 The dashboard needs data injected inline because `fetch()` doesn't work with `file://` protocol due to CORS.
 
-```python
-# Collect all JSON data
-data = {
-    "report": read_json(f"{BASE_DIR}/report.json"),
-    "orchestrate": read_json(f"{BASE_DIR}/orchestrate.json"),
-    "extraction": [],
-    "checking": [],
-    "investigation": []
-}
+1. Read `{BASE_DIR}/report.json` using the Read tool
+2. Read the default dashboard HTML from `{PLUGIN_ROOT}/assets/review-dashboard.html`
+3. Inject the report data as a script tag before `</head>`:
+   ```html
+   <script>window.REVIEW_DATA = { "report": <report.json contents> };</script>
+   ```
+4. Write the modified HTML to `{BASE_DIR}/dashboard.html` using the Write tool
+5. Open the dashboard:
+   ```bash
+   open {BASE_DIR}/dashboard.html
+   ```
 
-# Load extraction batches
-for i in range(1, 100):
-    batch = read_json(f"{BASE_DIR}/extraction/batch-{i}.json")
-    if batch:
-        data["extraction"].append(batch)
-    else:
-        break
-
-# Load checking files
-for name in checklist_names:  # from profile
-    check = read_json(f"{BASE_DIR}/checking/{name}.json")
-    if check:
-        data["checking"].append(check)
-
-# Load investigation batches
-for i in range(1, 100):
-    batch = read_json(f"{BASE_DIR}/investigation/batch-{i}.json")
-    if batch:
-        data["investigation"].append(batch)
-    else:
-        break
-
-# Inject data into dashboard HTML
-if exists(f"{BASE_DIR}/dashboard.html"):
-    # Custom dashboard - inject data
-    html = read_file(f"{BASE_DIR}/dashboard.html")
-else:
-    # Default dashboard
-    html = read_file(f"{PLUGIN_ROOT}/assets/review-dashboard.html")
-
-# Inject data script before </head>
-data_script = f"<script>window.REVIEW_DATA = {json.dumps(data)};</script>"
-html = html.replace("</head>", f"{data_script}\n</head>")
-
-# Write final dashboard
-write_file(f"{BASE_DIR}/dashboard.html", html)
-```
-
-```bash
-# Copy report-viewer and open
-cp {PLUGIN_ROOT}/assets/report-viewer.html {BASE_DIR}/
-open {BASE_DIR}/dashboard.html
-```
+This is simple string manipulation - just read the HTML, insert the JSON, write it back.
 
 **If "Fix All":**
 
