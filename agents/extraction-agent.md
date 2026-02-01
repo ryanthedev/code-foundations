@@ -49,11 +49,15 @@ Output format:
 
 ### 2. Process AST Units
 
-For each unit from AST extraction:
+AST output already includes characteristics (`has_loops`, `has_async`, `has_try_catch`, `has_io_calls`, `nesting_depth`).
+
+For each unit, you need to add:
+1. **diff** - Get the diff hunk for this unit's line range
+2. **summary** - What changed in <10 words
 
 ```bash
 # Get the diff hunk for this unit's line range
-git diff $DIFF_ARGS -U0 -- "$FILE" | \
+git diff $DIFF_ARGS -- "$FILE" | \
   awk -v start="$START_LINE" -v end="$END_LINE" '
     /^@@/ { in_range = 0 }
     /^@@.*\+([0-9]+)/ {
@@ -65,13 +69,6 @@ git diff $DIFF_ARGS -U0 -- "$FILE" | \
     in_range { print }
   '
 ```
-
-Analyze the code to detect:
-- `has_loops`: Contains for/while/forEach/map
-- `has_async`: Contains async/await/Promise
-- `has_try_catch`: Contains try/catch/except/finally
-
-Generate summary: What changed in <10 words.
 
 ### 3. Handle Fallback Files (LLM Extraction)
 
@@ -85,10 +82,32 @@ Read(file_path)
 git diff $DIFF_ARGS -- "$FILE"
 ```
 
-Manually identify:
-- Function/method/class boundaries
-- Which units contain changed lines
-- Start and end line numbers
+Manually extract units matching the AST output format:
+
+```json
+{
+  "type": "method",
+  "name": "ValidateAirlineReservation",
+  "file": "src/App/ReservationHandler.cs",
+  "lines": [122, 174],
+  "has_loops": true,
+  "has_async": true,
+  "has_try_catch": false,
+  "has_io_calls": false,
+  "nesting_depth": 6
+}
+```
+
+For each function/method/class in the diff:
+- `file`: file path
+- `type`: "function", "method", or "class"
+- `name`: identifier name
+- `lines`: [start, end] line numbers
+- `has_loops`: contains for/while/forEach/map
+- `has_async`: contains async/await/Promise
+- `has_try_catch`: contains try/catch/except/finally
+- `has_io_calls`: contains fetch/http/fs/db calls
+- `nesting_depth`: max indentation level (approximate)
 
 ### 4. Record All Units via add-unit.sh
 

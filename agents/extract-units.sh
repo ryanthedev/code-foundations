@@ -40,63 +40,49 @@ check_status() {
   exit 0
 }
 
-# Get file extension to language scope mapping
-get_scope() {
-  local file="$1"
-  case "${file##*.}" in
-    js|mjs|cjs) echo "source.js" ;;
-    ts) echo "source.ts" ;;
-    tsx) echo "source.tsx" ;;
-    jsx) echo "source.jsx" ;;
-    py) echo "source.python" ;;
-    go) echo "source.go" ;;
-    rs) echo "source.rust" ;;
-    java) echo "source.java" ;;
-    rb) echo "source.ruby" ;;
-    c|h) echo "source.c" ;;
-    cpp|cc|cxx|hpp) echo "source.cpp" ;;
-    *) echo "" ;;
-  esac
-}
-
 # Grammar directory (where tree-sitter grammars are cloned)
 GRAMMAR_DIR="${TREE_SITTER_GRAMMAR_DIR:-$HOME/repos/tree-sitter-grammars}"
 
-# Get query file for a language - prefer official tags.scm from grammar repos
-get_query_file() {
-  local scope="$1"
-  local lang="${scope#source.}"
+# Get query file based on file extension
+get_query_file_for_ext() {
+  local file="$1"
+  local ext="${file##*.}"
 
-  # Map scope to grammar directory name
-  # Note: TypeScript uses JavaScript queries for code constructs
+  # Map extension to grammar directory name
   local grammar_name
-  case "$lang" in
-    js|ts|tsx) grammar_name="javascript" ;;  # TS inherits JS queries
-    python) grammar_name="python" ;;
-    *) grammar_name="$lang" ;;
+  case "$ext" in
+    js|mjs|cjs|jsx) grammar_name="javascript" ;;
+    ts|tsx) grammar_name="typescript" ;;
+    py) grammar_name="python" ;;
+    go) grammar_name="go" ;;
+    rs) grammar_name="rust" ;;
+    java) grammar_name="java" ;;
+    rb) grammar_name="ruby" ;;
+    c|h) grammar_name="c" ;;
+    cpp|cc|cxx|hpp) grammar_name="cpp" ;;
+    cs) grammar_name="c-sharp" ;;
+    sh|bash) grammar_name="bash" ;;
+    swift) grammar_name="swift" ;;
+    kt) grammar_name="kotlin" ;;
+    *) return ;;  # Unknown extension
   esac
 
   # Use official tags.scm from grammar repo
   local official_tags="$GRAMMAR_DIR/tree-sitter-$grammar_name/queries/tags.scm"
   if [[ -f "$official_tags" ]]; then
     echo "$official_tags"
-  else
-    echo ""  # No query file -> will use LLM fallback
   fi
 }
 
 # Extract units from a single file
 extract_file() {
   local file="$1"
-  local scope query_file
+  local query_file
 
-  scope=$(get_scope "$file")
-  [[ -z "$scope" ]] && return
-
-  query_file=$(get_query_file "$scope")
+  query_file=$(get_query_file_for_ext "$file")
   [[ -z "$query_file" ]] && return
 
-  # Run tree-sitter query and parse output
+  # Run tree-sitter query and parse output (no --scope, auto-detected by extension)
   local output type name start_line end_line first=true
 
   while IFS= read -r line; do
@@ -121,13 +107,18 @@ extract_file() {
         if [[ "$first" != "true" ]]; then
           printf ","
         fi
-        printf '{"type":"%s","name":"%s","file":"%s","lines":[%d,%d]}' \
-          "$type" "$name" "$file" "$start_line" "$end_line"
+        # Get characteristics for this unit
+        local chars
+        chars=$(analyze_characteristics "$file" "$start_line" "$end_line")
+        # Merge into output
+        printf '{"type":"%s","name":"%s","file":"%s","lines":[%d,%d],%s}' \
+          "$type" "$name" "$file" "$start_line" "$end_line" \
+          "$(echo "$chars" | sed 's/^{//;s/}$//')"
         first=false
         type="" name="" start_line="" end_line=""
       fi
     fi
-  done < <(tree-sitter query "$query_file" "$file" --scope "$scope" 2>/dev/null)
+  done < <(tree-sitter query "$query_file" "$file" 2>/dev/null)
 }
 
 # Analyze a unit for characteristics
@@ -197,13 +188,9 @@ get_files() {
 # Check if we can parse a file (grammar available)
 can_parse_file() {
   local file="$1"
-  local scope
 
-  scope=$(get_scope "$file")
-  [[ -z "$scope" ]] && return 1
-
-  # Try to parse the file - if it works, grammar is available
-  tree-sitter parse --quiet "$file" --scope "$scope" 2>/dev/null
+  # Try to parse the file - tree-sitter auto-detects language by extension
+  tree-sitter parse --quiet "$file" 2>/dev/null
 }
 
 # Main
@@ -232,16 +219,9 @@ main() {
     [[ ! -f "$file" ]] && continue
 
     # Skip non-code files
-    local scope
-    scope=$(get_scope "$file")
-    if [[ -z "$scope" ]]; then
-      # Check if it's a code file we don't support yet
-      case "${file##*.}" in
-        md|json|yaml|yml|txt|lock|toml) continue ;;  # Skip config/doc files
-        *) fallback_files+=("$file") ;;  # Unknown code file -> fallback
-      esac
-      continue
-    fi
+    case "${file##*.}" in
+      md|json|yaml|yml|txt|lock|toml|xml|config) continue ;;
+    esac
 
     # If tree-sitter not available, all code files need fallback
     if [[ "$ts_available" != "true" ]]; then
@@ -249,9 +229,9 @@ main() {
       continue
     fi
 
-    # Check if we have the query file for this language
+    # Check if we have a query file for this extension
     local query_file
-    query_file=$(get_query_file "$scope")
+    query_file=$(get_query_file_for_ext "$file")
     if [[ -z "$query_file" ]]; then
       fallback_files+=("$file")
       continue
