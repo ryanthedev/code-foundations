@@ -156,8 +156,8 @@ checklists:
 **Validation:**
 
 ```python
-# Extract parallelism configuration (default: 3)
-MAX_PARALLELISM = profile.get("max_parallelism", 3)  # 0 means unlimited
+# Extract parallelism configuration (default: 5)
+MAX_PARALLELISM = profile.get("max_parallelism", 5)  # 0 means unlimited
 
 # Extract model configuration (with defaults)
 MODELS = {
@@ -355,62 +355,21 @@ batches = split_evenly(files, NUM_BATCHES)
 for wave in waves:
     for batch_num, file_batch in wave:
         Task(
-            subagent_type="general-purpose",
-            model="haiku",
+            subagent_type="code-foundations:extraction-agent",
             description=f"Extract batch {batch_num + 1}",
             prompt=f"""
-## Extraction Agent
-
-Extract semantic units from these files in {REPO_ROOT}:
-
 FILES:
 {chr(10).join(file_batch)}
 
-### Instructions
-
-For each file:
-1. Read the file
-2. Get the diff: `{DIFF_CMD} -- <file>`
-3. Identify units (functions/methods/classes) with:
-   - name, type, lines
-   - has_loops, has_async, has_try_catch
-   - The diff hunks that touch this unit
-
-### Output
-
-Write to `{BASE_DIR}/extraction/batch-{batch_num + 1}.json`:
-
-```json
-{{
-  "batch": {batch_num + 1},
-  "files": [
-    {{
-      "path": "src/user/api.ts",
-      "units": [
-        {{
-          "name": "createUser",
-          "type": "function",
-          "lines": [10, 45],
-          "has_loops": false,
-          "has_async": true,
-          "has_try_catch": false,
-          "diff": "@@ -10,6 +10,15 @@..."
-        }}
-      ]
-    }}
-  ]
-}}
-```
+DIFF_CMD: {DIFF_CMD}
+PLUGIN_ROOT: {PLUGIN_ROOT}
+BASE_DIR: {BASE_DIR}
 """
         )
     # WAIT for wave to complete
 ```
 
-**Merge and mark complete:**
-
-```bash
-jq -s '{files: map(.files) | add}' $BASE_DIR/extraction/batch-*.json > $BASE_DIR/units.json
-```
+**Mark complete (no merge needed):**
 
 ```python
 TaskUpdate(taskId=phase1_id, status="completed")
@@ -444,9 +403,12 @@ Build intelligent batches from extracted units.
 
 ### Step 1: Read Extracted Units
 
+```bash
+# Read all units from JSONL (one unit per line)
+cat {BASE_DIR}/units.jsonl
 ```
-Read({BASE_DIR}/units.json)
-```
+
+Each line is a JSON object with: file, name, type, lines, diff, summary, has_loops, has_async, has_try_catch
 
 ### Step 2: Triage Files
 
@@ -551,98 +513,44 @@ else:
 for wave in waves:
     for batch in wave:
         Task(
-            subagent_type="general-purpose",
-            model="sonnet",
+            subagent_type="code-foundations:checker-agent",
             description=f"Check batch {batch['id']}",
             prompt=f"""
-## Checker Agent: Batch {batch['id']}
+BATCH: {batch['id']}
+PLUGIN_ROOT: {PLUGIN_ROOT}
+BASE_DIR: {BASE_DIR}
 
-Review these units using the 14 core checks. Diffs are provided inline.
+SKILLS:
+- cc-defensive-programming
+- cc-control-flow-quality
+- aposd-verifying-correctness
+- cc-performance-tuning
 
-### Context
-
-**Shared context:** {batch['shared_context'] or 'None'}
-
-### Units to Check
-
-{chr(10).join(f'''
-**{u['name']}** ({u['type']}) - {u['file']}:{u['lines'][0]}-{u['lines'][1]}
-- has_loops: {u.get('has_loops', False)}
-- has_async: {u.get('has_async', False)}
-- has_try_catch: {u.get('has_try_catch', False)}
-
-```diff
-{u['diff']}
-```
-''' for u in batch['units'])}
-
-### Instructions
-
-For EACH unit above, evaluate ALL 14 checks.
-
-If you need more context around a diff, read the file:
-```
-Read({u['file']})
-```
-
-For EACH unit, evaluate:
-
-**Error Handling:**
+CHECKS (14 core):
 - ERR-3: Are all error-return codes checked?
 - ERR-8: Are partial failures handled (rollback, cleanup)?
-
-**Null Safety & Boundaries:**
 - NULL-2: Does code check for null before use?
 - NULL-4: Are array indexes within bounds?
 - NULL-5: Are array references free of off-by-one errors?
 - NULL-6: What happens with empty input?
-
-**Logic & Control Flow:**
 - LOGIC-1: Does the loop end under all conditions?
 - LOGIC-6: Does recursive code have a path to stop?
 - LOGIC-11: Are all cases covered in switch/if-else?
 - LOGIC-15: No accidental assignment in conditionals?
-
-**Concurrency:**
 - CONC-2: Is each shared access point protected?
 - CONC-3: Are there no TOCTOU race conditions?
-
-**Resources & Performance:**
 - RES-1: Does every acquire have corresponding release?
 - PERF-1: Are database queries not in loops (N+1)?
 
-### Output via add-finding.sh
-
-**Use the add-finding.sh script for EVERY check result.** This enforces the schema.
-
-```bash
-# Location of script
-SCRIPT="{PLUGIN_ROOT}/agents/add-finding.sh"
-export BASE_DIR="{BASE_DIR}"
+UNITS:
+{chr(10).join(f'''
+**{u['name']}** ({u['type']}) - {u['file']}:{u['lines'][0]}-{u['lines'][1]}
+- has_loops: {u.get('has_loops', False)}, has_async: {u.get('has_async', False)}, has_try_catch: {u.get('has_try_catch', False)}
+- summary: {u.get('summary', 'N/A')}
+```diff
+{u['diff']}
 ```
-
-For each unit, for each check, call the script:
-
-```bash
-# PASS example
-$SCRIPT --batch {batch['id']} --unit "createUser" --file "src/user/api.ts" --check-id "ERR-8" --verdict "PASS"
-
-# FINDING example (requires --line and --issue)
-$SCRIPT --batch {batch['id']} --unit "createUser" --file "src/user/api.ts" --check-id "ERR-3" --verdict "FINDING" --line 42 --issue "ignores db.insert error"
-
-# N/A example (requires --reason)
-$SCRIPT --batch {batch['id']} --unit "createUser" --file "src/user/api.ts" --check-id "LOGIC-1" --verdict "N/A" --reason "has_loops: false"
-```
-
-**The script will error if:**
-- Required fields are missing
-- Verdict is not PASS, FINDING, or N/A
-- FINDING is missing --line or --issue
-- N/A is missing --reason
-
-All results go to `{BASE_DIR}/findings.jsonl` (one JSON object per line).
-
-Return: "Batch {batch['id']} complete: X findings added"
+''' for u in batch['units'])}
 """
         )
     # WAIT for wave to complete
@@ -714,7 +622,7 @@ finding_batches = [FINDINGS[i:i+BATCH_SIZE] for i in range(0, len(FINDINGS), BAT
 for wave in waves:
     for batch_num, findings_batch in wave:
         Task(
-            subagent_type="general-purpose",
+            subagent_type="code-foundations:investigation-agent",
             model=MODELS["investigation"],
             description=f"Investigate batch {batch_num}",
             prompt=f"""
@@ -795,22 +703,63 @@ phase6_id = next(t.id for t in tasks if "Phase 6" in t.subject)
 TaskUpdate(taskId=phase6_id, status="in_progress")
 ```
 
-**Read verdicts and display summary:**
-
-```bash
-# Count by verdict type
-CONFIRMED=$(grep -c '"verdict":"CONFIRMED"' "$BASE_DIR/verdicts.jsonl" 2>/dev/null || echo "0")
-FALSE_POS=$(grep -c '"verdict":"FALSE_POSITIVE"' "$BASE_DIR/verdicts.jsonl" 2>/dev/null || echo "0")
-NEEDS_CTX=$(grep -c '"verdict":"NEEDS_CONTEXT"' "$BASE_DIR/verdicts.jsonl" 2>/dev/null || echo "0")
-```
-
-**Display results, offer actions, then mark complete:**
+**Collect findings, generate dashboard, display summary:**
 
 ```python
+# Read verdicts from JSONL
+verdicts = []
+for line in read_lines(f"{BASE_DIR}/verdicts.jsonl"):
+    verdicts.append(json.loads(line))
+
+confirmed = [v for v in verdicts if v["verdict"] == "CONFIRMED"]
+false_positives = [v for v in verdicts if v["verdict"] == "FALSE_POSITIVE"]
+needs_context = [v for v in verdicts if v["verdict"] == "NEEDS_CONTEXT"]
+findings = verdicts  # All verdicts are findings for dashboard
+```
+
+**Generate dashboard (inline, no agent):**
+
+```python
+# Build review data
+review_data = {
+    "profile": PROFILE_NAME,
+    "timestamp": datetime.now().isoformat(),
+    "stats": {
+        "files_reviewed": FILE_COUNT,
+        "checks_run": 14,
+        "confirmed": len(confirmed),
+        "false_positives": len(false_positives),
+        "needs_context": len(needs_context)
+    },
+    "findings": findings
+}
+
+# Read dashboard template, inject data, write to BASE_DIR
+html = Read(f"{PLUGIN_ROOT}/assets/review-dashboard.html")
+html = html.replace("</head>", f"<script>window.REVIEW_DATA = {json.dumps(review_data)};</script></head>")
+Write(f"{BASE_DIR}/dashboard.html", html)
+```
+
+**Display summary:**
+
+```python
+print(f"""
+## Review Complete
+
+**{PROFILE_NAME}** | **{FILE_COUNT} files** | **14 checks** | **{len(verdicts)} findings**
+
+### Results
+- Confirmed: {len(confirmed)}
+- False positives: {len(false_positives)}
+- Needs context: {len(needs_context)}
+
+**Dashboard:** {BASE_DIR}/dashboard.html
+""")
+
 TaskUpdate(taskId=phase6_id, status="completed")
 ```
 
-**Goto STEP 9 (Terminal Summary)**
+**Proceed to STEP 10 (OFFER ACTIONS)** to let user open dashboard, fix all, or exit.
 
 ---
 
@@ -855,60 +804,21 @@ for wave in waves:
     # Dispatch all agents in this wave in a SINGLE MESSAGE (true parallelism)
     for batch_num, file_batch in wave:
         Task(
-            subagent_type="general-purpose",
-            model="haiku",
+            subagent_type="code-foundations:extraction-agent",
             description=f"Extract batch {batch_num + 1}",
             prompt=f"""
-## Extraction Agent
-
-Extract semantic units from these files in {REPO_ROOT}:
-
 FILES:
 {chr(10).join(file_batch)}
 
-### Instructions
-
-For each file:
-1. Read the file
-2. Identify functions/methods/classes
-3. Record characteristics:
-   - has_try_catch: boolean
-   - has_loops: boolean
-   - has_async: boolean
-   - has_io_calls: boolean
-   - nesting_depth: number
-
-### Output
-
-Write to `{BASE_DIR}/extraction/batch-{batch_num + 1}.json`:
-
-```json
-{{
-  "batch": {batch_num + 1},
-  "files": [
-    {{
-      "path": "src/auth.ts",
-      "units": [
-        {{"name": "validateInput", "type": "function", "lines": [10, 25], "chars": {{...}}}}
-      ]
-    }}
-  ]
-}}
-```
+DIFF_CMD: {DIFF_CMD}
+PLUGIN_ROOT: {PLUGIN_ROOT}
+BASE_DIR: {BASE_DIR}
 """
         )
     # WAIT for this wave to complete before starting next wave
 ```
 
-**Wait for all extraction agents, then merge:**
-
-```bash
-# Verify all batches completed
-ls $BASE_DIR/extraction/batch-*.json | wc -l
-
-# Merge into units.json
-jq -s '{files: map(.files) | add}' $BASE_DIR/extraction/batch-*.json > $BASE_DIR/units.json
-```
+**Mark extraction complete (no merge needed):**
 
 Mark all extraction tasks completed.
 
@@ -1061,85 +971,25 @@ for wave in waves:
         group_skills = group["skills"]
 
         Task(
-            subagent_type="general-purpose",
+            subagent_type="code-foundations:checker-agent",
             model=MODELS["checking"],  # From profile config
             description=f"Check: {prefix}",
             prompt=f"""
-## Checker Agent: {prefix} ({group_name})
+BATCH: {prefix}
+PLUGIN_ROOT: {PLUGIN_ROOT}
+BASE_DIR: {BASE_DIR}
 
-You are a checker agent. Execute all {len(checks)} checks in the {prefix} group.
+FOCUS: {group_prompt}
 
-### YOUR FOCUS
+SKILLS:
+{chr(10).join(f'- {skill}' for skill in group_skills)}
 
-{group_prompt}
+CHECKS ({prefix} - {group_name}):
+{chr(10).join(f'- {c["id"]}: {c["check"]}' for c in checks)}
 
-### PHASE 1: LOAD SKILLS
-
-Load skills for this group's expertise:
-
-{chr(10).join(f'''```
-Skill(code-foundations:{skill})
-```''' for skill in group_skills)}
-
-### PHASE 2: LOAD CODE CONTEXT
-
-1. Read extracted units:
-   ```
-   Read({BASE_DIR}/units.json)
-   ```
-
-2. Get the diff:
-   ```bash
-   cd {REPO_ROOT}
-   {DIFF_CMD}
-   ```
-
-3. Read changed files for full context.
-
-### PHASE 3: EXECUTE CHECKS
-
-Your assigned checks ({prefix} group - {group_name}):
-
-{chr(10).join(f'''**{c["id"]}**: {c["check"]}''' for c in checks)}
-
-For EACH check:
-1. Apply the check to the changed code
-2. Record result:
-   - **PASS**: Check satisfied. One-line evidence.
-   - **FINDING**: Check failed. Include file:line, evidence, confidence, recommendation.
-
-### PHASE 4: OUTPUT
-
-Write to `{BASE_DIR}/checking/{prefix}.json`:
-
-```json
-{{
-  "prefix": "{prefix}",
-  "group_name": "{group_name}",
-  "checks_run": {len(checks)},
-  "findings": [
-    {{
-      "id": "{prefix}-1",
-      "check": "...",
-      "file": "src/auth.ts",
-      "line": 42,
-      "issue": "...",
-      "confidence": "HIGH",
-      "evidence": "...",
-      "recommendation": "..."
-    }}
-  ],
-  "passes": [
-    {{
-      "id": "{prefix}-2",
-      "check": "...",
-      "evidence": "..."
-    }}
-  ]
-}}
-```
-
-Return: `{BASE_DIR}/checking/{prefix}.json`
+UNITS: Read from {BASE_DIR}/units.jsonl
+DIFF_CMD: {DIFF_CMD}
+REPO_ROOT: {REPO_ROOT}
 """
         )
     # WAIT for this wave to complete before starting next wave
@@ -1174,11 +1024,11 @@ Collect findings, deduplicate, batch, and prepare investigation tasks with skill
 
 ### Step 1: Collect Findings
 
-Read all checking results:
+Read all findings from JSONL:
 ```bash
-ls {BASE_DIR}/checking/*.json
+cat {BASE_DIR}/findings.jsonl
 ```
-Read each file.
+Each line is a JSON object with: batch, unit, file, check_id, verdict, line, issue, confidence.
 
 ### Step 2: Deduplicate
 
@@ -1294,7 +1144,7 @@ for wave in waves:
         files = list(set(f["file"] for f in findings))
 
         Task(
-            subagent_type="general-purpose",
+            subagent_type="code-foundations:investigation-agent",
             model=MODELS["investigation"],  # From profile config
             description=f"Investigate batch {batch_num}",
             prompt=f"""
@@ -1461,6 +1311,29 @@ false_positives = [f for f in findings if f["verdict"] == "FALSE_POSITIVE"]
 needs_context = [f for f in findings if f["verdict"] == "NEEDS_CONTEXT"]
 ```
 
+**Generate dashboard (inline, no agent):**
+
+```python
+# Build review data
+review_data = {
+    "profile": PROFILE_NAME,
+    "timestamp": datetime.now().isoformat(),
+    "stats": {
+        "files_reviewed": FILE_COUNT,
+        "checklists_run": TOTAL_CHECKLISTS,
+        "confirmed": len(confirmed),
+        "false_positives": len(false_positives),
+        "needs_context": len(needs_context)
+    },
+    "findings": findings
+}
+
+# Read dashboard template, inject data, write to BASE_DIR
+html = Read(f"{PLUGIN_ROOT}/assets/review-dashboard.html")
+html = html.replace("</head>", f"<script>window.REVIEW_DATA = {json.dumps(review_data)};</script></head>")
+Write(f"{BASE_DIR}/dashboard.html", html)
+```
+
 **Display summary:**
 
 ```markdown
@@ -1479,7 +1352,7 @@ needs_context = [f for f in findings if f["verdict"] == "NEEDS_CONTEXT"]
 2. **[ID]** file:line - issue
 3. **[ID]** file:line - issue
 
-Output: {BASE_DIR}/investigation/
+**Dashboard:** {BASE_DIR}/dashboard.html
 ```
 
 ---
@@ -1504,37 +1377,11 @@ AskUserQuestion(
 
 **If "Open Dashboard":**
 
-**IMPORTANT: Do NOT dispatch a Task agent for this. Execute these steps directly.**
+Dashboard was already generated in STEP 9. Just open it:
 
-The dashboard needs data injected inline because `fetch()` doesn't work with `file://` protocol due to CORS.
-
-1. Collect all investigation results into a single data object:
-   ```python
-   review_data = {
-       "profile": PROFILE_NAME,
-       "timestamp": datetime.now().isoformat(),
-       "stats": {
-           "files_reviewed": FILE_COUNT,
-           "checklists_run": TOTAL_CHECKLISTS,
-           "confirmed": len(confirmed),
-           "false_positives": len(false_positives),
-           "needs_context": len(needs_context)
-       },
-       "findings": findings
-   }
-   ```
-2. Read the dashboard HTML from `{PLUGIN_ROOT}/assets/review-dashboard.html`
-3. Inject the data as a script tag before `</head>`:
-   ```html
-   <script>window.REVIEW_DATA = <review_data as JSON>;</script>
-   ```
-4. Write the modified HTML to `{BASE_DIR}/dashboard.html` using the Write tool
-5. Open the dashboard:
-   ```bash
-   open {BASE_DIR}/dashboard.html
-   ```
-
-This is simple string manipulation - just read the HTML, insert the JSON, write it back.
+```bash
+open {BASE_DIR}/dashboard.html
+```
 
 **If "Fix All":**
 
@@ -1546,13 +1393,13 @@ confirmed_with_fixes = [f for f in confirmed if f.get("fix")]
 if not confirmed_with_fixes:
     print("No confirmed findings with fixes to apply.")
 else:
-    total_edits = sum(len(f["fix"]["edits"]) for f in confirmed_with_fixes)
-    print(f"Applying {len(confirmed_with_fixes)} fixes ({total_edits} edits)...")
+    print(f"Applying {len(confirmed_with_fixes)} fixes...")
 
     for finding in confirmed_with_fixes:
         fix = finding["fix"]
-        print(f"\n**{finding['id']}**: {fix['explanation']}")
+        print(f"\n**{finding.get('check_id', finding.get('id', 'unknown'))}**: {fix['explanation']}")
 
+        # Apply each edit in the fix
         for edit in fix["edits"]:
             print(f"  → {edit['file']}")
             Edit(
@@ -1561,7 +1408,7 @@ else:
                 new_string=edit["new_string"]
             )
 
-    print(f"\n✓ Applied {len(confirmed_with_fixes)} fixes ({total_edits} edits)")
+    print(f"\n✓ Applied {len(confirmed_with_fixes)} fixes")
     print("Run tests to verify changes.")
 ```
 
@@ -1600,7 +1447,7 @@ else:
 Control concurrent agents per phase via profile config:
 
 ```yaml
-max_parallelism: 5  # Max concurrent agents (default: 3)
+max_parallelism: 5  # Max concurrent agents (default: 5)
 ```
 
 | Setting | Behavior |
@@ -1609,10 +1456,9 @@ max_parallelism: 5  # Max concurrent agents (default: 3)
 | `1` | Sequential - one agent at a time |
 | `N` | Dispatch in waves of N agents, wait between waves |
 
-**Example:** PR profile with ~30 prefix groups, `max_parallelism: 3`:
-- Wave 1: GC, GH, GS (wait)
-- Wave 2: EH, EC, SC (wait)
-- Wave 3: OP, CT, SS (wait)
+**Example:** PR profile with ~30 prefix groups, `max_parallelism: 5`:
+- Wave 1: GC, GH, GS, EH, EC (wait)
+- Wave 2: SC, OP, CT, SS, MD (wait)
 - ...
 
 ## SCALING ANALYSIS (100k Line PR)
