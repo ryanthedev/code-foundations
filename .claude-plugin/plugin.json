@@ -1,6 +1,6 @@
 {
   "name": "code-foundations",
-  "version": "3.1.0",
+  "version": "3.2.0",
   "description": "Software engineering skills from Code Complete and A Philosophy of Software Design. Profile-driven code review (1 agent per checklist), CHECKER pattern for parallel subagent dispatch, and prototype→whiteboarding→building development flow.",
   "author": {
     "name": "ryanthedev"
