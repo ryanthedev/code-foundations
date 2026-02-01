@@ -29,8 +29,21 @@ Code-foundations is a Claude Code plugin providing software engineering skills b
 
 **Single entry point:** `/code-foundations:review`
 
-**Profile-driven architecture:** One unified flow, configurable via profiles.
+**Profile-driven architecture:** Two flows based on profile type.
 
+**Sanity Flow (--sanity):** 14 core checks, intelligent batching
+```
+┌──────────┐   ┌─────────────┐   ┌───────────┐   ┌───────────────┐   ┌────────┐
+│ GET DIFF │ → │ ORCHESTRATE │ → │ CHECKING  │ → │ INVESTIGATION │ → │ REPORT │
+│  (main)  │   │  (sonnet)   │   │ (sonnet)  │   │   (sonnet)    │   │(haiku) │
+└──────────┘   └─────────────┘   └───────────┘   └───────────────┘   └────────┘
+                     ↓                 ↓                  ↓
+              • Triage files     1 agent per      1 agent per
+              • Smart batching   batch, runs      5 findings,
+              • Extract units    14 core checks   provides fixes
+```
+
+**PR Flow (--pr):** 614 checks, prefix-based grouping
 ```
 ┌────────────┐   ┌─────────────┐   ┌───────────┐   ┌─────────────┐   ┌───────────────┐   ┌────────┐
 │ EXTRACTION │ → │ CHECK ORCH  │ → │ CHECKING  │ → │ ORCHESTRATE │ → │ INVESTIGATION │ → │ REPORT │
@@ -39,14 +52,14 @@ Code-foundations is a Claude Code plugin providing software engineering skills b
       ↑                ↑                 ↑                ↑                  ↑               ↑
    Batch by        Group by         1 agent per      Dedupe &          1 agent per      Verdicts
    files (5)       ID prefix        prefix group     batch             5 findings       only
-                   (GC-, EH-...)    + ALL skills
+                   (GC-, EH-...)    + skills
 ```
 
-| Preset | Checklists | Checks | Use Case |
-|--------|------------|--------|----------|
-| `--sanity` | 1 | 99 | Pre-commit sanity |
-| `--pr` | 10 | 614 | Full PR review |
-| `--profile <name>` | varies | varies | Custom configuration |
+| Preset | Checks | Use Case |
+|--------|--------|----------|
+| `--sanity` | 14 core (consensus-distilled) | Pre-commit sanity |
+| `--pr` | 614 (10 checklists) | Full PR review |
+| `--profile <name>` | varies | Custom configuration |
 
 **Interactive mode:** `/code-foundations:review` (no flags) asks for profile.
 **Profile management:** `/code-foundations:review-profile --setup`

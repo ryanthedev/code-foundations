@@ -20,6 +20,25 @@ Unified review workflow. One flow, driven by profile configuration.
 
 ## ARCHITECTURE
 
+### Sanity Profile (--sanity)
+
+```
+┌──────────┐   ┌─────────────┐   ┌───────────┐   ┌───────────────┐   ┌────────┐
+│ GET DIFF │ → │ ORCHESTRATE │ → │ CHECKING  │ → │ INVESTIGATION │ → │ REPORT │
+│  (main)  │   │  (sonnet)   │   │ (sonnet)  │   │   (sonnet)    │   │(haiku) │
+└──────────┘   └─────────────┘   └───────────┘   └───────────────┘   └────────┘
+                     ↓                 ↓                  ↓
+              • Triage files     1 agent per      1 agent per
+              • Smart batching   batch, runs      5 findings,
+              • Extract units    14 core checks   provides fixes
+```
+
+- **14 core checks** distilled via 7-agent consensus
+- **Intelligent batching** by directory, size, dependencies
+- **Per-file evaluation** with PASS / FINDING / N/A
+
+### PR Profile (--pr)
+
 ```
 ┌────────────┐   ┌─────────────┐   ┌───────────┐   ┌─────────────┐   ┌───────────────┐   ┌────────┐
 │ EXTRACTION │ → │ CHECK ORCH  │ → │ CHECKING  │ → │ ORCHESTRATE │ → │ INVESTIGATION │ → │ REPORT │
@@ -28,8 +47,12 @@ Unified review workflow. One flow, driven by profile configuration.
       ↑                ↑                 ↑                ↑                  ↑               ↑
    Batch by        Group by         1 agent per      Dedupe &          1 agent per      Verdicts
    files (5)       ID prefix        prefix group     batch             5 findings       only
-                   (GC-, EH-...)    + ALL skills
+                   (GC-, EH-...)    + skills
 ```
+
+- **614 checks** across 10 skill checklists
+- **Prefix-based grouping** (GC-, EH-, OP-, etc.)
+- **Skill loading** per check group
 
 **Main agent orchestrates everything** - dispatches all agents directly for true parallelism.
 
@@ -270,6 +293,304 @@ FILE_COUNT=$(wc -l < "$BASE_DIR/files.txt" | tr -d ' ')
 
 Proceed? [Y/n]
 ```
+
+---
+
+## STEP 4.5: BRANCH BY PROFILE TYPE
+
+```python
+if PROFILE_NAME == "sanity":
+    goto SANITY_FLOW
+else:
+    goto PR_FLOW  # STEP 5
+```
+
+---
+
+# SANITY FLOW (14 core checks, intelligent batching)
+
+---
+
+## SANITY STEP 1: ORCHESTRATE (Single Sonnet)
+
+**Purpose:** Triage files, build intelligent batches, extract units. One agent does all pre-work.
+
+```python
+Task(
+    subagent_type="general-purpose",
+    model="sonnet",
+    description="Orchestrate review",
+    prompt=f"""
+## Review Orchestrator
+
+Analyze the diff, triage files, build intelligent batches, and extract units.
+
+### Step 1: Get Files
+
+```bash
+cd {REPO_ROOT}
+{DIFF_CMD} --name-only
+```
+
+Also get line counts:
+```bash
+{DIFF_CMD} --stat
+```
+
+### Step 2: Triage Files
+
+Categorize each file:
+
+**SKIP** (don't review):
+- `*.lock`, `*-lock.json` → lockfiles
+- `*.generated.*`, `*.pb.*`, `*_generated.*` → generated code
+- `*.min.js`, `*.bundle.js` → bundled/minified
+- `__snapshots__/*` → test snapshots
+- `vendor/*`, `node_modules/*` → dependencies
+
+**REVIEW** (everything else):
+- Application code
+- Tests
+- Documentation (*.md)
+- Config files
+- Migrations
+
+### Step 3: Build Intelligent Batches
+
+Group files for token efficiency:
+
+1. **By directory** - files in same dir share context
+2. **By size** - combine small files until ~4k tokens, large files alone
+3. **By relationship** - keep `foo.ts` + `foo.test.ts` together
+4. **By imports** - files that import each other → same batch
+
+Target: 3-6 files per batch, ~4k tokens of code
+
+### Step 4: Extract Units
+
+For each file in REVIEW, identify:
+- Functions/methods (name, lines, has_loops, has_async, has_try_catch)
+- Classes (name, lines, methods)
+
+### Output
+
+Write to `{BASE_DIR}/orchestrate.json`:
+
+```json
+{{
+  "stats": {{
+    "total_files": 147,
+    "review": 45,
+    "skip": 102
+  }},
+  "skip": [
+    {{"file": "package-lock.json", "reason": "lockfile"}},
+    {{"file": "src/generated/client.ts", "reason": "generated"}}
+  ],
+  "batches": [
+    {{
+      "id": 1,
+      "files": ["src/user/api.ts", "src/user/service.ts", "src/user/types.ts"],
+      "total_lines": 280,
+      "shared_context": "User module - files import from each other",
+      "units": [
+        {{"file": "src/user/api.ts", "name": "createUser", "type": "function", "lines": [10, 45], "has_loops": false, "has_async": true}},
+        {{"file": "src/user/api.ts", "name": "getUser", "type": "function", "lines": [47, 72], "has_loops": false, "has_async": true}},
+        {{"file": "src/user/service.ts", "name": "UserService", "type": "class", "lines": [5, 120]}}
+      ]
+    }},
+    {{
+      "id": 2,
+      "files": ["src/order/api.ts"],
+      "total_lines": 450,
+      "shared_context": null,
+      "units": [...]
+    }}
+  ]
+}}
+```
+
+Return batch count and file counts.
+"""
+)
+```
+
+**Wait for orchestrator. Read result:**
+```python
+orch = read_json(f"{BASE_DIR}/orchestrate.json")
+BATCHES = orch["batches"]
+NUM_BATCHES = len(BATCHES)
+```
+
+---
+
+## SANITY STEP 2: CHECKING (1 Agent per Batch)
+
+**Purpose:** Run 14 core checks against each batch. Per-file evaluation with PASS/FINDING/N/A.
+
+**Execute (respect MAX_PARALLELISM):**
+
+```python
+# Split into waves
+if MAX_PARALLELISM == 0:
+    waves = [BATCHES]
+else:
+    waves = [BATCHES[i:i+MAX_PARALLELISM]
+             for i in range(0, len(BATCHES), MAX_PARALLELISM)]
+
+for wave in waves:
+    for batch in wave:
+        Task(
+            subagent_type="general-purpose",
+            model="sonnet",
+            description=f"Check batch {batch['id']}",
+            prompt=f"""
+## Checker Agent: Batch {batch['id']}
+
+Review these files using the 14 core checks.
+
+### Context
+
+**Files:** {', '.join(batch['files'])}
+**Shared context:** {batch['shared_context'] or 'None'}
+
+**Units in this batch:**
+{chr(10).join(f"- {u['file']}: {u['name']} ({u['type']}, lines {u['lines'][0]}-{u['lines'][1]})" for u in batch['units'])}
+
+### Instructions
+
+1. Read each file
+2. Get the diff for context:
+   ```bash
+   cd {REPO_ROOT}
+   {DIFF_CMD} -- {' '.join(batch['files'])}
+   ```
+
+3. For EACH file, evaluate ALL 14 checks:
+
+**Error Handling:**
+- ERR-3: Are all error-return codes checked?
+- ERR-8: Are partial failures handled (rollback, cleanup)?
+
+**Null Safety & Boundaries:**
+- NULL-2: Does code check for null before use?
+- NULL-4: Are array indexes within bounds?
+- NULL-5: Are array references free of off-by-one errors?
+- NULL-6: What happens with empty input?
+
+**Logic & Control Flow:**
+- LOGIC-1: Does the loop end under all conditions?
+- LOGIC-6: Does recursive code have a path to stop?
+- LOGIC-11: Are all cases covered in switch/if-else?
+- LOGIC-15: No accidental assignment in conditionals?
+
+**Concurrency:**
+- CONC-2: Is each shared access point protected?
+- CONC-3: Are there no TOCTOU race conditions?
+
+**Resources & Performance:**
+- RES-1: Does every acquire have corresponding release?
+- PERF-1: Are database queries not in loops (N+1)?
+
+### Evaluation Format
+
+For each file, for each check:
+- **PASS**: Check satisfied
+- **FINDING**: Check failed - include line numbers and issue
+- **N/A**: Check doesn't apply (no loops, no arrays, etc.)
+
+### Output
+
+Write to `{BASE_DIR}/checking/batch-{batch['id']}.json`:
+
+```json
+{{
+  "batch": {batch['id']},
+  "files": {json.dumps(batch['files'])},
+  "results": {{
+    "src/user/api.ts": {{
+      "ERR-3": {{"verdict": "FINDING", "locations": [{{"line": 42, "issue": "createUser ignores db.insert error"}}]}},
+      "ERR-8": {{"verdict": "PASS"}},
+      "NULL-2": {{"verdict": "FINDING", "locations": [{{"line": 23, "issue": "userId not checked"}}, {{"line": 67, "issue": "response.data not checked"}}]}},
+      "NULL-4": {{"verdict": "N/A", "reason": "no array access"}},
+      ...
+    }},
+    "src/user/service.ts": {{
+      ...
+    }}
+  }},
+  "summary": {{
+    "total_checks": 28,
+    "pass": 20,
+    "findings": 6,
+    "na": 2
+  }}
+}}
+```
+"""
+        )
+    # WAIT for wave to complete
+```
+
+**Wait for all checker agents.**
+
+---
+
+## SANITY STEP 3: COLLECT FINDINGS
+
+**Main agent collects all findings from checking results:**
+
+```python
+findings = []
+for batch in BATCHES:
+    result = read_json(f"{BASE_DIR}/checking/batch-{batch['id']}.json")
+    for file, checks in result["results"].items():
+        for check_id, check_result in checks.items():
+            if check_result["verdict"] == "FINDING":
+                for loc in check_result["locations"]:
+                    findings.append({
+                        "id": check_id,
+                        "file": file,
+                        "line": loc["line"],
+                        "issue": loc["issue"]
+                    })
+
+if not findings:
+    print("No findings. Skipping investigation.")
+    goto SANITY_STEP_5
+```
+
+---
+
+## SANITY STEP 4: INVESTIGATION (1 Agent per 5 Findings)
+
+Same as PR flow - verify findings and provide comprehensive fixes.
+
+```python
+# Batch findings into groups of 5
+BATCH_SIZE = 5
+finding_batches = [findings[i:i+BATCH_SIZE] for i in range(0, len(findings), BATCH_SIZE)]
+
+# Dispatch investigation agents (respecting MAX_PARALLELISM)
+# ... same pattern as PR flow STEP 8 ...
+```
+
+Each investigation agent:
+1. Loads implementation skills picked by orchestrator
+2. Verifies each finding (CONFIRMED / FALSE_POSITIVE / NEEDS_CONTEXT)
+3. Provides comprehensive fix with `old_string` / `new_string` / `explanation`
+
+---
+
+## SANITY STEP 5: REPORT
+
+Same as PR flow - compile results into final JSON.
+
+**Then goto STEP 10 (Terminal Summary)**
+
+---
+
+# PR FLOW (614 checks, prefix-based grouping)
 
 ---
 
