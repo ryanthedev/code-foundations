@@ -126,6 +126,9 @@ models:                    # Optional - defaults if not specified
   checking: haiku
   investigation: haiku
   report: haiku
+dashboard:                 # Optional - custom dashboard generation
+  enabled: false           # Set true to generate custom dashboard per repo
+  model: sonnet            # Needs creativity for design
 checklists:
   - path: <checklist_path>
     skills: [<skill1>, <skill2>]
@@ -139,6 +142,12 @@ MODELS = {
     "checking": profile.get("models", {}).get("checking", "haiku"),
     "investigation": profile.get("models", {}).get("investigation", "haiku"),
     "report": profile.get("models", {}).get("report", "haiku")
+}
+
+# Extract dashboard configuration
+DASHBOARD = {
+    "enabled": profile.get("dashboard", {}).get("enabled", False),
+    "model": profile.get("dashboard", {}).get("model", "sonnet")
 }
 
 CHECKLISTS = []
@@ -796,6 +805,88 @@ Return: `{BASE_DIR}/report.json`
 
 ---
 
+## STEP 9.5: DASHBOARD DESIGNER (Optional)
+
+**Purpose:** Generate a customized HTML dashboard tailored to the specific repo. Only runs if `dashboard.enabled: true` in profile.
+
+```python
+if not DASHBOARD["enabled"]:
+    print("Dashboard generation disabled. Skipping to summary.")
+    goto STEP 10
+
+Task(
+    subagent_type="general-purpose",
+    model=DASHBOARD["model"],  # From profile config (default: sonnet)
+    description="Design custom dashboard",
+    prompt=f"""
+## Dashboard Designer Agent
+
+Create a customized HTML review dashboard for this specific project.
+
+### Load Skill
+
+```
+Skill(frontend-design:frontend-design)
+```
+
+### Gather Context
+
+1. Read the report:
+   ```
+   Read({BASE_DIR}/report.json)
+   ```
+
+2. Read project metadata (if exists):
+   ```
+   Read({REPO_ROOT}/package.json)      # or Cargo.toml, pyproject.toml, etc.
+   Read({REPO_ROOT}/README.md)
+   ```
+
+3. Get repo info:
+   ```bash
+   cd {REPO_ROOT}
+   basename $(git rev-parse --show-toplevel)  # Repo name
+   git remote get-url origin 2>/dev/null      # Remote URL (if any)
+   ```
+
+### Design Guidelines
+
+Create a **unique, project-specific** dashboard that:
+
+1. **Reflects the project identity**
+   - Use project name prominently
+   - Infer color scheme from project type (e.g., blue for TypeScript, green for Node, rust for Rust)
+   - Match the project's aesthetic if it has branding
+
+2. **Shows review results clearly**
+   - Stats summary (files, checklists, findings)
+   - Findings grouped by verdict (confirmed, false positive, needs context)
+   - Code context and diff for each finding
+   - Expandable details
+
+3. **Is self-contained**
+   - Single HTML file with embedded CSS/JS
+   - Works offline
+   - Loads report.json from same directory
+
+4. **Has personality**
+   - Don't use generic templates
+   - Add subtle design touches that make it memorable
+   - Consider the project type (CLI tool? Web app? Library?)
+
+### Output
+
+Write to `{BASE_DIR}/dashboard.html`
+
+The dashboard should load `{BASE_DIR}/report.json` for data.
+
+Return: `{BASE_DIR}/dashboard.html`
+"""
+)
+```
+
+---
+
 ## STEP 10: TERMINAL SUMMARY
 
 ```markdown
@@ -808,6 +899,7 @@ Return: `{BASE_DIR}/report.json`
 - Checking: {N} checklists
 - Orchestrate: {N} findings → {N} batches
 - Investigation: {N} confirmed, {N} false positives, {N} need context
+- Dashboard: {custom | default}
 
 ### Top Issues
 1. **[ID]** file:line - issue
@@ -815,6 +907,7 @@ Return: `{BASE_DIR}/report.json`
 3. **[ID]** file:line - issue
 
 Output: {BASE_DIR}/report.json
+Dashboard: {BASE_DIR}/dashboard.html
 ```
 
 ---
@@ -839,9 +932,17 @@ AskUserQuestion(
 
 **If "Open Dashboard":**
 ```bash
-cp {PLUGIN_ROOT}/assets/review-dashboard.html {BASE_DIR}/
-cp {PLUGIN_ROOT}/assets/report-viewer.html {BASE_DIR}/
-open {BASE_DIR}/review-dashboard.html
+# Use custom dashboard if generated, otherwise copy default
+if [ -f "{BASE_DIR}/dashboard.html" ]; then
+    # Custom dashboard exists - also copy report-viewer for linking
+    cp {PLUGIN_ROOT}/assets/report-viewer.html {BASE_DIR}/
+    open {BASE_DIR}/dashboard.html
+else
+    # Use default dashboard
+    cp {PLUGIN_ROOT}/assets/review-dashboard.html {BASE_DIR}/
+    cp {PLUGIN_ROOT}/assets/report-viewer.html {BASE_DIR}/
+    open {BASE_DIR}/review-dashboard.html
+fi
 ```
 
 **If "Fix All":**

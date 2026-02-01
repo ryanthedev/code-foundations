@@ -62,6 +62,11 @@ models:
   investigation: haiku  # Finding verification
   report: haiku         # JSON compilation
 
+# Custom dashboard (optional - generates project-specific HTML)
+dashboard:
+  enabled: true         # Set true for custom dashboard
+  model: sonnet         # Needs creativity
+
 checklists:
   # Skill checklist with its persona
   - path: skills/cc-defensive-programming/checklists.md

@@ -27,6 +27,12 @@ agent:
   report:
     default_model: haiku  # Just compilation, no deep reasoning
 
+  # Dashboard Designer: generates custom HTML dashboard per repo
+  # Only runs if dashboard.enabled: true in profile
+  dashboard:
+    default_model: sonnet  # Needs creativity for unique design
+    skill: frontend-design  # Skill loaded for design expertise
+
 # Profile locations
 profiles:
   # Built-in profiles (shipped with plugin)
@@ -44,4 +50,5 @@ output:
   #   checking/      - Per-checklist findings
   #   orchestrate.json - Batching summary
   #   investigation/ - Per-batch verdicts
-  #   REPORT.md      - Final report
+  #   report.json    - Final report data
+  #   dashboard.html - Custom dashboard (if enabled)
