@@ -33,25 +33,25 @@ Code-foundations is a Claude Code plugin providing software engineering skills b
 
 **Sanity Flow (--sanity):** 14 core checks, intelligent batching
 ```
-┌──────────┐   ┌─────────────┐   ┌───────────┐   ┌───────────────┐   ┌────────┐
-│ GET DIFF │ → │ ORCHESTRATE │ → │ CHECKING  │ → │ INVESTIGATION │ → │ REPORT │
-│  (main)  │   │  (sonnet)   │   │ (sonnet)  │   │   (sonnet)    │   │(haiku) │
-└──────────┘   └─────────────┘   └───────────┘   └───────────────┘   └────────┘
-                     ↓                 ↓                  ↓
-              • Triage files     1 agent per      1 agent per
-              • Smart batching   batch, runs      5 findings,
-              • Extract units    14 core checks   provides fixes
+┌────────────┐   ┌─────────────┐   ┌───────────┐   ┌───────────────┐
+│ EXTRACTION │ → │ ORCHESTRATE │ → │ CHECKING  │ → │ INVESTIGATION │
+│  (haiku)   │   │  (sonnet)   │   │ (sonnet)  │   │   (sonnet)    │
+└────────────┘   └─────────────┘   └───────────┘   └───────────────┘
+      ↓                 ↓                 ↓                  ↓
+  1 per 5 files   • Triage files    1 agent per      1 agent per
+  Extract units   • Smart batching  batch, runs      5 findings,
+  + diffs                           14 core checks   provides fixes
 ```
 
 **PR Flow (--pr):** 614 checks, prefix-based grouping
 ```
-┌────────────┐   ┌─────────────┐   ┌───────────┐   ┌─────────────┐   ┌───────────────┐   ┌────────┐
-│ EXTRACTION │ → │ CHECK ORCH  │ → │ CHECKING  │ → │ ORCHESTRATE │ → │ INVESTIGATION │ → │ REPORT │
-│  (haiku)   │   │   (haiku)   │   │ (sonnet)  │   │   (haiku)   │   │   (sonnet)    │   │(haiku) │
-└────────────┘   └─────────────┘   └───────────┘   └─────────────┘   └───────────────┘   └────────┘
-      ↑                ↑                 ↑                ↑                  ↑               ↑
-   Batch by        Group by         1 agent per      Dedupe &          1 agent per      Verdicts
-   files (5)       ID prefix        prefix group     batch             5 findings       only
+┌────────────┐   ┌─────────────┐   ┌───────────┐   ┌─────────────┐   ┌───────────────┐
+│ EXTRACTION │ → │ CHECK ORCH  │ → │ CHECKING  │ → │ ORCHESTRATE │ → │ INVESTIGATION │
+│  (haiku)   │   │   (haiku)   │   │ (sonnet)  │   │   (haiku)   │   │   (sonnet)    │
+└────────────┘   └─────────────┘   └───────────┘   └─────────────┘   └───────────────┘
+      ↑                ↑                 ↑                ↑                  ↑
+   Batch by        Group by         1 agent per      Dedupe &          1 agent per
+   files (5)       ID prefix        prefix group     batch             5 findings
                    (GC-, EH-...)    + skills
 ```
 
@@ -80,12 +80,6 @@ max_parallelism: 3      # Max concurrent agents per phase (0 = unlimited)
 models:
   checking: sonnet       # Checklist execution
   investigation: sonnet  # Finding verification
-  report: haiku          # JSON compilation
-
-# Custom dashboard (optional - generates project-specific HTML)
-dashboard:
-  enabled: true         # Set true for custom dashboard
-  model: sonnet         # Needs creativity
 
 checklists:
   # Skill checklist with its persona
@@ -131,14 +125,16 @@ checklists:
 1. **Load profile** → Parse checklists and skills
 2. **Validate** → Check checklist paths exist, warn on missing skills
 3. **Get target** → Ask for diff args (staged, unstaged, branch)
-4. **Extraction** → Parallel haiku agents (batch by files)
-5. **Check Orchestrate** → Single haiku agent parses checklists, groups by ID prefix, writes prompt + picks skills per group
-6. **Checking** → Parallel sonnet agents (1 per prefix group like `GC-`, `EH-`, loads group-specific skills)
-7. **Orchestrate** → Single haiku agent batches findings, creates investigation tasks
-8. **Investigation** → Parallel sonnet agents (1 per 5 findings, loads implementation skills, provides comprehensive fixes)
-9. **Report** → Single haiku agent compiles findings into JSON report
+4. **Create phase tasks** → TaskCreate for each phase (enforces flow)
+5. **Extraction** → Parallel haiku agents (batch by files)
+6. **Check Orchestrate** → Single haiku agent parses checklists, groups by ID prefix
+7. **Checking** → Parallel sonnet agents use `add-finding.sh` to record results
+8. **Orchestrate** → Single haiku agent batches findings
+9. **Investigation** → Parallel sonnet agents use `add-verdict.sh` to record verdicts + fixes
+10. **Summary** → Display results, offer actions (open dashboard, fix all)
 
-**Main agent orchestrates** - dispatches all agents directly for true parallelism.
+**Phase enforcement via TaskCreate/TaskUpdate** - agent cannot skip phases.
+**Schema enforcement via bash scripts** - `add-finding.sh` and `add-verdict.sh` validate all inputs.
 
 ### Master Dispatcher Flow
 

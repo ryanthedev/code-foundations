@@ -11,7 +11,6 @@ max_parallelism: 3  # Max concurrent agents per phase
 models:
   checking: sonnet       # Checklist execution - needs reasoning depth
   investigation: sonnet  # Verification - needs reasoning depth
-  report: haiku          # JSON compilation - no deep reasoning needed
 
 checklists:
   # Defensive (75 checks)

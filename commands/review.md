@@ -23,30 +23,30 @@ Unified review workflow. One flow, driven by profile configuration.
 ### Sanity Profile (--sanity)
 
 ```
-┌──────────┐   ┌─────────────┐   ┌───────────┐   ┌───────────────┐   ┌────────┐
-│ GET DIFF │ → │ ORCHESTRATE │ → │ CHECKING  │ → │ INVESTIGATION │ → │ REPORT │
-│  (main)  │   │  (sonnet)   │   │ (sonnet)  │   │   (sonnet)    │   │(haiku) │
-└──────────┘   └─────────────┘   └───────────┘   └───────────────┘   └────────┘
-                     ↓                 ↓                  ↓
-              • Triage files     1 agent per      1 agent per
-              • Smart batching   batch, runs      5 findings,
-              • Extract units    14 core checks   provides fixes
+┌────────────┐   ┌─────────────┐   ┌───────────┐   ┌───────────────┐
+│ EXTRACTION │ → │ ORCHESTRATE │ → │ CHECKING  │ → │ INVESTIGATION │
+│  (haiku)   │   │  (sonnet)   │   │ (sonnet)  │   │   (sonnet)    │
+└────────────┘   └─────────────┘   └───────────┘   └───────────────┘
+      ↓                 ↓                 ↓                  ↓
+  1 per 5 files   • Triage files    1 agent per      1 agent per
+  Extract units   • Smart batching  batch, runs      5 findings,
+  + diffs                           14 core checks   provides fixes
 ```
 
 - **14 core checks** distilled via 7-agent consensus
 - **Intelligent batching** by directory, size, dependencies
-- **Per-file evaluation** with PASS / FINDING / N/A
+- **Schema enforced** via add-finding.sh / add-verdict.sh
 
 ### PR Profile (--pr)
 
 ```
-┌────────────┐   ┌─────────────┐   ┌───────────┐   ┌─────────────┐   ┌───────────────┐   ┌────────┐
-│ EXTRACTION │ → │ CHECK ORCH  │ → │ CHECKING  │ → │ ORCHESTRATE │ → │ INVESTIGATION │ → │ REPORT │
-│  (haiku)   │   │   (haiku)   │   │ (sonnet)  │   │   (haiku)   │   │   (sonnet)    │   │(haiku) │
-└────────────┘   └─────────────┘   └───────────┘   └─────────────┘   └───────────────┘   └────────┘
-      ↑                ↑                 ↑                ↑                  ↑               ↑
-   Batch by        Group by         1 agent per      Dedupe &          1 agent per      Verdicts
-   files (5)       ID prefix        prefix group     batch             5 findings       only
+┌────────────┐   ┌─────────────┐   ┌───────────┐   ┌─────────────┐   ┌───────────────┐
+│ EXTRACTION │ → │ CHECK ORCH  │ → │ CHECKING  │ → │ ORCHESTRATE │ → │ INVESTIGATION │
+│  (haiku)   │   │   (haiku)   │   │ (sonnet)  │   │   (haiku)   │   │   (sonnet)    │
+└────────────┘   └─────────────┘   └───────────┘   └─────────────┘   └───────────────┘
+      ↑                ↑                 ↑                ↑                  ↑
+   Batch by        Group by         1 agent per      Dedupe &          1 agent per
+   files (5)       ID prefix        prefix group     batch             5 findings
                    (GC-, EH-...)    + skills
 ```
 
@@ -58,7 +58,7 @@ Unified review workflow. One flow, driven by profile configuration.
 
 **Main agent MUST:**
 - Parse arguments, load profiles, setup directories
-- Dispatch extraction, checking, orchestrate, investigation, and report agents
+- Dispatch extraction, checking, orchestrate, and investigation agents
 - Read TaskList() after orchestrate phase to dispatch investigation agents
 - Merge JSON outputs between phases
 - Display terminal summary
@@ -148,10 +148,6 @@ description: <description>
 models:                    # Optional - defaults if not specified
   checking: haiku
   investigation: haiku
-  report: haiku
-dashboard:                 # Optional - custom dashboard generation
-  enabled: false           # Set true to generate custom dashboard per repo
-  model: sonnet            # Needs creativity for design
 checklists:
   - path: <checklist_path>
     skills: [<skill1>, <skill2>]
@@ -166,14 +162,7 @@ MAX_PARALLELISM = profile.get("max_parallelism", 3)  # 0 means unlimited
 # Extract model configuration (with defaults)
 MODELS = {
     "checking": profile.get("models", {}).get("checking", "haiku"),
-    "investigation": profile.get("models", {}).get("investigation", "haiku"),
-    "report": profile.get("models", {}).get("report", "haiku")
-}
-
-# Extract dashboard configuration
-DASHBOARD = {
-    "enabled": profile.get("dashboard", {}).get("enabled", False),
-    "model": profile.get("dashboard", {}).get("model", "sonnet")
+    "investigation": profile.get("models", {}).get("investigation", "haiku")
 }
 
 CHECKLISTS = []
@@ -296,7 +285,38 @@ Proceed? [Y/n]
 
 ---
 
-## STEP 4.5: BRANCH BY PROFILE TYPE
+## STEP 4.5: CREATE PHASE TASKS
+
+**Create all phase tasks upfront.** This enforces the flow - agent cannot skip phases.
+
+```python
+if PROFILE_NAME == "sanity":
+    # Sanity flow phases
+    TaskCreate(subject="Phase 1: Extraction", description="Extract semantic units from files", activeForm="Extracting units")
+    TaskCreate(subject="Phase 2: Orchestrate", description="Triage files, build batches", activeForm="Orchestrating review")
+    TaskCreate(subject="Phase 3: Checking", description="Run 14 core checks on each batch", activeForm="Running checks")
+    TaskCreate(subject="Phase 4: Collect Findings", description="Parse checker output, count findings", activeForm="Collecting findings")
+    TaskCreate(subject="Phase 5: Investigation", description="Verify findings, provide fixes", activeForm="Investigating findings")
+    TaskCreate(subject="Phase 6: Summary", description="Display results, offer actions", activeForm="Generating summary")
+else:
+    # PR flow phases
+    TaskCreate(subject="Phase 1: Extraction", description="Extract semantic units from files", activeForm="Extracting units")
+    TaskCreate(subject="Phase 2: Check Orchestrate", description="Parse checklists, group by prefix", activeForm="Orchestrating checks")
+    TaskCreate(subject="Phase 3: Checking", description="Run checks per prefix group", activeForm="Running checks")
+    TaskCreate(subject="Phase 4: Orchestrate Findings", description="Dedupe, batch findings", activeForm="Orchestrating findings")
+    TaskCreate(subject="Phase 5: Investigation", description="Verify findings, provide fixes", activeForm="Investigating findings")
+    TaskCreate(subject="Phase 6: Summary", description="Display results, offer actions", activeForm="Generating summary")
+```
+
+**Each phase MUST:**
+1. `TaskUpdate(taskId=phase_id, status="in_progress")` before starting
+2. Do its work
+3. `TaskUpdate(taskId=phase_id, status="completed")` when done
+4. Check `TaskList()` to confirm next phase is ready
+
+---
+
+## STEP 4.6: BRANCH BY PROFILE TYPE
 
 ```python
 if PROFILE_NAME == "sanity":
@@ -311,9 +331,106 @@ else:
 
 ---
 
-## SANITY STEP 1: ORCHESTRATE (Single Sonnet)
+## SANITY STEP 1: EXTRACTION (Parallel Haiku)
 
-**Purpose:** Triage files, build intelligent batches, extract units. One agent does all pre-work.
+**Purpose:** Extract semantic units from changed files. Fast haiku agents batch by files.
+
+**Mark phase in_progress:**
+
+```python
+tasks = TaskList()
+phase1_id = next(t.id for t in tasks if "Phase 1" in t.subject)
+TaskUpdate(taskId=phase1_id, status="in_progress")
+```
+
+**Dispatch extraction agents:**
+
+```python
+MAX_PER_AGENT = 5
+files = read_lines(f"{BASE_DIR}/files.txt")
+NUM_BATCHES = max(1, ceil(len(files) / MAX_PER_AGENT))
+batches = split_evenly(files, NUM_BATCHES)
+
+# Dispatch in waves (respect MAX_PARALLELISM)
+for wave in waves:
+    for batch_num, file_batch in wave:
+        Task(
+            subagent_type="general-purpose",
+            model="haiku",
+            description=f"Extract batch {batch_num + 1}",
+            prompt=f"""
+## Extraction Agent
+
+Extract semantic units from these files in {REPO_ROOT}:
+
+FILES:
+{chr(10).join(file_batch)}
+
+### Instructions
+
+For each file:
+1. Read the file
+2. Get the diff: `{DIFF_CMD} -- <file>`
+3. Identify units (functions/methods/classes) with:
+   - name, type, lines
+   - has_loops, has_async, has_try_catch
+   - The diff hunks that touch this unit
+
+### Output
+
+Write to `{BASE_DIR}/extraction/batch-{batch_num + 1}.json`:
+
+```json
+{{
+  "batch": {batch_num + 1},
+  "files": [
+    {{
+      "path": "src/user/api.ts",
+      "units": [
+        {{
+          "name": "createUser",
+          "type": "function",
+          "lines": [10, 45],
+          "has_loops": false,
+          "has_async": true,
+          "has_try_catch": false,
+          "diff": "@@ -10,6 +10,15 @@..."
+        }}
+      ]
+    }}
+  ]
+}}
+```
+"""
+        )
+    # WAIT for wave to complete
+```
+
+**Merge and mark complete:**
+
+```bash
+jq -s '{files: map(.files) | add}' $BASE_DIR/extraction/batch-*.json > $BASE_DIR/units.json
+```
+
+```python
+TaskUpdate(taskId=phase1_id, status="completed")
+```
+
+---
+
+## SANITY STEP 2: ORCHESTRATE (Single Sonnet)
+
+**Purpose:** Triage files, build intelligent batches from extracted units.
+
+**Mark phase in_progress:**
+
+```python
+tasks = TaskList()
+phase2_id = next(t.id for t in tasks if "Phase 2" in t.subject)
+TaskUpdate(taskId=phase2_id, status="in_progress")
+```
+
+**Dispatch orchestrator:**
 
 ```python
 Task(
@@ -323,18 +440,12 @@ Task(
     prompt=f"""
 ## Review Orchestrator
 
-Analyze the diff, triage files, build intelligent batches, and extract units.
+Build intelligent batches from extracted units.
 
-### Step 1: Get Files
+### Step 1: Read Extracted Units
 
-```bash
-cd {REPO_ROOT}
-{DIFF_CMD} --name-only
 ```
-
-Also get line counts:
-```bash
-{DIFF_CMD} --stat
+Read({BASE_DIR}/units.json)
 ```
 
 ### Step 2: Triage Files
@@ -348,41 +459,17 @@ Categorize each file:
 - `__snapshots__/*` → test snapshots
 - `vendor/*`, `node_modules/*` → dependencies
 
-**REVIEW** (everything else):
-- Application code
-- Tests
-- Documentation (*.md)
-- Config files
-- Migrations
+**REVIEW** (everything else)
 
-### Step 3: Extract Units & Get Diffs
+### Step 3: Build Intelligent Batches
 
-For each file to REVIEW:
-1. Read the file
-2. Get the diff:
-   ```bash
-   {DIFF_CMD} -- <file>
-   ```
-3. Identify units (functions/methods/classes) with:
-   - name, type, lines
-   - has_loops, has_async, has_try_catch
-   - The actual diff hunks that touch this unit
+Group **units** for checking. Each batch → one checker agent.
 
-### Step 4: Build Intelligent Batches
-
-Group **units** (not just files) for checking. Each batch goes to one checker agent.
-
-**Hybrid batching strategy:**
-
-1. **By directory** - units from same dir share context (imports, types)
-2. **By size** - combine small units until ~4k tokens of diff, large units alone
-3. **By relationship** - keep `foo.ts` units + `foo.test.ts` units together
+**Batching strategy:**
+1. **By directory** - units from same dir share context
+2. **By size** - combine small units until ~4k tokens, large units alone
+3. **By relationship** - keep `foo.ts` + `foo.test.ts` together
 4. **By imports** - units that call each other → same batch
-
-**Each batch contains:**
-- List of units to check
-- The diff hunks for those units
-- Shared context description
 
 Target: ~4k tokens of diff per batch
 
@@ -393,13 +480,12 @@ Write to `{BASE_DIR}/orchestrate.json`:
 ```json
 {{
   "stats": {{
-    "total_files": 147,
-    "review": 45,
-    "skip": 102
+    "total_files": 18,
+    "review": 13,
+    "skip": 5
   }},
   "skip": [
-    {{"file": "package-lock.json", "reason": "lockfile"}},
-    {{"file": "src/generated/client.ts", "reason": "generated"}}
+    {{"file": "package-lock.json", "reason": "lockfile"}}
   ],
   "batches": [
     {{
@@ -413,32 +499,11 @@ Write to `{BASE_DIR}/orchestrate.json`:
           "lines": [10, 45],
           "has_loops": false,
           "has_async": true,
-          "diff": "@@ -10,6 +10,15 @@\n function createUser(data) {\n+  const validated = validate(data);\n+  if (!validated) return null;\n   ..."
-        }},
-        {{
-          "file": "src/user/api.ts",
-          "name": "getUser",
-          "type": "function",
-          "lines": [47, 72],
-          "has_loops": false,
-          "has_async": true,
-          "diff": "@@ -50,3 +50,8 @@\n async function getUser(id) {\n+  const user = await db.find(id);\n   ..."
-        }},
-        {{
-          "file": "src/user/service.ts",
-          "name": "UserService",
-          "type": "class",
-          "lines": [5, 120],
-          "diff": "@@ -20,4 +20,10 @@\n class UserService {\n+  async save(user) {\n   ..."
+          "has_try_catch": false,
+          "diff": "@@ -10,6 +10,15 @@..."
         }}
       ],
       "total_diff_tokens": 850
-    }},
-    {{
-      "id": 2,
-      "shared_context": null,
-      "units": [...],
-      "total_diff_tokens": 1200
     }}
   ]
 }}
@@ -449,18 +514,29 @@ Return batch count and file counts.
 )
 ```
 
-**Wait for orchestrator. Read result:**
+**Wait for orchestrator. Read result and mark phase complete:**
+
 ```python
 orch = read_json(f"{BASE_DIR}/orchestrate.json")
 BATCHES = orch["batches"]
 NUM_BATCHES = len(BATCHES)
+
+TaskUpdate(taskId=phase2_id, status="completed")
 ```
 
 ---
 
-## SANITY STEP 2: CHECKING (1 Agent per Batch)
+## SANITY STEP 3: CHECKING (1 Agent per Batch)
 
 **Purpose:** Run 14 core checks against each unit in the batch. Diffs are provided inline.
+
+**Mark phase in_progress:**
+
+```python
+tasks = TaskList()
+phase3_id = next(t.id for t in tasks if "Phase 3" in t.subject)
+TaskUpdate(taskId=phase3_id, status="in_progress")
+```
 
 **Execute (respect MAX_PARALLELISM):**
 
@@ -535,110 +611,206 @@ For EACH unit, evaluate:
 - RES-1: Does every acquire have corresponding release?
 - PERF-1: Are database queries not in loops (N+1)?
 
-### Evaluation Format
+### Output via add-finding.sh
 
-For each unit, for each check:
-- **PASS**: Check satisfied
-- **FINDING**: Check failed - include line numbers and issue
-- **N/A**: Check doesn't apply (use unit metadata: has_loops=false → LOGIC-1 is N/A)
+**Use the add-finding.sh script for EVERY check result.** This enforces the schema.
 
-### Output
-
-Write to `{BASE_DIR}/checking/batch-{batch['id']}.json`:
-
-```json
-{{
-  "batch": {batch['id']},
-  "results": [
-    {{
-      "unit": "createUser",
-      "file": "src/user/api.ts",
-      "lines": [10, 45],
-      "checks": {{
-        "ERR-3": {{"verdict": "FINDING", "locations": [{{"line": 42, "issue": "ignores db.insert error"}}]}},
-        "ERR-8": {{"verdict": "PASS"}},
-        "NULL-2": {{"verdict": "FINDING", "locations": [{{"line": 23, "issue": "userId not checked"}}]}},
-        "NULL-4": {{"verdict": "N/A", "reason": "no array access"}},
-        "LOGIC-1": {{"verdict": "N/A", "reason": "has_loops: false"}}
-      }}
-    }},
-    {{
-      "unit": "getUser",
-      "file": "src/user/api.ts",
-      "lines": [47, 72],
-      "checks": {{...}}
-    }}
-  ],
-  "summary": {{
-    "units_checked": 3,
-    "total_checks": 42,
-    "pass": 30,
-    "findings": 8,
-    "na": 4
-  }}
-}}
+```bash
+# Location of script
+SCRIPT="{PLUGIN_ROOT}/agents/add-finding.sh"
+export BASE_DIR="{BASE_DIR}"
 ```
+
+For each unit, for each check, call the script:
+
+```bash
+# PASS example
+$SCRIPT --batch {batch['id']} --unit "createUser" --file "src/user/api.ts" --check-id "ERR-8" --verdict "PASS"
+
+# FINDING example (requires --line and --issue)
+$SCRIPT --batch {batch['id']} --unit "createUser" --file "src/user/api.ts" --check-id "ERR-3" --verdict "FINDING" --line 42 --issue "ignores db.insert error"
+
+# N/A example (requires --reason)
+$SCRIPT --batch {batch['id']} --unit "createUser" --file "src/user/api.ts" --check-id "LOGIC-1" --verdict "N/A" --reason "has_loops: false"
+```
+
+**The script will error if:**
+- Required fields are missing
+- Verdict is not PASS, FINDING, or N/A
+- FINDING is missing --line or --issue
+- N/A is missing --reason
+
+All results go to `{BASE_DIR}/findings.jsonl` (one JSON object per line).
+
+Return: "Batch {batch['id']} complete: X findings added"
 """
         )
     # WAIT for wave to complete
 ```
 
-**Wait for all checker agents.**
+**Wait for all checker agents, then mark phase complete:**
+
+```python
+TaskUpdate(taskId=phase3_id, status="completed")
+```
 
 ---
 
-## SANITY STEP 3: COLLECT FINDINGS
+## SANITY STEP 4: COLLECT FINDINGS
 
-**Main agent collects all findings from checking results:**
+**Mark phase in_progress, then read findings from JSONL:**
 
 ```python
-findings = []
-for batch in BATCHES:
-    result = read_json(f"{BASE_DIR}/checking/batch-{batch['id']}.json")
-    for unit_result in result["results"]:
-        for check_id, check_result in unit_result["checks"].items():
-            if check_result["verdict"] == "FINDING":
-                for loc in check_result["locations"]:
-                    findings.append({
-                        "id": check_id,
-                        "unit": unit_result["unit"],
-                        "file": unit_result["file"],
-                        "line": loc["line"],
-                        "issue": loc["issue"]
-                    })
+tasks = TaskList()
+phase4_id = next(t.id for t in tasks if "Phase 4" in t.subject)
+TaskUpdate(taskId=phase4_id, status="in_progress")
+```
 
-if not findings:
+```bash
+# Count findings
+FINDING_COUNT=$(grep -c '"verdict":"FINDING"' "$BASE_DIR/findings.jsonl" 2>/dev/null || echo "0")
+
+# Extract just the FINDINGs for investigation
+jq -c 'select(.verdict == "FINDING")' "$BASE_DIR/findings.jsonl" > "$BASE_DIR/to-investigate.jsonl"
+```
+
+```python
+TaskUpdate(taskId=phase4_id, status="completed")
+
+if FINDING_COUNT == 0:
     print("No findings. Skipping investigation.")
-    goto SANITY_STEP_5
+    goto SANITY_STEP_6
 ```
 
 ---
 
-## SANITY STEP 4: INVESTIGATION (1 Agent per 5 Findings)
+## SANITY STEP 5: INVESTIGATION (1 Agent per 5 Findings)
 
-Same as PR flow - verify findings and provide comprehensive fixes.
+**Mark phase in_progress:**
 
 ```python
-# Batch findings into groups of 5
-BATCH_SIZE = 5
-finding_batches = [findings[i:i+BATCH_SIZE] for i in range(0, len(findings), BATCH_SIZE)]
-
-# Dispatch investigation agents (respecting MAX_PARALLELISM)
-# ... same pattern as PR flow STEP 8 ...
+tasks = TaskList()
+phase5_id = next(t.id for t in tasks if "Phase 5" in t.subject)
+TaskUpdate(taskId=phase5_id, status="in_progress")
 ```
 
-Each investigation agent:
-1. Loads implementation skills picked by orchestrator
-2. Verifies each finding (CONFIRMED / FALSE_POSITIVE / NEEDS_CONTEXT)
-3. Provides comprehensive fix with `old_string` / `new_string` / `explanation`
+**Read findings and batch:**
+
+```bash
+# Read findings into array (one per line)
+mapfile -t FINDINGS < "$BASE_DIR/to-investigate.jsonl"
+FINDING_COUNT=${#FINDINGS[@]}
+```
+
+```python
+# Batch into groups of 5
+BATCH_SIZE = 5
+finding_batches = [FINDINGS[i:i+BATCH_SIZE] for i in range(0, len(FINDINGS), BATCH_SIZE)]
+```
+
+**Dispatch investigation agents (respecting MAX_PARALLELISM):**
+
+```python
+for wave in waves:
+    for batch_num, findings_batch in wave:
+        Task(
+            subagent_type="general-purpose",
+            model=MODELS["investigation"],
+            description=f"Investigate batch {batch_num}",
+            prompt=f"""
+## Investigation Agent: Batch {batch_num}
+
+Verify each finding and provide fixes.
+
+### Findings to Investigate
+
+{chr(10).join(findings_batch)}
+
+### Instructions
+
+For EACH finding:
+1. Read the file around the finding line (20 lines context)
+2. Determine verdict:
+   - **CONFIRMED**: Real issue that needs fixing
+   - **FALSE_POSITIVE**: Not an issue (explain why)
+   - **NEEDS_CONTEXT**: Cannot determine without more info
+
+3. For CONFIRMED findings, provide a fix
+
+### Output via add-verdict.sh
+
+**Use the add-verdict.sh script for EVERY finding.** This enforces the schema.
+
+```bash
+SCRIPT="{PLUGIN_ROOT}/agents/add-verdict.sh"
+export BASE_DIR="{BASE_DIR}"
+```
+
+For each finding, call the script:
+
+```bash
+# CONFIRMED (requires fix fields)
+$SCRIPT --finding-id "batch-1-NULL-4" --file "src/foo.ts" --line 42 --check-id "NULL-4" \\
+  --verdict "CONFIRMED" --reason "Array accessed without bounds check" \\
+  --explanation "Add bounds check before array access" \\
+  --old-string "items[0]" --new-string "items.length > 0 ? items[0] : null"
+
+# FALSE_POSITIVE
+$SCRIPT --finding-id "batch-1-ERR-3" --file "src/foo.ts" --line 50 --check-id "ERR-3" \\
+  --verdict "FALSE_POSITIVE" --reason "Error is handled in caller via Result type"
+
+# NEEDS_CONTEXT
+$SCRIPT --finding-id "batch-1-CONC-2" --file "src/foo.ts" --line 60 --check-id "CONC-2" \\
+  --verdict "NEEDS_CONTEXT" --reason "Unclear if this runs in multi-threaded context" \\
+  --question "Is this service accessed concurrently?"
+```
+
+**The script will error if:**
+- Required fields are missing
+- Verdict is not CONFIRMED, FALSE_POSITIVE, or NEEDS_CONTEXT
+- CONFIRMED is missing fix fields
+
+All results go to `{BASE_DIR}/verdicts.jsonl`.
+
+Return: "Batch {batch_num} complete: X verdicts added"
+"""
+        )
+```
+
+**Wait for all investigation agents, then mark complete:**
+
+```python
+TaskUpdate(taskId=phase5_id, status="completed")
+```
 
 ---
 
-## SANITY STEP 5: REPORT
+## SANITY STEP 6: TERMINAL SUMMARY
 
-Same as PR flow - compile results into final JSON.
+**Mark phase in_progress:**
 
-**Then goto STEP 10 (Terminal Summary)**
+```python
+tasks = TaskList()
+phase6_id = next(t.id for t in tasks if "Phase 6" in t.subject)
+TaskUpdate(taskId=phase6_id, status="in_progress")
+```
+
+**Read verdicts and display summary:**
+
+```bash
+# Count by verdict type
+CONFIRMED=$(grep -c '"verdict":"CONFIRMED"' "$BASE_DIR/verdicts.jsonl" 2>/dev/null || echo "0")
+FALSE_POS=$(grep -c '"verdict":"FALSE_POSITIVE"' "$BASE_DIR/verdicts.jsonl" 2>/dev/null || echo "0")
+NEEDS_CTX=$(grep -c '"verdict":"NEEDS_CONTEXT"' "$BASE_DIR/verdicts.jsonl" 2>/dev/null || echo "0")
+```
+
+**Display results, offer actions, then mark complete:**
+
+```python
+TaskUpdate(taskId=phase6_id, status="completed")
+```
+
+**Goto STEP 9 (Terminal Summary)**
 
 ---
 
@@ -1273,252 +1445,46 @@ for task in investigate_tasks:
 
 ---
 
-## STEP 9: REPORT (Single Haiku)
+## STEP 9: TERMINAL SUMMARY
 
-**Purpose:** Compile investigation results into final JSON report.
-
-```python
-Task(
-    subagent_type="general-purpose",
-    model=MODELS["report"],  # From profile config (default: haiku)
-    description="Generate final report",
-    prompt=f"""
-## Report Agent
-
-Compile investigation results into the final report JSON.
-
-### Inputs
-
-1. Read orchestration summary:
-   ```
-   Read({BASE_DIR}/orchestrate.json)
-   ```
-
-2. Read all investigation results:
-   ```bash
-   ls {BASE_DIR}/investigation/*.json
-   ```
-   Read each file.
-
-3. Read extraction summary for file/line counts:
-   ```
-   Read({BASE_DIR}/units.json)
-   ```
-
-### Tasks
-
-1. **Collect** all findings from investigation results
-2. **Group** by verdict (confirmed, false_positive, needs_context)
-3. **Sort** confirmed findings by file, then line number
-4. **Compile** into final JSON
-
-### Output
-
-Write to `{BASE_DIR}/report.json`:
-
-```json
-{{
-  "profile": "{PROFILE_NAME}",
-  "timestamp": "2024-01-15T14:30:00Z",
-  "stats": {{
-    "files_reviewed": 14,
-    "checklists_run": 10,
-    "items_checked": 614,
-    "total_findings": 7,
-    "confirmed": 6,
-    "false_positives": 1,
-    "needs_context": 0
-  }},
-  "findings": [
-    {{
-      "id": "SEC-1",
-      "verdict": "confirmed",
-      "file": "src/auth.ts",
-      "line": 42,
-      "check": "Is input validated before use?",
-      "issue": "User input not validated",
-      "evidence": "req.body.id passed directly to query()",
-      "reason": "User input from request.body passed directly to SQL query",
-      "code_context": {{
-        "start_line": 35,
-        "lines": [...]
-      }},
-      "diff_hunk": "@@ -40,6 +42,8 @@...",
-      "fix": {{
-        "explanation": "Added input validation and switched to parameterized query",
-        "edits": [
-          {{
-            "file": "src/auth.ts",
-            "old_string": "  const id = req.body.id;\\n  db.query(`SELECT * FROM users WHERE id = ${{id}}`);",
-            "new_string": "  const id = req.body.id;\\n  if (!id || typeof id !== 'string') {{\\n    throw new ValidationError('Invalid user ID');\\n  }}\\n  db.query('SELECT * FROM users WHERE id = ?', [id]);"
-          }}
-        ]
-      }}
-    }},
-    {{
-      "id": "DP-3",
-      "verdict": "false_positive",
-      "file": "src/api.ts",
-      "line": 89,
-      "check": "Is error handling present?",
-      "issue": "Missing try-catch",
-      "reason": "Validation occurs in middleware before this function is called",
-      "code_context": {{
-        "start_line": 82,
-        "lines": [
-          "// Called after validateInput middleware",
-          "function processData(data) {{",
-          "  return transform(data);",
-          "}}"
-        ]
-      }},
-      "diff_hunk": null
-    }},
-    {{
-      "id": "CF-7",
-      "verdict": "needs_context",
-      "file": "src/utils.ts",
-      "line": 156,
-      "check": "Is the loop termination condition correct?",
-      "issue": "Potential infinite loop",
-      "reason": "Cannot determine without knowing if external service guarantees termination",
-      "code_context": {{
-        "start_line": 150,
-        "lines": [
-          "while (await fetchNext()) {{",
-          "  items.push(current);",
-          "  if (items.length > MAX) break;",
-          "}}"
-        ]
-      }},
-      "diff_hunk": "@@ -155,4 +156,6 @@\\n+while (await fetchNext()) {{"
-    }}
-  ]
-}}
-```
-
-Return: `{BASE_DIR}/report.json`
-"""
-)
-```
-
----
-
-## STEP 9.5: DASHBOARD DESIGNER (Optional)
-
-**Purpose:** Generate a customized HTML dashboard tailored to the specific repo.
-
-**CRITICAL: Check `dashboard.enabled` in the profile FIRST.**
-- If `dashboard.enabled: false` → SKIP this entire step, go directly to STEP 10
-- If `dashboard.enabled: true` → Run the Task below
+**Collect findings from investigation results:**
 
 ```python
-# CHECK THIS FIRST - most profiles have dashboard disabled
-if not DASHBOARD["enabled"]:
-    print("Dashboard generation disabled (dashboard.enabled: false). Skipping to STEP 10.")
-    # DO NOT dispatch any Task - go directly to STEP 10
-    goto STEP 10
+findings = []
+for batch_file in glob(f"{BASE_DIR}/investigation/batch-*.json"):
+    batch = read_json(batch_file)
+    for result in batch["results"]:
+        findings.append(result)
 
-# Only reach here if dashboard.enabled: true
-Task(
-    subagent_type="general-purpose",
-    model=DASHBOARD["model"],  # From profile config (default: sonnet)
-    description="Design custom dashboard",
-    prompt=f"""
-## Dashboard Designer Agent
-
-Create a customized HTML review dashboard for this specific project.
-
-### Load Skill
-
-```
-Skill(frontend-design:frontend-design)
+confirmed = [f for f in findings if f["verdict"] == "CONFIRMED"]
+false_positives = [f for f in findings if f["verdict"] == "FALSE_POSITIVE"]
+needs_context = [f for f in findings if f["verdict"] == "NEEDS_CONTEXT"]
 ```
 
-### Gather Context
-
-1. Read the report:
-   ```
-   Read({BASE_DIR}/report.json)
-   ```
-
-2. Read project metadata (if exists):
-   ```
-   Read({REPO_ROOT}/package.json)      # or Cargo.toml, pyproject.toml, etc.
-   Read({REPO_ROOT}/README.md)
-   ```
-
-3. Get repo info:
-   ```bash
-   cd {REPO_ROOT}
-   basename $(git rev-parse --show-toplevel)  # Repo name
-   git remote get-url origin 2>/dev/null      # Remote URL (if any)
-   ```
-
-### Design Guidelines
-
-Create a **unique, project-specific** dashboard that:
-
-1. **Reflects the project identity**
-   - Use project name prominently
-   - Infer color scheme from project type (e.g., blue for TypeScript, green for Node, rust for Rust)
-   - Match the project's aesthetic if it has branding
-
-2. **Shows review results clearly**
-   - Stats summary (files, checklists, findings)
-   - Findings grouped by verdict (confirmed, false positive, needs context)
-   - Code context and diff for each finding
-   - Expandable details
-
-3. **Is self-contained**
-   - Single HTML file with embedded CSS/JS
-   - Works offline
-   - Loads report.json from same directory
-
-4. **Has personality**
-   - Don't use generic templates
-   - Add subtle design touches that make it memorable
-   - Consider the project type (CLI tool? Web app? Library?)
-
-### Output
-
-Write to `{BASE_DIR}/dashboard.html`
-
-The dashboard should load `{BASE_DIR}/report.json` for data.
-
-Return: `{BASE_DIR}/dashboard.html`
-"""
-)
-```
-
----
-
-## STEP 10: TERMINAL SUMMARY
+**Display summary:**
 
 ```markdown
 ## Review Complete
 
-**{PROFILE_NAME}** | **{FILE_COUNT} files** | **{TOTAL_CHECKLISTS} checklists** | **{FINDING_COUNT} findings**
+**{PROFILE_NAME}** | **{FILE_COUNT} files** | **{TOTAL_CHECKLISTS} checklists** | **{len(findings)} findings**
 
 ### Phases
 - Extraction: {N} batches
 - Checking: {N} checklists
 - Orchestrate: {N} findings → {N} batches
-- Investigation: {N} confirmed, {N} false positives, {N} need context
-- Dashboard: {custom | default}
+- Investigation: {len(confirmed)} confirmed, {len(false_positives)} false positives, {len(needs_context)} need context
 
 ### Top Issues
 1. **[ID]** file:line - issue
 2. **[ID]** file:line - issue
 3. **[ID]** file:line - issue
 
-Output: {BASE_DIR}/report.json
-Dashboard: {BASE_DIR}/dashboard.html
+Output: {BASE_DIR}/investigation/
 ```
 
 ---
 
-## STEP 11: OFFER ACTIONS
+## STEP 10: OFFER ACTIONS
 
 ```
 AskUserQuestion(
@@ -1542,11 +1508,25 @@ AskUserQuestion(
 
 The dashboard needs data injected inline because `fetch()` doesn't work with `file://` protocol due to CORS.
 
-1. Read `{BASE_DIR}/report.json` using the Read tool
-2. Read the default dashboard HTML from `{PLUGIN_ROOT}/assets/review-dashboard.html`
-3. Inject the report data as a script tag before `</head>`:
+1. Collect all investigation results into a single data object:
+   ```python
+   review_data = {
+       "profile": PROFILE_NAME,
+       "timestamp": datetime.now().isoformat(),
+       "stats": {
+           "files_reviewed": FILE_COUNT,
+           "checklists_run": TOTAL_CHECKLISTS,
+           "confirmed": len(confirmed),
+           "false_positives": len(false_positives),
+           "needs_context": len(needs_context)
+       },
+       "findings": findings
+   }
+   ```
+2. Read the dashboard HTML from `{PLUGIN_ROOT}/assets/review-dashboard.html`
+3. Inject the data as a script tag before `</head>`:
    ```html
-   <script>window.REVIEW_DATA = { "report": <report.json contents> };</script>
+   <script>window.REVIEW_DATA = <review_data as JSON>;</script>
    ```
 4. Write the modified HTML to `{BASE_DIR}/dashboard.html` using the Write tool
 5. Open the dashboard:
@@ -1558,19 +1538,18 @@ This is simple string manipulation - just read the HTML, insert the JSON, write 
 
 **If "Fix All":**
 
-Apply fixes directly from the report:
+Apply fixes directly from investigation results:
 
 ```python
-report = read_json(f"{BASE_DIR}/report.json")
-confirmed = [f for f in report["findings"] if f["verdict"] == "confirmed" and f.get("fix")]
+confirmed_with_fixes = [f for f in confirmed if f.get("fix")]
 
-if not confirmed:
+if not confirmed_with_fixes:
     print("No confirmed findings with fixes to apply.")
 else:
-    total_edits = sum(len(f["fix"]["edits"]) for f in confirmed)
-    print(f"Applying {len(confirmed)} fixes ({total_edits} edits)...")
+    total_edits = sum(len(f["fix"]["edits"]) for f in confirmed_with_fixes)
+    print(f"Applying {len(confirmed_with_fixes)} fixes ({total_edits} edits)...")
 
-    for finding in confirmed:
+    for finding in confirmed_with_fixes:
         fix = finding["fix"]
         print(f"\n**{finding['id']}**: {fix['explanation']}")
 
@@ -1582,7 +1561,7 @@ else:
                 new_string=edit["new_string"]
             )
 
-    print(f"\n✓ Applied {len(confirmed)} fixes ({total_edits} edits)")
+    print(f"\n✓ Applied {len(confirmed_with_fixes)} fixes ({total_edits} edits)")
     print("Run tests to verify changes.")
 ```
 
@@ -1609,7 +1588,6 @@ else:
 | Checking | 1 per prefix group | `profile.models.checking` | `len(unique_prefixes)` |
 | Orchestrate | 1 | haiku | Fixed |
 | Investigation | 1 per 5 findings | `profile.models.investigation` | `ceil(findings / 5)` |
-| Report | 1 | `profile.models.report` | Fixed |
 
 **All dispatched by main agent** - single message with multiple Task calls = true parallelism.
 
@@ -1646,4 +1624,3 @@ max_parallelism: 5  # Max concurrent agents (default: 3)
 | Checking | ~30 | Medium (prefix group + all skills + code) | Semantic grouping |
 | Orchestrate | 1 | Medium (all findings) | Just batching |
 | Investigation | ~40 | Small (5 findings + files) | Bounded context |
-| Report | 1 | Small (verdicts only) | No raw code |

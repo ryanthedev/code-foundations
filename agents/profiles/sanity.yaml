@@ -11,12 +11,6 @@ max_parallelism: 3  # Max concurrent agents per phase
 models:
   checking: sonnet       # Needs reasoning depth for accurate checks
   investigation: sonnet  # Needs reasoning depth for verification
-  report: haiku          # Simple report for sanity check
-
-# Custom dashboard generation
-dashboard:
-  enabled: false        # Skip custom dashboard for quick sanity check
-  model: sonnet         # Needs creativity for unique design
 
 checklists:
   - path: agents/core-checklist.md
