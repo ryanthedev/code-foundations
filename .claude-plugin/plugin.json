@@ -1,7 +1,7 @@
 {
   "name": "code-foundations",
-  "version": "3.3.0",
-  "description": "Software engineering skills from Code Complete and A Philosophy of Software Design. Profile-driven code review (1 agent per ID prefix group with tailored prompts), and prototype→whiteboarding→building development flow.",
+  "version": "3.4.0",
+  "description": "Software engineering skills from Code Complete and A Philosophy of Software Design. Sanity review: 14 consensus-distilled checks with intelligent unit batching. PR review: 614 checks with prefix-based grouping.",
   "author": {
     "name": "ryanthedev"
   },
