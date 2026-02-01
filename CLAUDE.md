@@ -56,6 +56,12 @@ Profiles define which checklists to run and which skills inform each:
 name: my-profile
 description: "Description"
 
+# Model configuration (optional - all default to haiku)
+models:
+  checking: haiku       # Checklist execution
+  investigation: haiku  # Finding verification
+  report: haiku         # JSON compilation
+
 checklists:
   # Skill checklist with its persona
   - path: skills/cc-defensive-programming/checklists.md

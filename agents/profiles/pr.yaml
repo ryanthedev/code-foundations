@@ -7,8 +7,8 @@ description: "Full PR review - 10 skills, 614 checks"
 # Model configuration (optional - defaults shown)
 models:
   checking: haiku       # Checklist execution - systematic, not deep reasoning
-  investigation: haiku  # Verification - binary pass/fail decisions
-  report: sonnet        # Synthesis - needs reasoning, but not opus-level
+  investigation: haiku  # Verification - confirm/reject findings
+  report: haiku         # JSON compilation - no deep reasoning needed
 
 checklists:
   # Defensive (75 checks)

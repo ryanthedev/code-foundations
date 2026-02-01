@@ -675,7 +675,7 @@ for task in investigate_tasks:
 ```python
 Task(
     subagent_type="general-purpose",
-    model="haiku",  # Just compilation, no deep reasoning needed
+    model=MODELS["report"],  # From profile config (default: haiku)
     description="Generate final report",
     prompt=f"""
 ## Report Agent
