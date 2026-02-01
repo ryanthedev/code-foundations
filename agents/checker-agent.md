@@ -1,29 +1,22 @@
 ---
 name: checker-agent
-description: "Run checks against code units. Records findings via add-finding.sh - cannot write files directly."
+description: "Run checks against code units. Records findings via add-finding.sh."
 model: sonnet
 allowed-tools: ["Bash", "Glob", "Grep", "Read", "Skill"]
 ---
 
 # Checker Agent
 
-Run checks against code and record findings.
-
-## CRITICAL CONSTRAINTS
-
-1. **You CANNOT write files** - Write/Edit tools are not available
-2. **Record results via add-finding.sh** - This is the ONLY way to output findings
-3. **One call per check per unit** - Every check on every unit needs a result
+Run checks against extracted units and record findings.
 
 ## Inputs
 
-You will receive:
-- `CHECKS`: List of checks to run (ID + description)
-- `UNITS`: Units to check (from units.jsonl or inline)
-- `SKILLS`: Skills to load for expertise
+- `UNITS_FILE`: Path to units.jsonl
+- `CHECKLIST`: Path to checklist file (or inline checks)
+- `SKILLS`: Skills to load for expertise (optional)
 - `PLUGIN_ROOT`: Path to plugin directory
 - `BASE_DIR`: Output directory
-- `BATCH`: Batch number for grouping results
+- `BATCH`: Batch identifier for grouping results
 
 ## Workflow
 
@@ -31,98 +24,103 @@ You will receive:
 
 ```
 Skill(code-foundations:cc-defensive-programming)
-Skill(code-foundations:cc-control-flow-quality)
 ```
 
-### 2. Load Context
+### 2. Read Units
 
-For each unit:
 ```bash
-# Read the file around the unit
+cat $BASE_DIR/units.jsonl
+```
+
+Each unit has:
+```json
+{
+  "file": "src/api.ts",
+  "name": "ValidateUser",
+  "type": "method",
+  "lines": [10, 45],
+  "diff": "@@ -10,6 +10,15 @@...",
+  "summary": "Added input validation",
+  "has_loops": false,
+  "has_async": true,
+  "has_try_catch": true
+}
+```
+
+### 3. Read Checklist
+
+Parse the checklist to get check IDs and descriptions:
+```
+- [ ] ERR-3: "Are all error-return codes checked?"
+- [ ] NULL-2: "Does the code check pointers/references for null before use?"
+- [ ] LOGIC-1: "Does the loop end under all possible conditions?"
+```
+
+### 4. For Each Unit
+
+**Read the code:**
+```bash
 Read(file_path, offset=start_line-10, limit=end_line-start_line+20)
 ```
 
-### 3. Run Each Check
+**For each check, evaluate and record:**
 
-For each check, for each unit, determine:
-- **PASS**: Check satisfied
-- **FINDING**: Check failed - real issue found
-- **N/A**: Check doesn't apply to this unit
+Use unit characteristics to skip N/A checks early:
+- `has_loops: false` → LOGIC-1 (loop termination) is N/A
+- `has_async: false` → async checks are N/A
+- `has_try_catch: false` → exception handling checks are N/A
 
-### 4. Record via add-finding.sh
+**Call add-finding.sh for each result:**
 
-**Option A: Single record (CLI args)**
 ```bash
 SCRIPT="$PLUGIN_ROOT/agents/add-finding.sh"
 export BASE_DIR="$BASE_DIR"
 
 # PASS - check satisfied
-$SCRIPT --batch 1 --unit "createUser" --file "src/api.ts" \
-  --check-id "ERR-8" --verdict "PASS"
+$SCRIPT --batch "$BATCH" --unit "ValidateUser" --file "src/api.ts" \
+  --check-id "ERR-3" --verdict "PASS"
 
-# FINDING - issue found (requires --line and --issue)
-$SCRIPT --batch 1 --unit "createUser" --file "src/api.ts" \
-  --check-id "ERR-3" --verdict "FINDING" \
-  --line 42 --issue "Return value from db.insert() is ignored"
+# FINDING - issue found
+$SCRIPT --batch "$BATCH" --unit "ValidateUser" --file "src/api.ts" \
+  --check-id "NULL-2" --verdict "FINDING" \
+  --line 42 --issue "userId not checked for null before database lookup"
 
-# N/A - check doesn't apply (requires --reason)
-$SCRIPT --batch 1 --unit "createUser" --file "src/api.ts" \
+# N/A - check doesn't apply
+$SCRIPT --batch "$BATCH" --unit "ValidateUser" --file "src/api.ts" \
   --check-id "LOGIC-1" --verdict "N/A" \
   --reason "Unit has no loops (has_loops: false)"
 ```
 
-**Option B: Batch mode (preferred for many results)**
-```bash
-cat << 'EOF' | $SCRIPT --stdin
-[
-  {"batch": 1, "unit": "createUser", "file": "src/api.ts", "check_id": "ERR-8", "verdict": "PASS"},
-  {"batch": 1, "unit": "createUser", "file": "src/api.ts", "check_id": "ERR-3", "verdict": "FINDING", "line": 42, "issue": "Return value ignored"},
-  {"batch": 1, "unit": "createUser", "file": "src/api.ts", "check_id": "LOGIC-1", "verdict": "N/A", "reason": "No loops"}
-]
-EOF
-```
+## CLI Flags Reference
 
-**Required fields:**
-- `batch`: Batch number or prefix string
-- `unit`: Unit name
-- `file`: File path
-- `check_id`: Check ID (e.g., ERR-3, NULL-4)
-- `verdict`: PASS, FINDING, or N/A
+**Required:**
+- `--batch <id>` - Batch identifier
+- `--unit <name>` - Unit name
+- `--file <path>` - File path
+- `--check-id <id>` - Check ID (e.g., ERR-3, NULL-2)
+- `--verdict <v>` - PASS, FINDING, or N/A
 
-**Conditional fields:**
-- FINDING requires: `line` (integer), `issue` (description)
-- N/A requires: `reason` (why check doesn't apply)
+**Conditional:**
+- FINDING requires: `--line <n>` and `--issue <text>`
+- N/A requires: `--reason <text>`
 
 **Optional:**
-- `confidence`: HIGH, MEDIUM, or LOW (default: HIGH)
-
-## Script Validation
-
-The script will error if:
-- Required fields are missing
-- Verdict is not PASS, FINDING, or N/A
-- FINDING is missing line or issue
-- N/A is missing reason
+- `--confidence <v>` - HIGH, MEDIUM, or LOW (default: HIGH)
 
 ## Count Verification
 
-Before completing, verify you checked all units against all checks:
-
 ```bash
 # Expected = units × checks
-UNIT_COUNT=<number of units in batch>
-CHECK_COUNT=<number of checks to run>
-EXPECTED_COUNT=$((UNIT_COUNT * CHECK_COUNT))
+UNIT_COUNT=$(wc -l < "$BASE_DIR/units.jsonl" | tr -d ' ')
+CHECK_COUNT=<number of checks in checklist>
+EXPECTED=$((UNIT_COUNT * CHECK_COUNT))
 
-# Count results in output for this batch
-ACTUAL_COUNT=$(grep -c "\"batch\":\"$BATCH\"" "$BASE_DIR/findings.jsonl" || echo 0)
+# Actual results for this batch
+ACTUAL=$(grep -c "\"batch\":\"$BATCH\"" "$BASE_DIR/findings.jsonl" || echo 0)
 
-if [[ "$ACTUAL_COUNT" -ne "$EXPECTED_COUNT" ]]; then
-  echo "ERROR: Expected $EXPECTED_COUNT results ($UNIT_COUNT units × $CHECK_COUNT checks), got $ACTUAL_COUNT"
-  exit 1
-fi
+echo "Batch $BATCH: $ACTUAL results (expected $EXPECTED = $UNIT_COUNT units × $CHECK_COUNT checks)"
 ```
 
 ## Output
 
-Return summary: "Batch N complete: X findings, Y passes, Z n/a (verified: U units × C checks)"
+Return: "Batch N complete: X findings, Y passes, Z n/a"
