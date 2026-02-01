@@ -816,10 +816,41 @@ Write to `{BASE_DIR}/investigation/batch-{batch_num}.json`:
       }},
       "diff_hunk": "@@ -40,6 +42,8 @@...",
       "fix": {{
-        "file": "src/auth.ts",
-        "old_string": "  const id = req.body.id;\\n  db.query(`SELECT * FROM users WHERE id = ${{id}}`);",
-        "new_string": "  const id = req.body.id;\\n  if (!id || typeof id !== 'string') {{\\n    throw new ValidationError('Invalid user ID');\\n  }}\\n  db.query('SELECT * FROM users WHERE id = ?', [id]);",
-        "explanation": "Added input validation and switched to parameterized query to prevent SQL injection"
+        "explanation": "Added input validation and switched to parameterized query to prevent SQL injection",
+        "edits": [
+          {{
+            "file": "src/auth.ts",
+            "old_string": "  const id = req.body.id;\\n  db.query(`SELECT * FROM users WHERE id = ${{id}}`);",
+            "new_string": "  const id = req.body.id;\\n  if (!id || typeof id !== 'string') {{\\n    throw new ValidationError('Invalid user ID');\\n  }}\\n  db.query('SELECT * FROM users WHERE id = ?', [id]);"
+          }}
+        ]
+      }}
+    }},
+    {{
+      "id": "API-2",
+      "verdict": "CONFIRMED",
+      "reason": "Function renamed but callers not updated",
+      "code_context": {{...}},
+      "diff_hunk": "...",
+      "fix": {{
+        "explanation": "Renamed function and updated all call sites",
+        "edits": [
+          {{
+            "file": "src/utils.ts",
+            "old_string": "export function oldName(",
+            "new_string": "export function newName("
+          }},
+          {{
+            "file": "src/api.ts",
+            "old_string": "import {{ oldName }} from './utils'",
+            "new_string": "import {{ newName }} from './utils'"
+          }},
+          {{
+            "file": "src/api.ts",
+            "old_string": "oldName(data)",
+            "new_string": "newName(data)"
+          }}
+        ]
       }}
     }},
     {{
@@ -848,9 +879,11 @@ Write to `{BASE_DIR}/investigation/batch-{batch_num}.json`:
 ```
 
 **Fix requirements:**
+- `fix.edits` is an array - one finding can require multiple file edits
 - `old_string` must match exactly what's in the file
 - `new_string` should be a complete, working replacement
-- Include enough context to make the fix unambiguous
+- Order edits logically (definition before usages)
+- Include enough context to make each edit unambiguous
 - Follow the coding style of the existing file
 """
         )
@@ -939,10 +972,14 @@ Write to `{BASE_DIR}/report.json`:
       }},
       "diff_hunk": "@@ -40,6 +42,8 @@...",
       "fix": {{
-        "file": "src/auth.ts",
-        "old_string": "  const id = req.body.id;\\n  db.query(`SELECT * FROM users WHERE id = ${{id}}`);",
-        "new_string": "  const id = req.body.id;\\n  if (!id || typeof id !== 'string') {{\\n    throw new ValidationError('Invalid user ID');\\n  }}\\n  db.query('SELECT * FROM users WHERE id = ?', [id]);",
-        "explanation": "Added input validation and switched to parameterized query"
+        "explanation": "Added input validation and switched to parameterized query",
+        "edits": [
+          {{
+            "file": "src/auth.ts",
+            "old_string": "  const id = req.body.id;\\n  db.query(`SELECT * FROM users WHERE id = ${{id}}`);",
+            "new_string": "  const id = req.body.id;\\n  if (!id || typeof id !== 'string') {{\\n    throw new ValidationError('Invalid user ID');\\n  }}\\n  db.query('SELECT * FROM users WHERE id = ?', [id]);"
+          }}
+        ]
       }}
     }},
     {{
@@ -1188,21 +1225,22 @@ confirmed = [f for f in report["findings"] if f["verdict"] == "confirmed" and f.
 if not confirmed:
     print("No confirmed findings with fixes to apply.")
 else:
-    print(f"Applying {len(confirmed)} fixes...")
+    total_edits = sum(len(f["fix"]["edits"]) for f in confirmed)
+    print(f"Applying {len(confirmed)} fixes ({total_edits} edits)...")
 
     for finding in confirmed:
         fix = finding["fix"]
-        print(f"\n**{finding['id']}** - {fix['file']}")
-        print(f"  {fix['explanation']}")
+        print(f"\n**{finding['id']}**: {fix['explanation']}")
 
-        # Apply the fix
-        Edit(
-            file_path=fix["file"],
-            old_string=fix["old_string"],
-            new_string=fix["new_string"]
-        )
+        for edit in fix["edits"]:
+            print(f"  → {edit['file']}")
+            Edit(
+                file_path=edit["file"],
+                old_string=edit["old_string"],
+                new_string=edit["new_string"]
+            )
 
-    print(f"\n✓ Applied {len(confirmed)} fixes")
+    print(f"\n✓ Applied {len(confirmed)} fixes ({total_edits} edits)")
     print("Run tests to verify changes.")
 ```
 
