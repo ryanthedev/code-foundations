@@ -27,7 +27,7 @@
 
 ```bash
 /code-foundations:review --sanity          # 99 checks, quick pre-commit
-/code-foundations:review --pr              # 548 checks, full PR review
+/code-foundations:review --pr              # 614 checks, full PR review
 /code-foundations:review --profile <name>  # Custom profile
 ```
 
@@ -36,7 +36,7 @@
 | Profile | Checklists | Checks | Use Case |
 |---------|------------|--------|----------|
 | `--sanity` | 1 | 99 | Pre-commit sanity check |
-| `--pr` | 10 | 548 | Full PR review |
+| `--pr` | 10 | 614 | Full PR review |
 | Custom | varies | varies | Your saved configuration |
 
 **Create custom profiles:** `/code-foundations:review-profile --setup`

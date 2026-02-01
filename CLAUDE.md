@@ -42,7 +42,7 @@ Code-foundations is a Claude Code plugin providing software engineering skills b
 | Preset | Checklists | Checks | Use Case |
 |--------|------------|--------|----------|
 | `--sanity` | 1 | 99 | Pre-commit sanity |
-| `--pr` | 10 | 548 | Full PR review |
+| `--pr` | 10 | 614 | Full PR review |
 | `--profile <name>` | varies | varies | Custom configuration |
 
 **Interactive mode:** `/code-foundations:review` (no flags) asks for profile.
@@ -78,7 +78,7 @@ checklists:
 | Profile | Location | Checklists | Checks |
 |---------|----------|------------|--------|
 | sanity | `agents/profiles/sanity.yaml` | 1 | 99 |
-| pr | `agents/profiles/pr.yaml` | 10 | 548 |
+| pr | `agents/profiles/pr.yaml` | 10 | 614 |
 
 ### Skill Checklist Counts
 
@@ -86,15 +86,15 @@ checklists:
 |-------|--------|
 | cc-defensive-programming | 31 |
 | aposd-simplifying-complexity | 44 |
-| aposd-reviewing-module-design | 42 |
+| aposd-reviewing-module-design | 36 |
 | cc-code-layout-and-style | 85 |
-| cc-control-flow-quality | 94 |
-| aposd-verifying-correctness | 39 |
-| cc-quality-practices | 107 |
-| cc-performance-tuning | 40 |
+| cc-control-flow-quality | 124 |
+| aposd-verifying-correctness | 40 |
+| cc-quality-practices | 115 |
+| cc-performance-tuning | 50 |
 | aposd-optimizing-critical-paths | 40 |
-| cc-documentation-quality | 26 |
-| **Total (PR profile)** | **548** |
+| cc-documentation-quality | 49 |
+| **Total (PR profile)** | **614** |
 
 ### Review Execution Flow
 

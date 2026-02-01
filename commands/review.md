@@ -10,7 +10,7 @@ Unified review workflow. One flow, driven by profile configuration.
 
 ```
 /code-foundations:review --sanity          # 99 checks, quick pre-commit
-/code-foundations:review --pr              # 548 checks, full PR review
+/code-foundations:review --pr              # 614 checks, full PR review
 /code-foundations:review --profile <name>  # Custom profile
 ```
 
@@ -98,7 +98,7 @@ AskUserQuestion(
       question: "Which review profile do you want to use?",
       options: [
         {label: "Sanity (Recommended)", description: "99 critical checks. Quick pre-commit sanity."},
-        {label: "PR", description: "548 checks across 10 skills. Full PR review."},
+        {label: "PR", description: "614 checks across 10 skills. Full PR review."},
         {label: "Custom", description: "Use a saved profile or create one."}
       ]
     }
@@ -703,7 +703,7 @@ cat {BASE_DIR}/REPORT.md
 | Flag | Profile | Checks |
 |------|---------|--------|
 | `--sanity` | `agents/profiles/sanity.yaml` | 99 |
-| `--pr` | `agents/profiles/pr.yaml` | 548 |
+| `--pr` | `agents/profiles/pr.yaml` | 614 |
 | `--profile <name>` | User or built-in profile | Varies |
 
 ---
