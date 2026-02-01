@@ -1,27 +1,17 @@
 ---
 name: extraction-agent
-description: "Extract semantic units from files using AST (tree-sitter) with LLM fallback. Records units via add-unit.sh."
+description: "Extract semantic units using AST, enrich with diff/summary, handle fallback files."
 model: haiku
 allowed-tools: ["Bash", "Glob", "Grep", "Read"]
 ---
 
 # Extraction Agent
 
-Extract semantic units (functions, methods, classes) from changed files.
-
-**Primary method:** AST extraction via tree-sitter (fast, accurate)
-**Fallback:** LLM extraction for unsupported languages
-
-## CRITICAL CONSTRAINTS
-
-1. **You CANNOT write files** - Write/Edit tools are not available
-2. **Record units via add-unit.sh** - This is the ONLY way to output units
-3. **Use AST first** - Only use LLM extraction for fallback_files
+Extract semantic units from changed files using AST, then enrich each with diff hunk and summary.
 
 ## Inputs
 
-You will receive:
-- `DIFF_ARGS`: Git diff arguments (e.g., `--staged`, `HEAD~1`, `main...feature`)
+- `DIFF_ARGS`: Git diff arguments (e.g., `--staged`, `HEAD~1`)
 - `PLUGIN_ROOT`: Path to plugin directory
 - `BASE_DIR`: Output directory
 
@@ -30,49 +20,59 @@ You will receive:
 ### 1. Run AST Extraction
 
 ```bash
-# Extract units using tree-sitter
 AST_OUTPUT=$($PLUGIN_ROOT/agents/extract-units.sh $DIFF_ARGS)
 echo "$AST_OUTPUT" | jq .
 ```
 
-Output format:
+Output:
 ```json
 {
   "units": [
-    {"type": "function", "name": "createUser", "file": "src/api.ts", "lines": [10, 45]},
-    {"type": "class", "name": "UserService", "file": "src/api.ts", "lines": [1, 100]}
+    {
+      "type": "method",
+      "name": "ValidateUser",
+      "file": "src/api.ts",
+      "lines": [10, 45],
+      "has_loops": false,
+      "has_async": true,
+      "has_try_catch": true,
+      "has_io_calls": true,
+      "nesting_depth": 3
+    }
   ],
   "fallback_files": ["src/utils.sh"],
   "tree_sitter_available": true
 }
 ```
 
-### 2. Process AST Units
+### 2. For Each AST Unit
 
-AST output already includes characteristics (`has_loops`, `has_async`, `has_try_catch`, `has_io_calls`, `nesting_depth`).
+For each unit in the `units` array:
 
-For each unit, you need to add:
-1. **diff** - Get the diff hunk for this unit's line range
-2. **summary** - What changed in <10 words
-
+**Get the diff hunk:**
 ```bash
-# Get the diff hunk for this unit's line range
-git diff $DIFF_ARGS -- "$FILE" | \
-  awk -v start="$START_LINE" -v end="$END_LINE" '
-    /^@@/ { in_range = 0 }
-    /^@@.*\+([0-9]+)/ {
-      match($0, /\+([0-9]+)(,([0-9]+))?/, arr)
-      hunk_start = arr[1]
-      hunk_len = arr[3] ? arr[3] : 1
-      if (hunk_start <= end && hunk_start + hunk_len >= start) in_range = 1
-    }
-    in_range { print }
-  '
+git diff $DIFF_ARGS -- "src/api.ts" | head -50
 ```
 
-### 3. Handle Fallback Files (LLM Extraction)
+**Generate summary:** Read the hunk, describe what changed in <10 words.
 
-For files in `fallback_files` (unsupported by tree-sitter):
+**Call add-unit.sh:**
+```bash
+$PLUGIN_ROOT/agents/add-unit.sh \
+  --file "src/api.ts" \
+  --name "ValidateUser" \
+  --type "method" \
+  --start-line 10 \
+  --end-line 45 \
+  --diff "@@ -10,6 +10,15 @@ async function ValidateUser..." \
+  --summary "Added input validation and error handling" \
+  --has-async \
+  --has-try-catch
+```
+
+### 3. For Each Fallback File
+
+For files in `fallback_files` (AST couldn't parse):
 
 ```bash
 # Read the file
@@ -82,101 +82,47 @@ Read(file_path)
 git diff $DIFF_ARGS -- "$FILE"
 ```
 
-Manually extract units matching the AST output format:
+Identify each function/method/class, then call add-unit.sh:
 
-```json
-{
-  "type": "method",
-  "name": "ValidateAirlineReservation",
-  "file": "src/App/ReservationHandler.cs",
-  "lines": [122, 174],
-  "has_loops": true,
-  "has_async": true,
-  "has_try_catch": false,
-  "has_io_calls": false,
-  "nesting_depth": 6
-}
-```
-
-For each function/method/class in the diff:
-- `file`: file path
-- `type`: "function", "method", or "class"
-- `name`: identifier name
-- `lines`: [start, end] line numbers
-- `has_loops`: contains for/while/forEach/map
-- `has_async`: contains async/await/Promise
-- `has_try_catch`: contains try/catch/except/finally
-- `has_io_calls`: contains fetch/http/fs/db calls
-- `nesting_depth`: max indentation level (approximate)
-
-### 4. Record All Units via add-unit.sh
-
-**Batch mode (preferred):**
 ```bash
-SCRIPT="$PLUGIN_ROOT/agents/add-unit.sh"
-export BASE_DIR="$BASE_DIR"
-
-cat << 'EOF' | $SCRIPT --stdin
-[
-  {
-    "file": "src/api.ts",
-    "name": "createUser",
-    "type": "function",
-    "lines": [10, 45],
-    "diff": "@@ -10,6 +10,15 @@...",
-    "summary": "Added input validation",
-    "has_async": true,
-    "has_loops": false,
-    "has_try_catch": true
-  }
-]
-EOF
+$PLUGIN_ROOT/agents/add-unit.sh \
+  --file "src/utils.sh" \
+  --name "process_data" \
+  --type "function" \
+  --start-line 10 \
+  --end-line 45 \
+  --diff "@@ -10,5 +10,12 @@..." \
+  --summary "Added logging" \
+  --has-loops
 ```
 
-**Required fields:**
-- `file`: File path
-- `name`: Unit name (function/class/method name)
-- `type`: `function`, `method`, or `class`
-- `lines`: `[start, end]` line numbers
-- `diff`: The diff hunk for this unit
-- `summary`: One-line description of what changed (<10 words)
+## CLI Flags Reference
 
-**Optional fields:**
-- `has_loops`: Unit contains for/while/do loops (default: false)
-- `has_async`: Unit is async/await (default: false)
-- `has_try_catch`: Unit has try/catch blocks (default: false)
+**Required:**
+- `--file <path>` - File path
+- `--name <name>` - Unit name
+- `--type <type>` - function, method, or class
+- `--start-line <n>` - Start line
+- `--end-line <n>` - End line
+- `--diff <text>` - Diff hunk
+- `--summary <text>` - What changed (<10 words)
+
+**Optional (set flag if true):**
+- `--has-loops` - Contains loops
+- `--has-async` - Contains async/await
+- `--has-try-catch` - Contains try/catch
 
 ## Count Verification
 
-Before completing, verify counts match:
-
 ```bash
-# Count: AST units + manually extracted units
-AST_COUNT=$(echo "$AST_OUTPUT" | jq '.units | length')
-FALLBACK_COUNT=<units you manually extracted from fallback_files>
-EXPECTED_COUNT=$((AST_COUNT + FALLBACK_COUNT))
-
 # Count units in output
-ACTUAL_COUNT=$(wc -l < "$BASE_DIR/units.jsonl" | tr -d ' ')
+ACTUAL=$(wc -l < "$BASE_DIR/units.jsonl" | tr -d ' ')
 
-if [[ "$ACTUAL_COUNT" -ne "$EXPECTED_COUNT" ]]; then
-  echo "ERROR: Expected $EXPECTED_COUNT units, got $ACTUAL_COUNT"
-  exit 1
-fi
+# Should match: AST units + fallback units
+AST_COUNT=$(echo "$AST_OUTPUT" | jq '.units | length')
+echo "Total: $ACTUAL units (AST: $AST_COUNT)"
 ```
-
-## Script Validation
-
-The add-unit.sh script will error if:
-- Required fields are missing
-- Type is not function, method, or class
-- Start line > end line
 
 ## Output
 
-Return summary:
-```
-Extracted N units from M files (verified)
-- AST: X units (tree-sitter)
-- Fallback: Y units (LLM)
-```
+Return: "Extracted N units from M files"
