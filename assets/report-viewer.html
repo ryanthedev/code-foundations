@@ -925,12 +925,17 @@
 
     // Initialize
     async function init() {
-      try {
-        // Try to load external report.json, fall back to demo data
-        const response = await fetch('report.json').catch(() => null);
-        reportData = response?.ok ? await response.json() : DEMO_DATA;
-      } catch {
-        reportData = DEMO_DATA;
+      // Check for injected data first (works with file:// protocol)
+      if (window.REPORT_DATA) {
+        reportData = window.REPORT_DATA;
+      } else {
+        try {
+          // Try to load external report.json, fall back to demo data
+          const response = await fetch('report.json').catch(() => null);
+          reportData = response?.ok ? await response.json() : DEMO_DATA;
+        } catch {
+          reportData = DEMO_DATA;
+        }
       }
 
       renderReport(reportData);

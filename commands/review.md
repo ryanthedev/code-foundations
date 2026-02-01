@@ -968,18 +968,61 @@ AskUserQuestion(
 ```
 
 **If "Open Dashboard":**
+
+The dashboard needs data injected inline because `fetch()` doesn't work with `file://` protocol due to CORS.
+
+```python
+# Collect all JSON data
+data = {
+    "report": read_json(f"{BASE_DIR}/report.json"),
+    "orchestrate": read_json(f"{BASE_DIR}/orchestrate.json"),
+    "extraction": [],
+    "checking": [],
+    "investigation": []
+}
+
+# Load extraction batches
+for i in range(1, 100):
+    batch = read_json(f"{BASE_DIR}/extraction/batch-{i}.json")
+    if batch:
+        data["extraction"].append(batch)
+    else:
+        break
+
+# Load checking files
+for name in checklist_names:  # from profile
+    check = read_json(f"{BASE_DIR}/checking/{name}.json")
+    if check:
+        data["checking"].append(check)
+
+# Load investigation batches
+for i in range(1, 100):
+    batch = read_json(f"{BASE_DIR}/investigation/batch-{i}.json")
+    if batch:
+        data["investigation"].append(batch)
+    else:
+        break
+
+# Inject data into dashboard HTML
+if exists(f"{BASE_DIR}/dashboard.html"):
+    # Custom dashboard - inject data
+    html = read_file(f"{BASE_DIR}/dashboard.html")
+else:
+    # Default dashboard
+    html = read_file(f"{PLUGIN_ROOT}/assets/review-dashboard.html")
+
+# Inject data script before </head>
+data_script = f"<script>window.REVIEW_DATA = {json.dumps(data)};</script>"
+html = html.replace("</head>", f"{data_script}\n</head>")
+
+# Write final dashboard
+write_file(f"{BASE_DIR}/dashboard.html", html)
+```
+
 ```bash
-# Use custom dashboard if generated, otherwise copy default
-if [ -f "{BASE_DIR}/dashboard.html" ]; then
-    # Custom dashboard exists - also copy report-viewer for linking
-    cp {PLUGIN_ROOT}/assets/report-viewer.html {BASE_DIR}/
-    open {BASE_DIR}/dashboard.html
-else
-    # Use default dashboard
-    cp {PLUGIN_ROOT}/assets/review-dashboard.html {BASE_DIR}/
-    cp {PLUGIN_ROOT}/assets/report-viewer.html {BASE_DIR}/
-    open {BASE_DIR}/review-dashboard.html
-fi
+# Copy report-viewer and open
+cp {PLUGIN_ROOT}/assets/report-viewer.html {BASE_DIR}/
+open {BASE_DIR}/dashboard.html
 ```
 
 **If "Fix All":**

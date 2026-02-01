@@ -1894,14 +1894,26 @@
       });
     }
 
-    // Initialize with demo data
-    loadedData = {
-      report: DEMO_DATA.report,
-      extraction: DEMO_DATA.extraction,
-      checking: DEMO_DATA.checking,
-      orchestrate: DEMO_DATA.orchestrate,
-      investigation: DEMO_DATA.investigation
-    };
+    // Initialize with injected data (if present) or demo data
+    // When opened via file://, fetch won't work due to CORS
+    // The review command injects window.REVIEW_DATA to bypass this
+    if (window.REVIEW_DATA) {
+      loadedData = {
+        report: window.REVIEW_DATA.report || DEMO_DATA.report,
+        extraction: window.REVIEW_DATA.extraction || DEMO_DATA.extraction,
+        checking: window.REVIEW_DATA.checking || DEMO_DATA.checking,
+        orchestrate: window.REVIEW_DATA.orchestrate || DEMO_DATA.orchestrate,
+        investigation: window.REVIEW_DATA.investigation || DEMO_DATA.investigation
+      };
+    } else {
+      loadedData = {
+        report: DEMO_DATA.report,
+        extraction: DEMO_DATA.extraction,
+        checking: DEMO_DATA.checking,
+        orchestrate: DEMO_DATA.orchestrate,
+        investigation: DEMO_DATA.investigation
+      };
+    }
 
     renderAll();
   </script>
