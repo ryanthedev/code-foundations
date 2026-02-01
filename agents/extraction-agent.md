@@ -101,7 +101,7 @@ $PLUGIN_ROOT/agents/add-unit.sh \
 **Required:**
 - `--file <path>` - File path
 - `--name <name>` - Unit name
-- `--type <type>` - function, method, or class
+- `--type <type>` - function, method, class, interface, test, etc.
 - `--start-line <n>` - Start line
 - `--end-line <n>` - End line
 - `--diff <text>` - Diff hunk

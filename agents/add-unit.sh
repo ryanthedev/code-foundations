@@ -46,11 +46,7 @@ validate_unit() {
   [[ -z "$diff" ]] && error "Missing required: diff"
   [[ -z "$summary" ]] && error "Missing required: summary"
 
-  # Validate type enum
-  case "$type" in
-    function|method|class) ;;
-    *) error "type must be function, method, or class, got: $type" ;;
-  esac
+  # Type can be anything AST extracts (function, method, class, interface, test, etc.)
 
   # Validate lines are integers
   [[ ! "$start_line" =~ ^[0-9]+$ ]] && error "start_line must be an integer, got: $start_line"
