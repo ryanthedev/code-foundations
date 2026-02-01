@@ -70,18 +70,36 @@ Checks with 6/7 or 7/7 agreement were included.
 
 ## Usage
 
-Apply these 14 checks to each unit of code (function/method/class) individually.
+Apply checklist **per file**. Go through each check systematically.
 
-**Important: One check can produce multiple findings.**
+### Per-file evaluation
 
-Each check should be evaluated at every relevant location in the code. For example:
-- NULL-2 might flag 3 different lines where null isn't checked
-- LOGIC-1 might flag 2 different loops that could run forever
-- RES-1 might flag 4 different resources without cleanup
+For each changed file, evaluate all 14 checks:
 
-Output one finding per location, not one finding per check ID:
 ```
-NULL-2 @ src/api.ts:42 - userId not checked for null
-NULL-2 @ src/api.ts:67 - response.data not checked for null
-NULL-2 @ src/api.ts:89 - config.timeout not checked for null
+src/api.ts:
+  ERR-3:   FINDING @ line 42, 67 - error codes not checked
+  ERR-8:   PASS
+  NULL-2:  FINDING @ line 89 - userId not checked for null
+  NULL-4:  N/A (no array access)
+  NULL-5:  N/A (no array access)
+  NULL-6:  PASS
+  LOGIC-1: FINDING @ line 112 - while loop may not terminate
+  LOGIC-6: N/A (no recursion)
+  ...
+```
+
+### Verdicts
+
+| Verdict | Meaning |
+|---------|---------|
+| PASS | Check satisfied for this file |
+| FINDING | Check failed - list each location with line number |
+| N/A | Check doesn't apply (no loops, no arrays, no concurrency, etc.) |
+
+### One check → multiple findings
+
+A single check can produce findings at multiple locations:
+```
+NULL-2:  FINDING @ line 42, 67, 89
 ```
