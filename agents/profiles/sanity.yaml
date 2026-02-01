@@ -1,8 +1,8 @@
 # Sanity Profile - Quick pre-commit check
-# 99 curated critical checks in a single checklist
+# 14 consensus-distilled checks applied per unit
 
 name: sanity
-description: "Quick pre-commit sanity check - 99 critical checks"
+description: "Quick pre-commit sanity check - 14 core checks per unit"
 
 # Parallelism (default: 3)
 max_parallelism: 3  # Max concurrent agents per phase
@@ -19,5 +19,5 @@ dashboard:
   model: sonnet         # Needs creativity for unique design
 
 checklists:
-  - path: agents/quick-checklist.md
-    skills: []  # Self-contained checklist, no skill persona needed
+  - path: agents/core-checklist.md
+    skills: []  # Self-contained checklist, distilled via 7-agent consensus
