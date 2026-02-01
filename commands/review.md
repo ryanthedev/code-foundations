@@ -137,8 +137,8 @@ checklists:
 **Validation:**
 
 ```python
-# Extract parallelism configuration (default: unlimited = 0)
-MAX_PARALLELISM = profile.get("max_parallelism", 0)  # 0 means unlimited
+# Extract parallelism configuration (default: 3)
+MAX_PARALLELISM = profile.get("max_parallelism", 3)  # 0 means unlimited
 
 # Extract model configuration (with defaults)
 MODELS = {
@@ -1061,12 +1061,12 @@ Skill(code-foundations:whiteboarding, args: "Fix review findings from {BASE_DIR}
 Control concurrent agents per phase via profile config:
 
 ```yaml
-max_parallelism: 5  # Max concurrent agents (default: unlimited)
+max_parallelism: 5  # Max concurrent agents (default: 3)
 ```
 
 | Setting | Behavior |
 |---------|----------|
-| `0` or omitted | Unlimited - dispatch all agents at once |
+| `0` | Unlimited - dispatch all agents at once |
 | `1` | Sequential - one agent at a time |
 | `N` | Dispatch in waves of N agents, wait between waves |
 

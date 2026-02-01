@@ -4,8 +4,8 @@
 name: sanity
 description: "Quick pre-commit sanity check - 99 critical checks"
 
-# Parallelism (optional - default: unlimited)
-# max_parallelism: 5  # Max concurrent agents per phase
+# Parallelism (default: 3)
+max_parallelism: 3  # Max concurrent agents per phase
 
 # Model configuration (optional - defaults shown)
 models:
