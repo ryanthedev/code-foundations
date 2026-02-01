@@ -97,6 +97,101 @@ json_escape() {
   echo "$s"
 }
 
+# Determine if a file is a test file based on naming conventions
+is_test_file() {
+  local filepath="$1"
+  local basename="${filepath##*/}"
+
+  # Check basename patterns
+  if [[ "$basename" == *".test."* ]] || [[ "$basename" == *".spec."* ]]; then
+    return 0
+  fi
+
+  if [[ "$basename" == test_* ]] || [[ "$basename" == *"_test."* ]]; then
+    return 0
+  fi
+
+  if [[ "$basename" == *"Test."* ]] || [[ "$basename" == *"Spec."* ]]; then
+    return 0
+  fi
+
+  # Check path patterns
+  if [[ "$filepath" == *"__tests__"* ]]; then
+    return 0
+  fi
+
+  if [[ "$filepath" == *"/tests/"* ]] || [[ "$filepath" == *"/test/"* ]]; then
+    return 0
+  fi
+
+  if [[ "$filepath" == *"/spec/"* ]] || [[ "$filepath" == *"/specs/"* ]]; then
+    return 0
+  fi
+
+  return 1
+}
+
+# Infer architectural layer from directory path patterns
+infer_layer() {
+  local filepath="$1"
+  local basename="${filepath##*/}"
+
+  # API layer indicators
+  if [[ "$filepath" == *"/api/"* ]] || [[ "$filepath" == *"/routes/"* ]] || \
+     [[ "$filepath" == *"/handlers/"* ]] || [[ "$filepath" == *"/controllers/"* ]]; then
+    echo "api"
+    return
+  fi
+
+  # Service layer indicators
+  if [[ "$filepath" == *"/services/"* ]] || [[ "$filepath" == *"/usecases/"* ]] || \
+     [[ "$filepath" == *"/use-cases/"* ]]; then
+    echo "service"
+    return
+  fi
+
+  # Domain layer indicators
+  if [[ "$filepath" == *"/domain/"* ]] || [[ "$filepath" == *"/models/"* ]] || \
+     [[ "$filepath" == *"/entities/"* ]]; then
+    echo "domain"
+    return
+  fi
+
+  # Data layer indicators
+  if [[ "$filepath" == *"/data/"* ]] || [[ "$filepath" == *"/repositories/"* ]] || \
+     [[ "$filepath" == *"/dal/"* ]] || [[ "$filepath" == *"/persistence/"* ]]; then
+    echo "data"
+    return
+  fi
+
+  # Infrastructure layer indicators
+  if [[ "$filepath" == *"/infra/"* ]] || [[ "$filepath" == *"/infrastructure/"* ]] || \
+     [[ "$filepath" == *"/providers/"* ]]; then
+    echo "infra"
+    return
+  fi
+
+  # Test layer (checked after specific layers)
+  if is_test_file "$filepath"; then
+    echo "test"
+    return
+  fi
+
+  # Config layer indicators
+  if [[ "$filepath" == *"/config/"* ]] || [[ "$filepath" == *"/configs/"* ]]; then
+    echo "config"
+    return
+  fi
+
+  if [[ "$basename" == *".config."* ]]; then
+    echo "config"
+    return
+  fi
+
+  # Default
+  echo "unknown"
+}
+
 # Extract units from a single file using comprehensive AST parsing
 extract_file() {
   local file="$1"
@@ -142,10 +237,11 @@ extract_file() {
 
     # Parse capture lines
     # Format: "    capture: definition.function.exported.async, start: (2, 0), end: (13, 1)"
-    if [[ "$line" =~ capture:\ ([^,]+),\ start:\ \(([0-9]+),\ [0-9]+\),\ end:\ \(([0-9]+), ]]; then
-      local capture_name="${BASH_REMATCH[1]}"
-      local start_row="${BASH_REMATCH[2]}"
-      local end_row="${BASH_REMATCH[3]}"
+    # Also handles numbered format: "    capture: 4 - definition.function.exported.async, start: (0, 0), end: (0, 40)"
+    if [[ "$line" =~ capture:\ ([0-9]+\ -\ )?([^,]+),\ start:\ \(([0-9]+),\ [0-9]+\),\ end:\ \(([0-9]+), ]]; then
+      local capture_name="${BASH_REMATCH[2]}"
+      local start_row="${BASH_REMATCH[3]}"
+      local end_row="${BASH_REMATCH[4]}"
 
       # Convert 0-indexed to 1-indexed
       local start_line=$((start_row + 1))
@@ -319,11 +415,27 @@ extract_file() {
     done
   done
 
+  # File-level calculations
+  local is_test=false
+  is_test_file "$file" && is_test=true
+  local layer
+  layer=$(infer_layer "$file")
+
   # Build JSON output for each definition
   local first=true
   for def in "${unique_defs[@]}"; do
     local start end type name params return_type visibility modifiers
     IFS="$DELIM" read -r start end type name params return_type visibility modifiers <<< "$def"
+
+    # Definition-level calculations
+    local param_count=0
+    # Remove parentheses and whitespace for empty check
+    local params_trimmed="${params//[()[:space:]]/}"
+    if [[ -n "$params_trimmed" ]]; then
+      param_count=$(($(printf '%s' "$params" | tr -cd ',' | wc -c) + 1))
+    fi
+
+    local line_count=$((end - start + 1))
 
     # Count characteristics within this definition's line range
     local loop_count=0 try_catch_count=0 async_count=0 call_count=0 throw_count=0
@@ -344,15 +456,21 @@ extract_file() {
       done
     fi
 
-    # Collect unique call names within this definition
+    # Collect unique call names within this definition and detect recursion
     local calls_json="["
     local calls_first=true
     local seen_calls=""
+    local has_recursion=false
     if [[ ${#call_names[@]} -gt 0 ]]; then
       for call_entry in "${call_names[@]}"; do
         local cstart cname
         IFS="$DELIM" read -r cstart cname <<< "$call_entry"
         if (( cstart >= start && cstart <= end )); then
+          # Check for recursion
+          if [[ "$cname" == "$name" ]]; then
+            has_recursion=true
+          fi
+
           if [[ "$seen_calls" != *"${DELIM}${cname}${DELIM}"* ]]; then
             seen_calls="${seen_calls}${DELIM}${cname}${DELIM}"
             if [[ "$calls_first" != "true" ]]; then
@@ -385,10 +503,11 @@ extract_file() {
     fi
 
     # Boolean characteristics
-    local has_loops=false has_try_catch=false has_async=false
+    local has_loops=false has_try_catch=false has_async=false has_throw=false
     (( loop_count > 0 )) && has_loops=true
     (( try_catch_count > 0 )) && has_try_catch=true
     (( async_count > 0 )) && has_async=true
+    (( throw_count > 0 )) && has_throw=true
 
     # Output JSON
     if [[ "$first" != "true" ]]; then
@@ -413,7 +532,9 @@ extract_file() {
     [[ -n "$return_type" ]] && printf ',"return_type":"%s"' "$escaped_return_type"
     printf ',"calls":%s' "$calls_json"
     printf ',"has_loops":%s,"has_try_catch":%s,"has_async":%s' "$has_loops" "$has_try_catch" "$has_async"
-    printf ',"loop_count":%d,"call_count":%d}' "$loop_count" "$call_count"
+    printf ',"loop_count":%d,"call_count":%d' "$loop_count" "$call_count"
+    printf ',"is_test":%s,"layer":"%s","param_count":%d,"line_count":%d,"has_throw":%s,"has_recursion":%s}' \
+      "$is_test" "$layer" "$param_count" "$line_count" "$has_throw" "$has_recursion"
   done
 }
 
