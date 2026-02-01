@@ -41,21 +41,22 @@
 
 **Create custom profiles:** `/code-foundations:review-profile --setup`
 
-### Architecture: 4-Phase Pipeline
+### Architecture: 5-Phase Pipeline
 
 ```
-┌──────────────┐     ┌──────────────┐     ┌───────────────┐     ┌──────────┐
-│  EXTRACTION  │ ──▶ │   CHECKING   │ ──▶ │ INVESTIGATION │ ──▶ │  REPORT  │
-│   (haiku)    │     │ (per checklist)│   │    (haiku)    │     │          │
-└──────────────┘     └──────────────┘     └───────────────┘     └──────────┘
+┌────────────┐   ┌──────────┐   ┌─────────────┐   ┌───────────────┐   ┌────────┐
+│ EXTRACTION │ → │ CHECKING │ → │ ORCHESTRATE │ → │ INVESTIGATION │ → │ REPORT │
+│  (haiku)   │   │ (haiku)  │   │   (haiku)   │   │    (haiku)    │   │(haiku) │
+└────────────┘   └──────────┘   └─────────────┘   └───────────────┘   └────────┘
 ```
 
 | Phase | What Happens | Parallelism |
 |-------|--------------|-------------|
 | **Extraction** | Parse code into semantic units (functions, classes) | 1 agent per 5 files |
 | **Checking** | Run checklists against code, skills as agent personas | 1 agent per checklist |
-| **Investigation** | Verify findings, reduce false positives | 1 agent per 5 findings |
-| **Report** | Merge results, generate actionable output | Single agent |
+| **Orchestrate** | Batch findings, create investigation tasks | Single agent |
+| **Investigation** | Verify findings, capture code context and diff | 1 agent per 5 findings |
+| **Report** | Compile results into JSON, open dashboard | Single agent |
 
 ### Skills as Personas
 
