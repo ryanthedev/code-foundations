@@ -15,7 +15,7 @@ models:
 
 # Custom dashboard generation
 dashboard:
-  enabled: true         # Generate project-specific dashboard
+  enabled: false        # Skip custom dashboard for quick sanity check
   model: sonnet         # Needs creativity for unique design
 
 checklists:
