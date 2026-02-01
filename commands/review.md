@@ -21,28 +21,28 @@ Unified review workflow. One flow, driven by profile configuration.
 ## ARCHITECTURE
 
 ```
-┌──────────────┐     ┌──────────────┐     ┌───────────────┐     ┌──────────┐
-│  EXTRACTION  │ ──▶ │   CHECKING   │ ──▶ │ INVESTIGATION │ ──▶ │  REPORT  │
-│   (haiku)    │     │ (per checklist)│    │    (haiku)    │     │          │
-└──────────────┘     └──────────────┘     └───────────────┘     └──────────┘
-     ↑                      ↑
-  Batch by files       Profile-driven
-  (max 5 per agent)    (1 agent per checklist)
+┌────────────┐   ┌────────────┐   ┌─────────────┐   ┌───────────────┐   ┌────────┐
+│ EXTRACTION │ → │  CHECKING  │ → │ ORCHESTRATE │ → │ INVESTIGATION │ → │ REPORT │
+│  (haiku)   │   │  (haiku)   │   │   (haiku)   │   │    (haiku)    │   │(haiku) │
+└────────────┘   └────────────┘   └─────────────┘   └───────────────┘   └────────┘
+      ↑                ↑                 ↑                  ↑               ↑
+   Batch by        1 agent per       1 agent:           1 agent per     Verdicts
+   files (5)       checklist         batches &          5 findings      only
+                                     creates tasks
 ```
 
 **Main agent orchestrates everything** - dispatches all agents directly for true parallelism.
 
 **Main agent MUST:**
 - Parse arguments, load profiles, setup directories
-- Dispatch extraction, checking, investigation, and report agents
+- Dispatch extraction, checking, orchestrate, investigation, and report agents
+- Read TaskList() after orchestrate phase to dispatch investigation agents
 - Merge JSON outputs between phases
-- Mark investigation tasks complete after STEP 7
 - Display terminal summary
 
 **Main agent MUST NOT:**
 - Read the diff content (subagents do this)
 - Read changed files (subagents do this)
-- Create investigation tasks (checking agents create these)
 
 ---
 
@@ -125,7 +125,7 @@ description: <description>
 models:                    # Optional - defaults if not specified
   checking: haiku
   investigation: haiku
-  report: sonnet
+  report: haiku
 checklists:
   - path: <checklist_path>
     skills: [<skill1>, <skill2>]
@@ -138,7 +138,7 @@ checklists:
 MODELS = {
     "checking": profile.get("models", {}).get("checking", "haiku"),
     "investigation": profile.get("models", {}).get("investigation", "haiku"),
-    "report": profile.get("models", {}).get("report", "sonnet")
+    "report": profile.get("models", {}).get("report", "haiku")
 }
 
 CHECKLISTS = []
@@ -405,29 +405,25 @@ You are a checklist agent. Execute EVERY item in the checklist against the code.
 
 ### PHASE 2: EXECUTE CHECKLIST
 
-For EACH checklist item (every line starting with `- [ ]`):
+Process the checklist **section by section**. For each section:
 
-1. Extract the item ID and check
-2. Apply the check to the code
-3. Record result:
-   - **PASS**: Check satisfied. One-line evidence.
-   - **FINDING**: Check failed. Include file:line, evidence, confidence.
+1. Log the section header
+2. For EACH checklist item (every line starting with `- [ ]`):
+   - Extract the item ID
+   - Log the check message (the question being asked)
+   - Apply the check to the code
+   - Record and log result:
+     - **PASS**: Check satisfied. One-line evidence.
+     - **FINDING**: Check failed. Include file:line, evidence, confidence, recommendation.
 
-4. For EVERY finding, create an investigation task:
+3. After completing the section, log a section summary:
    ```
-   TaskCreate(
-     subject="Investigate: {{finding.id}}",
-     description="{{finding.file}}:{{finding.line}} - {{finding.issue}}",
-     activeForm="Investigating {{finding.id}}",
-     metadata={{
-       "finding_id": "{{finding.id}}",
-       "file": "{{finding.file}}",
-       "line": "{{finding.line}}",
-       "issue": "{{finding.issue}}",
-       "confidence": "{{finding.confidence}}",
-       "checklist": "{checklist_name}"
-     }}
-   )
+   ## {{SECTION_NAME}}
+
+   - {{ID-1}}: "{{check message}}" → PASS (evidence)
+   - {{ID-2}}: "{{check message}}" → FINDING: {{file}}:{{line}} - {{issue}}
+
+   Section: {{pass_count}} passed, {{finding_count}} findings
    ```
 
 ### PHASE 3: OUTPUT
@@ -442,6 +438,7 @@ Write to `{BASE_DIR}/checking/{checklist_name}.json`:
   "findings": [
     {{
       "id": "SEC-1",
+      "check": "Is input validated before use?",
       "file": "src/auth.ts",
       "line": 42,
       "issue": "User input not validated",
@@ -451,7 +448,11 @@ Write to `{BASE_DIR}/checking/{checklist_name}.json`:
     }}
   ],
   "passes": [
-    {{"id": "SEC-2", "evidence": "All inputs sanitized"}}
+    {{
+      "id": "SEC-2",
+      "check": "Are all inputs sanitized?",
+      "evidence": "All inputs sanitized via sanitize() at entry points"
+    }}
   ]
 }}
 ```
@@ -463,94 +464,203 @@ Return: `{BASE_DIR}/checking/{checklist_name}.json`
 
 **Wait for all checking agents.**
 
-Mark all checking tasks completed. Proceed directly to STEP 7 - investigation tasks were already created by checkers.
-
 ---
 
-## STEP 7: PHASE 3 - INVESTIGATION (Parallel Haiku)
+## STEP 7: ORCHESTRATE FINDINGS (Single Haiku)
 
-**Purpose:** Verify all findings. Reduce false positives.
+**Purpose:** Batch findings and create investigation tasks. Main agent dispatches based on these tasks.
 
-**Get pending investigation tasks:**
+```python
+Task(
+    subagent_type="general-purpose",
+    model="haiku",
+    description="Orchestrate findings",
+    prompt=f"""
+## Orchestrator Agent
+
+Collect all findings, deduplicate, and create investigation tasks.
+
+### Step 1: Collect Findings
+
+Read all checking results:
+```bash
+ls {BASE_DIR}/checking/*.json
+```
+Read each file.
+
+### Step 2: Deduplicate
+
+Group findings by file:line. If multiple checklists flagged the same location, keep the most specific finding.
+
+### Step 3: Batch and Create Tasks
+
+Create one task per batch of 5 findings:
+
+```python
+BATCH_SIZE = 5
+batches = chunk(findings, BATCH_SIZE)
+
+for batch_num, batch in enumerate(batches):
+    TaskCreate(
+        subject=f"Investigate: batch-{{batch_num + 1}}",
+        description=f"Verify {{len(batch)}} findings",
+        activeForm=f"Investigating batch {{batch_num + 1}}",
+        metadata={{
+            "batch": batch_num + 1,
+            "findings": [
+                {{
+                    "id": f.id,
+                    "check": f.check,
+                    "file": f.file,
+                    "line": f.line,
+                    "issue": f.issue,
+                    "confidence": f.confidence,
+                    "evidence": f.evidence,
+                    "recommendation": f.recommendation
+                }}
+                for f in batch
+            ]
+        }}
+    )
+```
+
+### Step 4: Write Summary
+
+Write to `{BASE_DIR}/orchestrate.json`:
+
+```json
+{{
+  "total_findings": N,
+  "unique_findings": N,
+  "duplicates_removed": N,
+  "batches_created": N,
+  "findings_per_batch": [5, 5, 3]
+}}
+```
+
+### Output
+
+Return the batch count and total findings.
+"""
+)
+```
+
+**Wait for orchestrator. Then read tasks:**
+
 ```python
 tasks = TaskList()
 investigate_tasks = [t for t in tasks if t.subject.startswith("Investigate:") and t.status == "pending"]
-
-# Deduplicate by finding_id (in case of duplicates)
-seen_ids = set()
-unique_tasks = []
-for task in investigate_tasks:
-    finding_id = task.metadata.get("finding_id")
-    if finding_id and finding_id not in seen_ids:
-        seen_ids.add(finding_id)
-        unique_tasks.append(task)
-investigate_tasks = unique_tasks
 ```
 
-**Skip if no findings:**
+**If no findings:**
 ```python
 if len(investigate_tasks) == 0:
     print("No findings to investigate. Skipping to report.")
-    goto STEP 8
+    goto STEP 9
 ```
 
-**Batch and dispatch:**
-```python
-MAX_PER_AGENT = 5
-NUM_BATCHES = max(1, ceil(len(investigate_tasks) / MAX_PER_AGENT))
-batches = split_evenly(investigate_tasks, NUM_BATCHES)
+---
 
-# Single message with multiple Task calls = true parallelism
-for batch_num, batch in enumerate(batches):
+## STEP 8: INVESTIGATION (Parallel Haiku)
+
+**Purpose:** Verify findings in parallel. Each agent handles one batch. Capture code context and diff for report.
+
+**Dispatch ALL in single message:**
+
+```python
+for task in investigate_tasks:
+    batch_num = task.metadata["batch"]
+    findings = task.metadata["findings"]
+    files = list(set(f["file"] for f in findings))
+
     Task(
         subagent_type="general-purpose",
         model=MODELS["investigation"],  # From profile config (default: haiku)
-        description=f"Investigate batch {batch_num + 1}",
+        description=f"Investigate batch {batch_num}",
         prompt=f"""
 ## Investigation Agent
 
-Investigate these findings in {REPO_ROOT}:
+Verify these findings in {REPO_ROOT}:
+
+### Findings to Verify
 
 {chr(10).join(f'''
-- **{task.metadata.finding_id}**
-  Issue: {task.metadata.issue}
-  File: {task.metadata.file}:{task.metadata.line}
-''' for task in batch)}
+**{f["id"]}** - {f["file"]}:{f["line"]}
+- Check: "{f["check"]}"
+- Issue: {f["issue"]}
+- Evidence: {f["evidence"]}
+''' for f in findings)}
 
 ### Instructions
 
 For EACH finding:
-1. Read the file and surrounding context (50 lines before/after)
-2. Determine verdict:
-   - **CONFIRMED**: Real issue, needs fixing
+
+1. Read the file around the finding line (10 lines before, 10 lines after)
+2. Get the diff hunk for that file:
+   ```bash
+   cd {REPO_ROOT}
+   git diff {DIFF_ARGS} -U5 -- <file> | grep -A20 "^@@.*{line_number}"
+   ```
+3. Determine verdict:
+   - **CONFIRMED**: Real issue that needs fixing
    - **FALSE_POSITIVE**: Not an issue (explain why)
-   - **NEEDS_CONTEXT**: Can't determine without more info
-3. Explain reasoning
+   - **NEEDS_CONTEXT**: Cannot determine without more information
+4. For CONFIRMED: refine the recommendation if needed
+5. Capture the code context and diff hunk for the report
 
 ### Output
 
-Write to `{BASE_DIR}/investigation/batch-{batch_num + 1}.json`:
+Write to `{BASE_DIR}/investigation/batch-{batch_num}.json`:
 
 ```json
 {{
-  "batch": {batch_num + 1},
-  "findings": [
+  "batch": {batch_num},
+  "results": [
     {{
       "id": "SEC-1",
       "verdict": "CONFIRMED",
-      "reason": "User input from request.body passed directly to SQL query without sanitization",
-      "recommendation": "Use parameterized query"
+      "reason": "User input from request.body passed directly to SQL query",
+      "recommendation": "Use parameterized query",
+      "code_context": {{
+        "start_line": 35,
+        "lines": [
+          "function handleRequest(req) {{",
+          "  const id = req.body.id;",
+          "  db.query(`SELECT * FROM users WHERE id = ${{id}}`);",
+          "  return result;",
+          "}}"
+        ]
+      }},
+      "diff_hunk": "@@ -40,6 +42,8 @@\\n function handleRequest(req) {{\\n+  const id = req.body.id;\\n+  db.query(`SELECT...`);"
+    }},
+    {{
+      "id": "DP-3",
+      "verdict": "FALSE_POSITIVE",
+      "reason": "Validation occurs in middleware before this function is called",
+      "code_context": {{
+        "start_line": 82,
+        "lines": [
+          "// Called after validateInput middleware",
+          "function processData(data) {{",
+          "  // data is already validated",
+          "  return transform(data);",
+          "}}"
+        ]
+      }},
+      "diff_hunk": null
     }}
   ]
 }}
 ```
+
+**Important:** Always include `code_context` with ~10 lines around the finding. Include `diff_hunk` if the finding is in changed code, otherwise null.
 """
     )
 ```
 
 **Wait for all investigation agents.**
 
-**Mark investigation tasks complete (main agent responsibility):**
+**Mark investigation tasks complete:**
 ```python
 for task in investigate_tasks:
     TaskUpdate(taskId=task.id, status="completed")
@@ -558,94 +668,135 @@ for task in investigate_tasks:
 
 ---
 
-## STEP 8: PHASE 4 - REPORT
+## STEP 9: REPORT (Single Haiku)
 
-**Purpose:** Generate final report merging all results.
+**Purpose:** Compile investigation results into final JSON report.
 
 ```python
 Task(
     subagent_type="general-purpose",
-    model=MODELS["report"],  # From profile config (default: sonnet)
+    model="haiku",  # Just compilation, no deep reasoning needed
     description="Generate final report",
     prompt=f"""
 ## Report Agent
 
-Generate the final review report.
+Compile investigation results into the final report JSON.
 
 ### Inputs
 
-1. Read extraction summary:
+1. Read orchestration summary:
    ```
-   Read({BASE_DIR}/units.json)
+   Read({BASE_DIR}/orchestrate.json)
    ```
 
-2. Read all checking results:
-   ```bash
-   ls {BASE_DIR}/checking/*.json
-   ```
-   Read each file.
-
-3. Read all investigation verdicts:
+2. Read all investigation results:
    ```bash
    ls {BASE_DIR}/investigation/*.json
    ```
    Read each file.
 
+3. Read extraction summary for file/line counts:
+   ```
+   Read({BASE_DIR}/units.json)
+   ```
+
 ### Tasks
 
-1. **Changes Summary**: 2-3 sentences describing what changed and apparent intent.
-
-2. **Apply Verdicts**:
-   - CONFIRMED → Include in Findings
-   - FALSE_POSITIVE → Remove (note count)
-   - NEEDS_CONTEXT → Include in Questions
-
-3. **Format Report**:
-
-```markdown
-# Review Report
-
-**Profile:** {PROFILE_NAME}
-**Files:** N files, N lines changed
-**Checklists:** N checklists, N items checked
-**Results:** N findings, N questions, N false positives removed
-
-## Changes Summary
-
-[2-3 sentences]
-
-## Findings
-
-1. **[ID]** file:line - Issue
-   Evidence: ...
-   Fix: ...
-
-2. **[ID]** file:line - Issue
-   Evidence: ...
-   Fix: ...
-
-## Questions (Need Context)
-
-1. **[ID]** file:line - Issue
-   Unknown: ...
-
-## Positive Observations
-
-- [Things done well]
-```
+1. **Collect** all findings from investigation results
+2. **Group** by verdict (confirmed, false_positive, needs_context)
+3. **Sort** confirmed findings by file, then line number
+4. **Compile** into final JSON
 
 ### Output
 
-Write to `{BASE_DIR}/REPORT.md`
+Write to `{BASE_DIR}/report.json`:
 
-Return: `{BASE_DIR}/REPORT.md`
+```json
+{{
+  "profile": "{PROFILE_NAME}",
+  "timestamp": "2024-01-15T14:30:00Z",
+  "stats": {{
+    "files_reviewed": 14,
+    "checklists_run": 10,
+    "items_checked": 614,
+    "total_findings": 7,
+    "confirmed": 6,
+    "false_positives": 1,
+    "needs_context": 0
+  }},
+  "findings": [
+    {{
+      "id": "SEC-1",
+      "verdict": "confirmed",
+      "file": "src/auth.ts",
+      "line": 42,
+      "check": "Is input validated before use?",
+      "issue": "User input not validated",
+      "evidence": "req.body.id passed directly to query()",
+      "recommendation": "Use parameterized query",
+      "reason": "User input from request.body passed directly to SQL query",
+      "code_context": {{
+        "start_line": 35,
+        "lines": [
+          "function handleRequest(req) {{",
+          "  const id = req.body.id;",
+          "  db.query(`SELECT * FROM users WHERE id = ${{id}}`);",
+          "  return result;",
+          "}}"
+        ]
+      }},
+      "diff_hunk": "@@ -40,6 +42,8 @@\\n function handleRequest(req) {{\\n+  const id = req.body.id;"
+    }},
+    {{
+      "id": "DP-3",
+      "verdict": "false_positive",
+      "file": "src/api.ts",
+      "line": 89,
+      "check": "Is error handling present?",
+      "issue": "Missing try-catch",
+      "reason": "Validation occurs in middleware before this function is called",
+      "code_context": {{
+        "start_line": 82,
+        "lines": [
+          "// Called after validateInput middleware",
+          "function processData(data) {{",
+          "  return transform(data);",
+          "}}"
+        ]
+      }},
+      "diff_hunk": null
+    }},
+    {{
+      "id": "CF-7",
+      "verdict": "needs_context",
+      "file": "src/utils.ts",
+      "line": 156,
+      "check": "Is the loop termination condition correct?",
+      "issue": "Potential infinite loop",
+      "reason": "Cannot determine without knowing if external service guarantees termination",
+      "code_context": {{
+        "start_line": 150,
+        "lines": [
+          "while (await fetchNext()) {{",
+          "  items.push(current);",
+          "  if (items.length > MAX) break;",
+          "}}"
+        ]
+      }},
+      "diff_hunk": "@@ -155,4 +156,6 @@\\n+while (await fetchNext()) {{"
+    }}
+  ]
+}}
+```
+
+Return: `{BASE_DIR}/report.json`
 """
 )
 ```
 
 ---
 
-## STEP 9: TERMINAL SUMMARY
+## STEP 10: TERMINAL SUMMARY
 
 ```markdown
 ## Review Complete
@@ -655,46 +806,50 @@ Return: `{BASE_DIR}/REPORT.md`
 ### Phases
 - Extraction: {N} batches
 - Checking: {N} checklists
-- Investigation: {N} batches ({N} confirmed, {N} false positives)
-- Report: generated
+- Orchestrate: {N} findings → {N} batches
+- Investigation: {N} confirmed, {N} false positives, {N} need context
 
 ### Top Issues
 1. **[ID]** file:line - issue
 2. **[ID]** file:line - issue
 3. **[ID]** file:line - issue
 
-Full report: {BASE_DIR}/REPORT.md
+Output: {BASE_DIR}/report.json
 ```
 
 ---
 
-## STEP 10: OFFER ACTIONS
+## STEP 11: OFFER ACTIONS
 
 ```
 AskUserQuestion(
   questions: [
     {
       header: "Action",
-      question: "What would you like to do with these findings?",
+      question: "What would you like to do?",
       options: [
+        {label: "Open Dashboard", description: "View full review in browser"},
         {label: "Fix All", description: "Create a plan to fix all issues"},
-        {label: "View Report", description: "Show the full report"},
-        {label: "Done", description: "Exit"}
+        {label: "Done", description: "Exit review"}
       ]
     }
   ]
 )
 ```
 
-**If "Fix All":**
-```
-Skill(code-foundations:whiteboarding, args: "Fix review findings from {BASE_DIR}/REPORT.md")
+**If "Open Dashboard":**
+```bash
+cp {PLUGIN_ROOT}/assets/review-dashboard.html {BASE_DIR}/
+cp {PLUGIN_ROOT}/assets/report-viewer.html {BASE_DIR}/
+open {BASE_DIR}/review-dashboard.html
 ```
 
-**If "View Report":**
-```bash
-cat {BASE_DIR}/REPORT.md
+**If "Fix All":**
 ```
+Skill(code-foundations:whiteboarding, args: "Fix review findings from {BASE_DIR}/report.json")
+```
+
+**If "Other":** Handle user's custom request.
 
 ---
 
@@ -713,8 +868,19 @@ cat {BASE_DIR}/REPORT.md
 | Phase | Agents | Model | Scaling |
 |-------|--------|-------|---------|
 | Extraction | 1 per 5 files | haiku | `ceil(files / 5)` |
-| Checking | 1 per checklist | `profile.models.checking` (default: haiku) | `len(profile.checklists)` |
-| Investigation | 1 per 5 findings | `profile.models.investigation` (default: haiku) | `ceil(findings / 5)` |
-| Report | 1 | `profile.models.report` (default: sonnet) | Fixed |
+| Checking | 1 per checklist | `profile.models.checking` | `len(checklists)` |
+| Orchestrate | 1 | haiku | Fixed |
+| Investigation | 1 per 5 findings | `profile.models.investigation` | `ceil(findings / 5)` |
+| Report | 1 | `profile.models.report` | Fixed |
 
 **All dispatched by main agent** - single message with multiple Task calls = true parallelism.
+
+## SCALING ANALYSIS (100k Line PR)
+
+| Phase | Agents | Context per Agent | Notes |
+|-------|--------|-------------------|-------|
+| Extraction | ~200 | Small (5 files) | Parallel, fast |
+| Checking | 10 | Medium (units.json) | Fixed by profile |
+| Orchestrate | 1 | Medium (all findings) | Just batching |
+| Investigation | ~40 | Small (5 findings + files) | Bounded context |
+| Report | 1 | Small (verdicts only) | No raw code |

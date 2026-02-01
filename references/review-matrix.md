@@ -19,16 +19,17 @@ Profile-driven code review: `/code-foundations:review`
 ## Architecture
 
 ```
-Extraction → Checking → Investigation → Report
-   haiku    1 per checklist   haiku       single
+Extraction → Checking → Orchestrate → Investigation → Report
+   haiku      haiku        haiku         haiku        sonnet
 ```
 
-| Phase | Agents | Model |
-|-------|--------|-------|
-| Extraction | 1 per 5 files | haiku |
-| Checking | 1 per checklist | inherited |
-| Investigation | 1 per 5 findings | haiku |
-| Report | 1 | inherited |
+| Phase | Agents | Model | Scaling |
+|-------|--------|-------|---------|
+| Extraction | 1 per 5 files | haiku | `ceil(files / 5)` |
+| Checking | 1 per checklist | haiku | `len(checklists)` |
+| Orchestrate | 1 | haiku | Fixed |
+| Investigation | 1 per 5 findings | haiku | `ceil(findings / 5)` |
+| Report | 1 | haiku | Fixed |
 
 ---
 

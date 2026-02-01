@@ -22,7 +22,6 @@ Code-foundations is a Claude Code plugin providing software engineering skills b
 - `agents/` - Agent templates, profiles, and configuration
   - `agents/profiles/` - Built-in profiles (sanity.yaml, pr.yaml)
   - `agents/config.yaml` - Agent settings
-  - `agents/AGENT.md` - Checklist agent template
 - `references/` - Shared reference materials
 - `docs/` - Case study examples
 
@@ -33,10 +32,10 @@ Code-foundations is a Claude Code plugin providing software engineering skills b
 **Profile-driven architecture:** One unified flow, configurable via profiles.
 
 ```
-┌──────────────┐     ┌──────────────┐     ┌───────────────┐     ┌──────────┐
-│  EXTRACTION  │ ──▶ │   CHECKING   │ ──▶ │ INVESTIGATION │ ──▶ │  REPORT  │
-│   (haiku)    │     │ (per checklist)│    │    (haiku)    │     │          │
-└──────────────┘     └──────────────┘     └───────────────┘     └──────────┘
+┌────────────┐   ┌──────────┐   ┌─────────────┐   ┌───────────────┐   ┌────────┐
+│ EXTRACTION │ → │ CHECKING │ → │ ORCHESTRATE │ → │ INVESTIGATION │ → │ REPORT │
+│  (haiku)   │   │ (haiku)  │   │   (haiku)   │   │    (haiku)    │   │(haiku) │
+└────────────┘   └──────────┘   └─────────────┘   └───────────────┘   └────────┘
 ```
 
 | Preset | Checklists | Checks | Use Case |
@@ -103,8 +102,9 @@ checklists:
 3. **Get target** → Ask for diff args (staged, unstaged, branch)
 4. **Extraction** → Parallel haiku agents (batch by files)
 5. **Checking** → Parallel agents (1 per checklist, loads skills)
-6. **Investigation** → Parallel haiku agents (batch by findings)
-7. **Report** → Single agent merges results
+6. **Orchestrate** → Single haiku agent batches findings, creates investigation tasks
+7. **Investigation** → Parallel haiku agents (1 per 5 findings), verify and filter
+8. **Report** → Single haiku agent compiles findings into JSON report
 
 **Main agent orchestrates** - dispatches all agents directly for true parallelism.
 
