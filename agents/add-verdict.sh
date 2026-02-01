@@ -1,7 +1,7 @@
 #!/bin/bash
 # add-verdict.sh - Investigation agents use this to add verified findings with fixes
 # Enforces schema. Exits non-zero if validation fails.
-# Supports single record (CLI args) or batch (--stdin JSON array)
+# CLI args only - one call per verdict (debuggable, simple)
 # Fix structure supports multiple edits per finding
 
 set -e
@@ -109,43 +109,7 @@ validate_verdict() {
   fi
 }
 
-# Batch mode: read JSON array from stdin
-process_stdin() {
-  local output_file=$(get_output_file)
-  local input=$(cat)
-
-  # Check if input is valid JSON array
-  if ! echo "$input" | jq -e 'type == "array"' > /dev/null 2>&1; then
-    error "Input must be a JSON array"
-  fi
-
-  # Process each object in the array
-  local total=$(echo "$input" | jq 'length')
-  local confirmed=0
-  local false_pos=0
-  local needs_ctx=0
-
-  for ((i=0; i<total; i++)); do
-    local verdict_obj=$(echo "$input" | jq -c ".[$i]")
-    local validated
-    if ! validated=$(validate_verdict "$verdict_obj"); then
-      error "Validation failed for item $i"
-    fi
-    echo "$validated" >> "$output_file"
-
-    # Count by verdict type
-    local v=$(echo "$validated" | jq -r '.verdict')
-    case "$v" in
-      CONFIRMED) ((confirmed++)) ;;
-      FALSE_POSITIVE) ((false_pos++)) ;;
-      NEEDS_CONTEXT) ((needs_ctx++)) ;;
-    esac
-  done
-
-  echo "Added $total verdicts ($confirmed confirmed, $false_pos false positives, $needs_ctx need context)"
-}
-
-# Single mode: parse CLI args (only for FALSE_POSITIVE and NEEDS_CONTEXT)
+# Parse CLI args and record verdict
 process_single() {
   local FINDING_ID=""
   local FILE=""
@@ -154,6 +118,8 @@ process_single() {
   local VERDICT=""
   local REASON=""
   local QUESTION=""
+  local FIX_EXPLANATION=""
+  local FIX_EDITS=""
 
   while [[ $# -gt 0 ]]; do
     case $1 in
@@ -164,27 +130,48 @@ process_single() {
       --verdict) VERDICT="$2"; shift 2 ;;
       --reason) REASON="$2"; shift 2 ;;
       --question) QUESTION="$2"; shift 2 ;;
+      --fix-explanation) FIX_EXPLANATION="$2"; shift 2 ;;
+      --fix-edits) FIX_EDITS="$2"; shift 2 ;;
       --output) OUTPUT="$2"; shift 2 ;;
       -h|--help) usage ;;
       *) error "Unknown option: $1" ;;
     esac
   done
 
-  # CLI mode doesn't support CONFIRMED (requires fix.edits array)
+  # CONFIRMED requires fix args
   if [[ "$VERDICT" == "CONFIRMED" ]]; then
-    error "CONFIRMED verdicts require batch mode (--stdin) with fix.edits array"
+    [[ -z "$FIX_EXPLANATION" ]] && error "CONFIRMED requires --fix-explanation"
+    [[ -z "$FIX_EDITS" ]] && error "CONFIRMED requires --fix-edits (JSON array)"
+    # Validate fix-edits is valid JSON array
+    if ! echo "$FIX_EDITS" | jq -e 'type == "array"' > /dev/null 2>&1; then
+      error "--fix-edits must be a JSON array"
+    fi
   fi
 
   # Build JSON from args
-  local json=$(jq -n \
-    --arg finding_id "$FINDING_ID" \
-    --arg file "$FILE" \
-    --arg line "$LINE" \
-    --arg check_id "$CHECK_ID" \
-    --arg verdict "$VERDICT" \
-    --arg reason "$REASON" \
-    --arg question "$QUESTION" \
-    '{finding_id: $finding_id, file: $file, line: $line, check_id: $check_id, verdict: $verdict, reason: $reason, question: $question}')
+  local json
+  if [[ "$VERDICT" == "CONFIRMED" ]]; then
+    json=$(jq -n \
+      --arg finding_id "$FINDING_ID" \
+      --arg file "$FILE" \
+      --arg line "$LINE" \
+      --arg check_id "$CHECK_ID" \
+      --arg verdict "$VERDICT" \
+      --arg reason "$REASON" \
+      --arg explanation "$FIX_EXPLANATION" \
+      --argjson edits "$FIX_EDITS" \
+      '{finding_id: $finding_id, file: $file, line: $line, check_id: $check_id, verdict: $verdict, reason: $reason, fix: {explanation: $explanation, edits: $edits}}')
+  else
+    json=$(jq -n \
+      --arg finding_id "$FINDING_ID" \
+      --arg file "$FILE" \
+      --arg line "$LINE" \
+      --arg check_id "$CHECK_ID" \
+      --arg verdict "$VERDICT" \
+      --arg reason "$REASON" \
+      --arg question "$QUESTION" \
+      '{finding_id: $finding_id, file: $file, line: $line, check_id: $check_id, verdict: $verdict, reason: $reason, question: $question}')
+  fi
 
   local validated
   if ! validated=$(validate_verdict "$json"); then
@@ -199,49 +186,48 @@ process_single() {
 usage() {
   cat <<EOF
 Usage:
-  CLI:   add-verdict.sh --finding-id <id> --file <path> --line <n> --check-id <id> --verdict <v> --reason <text> [options]
-  Batch: cat verdicts.json | add-verdict.sh --stdin
+  add-verdict.sh --finding-id <id> --file <path> --line <n> --check-id <id> --verdict <v> --reason <text> [options]
 
-CLI mode (FALSE_POSITIVE and NEEDS_CONTEXT only):
-  --finding-id <id>   Original finding ID (e.g., "batch-2-NULL-4")
-  --file <path>       File path where finding was found
-  --line <n>          Line number
-  --check-id <id>     Check ID (e.g., NULL-4)
-  --verdict <v>       FALSE_POSITIVE or NEEDS_CONTEXT
-  --reason <text>     Why this verdict was reached
-  --question <text>   For NEEDS_CONTEXT: what info is missing
-  --output <path>     Output file (default: \$BASE_DIR/verdicts.jsonl)
+Required:
+  --finding-id <id>       Original finding ID (e.g., "batch-2-NULL-4")
+  --file <path>           File path where finding was found
+  --line <n>              Line number
+  --check-id <id>         Check ID (e.g., NULL-4)
+  --verdict <v>           CONFIRMED, FALSE_POSITIVE, or NEEDS_CONTEXT
+  --reason <text>         Why this verdict was reached
 
-Batch mode (required for CONFIRMED):
-  --stdin             Read JSON array from stdin
+Conditional:
+  CONFIRMED requires:
+    --fix-explanation <text>   What the fix does
+    --fix-edits <json>         JSON array of edits
 
-Batch JSON format:
-  [
-    {
-      "finding_id": "batch-1-NULL-4",
-      "file": "src/api.ts",
-      "line": 42,
-      "check_id": "NULL-4",
-      "verdict": "CONFIRMED",
-      "reason": "Array accessed without bounds check",
-      "fix": {
-        "explanation": "Add bounds check",
-        "edits": [
-          {"file": "src/api.ts", "old_string": "items[0]", "new_string": "items?.[0]"}
-        ]
-      }
-    },
-    {
-      "finding_id": "batch-1-ERR-3",
-      "file": "src/api.ts",
-      "line": 50,
-      "check_id": "ERR-3",
-      "verdict": "FALSE_POSITIVE",
-      "reason": "Error handled by caller"
-    }
-  ]
+  NEEDS_CONTEXT requires:
+    --question <text>          What info is missing
 
-Note: CONFIRMED requires batch mode with fix.edits array (supports multi-file fixes).
+Optional:
+  --output <path>         Output file (default: \$BASE_DIR/verdicts.jsonl)
+
+Examples:
+  # FALSE_POSITIVE
+  add-verdict.sh --finding-id "batch-1-ERR-3" --file "src/api.ts" --line 50 \\
+    --check-id "ERR-3" --verdict "FALSE_POSITIVE" --reason "Error handled by caller"
+
+  # NEEDS_CONTEXT
+  add-verdict.sh --finding-id "batch-1-CONC-2" --file "src/api.ts" --line 60 \\
+    --check-id "CONC-2" --verdict "NEEDS_CONTEXT" --reason "Unclear threading model" \\
+    --question "Is this service accessed concurrently?"
+
+  # CONFIRMED (single file fix)
+  add-verdict.sh --finding-id "batch-1-NULL-4" --file "src/api.ts" --line 42 \\
+    --check-id "NULL-4" --verdict "CONFIRMED" --reason "Array accessed without bounds check" \\
+    --fix-explanation "Add bounds check" \\
+    --fix-edits '[{"file":"src/api.ts","old_string":"items[0]","new_string":"items?.[0]"}]'
+
+  # CONFIRMED (multi-file fix)
+  add-verdict.sh --finding-id "batch-1-API-2" --file "src/utils.ts" --line 10 \\
+    --check-id "API-2" --verdict "CONFIRMED" --reason "Function renamed but callers not updated" \\
+    --fix-explanation "Rename function and update call sites" \\
+    --fix-edits '[{"file":"src/utils.ts","old_string":"export function oldName(","new_string":"export function newName("},{"file":"src/api.ts","old_string":"oldName(data)","new_string":"newName(data)"}]'
 
 EOF
   exit 1
@@ -250,15 +236,7 @@ EOF
 # Main
 OUTPUT=""
 
-# Check for --stdin first
-if [[ "$1" == "--stdin" ]]; then
-  shift
-  if [[ "$1" == "--output" ]]; then
-    OUTPUT="$2"
-    shift 2
-  fi
-  process_stdin
-elif [[ "$1" == "-h" || "$1" == "--help" || -z "$1" ]]; then
+if [[ "$1" == "-h" || "$1" == "--help" || -z "$1" ]]; then
   usage
 else
   process_single "$@"

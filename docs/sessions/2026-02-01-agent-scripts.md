@@ -90,6 +90,7 @@ Output: verdicts.jsonl
 ## Commits on Branch
 
 ```
+<pending> refactor: simplify investigation agent - CLI calls, remove batch mode
 42c0d99 refactor: simplify checker agent - CLI calls, use unit characteristics
 f2d9ece fix: allow any unit type (interface, test, etc.)
 bedee91 refactor: simplify extraction flow - AST first, then enrich
@@ -117,7 +118,7 @@ f8bb988 feat: add batch mode to agent scripts with unified fix.edits format
 
 ## What's Left
 
-- [ ] Investigation agent needs same refactor pattern (CLI calls, not batch)
+- [x] Investigation agent needs same refactor pattern (CLI calls, not batch)
 - [ ] Integration with `commands/review.md`
 - [ ] Register agents in plugin system (currently not discoverable)
 - [ ] End-to-end test of full review flow
