@@ -70,4 +70,18 @@ Checks with 6/7 or 7/7 agreement were included.
 
 ## Usage
 
-Apply these 14 checks to each unit of code (function/method/class) individually. Each unit gets dedicated attention rather than spreading checks across the whole diff.
+Apply these 14 checks to each unit of code (function/method/class) individually.
+
+**Important: One check can produce multiple findings.**
+
+Each check should be evaluated at every relevant location in the code. For example:
+- NULL-2 might flag 3 different lines where null isn't checked
+- LOGIC-1 might flag 2 different loops that could run forever
+- RES-1 might flag 4 different resources without cleanup
+
+Output one finding per location, not one finding per check ID:
+```
+NULL-2 @ src/api.ts:42 - userId not checked for null
+NULL-2 @ src/api.ts:67 - response.data not checked for null
+NULL-2 @ src/api.ts:89 - config.timeout not checked for null
+```
