@@ -606,7 +606,16 @@ Return: `{BASE_DIR}/checking/{prefix}.json`
 
 ## STEP 7: ORCHESTRATE FINDINGS (Single Haiku)
 
-**Purpose:** Batch findings and create investigation tasks. Main agent dispatches based on these tasks.
+**Purpose:** Batch findings, pick implementation skills, and create investigation tasks with tailored prompts.
+
+**Available implementation skills** (orchestrator picks per batch):
+- `cc-defensive-programming` - input validation, error handling, assertions
+- `cc-refactoring-guidance` - safe code changes, small steps
+- `cc-routine-and-class-design` - function/class structure, cohesion
+- `cc-control-flow-quality` - conditionals, loops, complexity
+- `aposd-designing-deep-modules` - interface design, abstraction
+- `aposd-simplifying-complexity` - reducing cognitive load
+- `aposd-improving-code-clarity` - naming, comments, readability
 
 ```python
 Task(
@@ -616,7 +625,7 @@ Task(
     prompt=f"""
 ## Orchestrator Agent
 
-Collect all findings, deduplicate, and create investigation tasks.
+Collect findings, deduplicate, batch, and prepare investigation tasks with skills and prompts.
 
 ### Step 1: Collect Findings
 
@@ -628,23 +637,32 @@ Read each file.
 
 ### Step 2: Deduplicate
 
-Group findings by file:line. If multiple checklists flagged the same location, keep the most specific finding.
+Group findings by file:line. If multiple checks flagged the same location, keep the most specific finding.
 
 ### Step 3: Batch and Create Tasks
 
-Create one task per batch of 5 findings:
+Create one task per batch of 5 findings. For each batch:
+1. Analyze what the findings are about
+2. Write a focused prompt for the investigator
+3. Pick 1-3 implementation skills relevant to FIXING these issues
 
 ```python
 BATCH_SIZE = 5
 batches = chunk(findings, BATCH_SIZE)
 
 for batch_num, batch in enumerate(batches):
+    # Analyze batch to pick skills and write prompt
+    # e.g., if findings are about validation → cc-defensive-programming
+    # e.g., if findings are about complexity → aposd-simplifying-complexity
+
     TaskCreate(
         subject=f"Investigate: batch-{{batch_num + 1}}",
         description=f"Verify {{len(batch)}} findings",
         activeForm=f"Investigating batch {{batch_num + 1}}",
         metadata={{
             "batch": batch_num + 1,
+            "prompt": "Focus on validation gaps. For each confirmed issue, provide a complete fix with proper input sanitization.",
+            "skills": ["cc-defensive-programming", "cc-refactoring-guidance"],
             "findings": [
                 {{
                     "id": f.id,
@@ -661,6 +679,14 @@ for batch_num, batch in enumerate(batches):
         }}
     )
 ```
+
+**Skill selection guide:**
+- Validation/security issues → `cc-defensive-programming`
+- Complexity/nesting issues → `aposd-simplifying-complexity`, `cc-control-flow-quality`
+- Interface/abstraction issues → `aposd-designing-deep-modules`
+- Naming/clarity issues → `aposd-improving-code-clarity`
+- Structure issues → `cc-routine-and-class-design`
+- Always include `cc-refactoring-guidance` for safe changes
 
 ### Step 4: Write Summary
 
@@ -699,9 +725,9 @@ if len(investigate_tasks) == 0:
 
 ---
 
-## STEP 8: INVESTIGATION (Parallel Haiku)
+## STEP 8: INVESTIGATION (Parallel Sonnet)
 
-**Purpose:** Verify findings in parallel. Each agent handles one batch. Capture code context and diff for report.
+**Purpose:** Verify findings and provide comprehensive fixes. Each agent loads implementation skills and produces ready-to-apply code.
 
 **Execute (respect MAX_PARALLELISM):**
 
@@ -718,18 +744,30 @@ for wave in waves:
     for task in wave:
         batch_num = task.metadata["batch"]
         findings = task.metadata["findings"]
+        batch_prompt = task.metadata["prompt"]
+        batch_skills = task.metadata["skills"]
         files = list(set(f["file"] for f in findings))
 
         Task(
             subagent_type="general-purpose",
-            model=MODELS["investigation"],  # From profile config (default: haiku)
+            model=MODELS["investigation"],  # From profile config
             description=f"Investigate batch {batch_num}",
             prompt=f"""
 ## Investigation Agent
 
-Verify these findings in {REPO_ROOT}:
+Verify findings and provide comprehensive, ready-to-apply fixes.
 
-### Findings to Verify
+### YOUR FOCUS
+
+{batch_prompt}
+
+### PHASE 1: LOAD IMPLEMENTATION SKILLS
+
+{chr(10).join(f'''```
+Skill(code-foundations:{skill})
+```''' for skill in batch_skills)}
+
+### PHASE 2: VERIFY FINDINGS
 
 {chr(10).join(f'''
 **{f["id"]}** - {f["file"]}:{f["line"]}
@@ -738,22 +776,26 @@ Verify these findings in {REPO_ROOT}:
 - Evidence: {f["evidence"]}
 ''' for f in findings)}
 
-### Instructions
-
 For EACH finding:
 
-1. Read the file around the finding line (10 lines before, 10 lines after)
-2. Get the diff hunk for that file:
+1. Read the file around the finding line (20 lines before, 20 lines after)
+2. Get the diff hunk:
    ```bash
    cd {REPO_ROOT}
-   git diff {DIFF_ARGS} -U5 -- <file> | grep -A20 "^@@.*{line_number}"
+   git diff {DIFF_ARGS} -U5 -- <file>
    ```
 3. Determine verdict:
    - **CONFIRMED**: Real issue that needs fixing
    - **FALSE_POSITIVE**: Not an issue (explain why)
    - **NEEDS_CONTEXT**: Cannot determine without more information
-4. For CONFIRMED: refine the recommendation if needed
-5. Capture the code context and diff hunk for the report
+
+### PHASE 3: WRITE COMPREHENSIVE FIXES
+
+For each CONFIRMED finding, provide a **complete fix**:
+- Show the exact code to replace (old_string)
+- Show the fixed code (new_string)
+- Explain WHY this fix works
+- Follow patterns from the loaded skills
 
 ### Output
 
@@ -767,18 +809,18 @@ Write to `{BASE_DIR}/investigation/batch-{batch_num}.json`:
       "id": "SEC-1",
       "verdict": "CONFIRMED",
       "reason": "User input from request.body passed directly to SQL query",
-      "recommendation": "Use parameterized query",
       "code_context": {{
         "start_line": 35,
-        "lines": [
-          "function handleRequest(req) {{",
-          "  const id = req.body.id;",
-          "  db.query(`SELECT * FROM users WHERE id = ${{id}}`);",
-          "  return result;",
-          "}}"
-        ]
+        "end_line": 45,
+        "lines": ["..."]
       }},
-      "diff_hunk": "@@ -40,6 +42,8 @@\\n function handleRequest(req) {{\\n+  const id = req.body.id;\\n+  db.query(`SELECT...`);"
+      "diff_hunk": "@@ -40,6 +42,8 @@...",
+      "fix": {{
+        "file": "src/auth.ts",
+        "old_string": "  const id = req.body.id;\\n  db.query(`SELECT * FROM users WHERE id = ${{id}}`);",
+        "new_string": "  const id = req.body.id;\\n  if (!id || typeof id !== 'string') {{\\n    throw new ValidationError('Invalid user ID');\\n  }}\\n  db.query('SELECT * FROM users WHERE id = ?', [id]);",
+        "explanation": "Added input validation and switched to parameterized query to prevent SQL injection"
+      }}
     }},
     {{
       "id": "DP-3",
@@ -786,21 +828,30 @@ Write to `{BASE_DIR}/investigation/batch-{batch_num}.json`:
       "reason": "Validation occurs in middleware before this function is called",
       "code_context": {{
         "start_line": 82,
-        "lines": [
-          "// Called after validateInput middleware",
-          "function processData(data) {{",
-          "  // data is already validated",
-          "  return transform(data);",
-          "}}"
-        ]
+        "end_line": 92,
+        "lines": ["..."]
       }},
-      "diff_hunk": null
+      "diff_hunk": null,
+      "fix": null
+    }},
+    {{
+      "id": "CF-7",
+      "verdict": "NEEDS_CONTEXT",
+      "reason": "Cannot determine loop termination without knowing external API behavior",
+      "code_context": {{...}},
+      "diff_hunk": "...",
+      "fix": null,
+      "question": "Does fetchNext() guarantee eventual termination?"
     }}
   ]
 }}
 ```
 
-**Important:** Always include `code_context` with ~10 lines around the finding. Include `diff_hunk` if the finding is in changed code, otherwise null.
+**Fix requirements:**
+- `old_string` must match exactly what's in the file
+- `new_string` should be a complete, working replacement
+- Include enough context to make the fix unambiguous
+- Follow the coding style of the existing file
 """
         )
     # WAIT for this wave to complete before starting next wave
@@ -881,19 +932,18 @@ Write to `{BASE_DIR}/report.json`:
       "check": "Is input validated before use?",
       "issue": "User input not validated",
       "evidence": "req.body.id passed directly to query()",
-      "recommendation": "Use parameterized query",
       "reason": "User input from request.body passed directly to SQL query",
       "code_context": {{
         "start_line": 35,
-        "lines": [
-          "function handleRequest(req) {{",
-          "  const id = req.body.id;",
-          "  db.query(`SELECT * FROM users WHERE id = ${{id}}`);",
-          "  return result;",
-          "}}"
-        ]
+        "lines": [...]
       }},
-      "diff_hunk": "@@ -40,6 +42,8 @@\\n function handleRequest(req) {{\\n+  const id = req.body.id;"
+      "diff_hunk": "@@ -40,6 +42,8 @@...",
+      "fix": {{
+        "file": "src/auth.ts",
+        "old_string": "  const id = req.body.id;\\n  db.query(`SELECT * FROM users WHERE id = ${{id}}`);",
+        "new_string": "  const id = req.body.id;\\n  if (!id || typeof id !== 'string') {{\\n    throw new ValidationError('Invalid user ID');\\n  }}\\n  db.query('SELECT * FROM users WHERE id = ?', [id]);",
+        "explanation": "Added input validation and switched to parameterized query"
+      }}
     }},
     {{
       "id": "DP-3",
@@ -1061,7 +1111,7 @@ AskUserQuestion(
       question: "What would you like to do?",
       options: [
         {label: "Open Dashboard", description: "View full review in browser"},
-        {label: "Fix All", description: "Create a plan to fix all issues"},
+        {label: "Fix All", description: "Apply all fixes from confirmed findings"},
         {label: "Done", description: "Exit review"}
       ]
     }
@@ -1128,8 +1178,32 @@ open {BASE_DIR}/dashboard.html
 ```
 
 **If "Fix All":**
-```
-Skill(code-foundations:whiteboarding, args: "Fix review findings from {BASE_DIR}/report.json")
+
+Apply fixes directly from the report:
+
+```python
+report = read_json(f"{BASE_DIR}/report.json")
+confirmed = [f for f in report["findings"] if f["verdict"] == "confirmed" and f.get("fix")]
+
+if not confirmed:
+    print("No confirmed findings with fixes to apply.")
+else:
+    print(f"Applying {len(confirmed)} fixes...")
+
+    for finding in confirmed:
+        fix = finding["fix"]
+        print(f"\n**{finding['id']}** - {fix['file']}")
+        print(f"  {fix['explanation']}")
+
+        # Apply the fix
+        Edit(
+            file_path=fix["file"],
+            old_string=fix["old_string"],
+            new_string=fix["new_string"]
+        )
+
+    print(f"\n✓ Applied {len(confirmed)} fixes")
+    print("Run tests to verify changes.")
 ```
 
 **If "Other":** Handle user's custom request.

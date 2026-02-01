@@ -122,7 +122,7 @@ checklists:
 5. **Check Orchestrate** → Single haiku agent parses checklists, groups by ID prefix, writes prompt + picks skills per group
 6. **Checking** → Parallel sonnet agents (1 per prefix group like `GC-`, `EH-`, loads group-specific skills)
 7. **Orchestrate** → Single haiku agent batches findings, creates investigation tasks
-8. **Investigation** → Parallel sonnet agents (1 per 5 findings), verify and filter
+8. **Investigation** → Parallel sonnet agents (1 per 5 findings, loads implementation skills, provides comprehensive fixes)
 9. **Report** → Single haiku agent compiles findings into JSON report
 
 **Main agent orchestrates** - dispatches all agents directly for true parallelism.
