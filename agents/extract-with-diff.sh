@@ -123,43 +123,55 @@ infer_layer() {
   local filepath="$1"
   local basename="${filepath##*/}"
 
-  # API layer indicators
-  if [[ "$filepath" == *"/api/"* ]] || [[ "$filepath" == *"/routes/"* ]] || \
-     [[ "$filepath" == *"/handlers/"* ]] || [[ "$filepath" == *"/controllers/"* ]]; then
+  # API layer indicators (lowercase and PascalCase for C#)
+  if [[ "$filepath" == *"/api/"* ]] || [[ "$filepath" == *"/Api/"* ]] || \
+     [[ "$filepath" == *"/routes/"* ]] || [[ "$filepath" == *"/Routes/"* ]] || \
+     [[ "$filepath" == *"/handlers/"* ]] || [[ "$filepath" == *"/Handlers/"* ]] || \
+     [[ "$filepath" == *"/controllers/"* ]] || [[ "$filepath" == *"/Controllers/"* ]]; then
     echo "api"
     return
   fi
 
-  # Service layer indicators
-  if [[ "$filepath" == *"/services/"* ]] || [[ "$filepath" == *"/usecases/"* ]]; then
+  # Service layer indicators (lowercase and PascalCase for C#)
+  if [[ "$filepath" == *"/services/"* ]] || [[ "$filepath" == *"/Services/"* ]] || \
+     [[ "$filepath" == *"/usecases/"* ]] || [[ "$filepath" == *"/UseCases/"* ]] || \
+     [[ "$filepath" == *"/use-cases/"* ]] || [[ "$filepath" == *"/App/"* ]]; then
     echo "service"
     return
   fi
 
-  # Domain layer indicators
-  if [[ "$filepath" == *"/domain/"* ]] || [[ "$filepath" == *"/models/"* ]] || \
-     [[ "$filepath" == *"/entities/"* ]]; then
+  # Domain layer indicators (lowercase and PascalCase for C#)
+  if [[ "$filepath" == *"/domain/"* ]] || [[ "$filepath" == *"/Domain/"* ]] || \
+     [[ "$filepath" == *"/models/"* ]] || [[ "$filepath" == *"/Models/"* ]] || \
+     [[ "$filepath" == *"/entities/"* ]] || [[ "$filepath" == *"/Entities/"* ]] || \
+     [[ "$filepath" == *"/Core/"* ]]; then
     echo "domain"
     return
   fi
 
-  # Data layer indicators
-  if [[ "$filepath" == *"/data/"* ]] || [[ "$filepath" == *"/repositories/"* ]] || \
-     [[ "$filepath" == *"/dal/"* ]]; then
+  # Data layer indicators (lowercase and PascalCase for C#)
+  if [[ "$filepath" == *"/data/"* ]] || [[ "$filepath" == *"/Data/"* ]] || \
+     [[ "$filepath" == *"/repositories/"* ]] || [[ "$filepath" == *"/Repositories/"* ]] || \
+     [[ "$filepath" == *"/dal/"* ]] || [[ "$filepath" == *"/persistence/"* ]] || \
+     [[ "$filepath" == *"/Persistence/"* ]]; then
     echo "data"
     return
   fi
 
-  # Infrastructure layer indicators
-  if [[ "$filepath" == *"/infra/"* ]] || [[ "$filepath" == *"/infrastructure/"* ]] || \
-     [[ "$filepath" == *"/providers/"* ]]; then
+  # Infrastructure layer indicators (lowercase and PascalCase for C#)
+  if [[ "$filepath" == *"/infra/"* ]] || [[ "$filepath" == *"/Infra/"* ]] || \
+     [[ "$filepath" == *"/infrastructure/"* ]] || [[ "$filepath" == *"/Infrastructure/"* ]] || \
+     [[ "$filepath" == *"/providers/"* ]] || [[ "$filepath" == *"/Providers/"* ]] || \
+     [[ "$filepath" == *"/Adapters/"* ]] || [[ "$filepath" == *"/adapters/"* ]]; then
     echo "infra"
     return
   fi
 
-  # Test layer
+  # Test layer (lowercase, PascalCase, and C# conventions)
   if [[ "$basename" == *".test."* ]] || [[ "$basename" == *".spec."* ]] || \
-     [[ "$filepath" == *"__tests__"* ]] || [[ "$filepath" == *"/tests/"* ]]; then
+     [[ "$basename" == *"Test."* ]] || [[ "$basename" == *"Tests."* ]] || \
+     [[ "$filepath" == *"__tests__"* ]] || [[ "$filepath" == *"/tests/"* ]] || \
+     [[ "$filepath" == *".Tests."* ]] || [[ "$filepath" == *".Test."* ]]; then
     echo "test"
     return
   fi
