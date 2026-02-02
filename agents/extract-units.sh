@@ -185,7 +185,9 @@ infer_layer() {
   if [[ "$filepath" == *"/infra/"* ]] || [[ "$filepath" == *"/Infra/"* ]] || \
      [[ "$filepath" == *"/infrastructure/"* ]] || [[ "$filepath" == *"/Infrastructure/"* ]] || \
      [[ "$filepath" == *"/providers/"* ]] || [[ "$filepath" == *"/Providers/"* ]] || \
-     [[ "$filepath" == *"/Adapters/"* ]] || [[ "$filepath" == *"/adapters/"* ]]; then
+     [[ "$filepath" == *"/Adapters/"* ]] || [[ "$filepath" == *"/adapters/"* ]] || \
+     [[ "$filepath" == *"/Middleware/"* ]] || [[ "$filepath" == *"/middleware/"* ]] || \
+     [[ "$filepath" == *"/Extensions/"* ]] || [[ "$filepath" == *"/extensions/"* ]]; then
     echo "infra"
     return
   fi
@@ -197,7 +199,9 @@ infer_layer() {
   fi
 
   # Config layer indicators
-  if [[ "$filepath" == *"/config/"* ]] || [[ "$filepath" == *"/configs/"* ]]; then
+  if [[ "$filepath" == *"/config/"* ]] || [[ "$filepath" == *"/configs/"* ]] || \
+     [[ "$filepath" == *"/Config/"* ]] || [[ "$filepath" == *"/Constants/"* ]] || \
+     [[ "$filepath" == *"/constants/"* ]] || [[ "$basename" == *".config."* ]]; then
     echo "config"
     return
   fi
