@@ -141,6 +141,65 @@ is_test_file() {
   return 1
 }
 
+# Infer the unit name being tested from a test file name
+# Returns the inferred unit name, or empty string if not inferrable
+infer_tests_unit() {
+  local filepath="$1"
+  local basename="${filepath##*/}"
+  local name_no_ext="${basename%.*}"  # Remove extension
+
+  # Handle double extensions like .test.ts, .spec.js
+  if [[ "$name_no_ext" == *".test" ]] || [[ "$name_no_ext" == *".spec" ]]; then
+    name_no_ext="${name_no_ext%.*}"
+  fi
+
+  # JS/TS: foo.test.ts → foo, foo.spec.ts → foo
+  if [[ "$basename" == *".test."* ]]; then
+    echo "${basename%.test.*}"
+    return
+  fi
+  if [[ "$basename" == *".spec."* ]]; then
+    echo "${basename%.spec.*}"
+    return
+  fi
+
+  # Python: test_foo.py → foo
+  if [[ "$basename" == test_* ]]; then
+    local without_prefix="${name_no_ext#test_}"
+    echo "$without_prefix"
+    return
+  fi
+
+  # Python: foo_test.py → foo
+  if [[ "$name_no_ext" == *_test ]]; then
+    echo "${name_no_ext%_test}"
+    return
+  fi
+
+  # Java/C#: FooTest.java → Foo, FooTests.cs → Foo
+  if [[ "$name_no_ext" == *Tests ]]; then
+    echo "${name_no_ext%Tests}"
+    return
+  fi
+  if [[ "$name_no_ext" == *Test ]]; then
+    echo "${name_no_ext%Test}"
+    return
+  fi
+
+  # C#: FooSpecs.cs → Foo
+  if [[ "$name_no_ext" == *Specs ]]; then
+    echo "${name_no_ext%Specs}"
+    return
+  fi
+  if [[ "$name_no_ext" == *Spec ]]; then
+    echo "${name_no_ext%Spec}"
+    return
+  fi
+
+  # Could not infer
+  echo ""
+}
+
 # Layer overrides storage (loaded from .code-foundations/layers.yaml)
 # Format: "pattern1:layer1 pattern2:layer2 ..."
 LAYER_OVERRIDES=""
@@ -529,6 +588,12 @@ extract_file() {
   local layer
   layer=$(infer_layer "$file")
 
+  # Infer testsUnit for test files
+  local tests_unit=""
+  if [[ "$is_test" == "true" ]]; then
+    tests_unit=$(infer_tests_unit "$file")
+  fi
+
   # Build JSON output for each definition
   local first=true
   for def in "${unique_defs[@]}"; do
@@ -641,8 +706,15 @@ extract_file() {
     printf ',"calls":%s' "$calls_json"
     printf ',"has_loops":%s,"has_try_catch":%s,"has_async":%s' "$has_loops" "$has_try_catch" "$has_async"
     printf ',"loop_count":%d,"call_count":%d' "$loop_count" "$call_count"
-    printf ',"is_test":%s,"layer":"%s","param_count":%d,"line_count":%d,"has_throw":%s,"has_recursion":%s}' \
+    printf ',"is_test":%s,"layer":"%s","param_count":%d,"line_count":%d,"has_throw":%s,"has_recursion":%s' \
       "$is_test" "$layer" "$param_count" "$line_count" "$has_throw" "$has_recursion"
+
+    # Add tests_unit for test files (only if non-empty)
+    if [[ -n "$tests_unit" ]]; then
+      printf ',"tests_unit":"%s"' "$(json_escape "$tests_unit")"
+    fi
+
+    printf '}'
   done
 }
 

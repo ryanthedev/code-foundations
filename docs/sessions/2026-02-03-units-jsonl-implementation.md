@@ -2,7 +2,7 @@
 
 **Date:** 2026-02-03
 **Branch:** `feat/agent-scripts-batch-mode`
-**Status:** Phase 1-4 complete, orchestrator needs work
+**Status:** Phase 1-5 complete, orchestrator decision pending
 
 ---
 
@@ -37,6 +37,20 @@ Documented 7-step batching algorithm:
 
 ### Phase 4: Wired into /code-foundations:review
 Replaced multi-agent extraction with single script call in both SANITY and PR flows.
+
+### Phase 5: Implemented testsUnit Inference
+Added `infer_tests_unit()` function to `extract-units.sh`:
+- Strips test suffixes from filenames to infer tested unit name
+- Supports multiple conventions:
+  - JS/TS: `foo.test.ts` → `foo`, `foo.spec.ts` → `foo`
+  - Python: `test_foo.py` → `foo`, `foo_test.py` → `foo`
+  - Java: `FooTest.java` → `Foo`
+  - C#: `FooTests.cs` → `Foo`, `FooSpecs.cs` → `Foo`
+- Field flows through `extract-with-diff.sh` to final units.jsonl
+
+**Verified on:**
+- `booking-trip-creation`: `LinkedPnrsControllerTests.cs` → `tests_unit: "LinkedPnrsController"`
+- `PricingAPI`: `QuoteRequestAdapterDpMarketTests.cs` → `tests_unit: "QuoteRequestAdapterDpMarket"`
 
 ---
 
@@ -81,14 +95,8 @@ overrides:
 
 ## Open Issues
 
-### 1. `testsUnit` Not Populated (HIGH)
-The extraction sets `is_test: true` but never populates `testsUnit`.
-This breaks test pairing in the orchestrator (Step 3).
-
-**Options:**
-- Filename convention: `UserService.cs` → `UserServiceTests.cs`
-- Import analysis: Parse what the test imports
-- Heuristic: Match test class name to source class name
+### ~~1. `testsUnit` Not Populated (HIGH)~~ ✅ RESOLVED
+Implemented filename convention approach in Phase 5.
 
 ### 2. Orchestrator is LLM-Based (MEDIUM)
 Using Sonnet to execute algorithmic batching logic is:
@@ -126,7 +134,7 @@ b68f5b0 feat(orchestrate): implement smart batching from units.jsonl
 ## Next Steps
 
 1. **Decide on orchestrator approach** - LLM vs bash vs hybrid
-2. **Implement testsUnit inference** - Enable test pairing
+2. ~~**Implement testsUnit inference** - Enable test pairing~~ ✅ Done
 3. **Test full review flow** - Run `/code-foundations:review --sanity` on a real PR
 4. **Performance benchmark** - Measure extraction time on large repos
 
