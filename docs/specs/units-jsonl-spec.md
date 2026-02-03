@@ -68,7 +68,7 @@ Status: Draft
     "summary":        { "type": "string", "maxLength": 80, "description": "What changed (<10 words)" },
     "lineCount":      { "type": "integer", "description": "Total lines in unit (end - start + 1)" },
 
-    "layer":          { "type": "string", "enum": ["api", "service", "domain", "data", "infra", "test", "config", "unknown"], "description": "Inferred from path" },
+    "layer":          { "type": "string", "enum": ["api", "service", "domain", "data", "integration", "infra", "test", "config", "unknown"], "description": "Inferred from path" },
 
     "visibility":     { "type": "string", "enum": ["public", "private", "protected", "internal", "exported"], "description": "Access modifier" },
     "modifiers":      { "type": "array", "items": { "type": "string" }, "description": "async, static, abstract, final, arrow, decorated" },
@@ -136,13 +136,24 @@ Status: Draft
 | Path Pattern | Layer |
 |-------------|-------|
 | `**/api/**`, `**/routes/**`, `**/handlers/**`, `**/controllers/**` | api |
-| `**/services/**`, `**/usecases/**` | service |
-| `**/domain/**`, `**/models/**`, `**/entities/**` | domain |
-| `**/data/**`, `**/repositories/**`, `**/dal/**` | data |
-| `**/infra/**`, `**/infrastructure/**`, `**/providers/**` | infra |
-| `**/*.test.*`, `**/*.spec.*`, `**/tests/**`, `**/__tests__/**` | test |
-| `**/config/**`, `*.config.*` | config |
+| `**/services/**`, `**/usecases/**`, `**/App/**` | service |
+| `**/domain/**`, `**/models/**`, `**/entities/**`, `**/Core/**` | domain |
+| `**/data/**`, `**/repositories/**`, `**/dal/**`, `**/persistence/**` | data |
+| `**/adapters/**`, `**/providers/**`, `**/clients/**`, `**/gateways/**`, `**/external/**` | integration |
+| `**/infra/**`, `**/infrastructure/**`, `**/middleware/**`, `**/extensions/**`, `**/hosting/**` | infra |
+| `**/*.test.*`, `**/*.spec.*`, `**/tests/**`, `**/__tests__/**`, `**.Tests.**` | test |
+| `**/config/**`, `**/constants/**`, `*.config.*` | config |
 | (default) | unknown |
+
+**Layer definitions:**
+- **api** - HTTP endpoints, request/response handling
+- **service** - Business logic, use cases, application services
+- **domain** - Core business entities, value objects, domain logic
+- **data** - Database access, repositories, persistence
+- **integration** - External system adapters (APIs, message queues, third-party services)
+- **infra** - Cross-cutting concerns (middleware, DI, logging, caching)
+- **test** - Test files
+- **config** - Configuration, constants
 
 ---
 
@@ -265,7 +276,7 @@ function createBatches(units):
     remaining.remove(dirUnits)
 
   # Phase 4: Remaining by layer
-  for layer in ["api", "service", "domain", "data", "infra"]:
+  for layer in ["api", "service", "domain", "data", "integration", "infra"]:
     layerUnits = remaining.filter(u => u.layer == layer)
     batches.add(...chunkByTokens(layerUnits, 4000))
 

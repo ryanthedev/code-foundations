@@ -181,13 +181,22 @@ infer_layer() {
     return
   fi
 
-  # Infrastructure layer indicators (lowercase and PascalCase for C#)
+  # Integration layer - code that talks to external systems (adapters, providers, clients)
+  if [[ "$filepath" == *"/Adapters/"* ]] || [[ "$filepath" == *"/adapters/"* ]] || \
+     [[ "$filepath" == *"/providers/"* ]] || [[ "$filepath" == *"/Providers/"* ]] || \
+     [[ "$filepath" == *"/clients/"* ]] || [[ "$filepath" == *"/Clients/"* ]] || \
+     [[ "$filepath" == *"/gateways/"* ]] || [[ "$filepath" == *"/Gateways/"* ]] || \
+     [[ "$filepath" == *"/external/"* ]] || [[ "$filepath" == *"/External/"* ]]; then
+    echo "integration"
+    return
+  fi
+
+  # Infrastructure layer - HTTP pipeline, DI, cross-cutting concerns
   if [[ "$filepath" == *"/infra/"* ]] || [[ "$filepath" == *"/Infra/"* ]] || \
      [[ "$filepath" == *"/infrastructure/"* ]] || [[ "$filepath" == *"/Infrastructure/"* ]] || \
-     [[ "$filepath" == *"/providers/"* ]] || [[ "$filepath" == *"/Providers/"* ]] || \
-     [[ "$filepath" == *"/Adapters/"* ]] || [[ "$filepath" == *"/adapters/"* ]] || \
      [[ "$filepath" == *"/Middleware/"* ]] || [[ "$filepath" == *"/middleware/"* ]] || \
-     [[ "$filepath" == *"/Extensions/"* ]] || [[ "$filepath" == *"/extensions/"* ]]; then
+     [[ "$filepath" == *"/Extensions/"* ]] || [[ "$filepath" == *"/extensions/"* ]] || \
+     [[ "$filepath" == *"/hosting/"* ]] || [[ "$filepath" == *"/Hosting/"* ]]; then
     echo "infra"
     return
   fi
