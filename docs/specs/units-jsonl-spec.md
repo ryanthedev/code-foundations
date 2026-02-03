@@ -155,6 +155,32 @@ Status: Draft
 - **test** - Test files
 - **config** - Configuration, constants
 
+### Layer Overrides
+
+Projects can override layer detection by creating `.code-foundations/layers.yaml`:
+
+```yaml
+# .code-foundations/layers.yaml
+overrides:
+  # Pattern → layer (checked before defaults)
+  "/Infrastructure/": integration    # This repo puts adapters in Infrastructure/
+  "/Gateway/": api                   # Custom gateway folder = api layer
+  "/Shared/": domain                 # Shared library = domain layer
+```
+
+**Pattern matching:**
+- Patterns are substring matches against the file path
+- Checked in order listed (first match wins)
+- Override patterns are checked before built-in patterns
+
+**Example:** For `booking-trip-creation` where adapters live in `/Infrastructure/`:
+```yaml
+overrides:
+  "/Infrastructure/": integration
+```
+
+This would classify `src/TripCreation/Infrastructure/Adapters/FooAdapter.cs` as `integration` instead of `infra`.
+
 ---
 
 ## 3. Check Skipping Matrix

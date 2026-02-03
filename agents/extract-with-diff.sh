@@ -118,10 +118,86 @@ generate_summary() {
   fi
 }
 
+# Layer overrides storage (loaded from .code-foundations/layers.yaml)
+# Format: "pattern1:layer1 pattern2:layer2 ..."
+LAYER_OVERRIDES=""
+LAYER_OVERRIDES_LOADED=false
+
+# Load layer overrides from repo config file
+load_layer_overrides() {
+  [[ "$LAYER_OVERRIDES_LOADED" == "true" ]] && return
+
+  LAYER_OVERRIDES_LOADED=true
+  local config_file=".code-foundations/layers.yaml"
+
+  [[ ! -f "$config_file" ]] && return
+
+  # Parse YAML overrides section (simple key: value format)
+  # Supports: /Pattern/: layer
+  local in_overrides=false
+  while IFS= read -r line; do
+    # Check for overrides: section
+    if [[ "$line" =~ ^overrides: ]]; then
+      in_overrides=true
+      continue
+    fi
+
+    # Stop at next top-level key
+    if [[ "$in_overrides" == "true" && "$line" =~ ^[a-z] && ! "$line" =~ ^[[:space:]] ]]; then
+      break
+    fi
+
+    # Parse override entries (indented lines with pattern: layer)
+    if [[ "$in_overrides" == "true" && "$line" =~ ^[[:space:]]+(\"[^\"]+\"|\'[^\']+\'|[^:]+):[[:space:]]*([a-z]+) ]]; then
+      local pattern="${BASH_REMATCH[1]}"
+      local layer="${BASH_REMATCH[2]}"
+      # Remove quotes if present
+      pattern="${pattern#\"}"
+      pattern="${pattern%\"}"
+      pattern="${pattern#\'}"
+      pattern="${pattern%\'}"
+      # Trim whitespace
+      pattern="${pattern#"${pattern%%[![:space:]]*}"}"
+      pattern="${pattern%"${pattern##*[![:space:]]}"}"
+      LAYER_OVERRIDES="${LAYER_OVERRIDES}${pattern}:${layer} "
+    fi
+  done < "$config_file"
+}
+
+# Check if filepath matches any layer override
+check_layer_override() {
+  local filepath="$1"
+
+  # Load overrides if not already loaded
+  load_layer_overrides
+
+  [[ -z "$LAYER_OVERRIDES" ]] && return 1
+
+  # Check each override pattern
+  for entry in $LAYER_OVERRIDES; do
+    local pattern="${entry%:*}"
+    local layer="${entry#*:}"
+
+    if [[ "$filepath" == *"$pattern"* ]]; then
+      echo "$layer"
+      return 0
+    fi
+  done
+
+  return 1
+}
+
 # Infer architectural layer from file path
 infer_layer() {
   local filepath="$1"
   local basename="${filepath##*/}"
+
+  # Check repo-specific overrides first
+  local override_layer
+  if override_layer=$(check_layer_override "$filepath"); then
+    echo "$override_layer"
+    return
+  fi
 
   # API layer indicators (lowercase and PascalCase for C#)
   if [[ "$filepath" == *"/api/"* ]] || [[ "$filepath" == *"/Api/"* ]] || \
