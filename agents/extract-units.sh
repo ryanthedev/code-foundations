@@ -1,101 +1,72 @@
 #!/usr/bin/env bash
 #
-# Extract semantic units (functions, classes) from code using tree-sitter CLI.
+# Extract semantic units (functions, classes, methods) from code using ast-grep.
 #
 # Usage:
 #   ./extract-units.sh [--staged | --files file1 file2 | <git-diff-args>]
-#   ./extract-units.sh --status   # Check tree-sitter availability
+#   ./extract-units.sh --status   # Check ast-grep availability
 #
 # Output: JSON with:
 #   - units: extracted functions/classes/etc with full metadata
-#   - fallback_files: files that need LLM extraction (unsupported/missing grammar)
+#   - skipped_files: files with unsupported languages
+#   - sg_available: true if ast-grep is installed
 #
-# If tree-sitter CLI not installed, outputs all files in fallback_files.
+# Requirements: sg (ast-grep), jq
 #
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SG_RULES_DIR="$SCRIPT_DIR/sg-rules"
 
-# Field delimiter (unit separator ASCII 31, won't appear in code)
-DELIM=$'\x1f'
+# =============================================================================
+# Dependency Check
+# =============================================================================
 
-# Check tree-sitter availability
+check_deps() {
+  local missing=""
+
+  if ! command -v sg &>/dev/null; then
+    missing="sg (ast-grep)"
+  fi
+
+  if ! command -v jq &>/dev/null; then
+    if [[ -n "$missing" ]]; then
+      missing="$missing, jq"
+    else
+      missing="jq"
+    fi
+  fi
+
+  if [[ -n "$missing" ]]; then
+    echo "{\"error\": \"Missing required tools: $missing\", \"sg_available\": false}" >&2
+    exit 1
+  fi
+}
+
+# Check status (for --status flag)
 check_status() {
-  local ts_version parsers_count
-
-  if ! command -v tree-sitter &>/dev/null; then
-    echo '{"available": false, "error": "tree-sitter CLI not found. Run: ./scripts/setup-tree-sitter.sh"}'
+  if ! command -v sg &>/dev/null; then
+    echo '{"sg_available": false, "error": "ast-grep (sg) not installed. Run: cargo install ast-grep"}'
     exit 0
   fi
 
-  ts_version=$(tree-sitter --version 2>/dev/null | awk '{print $2}')
+  local sg_version
+  sg_version=$(sg --version 2>/dev/null | head -1)
 
-  # Count available parsers by checking which languages parse successfully
-  parsers_count=0
-  for lang in javascript typescript python go rust java ruby c cpp; do
-    if tree-sitter parse --quiet /dev/null --scope "source.$lang" 2>/dev/null; then
-      ((parsers_count++)) || true
-    fi
+  # Check which rule files exist
+  local rules_found=0
+  for rule in "$SG_RULES_DIR"/*.yaml; do
+    [[ -f "$rule" ]] && ((rules_found++)) || true
   done
 
-  echo "{\"available\": true, \"version\": \"$ts_version\", \"parsers\": $parsers_count}"
+  echo "{\"sg_available\": true, \"version\": \"$sg_version\", \"rules_found\": $rules_found}"
   exit 0
 }
 
-# Grammar directory (where tree-sitter grammars are cloned)
-GRAMMAR_DIR="${TREE_SITTER_GRAMMAR_DIR:-$HOME/repos/tree-sitter-grammars}"
-
-# Get query file based on file extension
-# Prefers custom queries from $SCRIPT_DIR/queries/ over official tags.scm
-get_query_file_for_ext() {
-  local file="$1"
-  local ext="${file##*.}"
-
-  # Map extension to language name
-  local lang_name
-  case "$ext" in
-    js|mjs|cjs|jsx) lang_name="javascript" ;;
-    ts|tsx) lang_name="typescript" ;;
-    py) lang_name="python" ;;
-    go) lang_name="go" ;;
-    rs) lang_name="rust" ;;
-    java) lang_name="java" ;;
-    rb) lang_name="ruby" ;;
-    c|h) lang_name="c" ;;
-    cpp|cc|cxx|hpp) lang_name="cpp" ;;
-    cs) lang_name="csharp" ;;
-    sh|bash) lang_name="bash" ;;
-    swift) lang_name="swift" ;;
-    kt) lang_name="kotlin" ;;
-    *) return ;;  # Unknown extension
-  esac
-
-  # 1. Check for custom query first (preferred)
-  local custom_query="$SCRIPT_DIR/queries/$lang_name.scm"
-  if [[ -f "$custom_query" ]]; then
-    echo "$custom_query"
-    return
-  fi
-
-  # 2. Fall back to official tags.scm from grammar repo
-  local official_tags="$GRAMMAR_DIR/tree-sitter-$lang_name/queries/tags.scm"
-  if [[ -f "$official_tags" ]]; then
-    echo "$official_tags"
-  fi
-}
-
-# JSON-escape a string
-json_escape() {
-  local s="$1"
-  # Escape backslashes, double quotes, and control characters
-  s="${s//\\/\\\\}"
-  s="${s//\"/\\\"}"
-  s="${s//$'\n'/\\n}"
-  s="${s//$'\r'/\\r}"
-  s="${s//$'\t'/\\t}"
-  echo "$s"
-}
+# =============================================================================
+# Helper Functions (preserved from original)
+# =============================================================================
 
 # Determine if a file is a test file based on naming conventions
 is_test_file() {
@@ -142,18 +113,17 @@ is_test_file() {
 }
 
 # Infer the unit name being tested from a test file name
-# Returns the inferred unit name, or empty string if not inferrable
 infer_tests_unit() {
   local filepath="$1"
   local basename="${filepath##*/}"
-  local name_no_ext="${basename%.*}"  # Remove extension
+  local name_no_ext="${basename%.*}"
 
   # Handle double extensions like .test.ts, .spec.js
   if [[ "$name_no_ext" == *".test" ]] || [[ "$name_no_ext" == *".spec" ]]; then
     name_no_ext="${name_no_ext%.*}"
   fi
 
-  # JS/TS: foo.test.ts → foo, foo.spec.ts → foo
+  # JS/TS: foo.test.ts -> foo
   if [[ "$basename" == *".test."* ]]; then
     echo "${basename%.test.*}"
     return
@@ -163,20 +133,20 @@ infer_tests_unit() {
     return
   fi
 
-  # Python: test_foo.py → foo
+  # Python: test_foo.py -> foo
   if [[ "$basename" == test_* ]]; then
     local without_prefix="${name_no_ext#test_}"
     echo "$without_prefix"
     return
   fi
 
-  # Python: foo_test.py → foo
+  # Python: foo_test.py -> foo
   if [[ "$name_no_ext" == *_test ]]; then
     echo "${name_no_ext%_test}"
     return
   fi
 
-  # Java/C#: FooTest.java → Foo, FooTests.cs → Foo
+  # Java/C#: FooTest.java -> Foo, FooTests.cs -> Foo
   if [[ "$name_no_ext" == *Tests ]]; then
     echo "${name_no_ext%Tests}"
     return
@@ -186,7 +156,7 @@ infer_tests_unit() {
     return
   fi
 
-  # C#: FooSpecs.cs → Foo
+  # C#: FooSpecs.cs -> Foo
   if [[ "$name_no_ext" == *Specs ]]; then
     echo "${name_no_ext%Specs}"
     return
@@ -196,12 +166,10 @@ infer_tests_unit() {
     return
   fi
 
-  # Could not infer
   echo ""
 }
 
-# Layer overrides storage (loaded from .code-foundations/layers.yaml)
-# Format: "pattern1:layer1 pattern2:layer2 ..."
+# Layer overrides storage
 LAYER_OVERRIDES=""
 LAYER_OVERRIDES_LOADED=false
 
@@ -214,31 +182,24 @@ load_layer_overrides() {
 
   [[ ! -f "$config_file" ]] && return
 
-  # Parse YAML overrides section (simple key: value format)
-  # Supports: /Pattern/: layer
   local in_overrides=false
   while IFS= read -r line; do
-    # Check for overrides: section
     if [[ "$line" =~ ^overrides: ]]; then
       in_overrides=true
       continue
     fi
 
-    # Stop at next top-level key
     if [[ "$in_overrides" == "true" && "$line" =~ ^[a-z] && ! "$line" =~ ^[[:space:]] ]]; then
       break
     fi
 
-    # Parse override entries (indented lines with pattern: layer)
     if [[ "$in_overrides" == "true" && "$line" =~ ^[[:space:]]+(\"[^\"]+\"|\'[^\']+\'|[^:]+):[[:space:]]*([a-z]+) ]]; then
       local pattern="${BASH_REMATCH[1]}"
       local layer="${BASH_REMATCH[2]}"
-      # Remove quotes if present
       pattern="${pattern#\"}"
       pattern="${pattern%\"}"
       pattern="${pattern#\'}"
       pattern="${pattern%\'}"
-      # Trim whitespace
       pattern="${pattern#"${pattern%%[![:space:]]*}"}"
       pattern="${pattern%"${pattern##*[![:space:]]}"}"
       LAYER_OVERRIDES="${LAYER_OVERRIDES}${pattern}:${layer} "
@@ -250,12 +211,10 @@ load_layer_overrides() {
 check_layer_override() {
   local filepath="$1"
 
-  # Load overrides if not already loaded
   load_layer_overrides
 
   [[ -z "$LAYER_OVERRIDES" ]] && return 1
 
-  # Check each override pattern
   for entry in $LAYER_OVERRIDES; do
     local pattern="${entry%:*}"
     local layer="${entry#*:}"
@@ -281,7 +240,13 @@ infer_layer() {
     return
   fi
 
-  # API layer indicators (lowercase and PascalCase for C#)
+  # Test layer - check FIRST since test files have specific naming that overrides path
+  if is_test_file "$filepath"; then
+    echo "test"
+    return
+  fi
+
+  # API layer indicators
   if [[ "$filepath" == *"/api/"* ]] || [[ "$filepath" == *"/Api/"* ]] || \
      [[ "$filepath" == *"/routes/"* ]] || [[ "$filepath" == *"/Routes/"* ]] || \
      [[ "$filepath" == *"/handlers/"* ]] || [[ "$filepath" == *"/Handlers/"* ]] || \
@@ -290,7 +255,7 @@ infer_layer() {
     return
   fi
 
-  # Service layer indicators (lowercase and PascalCase for C#)
+  # Service layer indicators
   if [[ "$filepath" == *"/services/"* ]] || [[ "$filepath" == *"/Services/"* ]] || \
      [[ "$filepath" == *"/usecases/"* ]] || [[ "$filepath" == *"/UseCases/"* ]] || \
      [[ "$filepath" == *"/use-cases/"* ]] || [[ "$filepath" == *"/App/"* ]]; then
@@ -298,7 +263,7 @@ infer_layer() {
     return
   fi
 
-  # Domain layer indicators (lowercase and PascalCase for C#)
+  # Domain layer indicators
   if [[ "$filepath" == *"/domain/"* ]] || [[ "$filepath" == *"/Domain/"* ]] || \
      [[ "$filepath" == *"/models/"* ]] || [[ "$filepath" == *"/Models/"* ]] || \
      [[ "$filepath" == *"/entities/"* ]] || [[ "$filepath" == *"/Entities/"* ]] || \
@@ -307,7 +272,7 @@ infer_layer() {
     return
   fi
 
-  # Data layer indicators (lowercase and PascalCase for C#)
+  # Data layer indicators
   if [[ "$filepath" == *"/data/"* ]] || [[ "$filepath" == *"/Data/"* ]] || \
      [[ "$filepath" == *"/repositories/"* ]] || [[ "$filepath" == *"/Repositories/"* ]] || \
      [[ "$filepath" == *"/dal/"* ]] || [[ "$filepath" == *"/persistence/"* ]] || \
@@ -316,7 +281,7 @@ infer_layer() {
     return
   fi
 
-  # Integration layer - code that talks to external systems (adapters, providers, clients)
+  # Integration layer
   if [[ "$filepath" == *"/Adapters/"* ]] || [[ "$filepath" == *"/adapters/"* ]] || \
      [[ "$filepath" == *"/providers/"* ]] || [[ "$filepath" == *"/Providers/"* ]] || \
      [[ "$filepath" == *"/clients/"* ]] || [[ "$filepath" == *"/Clients/"* ]] || \
@@ -326,19 +291,13 @@ infer_layer() {
     return
   fi
 
-  # Infrastructure layer - HTTP pipeline, DI, cross-cutting concerns
+  # Infrastructure layer
   if [[ "$filepath" == *"/infra/"* ]] || [[ "$filepath" == *"/Infra/"* ]] || \
      [[ "$filepath" == *"/infrastructure/"* ]] || [[ "$filepath" == *"/Infrastructure/"* ]] || \
      [[ "$filepath" == *"/Middleware/"* ]] || [[ "$filepath" == *"/middleware/"* ]] || \
      [[ "$filepath" == *"/Extensions/"* ]] || [[ "$filepath" == *"/extensions/"* ]] || \
      [[ "$filepath" == *"/hosting/"* ]] || [[ "$filepath" == *"/Hosting/"* ]]; then
     echo "infra"
-    return
-  fi
-
-  # Test layer (checked after specific layers)
-  if is_test_file "$filepath"; then
-    echo "test"
     return
   fi
 
@@ -350,419 +309,675 @@ infer_layer() {
     return
   fi
 
-  if [[ "$basename" == *".config."* ]]; then
-    echo "config"
-    return
-  fi
-
-  # Default
   echo "unknown"
 }
 
-# Extract units from a single file using comprehensive AST parsing
-extract_file() {
+# =============================================================================
+# Language Detection
+# =============================================================================
+
+# Map file extension to ast-grep language and rule file
+get_language_info() {
   local file="$1"
-  local query_file
+  local ext="${file##*.}"
 
-  query_file=$(get_query_file_for_ext "$file")
-  [[ -z "$query_file" ]] && return
+  case "$ext" in
+    cs)
+      echo "csharp:$SG_RULES_DIR/csharp.yaml"
+      ;;
+    ts|tsx)
+      echo "typescript:$SG_RULES_DIR/typescript.yaml"
+      ;;
+    js|jsx|mjs|cjs)
+      echo "typescript:$SG_RULES_DIR/typescript.yaml"
+      ;;
+    py)
+      echo "python:$SG_RULES_DIR/python.yaml"
+      ;;
+    go)
+      echo "go:$SG_RULES_DIR/go.yaml"
+      ;;
+    swift)
+      echo "swift:$SG_RULES_DIR/swift.yaml"
+      ;;
+    *)
+      echo ""
+      ;;
+  esac
+}
 
-  # Parse tree-sitter query output
-  local output
-  output=$(tree-sitter query "$query_file" "$file" 2>/dev/null) || return
+# =============================================================================
+# Unit Extraction
+# =============================================================================
 
-  # Track definitions: each entry uses DELIM as separator
-  # Format: "start${DELIM}end${DELIM}type${DELIM}name${DELIM}params${DELIM}return_type${DELIM}visibility${DELIM}modifiers"
-  local definitions=()
+# Map rule ID to unit type
+map_rule_to_type() {
+  local rule_id="$1"
 
-  # Track pattern captures for characteristics: "pattern_type${DELIM}start${DELIM}end"
-  local patterns=()
+  case "$rule_id" in
+    # C#
+    cs-method|cs-async-method) echo "method" ;;
+    cs-class|cs-primary-constructor) echo "class" ;;
+    cs-interface) echo "interface" ;;
+    cs-constructor|cs-partial-constructor) echo "constructor" ;;
+    cs-property|cs-partial-property) echo "property" ;;
+    cs-record) echo "class" ;;
+    cs-enum) echo "class" ;;
+    cs-operator|cs-compound-assignment-op|cs-conversion-operator) echo "method" ;;
+    cs-local-function) echo "function" ;;
+    cs-delegate) echo "interface" ;;
+    cs-struct|cs-inline-array) echo "class" ;;
+    cs-event|cs-partial-event) echo "field" ;;
+    cs-indexer) echo "property" ;;
+    cs-ref-readonly-param) echo "" ;;  # Skip - not a unit
 
-  # Track call names: "start${DELIM}name"
-  local call_names=()
+    # TypeScript
+    ts-function) echo "function" ;;
+    ts-arrow-const|ts-arrow-let) echo "function" ;;
+    ts-method) echo "method" ;;
+    ts-class) echo "class" ;;
+    ts-interface) echo "interface" ;;
 
-  # Current parsing state
-  local current_def_start="" current_def_end="" current_def_type=""
-  local current_name="" current_params="" current_return_type=""
-  local current_visibility="" current_modifiers=""
+    # Python
+    py-function|py-function-typed|py-async-function) echo "function" ;;
+    py-method|py-method-typed|py-async-method) echo "method" ;;
+    py-class|py-class-with-bases) echo "class" ;;
+    py-decorated) echo "" ;;  # Skip - handled by underlying def
+    py-has-*) echo "" ;;  # Skip - characteristic markers
 
-  # Parse the output line by line
-  while IFS= read -r line; do
-    # New pattern starts
-    if [[ "$line" =~ ^[[:space:]]*pattern:[[:space:]]*([0-9]+) ]]; then
-      # Save previous definition if complete
-      if [[ -n "$current_def_start" && -n "$current_name" ]]; then
-        definitions+=("${current_def_start}${DELIM}${current_def_end}${DELIM}${current_def_type}${DELIM}${current_name}${DELIM}${current_params}${DELIM}${current_return_type}${DELIM}${current_visibility}${DELIM}${current_modifiers}")
+    # Go
+    go-function) echo "function" ;;
+    go-method) echo "method" ;;
+    go-struct) echo "class" ;;
+    go-interface) echo "interface" ;;
+    go-has-*) echo "" ;;  # Skip - characteristic markers
+
+    # Swift
+    swift-function|swift-throwing-function|swift-public-function|swift-private-function) echo "function" ;;
+    swift-class|swift-class-with-inheritance) echo "class" ;;
+    swift-struct) echo "class" ;;
+    swift-protocol) echo "interface" ;;
+    swift-extension) echo "class" ;;
+    swift-enum) echo "class" ;;
+    swift-actor) echo "class" ;;
+    swift-typealias) echo "" ;;  # Skip type aliases
+    swift-init) echo "constructor" ;;
+    swift-deinit) echo "method" ;;
+    swift-closure) echo "" ;;  # Skip inline closures
+    swift-property) echo "property" ;;
+
+    *) echo "" ;;
+  esac
+}
+
+# Extract visibility from rule ID
+extract_visibility() {
+  local rule_id="$1"
+
+  case "$rule_id" in
+    *-public-*|swift-public-function) echo "public" ;;
+    *-private-*|swift-private-function) echo "private" ;;
+    *) echo "null" ;;
+  esac
+}
+
+# Check if rule indicates async
+is_async_rule() {
+  local rule_id="$1"
+  case "$rule_id" in
+    cs-async-method|py-async-function|py-async-method)
+      return 0
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+}
+
+# Check for loops in source text
+has_loops() {
+  local source="$1"
+  local lang="$2"
+
+  case "$lang" in
+    csharp|typescript)
+      if [[ "$source" =~ (for[[:space:]]*\(|foreach[[:space:]]*\(|while[[:space:]]*\(|do[[:space:]]*\{) ]]; then
+        return 0
       fi
-
-      # Reset for new pattern
-      current_def_start="" current_def_end="" current_def_type=""
-      current_name="" current_params="" current_return_type=""
-      current_visibility="" current_modifiers=""
-      continue
-    fi
-
-    # Parse capture lines
-    # Format: "    capture: definition.function.exported.async, start: (2, 0), end: (13, 1)"
-    # Also handles numbered format: "    capture: 4 - definition.function.exported.async, start: (0, 0), end: (0, 40)"
-    if [[ "$line" =~ capture:\ ([0-9]+\ -\ )?([^,]+),\ start:\ \(([0-9]+),\ [0-9]+\),\ end:\ \(([0-9]+), ]]; then
-      local capture_name="${BASH_REMATCH[2]}"
-      local start_row="${BASH_REMATCH[3]}"
-      local end_row="${BASH_REMATCH[4]}"
-
-      # Convert 0-indexed to 1-indexed
-      local start_line=$((start_row + 1))
-      local end_line=$((end_row + 1))
-
-      # Check for definition captures
-      if [[ "$capture_name" =~ ^definition\. ]]; then
-        current_def_start="$start_line"
-        current_def_end="$end_line"
-
-        # Parse type and modifiers from capture name
-        local parts="${capture_name#definition.}"
-        local base_type="${parts%%.*}"
-        current_def_type="$base_type"
-
-        # Extract visibility and modifiers
-        current_visibility=""
-        if [[ "$parts" == *".exported"* ]]; then
-          current_visibility="exported"
-        elif [[ "$parts" == *".private"* ]]; then
-          current_visibility="private"
-        elif [[ "$parts" == *".public"* ]]; then
-          current_visibility="public"
-        fi
-
-        current_modifiers=""
-        if [[ "$parts" == *".async"* ]]; then
-          current_modifiers="${current_modifiers}async,"
-        fi
-        if [[ "$parts" == *".static"* ]]; then
-          current_modifiers="${current_modifiers}static,"
-        fi
-        if [[ "$parts" == *".arrow"* ]]; then
-          current_modifiers="${current_modifiers}arrow,"
-        fi
-        if [[ "$parts" == *".decorated"* ]]; then
-          current_modifiers="${current_modifiers}decorated,"
-        fi
-        current_modifiers="${current_modifiers%,}"
-
-      # Check for pattern captures (characteristics)
-      elif [[ "$capture_name" =~ ^(pattern\.|[0-9]+\ -\ pattern\.) ]]; then
-        local pattern_type
-        if [[ "$capture_name" =~ pattern\.([a-z_]+) ]]; then
-          pattern_type="${BASH_REMATCH[1]}"
-          patterns+=("${pattern_type}${DELIM}${start_line}${DELIM}${end_line}")
-        fi
+      ;;
+    python)
+      if [[ "$source" =~ (for[[:space:]]|while[[:space:]]) ]]; then
+        return 0
       fi
-    fi
+      ;;
+    go)
+      if [[ "$source" =~ for[[:space:]] ]]; then
+        return 0
+      fi
+      ;;
+    swift)
+      if [[ "$source" =~ (for[[:space:]]|while[[:space:]]) ]]; then
+        return 0
+      fi
+      ;;
+  esac
+  return 1
+}
 
-    # Parse named captures with text (with number prefix)
-    # Format: "    capture: 0 - name, start: (2, 22), end: (2, 33), text: `processUser`"
-    if [[ "$line" =~ capture:\ [0-9]+\ -\ ([^,]+),.*text:\ \`([^\`]*)\` ]]; then
-      local field_name="${BASH_REMATCH[1]}"
-      local field_text="${BASH_REMATCH[2]}"
+# Check for try-catch in source text
+has_try_catch() {
+  local source="$1"
+  local lang="$2"
 
-      case "$field_name" in
-        name) current_name="$field_text" ;;
-        params) current_params="$field_text" ;;
-        return_type) current_return_type="$field_text" ;;
-        call.name)
-          # Extract start line from the line for correlation
-          if [[ "$line" =~ start:\ \(([0-9]+), ]]; then
-            local call_start=$(( ${BASH_REMATCH[1]} + 1 ))
-            call_names+=("${call_start}${DELIM}${field_text}")
-          fi
-          ;;
-      esac
-    fi
+  case "$lang" in
+    csharp|typescript)
+      if [[ "$source" =~ try[[:space:]]*\{ ]]; then
+        return 0
+      fi
+      ;;
+    python)
+      if [[ "$source" =~ try: ]]; then
+        return 0
+      fi
+      ;;
+    go)
+      # Go uses defer/recover pattern
+      if [[ "$source" =~ recover\( ]]; then
+        return 0
+      fi
+      ;;
+    swift)
+      if [[ "$source" =~ (do[[:space:]]*\{|try[[:space:]]) ]]; then
+        return 0
+      fi
+      ;;
+  esac
+  return 1
+}
 
-    # Also check for named captures without number prefix (fallback)
-    # Format: "    capture: name, start: (2, 22), end: (2, 33), text: `processUser`"
-    if [[ "$line" =~ capture:\ (name|params|return_type),\ start:.*text:\ \`([^\`]*)\` ]]; then
-      local field_name="${BASH_REMATCH[1]}"
-      local field_text="${BASH_REMATCH[2]}"
+# Check for async patterns in source text
+has_async() {
+  local source="$1"
+  local lang="$2"
 
-      case "$field_name" in
-        name) [[ -z "$current_name" ]] && current_name="$field_text" ;;
-        params) [[ -z "$current_params" ]] && current_params="$field_text" ;;
-        return_type) [[ -z "$current_return_type" ]] && current_return_type="$field_text" ;;
-      esac
-    fi
+  case "$lang" in
+    csharp)
+      if [[ "$source" =~ (async[[:space:]]|await[[:space:]]) ]]; then
+        return 0
+      fi
+      ;;
+    typescript)
+      if [[ "$source" =~ (async[[:space:]]|await[[:space:]]|Promise) ]]; then
+        return 0
+      fi
+      ;;
+    python)
+      if [[ "$source" =~ (async[[:space:]]def|await[[:space:]]) ]]; then
+        return 0
+      fi
+      ;;
+    go)
+      if [[ "$source" =~ go[[:space:]] ]]; then
+        return 0
+      fi
+      ;;
+    swift)
+      if [[ "$source" =~ (async[[:space:]]|await[[:space:]]) ]]; then
+        return 0
+      fi
+      ;;
+  esac
+  return 1
+}
 
-  done <<< "$output"
+# Check for throw statements
+has_throw() {
+  local source="$1"
+  local lang="$2"
 
-  # Save last definition if any
-  if [[ -n "$current_def_start" && -n "$current_name" ]]; then
-    definitions+=("${current_def_start}${DELIM}${current_def_end}${DELIM}${current_def_type}${DELIM}${current_name}${DELIM}${current_params}${DELIM}${current_return_type}${DELIM}${current_visibility}${DELIM}${current_modifiers}")
+  case "$lang" in
+    csharp|typescript)
+      if [[ "$source" =~ throw[[:space:]] ]]; then
+        return 0
+      fi
+      ;;
+    python)
+      if [[ "$source" =~ raise[[:space:]] ]]; then
+        return 0
+      fi
+      ;;
+    go)
+      if [[ "$source" =~ panic\( ]]; then
+        return 0
+      fi
+      ;;
+    swift)
+      if [[ "$source" =~ throw[[:space:]] ]]; then
+        return 0
+      fi
+      ;;
+  esac
+  return 1
+}
+
+# Extract function calls from source (simple regex approach)
+extract_calls() {
+  local source="$1"
+  local lang="$2"
+
+  # Extract function/method call names from BODY only (skip first line which is the signature)
+  # This avoids counting the function definition itself as a call
+  local body
+  body=$(echo "$source" | tail -n +2)
+
+  # Match: word( patterns (function calls)
+  local calls=""
+  calls=$(echo "$body" | grep -oE '\b[a-zA-Z_][a-zA-Z0-9_]*\s*\(' | sed 's/[[:space:]]*($//' | sort -u | head -20 | tr '\n' ',' | sed 's/,$//')
+
+  echo "$calls"
+}
+
+# Check for recursion (function calls itself)
+has_recursion() {
+  local name="$1"
+  local calls="$2"
+
+  if [[ ",$calls," == *",$name,"* ]]; then
+    return 0
   fi
+  return 1
+}
 
-  # Deduplicate definitions:
-  # 1. Remove entries where one definition contains another with same name (keep outer)
-  # 2. For exact duplicates (same start/end/name), keep the one with more modifiers
-  local unique_defs=()
+# Count parameters from parameter string
+count_params() {
+  local params="$1"
 
-  # Guard for empty definitions
-  if [[ ${#definitions[@]} -eq 0 ]]; then
+  # Remove parentheses and whitespace
+  params="${params//[()]/}"
+  params="${params#"${params%%[![:space:]]*}"}"
+  params="${params%"${params##*[![:space:]]}"}"
+
+  if [[ -z "$params" ]]; then
+    echo 0
     return
   fi
 
-  for def in "${definitions[@]}"; do
-    local start end type name params return_type visibility modifiers
-    IFS="$DELIM" read -r start end type name params return_type visibility modifiers <<< "$def"
+  # Count commas + 1
+  local count
+  count=$(($(echo "$params" | tr -cd ',' | wc -c) + 1))
+  echo "$count"
+}
 
-    # Check if this definition is contained within or duplicates another
-    local dominated=false
-    local replace_idx=-1
+# Extract modifiers from source
+extract_modifiers() {
+  local source="$1"
+  local lang="$2"
+  local is_async="$3"
 
-    if [[ ${#unique_defs[@]} -gt 0 ]]; then
-      local idx=0
-      for existing in "${unique_defs[@]}"; do
-        local ex_start ex_end ex_type ex_name ex_params ex_return ex_vis ex_mods
-        IFS="$DELIM" read -r ex_start ex_end ex_type ex_name ex_params ex_return ex_vis ex_mods <<< "$existing"
+  local mods=""
 
-        if [[ "$name" == "$ex_name" ]]; then
-          # Exact same range - keep one with more metadata
-          if (( start == ex_start && end == ex_end )); then
-            # Count fields: modifiers + visibility
-            local new_score=0 old_score=0
-            [[ -n "$modifiers" ]] && new_score=$((new_score + 1))
-            [[ -n "$visibility" ]] && new_score=$((new_score + 1))
-            [[ -n "$ex_mods" ]] && old_score=$((old_score + 1))
-            [[ -n "$ex_vis" ]] && old_score=$((old_score + 1))
+  # Add async if detected
+  if [[ "$is_async" == "true" ]]; then
+    mods="async"
+  fi
 
-            if (( new_score > old_score )); then
-              replace_idx=$idx
-            else
-              dominated=true
-            fi
-            break
-          fi
+  case "$lang" in
+    csharp)
+      [[ "$source" =~ static[[:space:]] ]] && mods="${mods:+$mods,}static"
+      [[ "$source" =~ abstract[[:space:]] ]] && mods="${mods:+$mods,}abstract"
+      [[ "$source" =~ virtual[[:space:]] ]] && mods="${mods:+$mods,}virtual"
+      [[ "$source" =~ override[[:space:]] ]] && mods="${mods:+$mods,}override"
+      [[ "$source" =~ sealed[[:space:]] ]] && mods="${mods:+$mods,}sealed"
+      [[ "$source" =~ partial[[:space:]] ]] && mods="${mods:+$mods,}partial"
+      ;;
+    typescript)
+      [[ "$source" =~ static[[:space:]] ]] && mods="${mods:+$mods,}static"
+      [[ "$source" =~ =\> ]] && mods="${mods:+$mods,}arrow"
+      [[ "$source" =~ export[[:space:]] ]] && mods="${mods:+$mods,}exported"
+      ;;
+    python)
+      [[ "$source" =~ @staticmethod ]] && mods="${mods:+$mods,}static"
+      [[ "$source" =~ @classmethod ]] && mods="${mods:+$mods,}classmethod"
+      [[ "$source" =~ @property ]] && mods="${mods:+$mods,}property"
+      [[ "$source" =~ ^@[a-zA-Z] ]] && mods="${mods:+$mods,}decorated"
+      ;;
+    go)
+      # Go doesn't have traditional modifiers
+      ;;
+    swift)
+      [[ "$source" =~ static[[:space:]] ]] && mods="${mods:+$mods,}static"
+      [[ "$source" =~ class[[:space:]]func ]] && mods="${mods:+$mods,}class"
+      [[ "$source" =~ mutating[[:space:]] ]] && mods="${mods:+$mods,}mutating"
+      [[ "$source" =~ @objc ]] && mods="${mods:+$mods,}objc"
+      ;;
+  esac
 
-          # This one is contained within existing -> skip it
-          if (( start >= ex_start && end <= ex_end )); then
-            dominated=true
-            break
-          fi
+  echo "$mods"
+}
 
-          # This one contains existing -> will replace
-          if (( start <= ex_start && end >= ex_end )); then
-            replace_idx=$idx
-            break
-          fi
-        fi
-        ((idx++))
-      done
+# Build JSON array from comma-separated string
+to_json_array() {
+  local items="$1"
+
+  if [[ -z "$items" ]]; then
+    echo "[]"
+    return
+  fi
+
+  local result="["
+  local first=true
+
+  IFS=',' read -ra arr <<< "$items"
+  for item in "${arr[@]}"; do
+    item="${item#"${item%%[![:space:]]*}"}"
+    item="${item%"${item##*[![:space:]]}"}"
+    [[ -z "$item" ]] && continue
+
+    if [[ "$first" != "true" ]]; then
+      result+=","
     fi
-
-    [[ "$dominated" == "true" ]] && continue
-
-    # Replace existing entry if found
-    if (( replace_idx >= 0 )); then
-      unique_defs[$replace_idx]="$def"
-    else
-      unique_defs+=("$def")
-    fi
+    # Escape quotes in item
+    item="${item//\\/\\\\}"
+    item="${item//\"/\\\"}"
+    result+="\"$item\""
+    first=false
   done
 
-  # Sort definitions by start line (simple bubble sort for small arrays)
-  local n=${#unique_defs[@]}
-  for ((i = 0; i < n - 1; i++)); do
-    for ((j = 0; j < n - i - 1; j++)); do
-      local start_j start_j1
-      IFS="$DELIM" read -r start_j _ <<< "${unique_defs[$j]}"
-      IFS="$DELIM" read -r start_j1 _ <<< "${unique_defs[$((j + 1))]}"
-      if (( start_j > start_j1 )); then
-        local tmp="${unique_defs[$j]}"
-        unique_defs[$j]="${unique_defs[$((j + 1))]}"
-        unique_defs[$((j + 1))]="$tmp"
-      fi
-    done
-  done
+  result+="]"
+  echo "$result"
+}
 
-  # File-level calculations
+# Extract units from a single file using ast-grep
+extract_file() {
+  local file="$1"
+  local lang_info
+
+  lang_info=$(get_language_info "$file")
+  [[ -z "$lang_info" ]] && return
+
+  local lang="${lang_info%%:*}"
+  local rules_file="${lang_info#*:}"
+
+  [[ ! -f "$rules_file" ]] && return
+
+  # Run ast-grep with --json output
+  local sg_output
+  sg_output=$(sg scan --rule "$rules_file" "$file" --json 2>/dev/null) || return
+
+  # Parse JSON output and transform to our schema
+  # sg outputs an array of matches
+
+  # Get file-level metadata
   local is_test=false
   is_test_file "$file" && is_test=true
+
   local layer
   layer=$(infer_layer "$file")
 
-  # Infer testsUnit for test files
   local tests_unit=""
   if [[ "$is_test" == "true" ]]; then
     tests_unit=$(infer_tests_unit "$file")
   fi
 
-  # Build JSON output for each definition
-  local first=true
-  for def in "${unique_defs[@]}"; do
-    local start end type name params return_type visibility modifiers
-    IFS="$DELIM" read -r start end type name params return_type visibility modifiers <<< "$def"
+  # Process each match from sg output
+  # Use jq to parse and transform, then enrich with bash-computed fields
+  echo "$sg_output" | jq -c --arg file "$file" --arg lang "$lang" \
+    --argjson is_test "$is_test" --arg layer "$layer" --arg tests_unit "$tests_unit" '
+    # Input is array of matches
+    [.[] | select(.ruleId != null) | {
+      ruleId: .ruleId,
+      text: .text,
+      range: .range,
+      metaVariables: (.metaVariables // {})
+    }]
+  ' | jq -c '.[]' | while IFS= read -r match; do
+    # Parse each match
+    local rule_id text start_line end_line meta_vars
+    rule_id=$(echo "$match" | jq -r '.ruleId')
+    text=$(echo "$match" | jq -r '.text')
+    start_line=$(echo "$match" | jq -r '.range.start.line')
+    end_line=$(echo "$match" | jq -r '.range.end.line')
+    meta_vars=$(echo "$match" | jq -c '.metaVariables')
 
-    # Definition-level calculations
-    local param_count=0
-    # Remove parentheses and whitespace for empty check
-    local params_trimmed="${params//[()[:space:]]/}"
-    if [[ -n "$params_trimmed" ]]; then
-      param_count=$(($(printf '%s' "$params" | tr -cd ',' | wc -c) + 1))
+    # Map rule to type
+    local unit_type
+    unit_type=$(map_rule_to_type "$rule_id")
+    [[ -z "$unit_type" ]] && continue
+
+    # Convert 0-indexed to 1-indexed
+    start_line=$((start_line + 1))
+    end_line=$((end_line + 1))
+
+    # Extract name from metaVariables
+    # ast-grep structure: {single: {NAME: {text: "name"}, PARAMS: {...}}, multi: {...}}
+    local name=""
+    name=$(echo "$meta_vars" | jq -r '
+      if .single.NAME.text then .single.NAME.text
+      elif .NAME.text then .NAME.text
+      else ""
+      end
+    ')
+
+    # Fallback: try to extract name from text for rules that might not capture it
+    if [[ -z "$name" || "$name" == "null" ]]; then
+      case "$rule_id" in
+        ts-function)
+          name=$(echo "$text" | grep -oE 'function[[:space:]]+([a-zA-Z_][a-zA-Z0-9_]*)' | head -1 | awk '{print $2}')
+          ;;
+        ts-class)
+          name=$(echo "$text" | grep -oE 'class[[:space:]]+([a-zA-Z_][a-zA-Z0-9_]*)' | head -1 | awk '{print $2}')
+          ;;
+        ts-interface)
+          name=$(echo "$text" | grep -oE 'interface[[:space:]]+([a-zA-Z_][a-zA-Z0-9_]*)' | head -1 | awk '{print $2}')
+          ;;
+        swift-init)
+          name="init"
+          ;;
+        swift-deinit)
+          name="deinit"
+          ;;
+        *)
+          # Generic fallback - get first word-like identifier
+          name=$(echo "$text" | head -1 | grep -oE '\b[a-zA-Z_][a-zA-Z0-9_]*' | head -1)
+          ;;
+      esac
     fi
 
-    local line_count=$((end - start + 1))
+    [[ -z "$name" || "$name" == "null" ]] && continue
 
-    # Count characteristics within this definition's line range
-    local loop_count=0 try_catch_count=0 async_count=0 call_count=0 throw_count=0
+    # Extract params
+    # ast-grep structure: {single: {PARAMS: {text: "(params)"}}}
+    local params=""
+    params=$(echo "$meta_vars" | jq -r '
+      if .single.PARAMS.text then .single.PARAMS.text
+      elif .PARAMS.text then .PARAMS.text
+      else ""
+      end
+    ')
+    [[ "$params" == "null" ]] && params=""
 
-    if [[ ${#patterns[@]} -gt 0 ]]; then
-      for pattern in "${patterns[@]}"; do
-        local ptype pstart pend
-        IFS="$DELIM" read -r ptype pstart pend <<< "$pattern"
-        if (( pstart >= start && pstart <= end )); then
-          case "$ptype" in
-            loop) ((loop_count++)) ;;
-            try_catch) ((try_catch_count++)) ;;
-            async) ((async_count++)) ;;
-            call) ((call_count++)) ;;
-            throw) ((throw_count++)) ;;
-          esac
-        fi
-      done
+    # Extract return type
+    # ast-grep structure: {single: {RET: {text: "return_type"}, TYPE: {text: "type"}}}
+    local return_type=""
+    return_type=$(echo "$meta_vars" | jq -r '
+      if .single.RET.text then .single.RET.text
+      elif .RET.text then .RET.text
+      elif .single.TYPE.text then .single.TYPE.text
+      elif .TYPE.text then .TYPE.text
+      else ""
+      end
+    ')
+    [[ "$return_type" == "null" ]] && return_type=""
+
+    # Compute characteristics
+    local line_count=$((end_line - start_line + 1))
+    local param_count
+    param_count=$(count_params "$params")
+
+    # Visibility
+    local visibility
+    visibility=$(extract_visibility "$rule_id")
+
+    # Check for C# visibility modifiers in source
+    if [[ "$visibility" == "null" && "$lang" == "csharp" ]]; then
+      if [[ "$text" =~ public[[:space:]] ]]; then
+        visibility="public"
+      elif [[ "$text" =~ private[[:space:]] ]]; then
+        visibility="private"
+      elif [[ "$text" =~ protected[[:space:]] ]]; then
+        visibility="protected"
+      elif [[ "$text" =~ internal[[:space:]] ]]; then
+        visibility="internal"
+      fi
     fi
 
-    # Collect unique call names within this definition and detect recursion
-    local calls_json="["
-    local calls_first=true
-    local seen_calls=""
-    local has_recursion=false
-    if [[ ${#call_names[@]} -gt 0 ]]; then
-      for call_entry in "${call_names[@]}"; do
-        local cstart cname
-        IFS="$DELIM" read -r cstart cname <<< "$call_entry"
-        if (( cstart >= start && cstart <= end )); then
-          # Check for recursion
-          if [[ "$cname" == "$name" ]]; then
-            has_recursion=true
-          fi
-
-          if [[ "$seen_calls" != *"${DELIM}${cname}${DELIM}"* ]]; then
-            seen_calls="${seen_calls}${DELIM}${cname}${DELIM}"
-            if [[ "$calls_first" != "true" ]]; then
-              calls_json+=","
-            fi
-            calls_json+="\"$(json_escape "$cname")\""
-            calls_first=false
-          fi
-        fi
-      done
-    fi
-    calls_json+="]"
-
-    # Build modifiers array
-    local modifiers_json="[]"
-    if [[ -n "$modifiers" ]]; then
-      modifiers_json="["
-      local mods_first=true
-      IFS=',' read -ra mods <<< "$modifiers"
-      for m in "${mods[@]}"; do
-        if [[ -n "$m" ]]; then
-          if [[ "$mods_first" != "true" ]]; then
-            modifiers_json+=","
-          fi
-          modifiers_json+="\"$m\""
-          mods_first=false
-        fi
-      done
-      modifiers_json+="]"
+    # Check for TypeScript export
+    if [[ "$visibility" == "null" && "$lang" == "typescript" ]]; then
+      if [[ "$text" =~ ^export[[:space:]] ]]; then
+        visibility="exported"
+      fi
     fi
 
-    # Boolean characteristics
-    local has_loops=false has_try_catch=false has_async=false has_throw=false
-    (( loop_count > 0 )) && has_loops=true
-    (( try_catch_count > 0 )) && has_try_catch=true
-    (( async_count > 0 )) && has_async=true
-    (( throw_count > 0 )) && has_throw=true
+    # Async check
+    local is_async=false
+    is_async_rule "$rule_id" && is_async=true
+    [[ "$is_async" == "false" ]] && has_async "$text" "$lang" && is_async=true
 
-    # Output JSON
-    if [[ "$first" != "true" ]]; then
-      printf ","
-    fi
-    first=false
+    # Other characteristics
+    local loops=false try_catch=false throw=false
+    has_loops "$text" "$lang" && loops=true
+    has_try_catch "$text" "$lang" && try_catch=true
+    has_throw "$text" "$lang" && throw=true
+
+    # Extract calls and check recursion
+    local calls_str
+    calls_str=$(extract_calls "$text" "$lang")
+
+    local recursion=false
+    has_recursion "$name" "$calls_str" && recursion=true
+
+    # Build modifiers
+    local mods_str
+    mods_str=$(extract_modifiers "$text" "$lang" "$is_async")
+
+    # Build JSON arrays
+    local calls_json mods_json
+    calls_json=$(to_json_array "$calls_str")
+    mods_json=$(to_json_array "$mods_str")
 
     # Escape strings for JSON
-    local escaped_name escaped_params escaped_return_type escaped_visibility
-    escaped_name=$(json_escape "$name")
-    escaped_params=$(json_escape "$params")
-    escaped_return_type=$(json_escape "$return_type")
-    escaped_visibility=$(json_escape "$visibility")
+    name="${name//\\/\\\\}"
+    name="${name//\"/\\\"}"
+    params="${params//\\/\\\\}"
+    params="${params//\"/\\\"}"
+    return_type="${return_type//\\/\\\\}"
+    return_type="${return_type//\"/\\\"}"
 
-    printf '{"type":"%s","name":"%s","file":"%s","lines":[%d,%d]' \
-      "$type" "$escaped_name" "$file" "$start" "$end"
+    # Build JSON output
+    local json_out='{'
+    json_out+="\"name\":\"$name\""
+    json_out+=",\"file\":\"$file\""
+    json_out+=",\"type\":\"$unit_type\""
+    json_out+=",\"lines\":[$start_line,$end_line]"
+    json_out+=",\"is_test\":$is_test"
 
-    # Add optional fields
-    [[ -n "$visibility" ]] && printf ',"visibility":"%s"' "$escaped_visibility"
-    printf ',"modifiers":%s' "$modifiers_json"
-    [[ -n "$params" ]] && printf ',"params":"%s"' "$escaped_params"
-    [[ -n "$return_type" ]] && printf ',"return_type":"%s"' "$escaped_return_type"
-    printf ',"calls":%s' "$calls_json"
-    printf ',"has_loops":%s,"has_try_catch":%s,"has_async":%s' "$has_loops" "$has_try_catch" "$has_async"
-    printf ',"loop_count":%d,"call_count":%d' "$loop_count" "$call_count"
-    printf ',"is_test":%s,"layer":"%s","param_count":%d,"line_count":%d,"has_throw":%s,"has_recursion":%s' \
-      "$is_test" "$layer" "$param_count" "$line_count" "$has_throw" "$has_recursion"
-
-    # Add tests_unit for test files (only if non-empty)
     if [[ -n "$tests_unit" ]]; then
-      printf ',"tests_unit":"%s"' "$(json_escape "$tests_unit")"
+      tests_unit="${tests_unit//\\/\\\\}"
+      tests_unit="${tests_unit//\"/\\\"}"
+      json_out+=",\"tests_unit\":\"$tests_unit\""
+    else
+      json_out+=",\"tests_unit\":null"
     fi
 
-    printf '}'
+    json_out+=",\"layer\":\"$layer\""
+    json_out+=",\"calls\":$calls_json"
+    json_out+=",\"params\":\"$params\""
+    json_out+=",\"param_count\":$param_count"
+
+    if [[ -n "$return_type" ]]; then
+      json_out+=",\"return_type\":\"$return_type\""
+    else
+      json_out+=",\"return_type\":null"
+    fi
+
+    json_out+=",\"has_loops\":$loops"
+    json_out+=",\"has_async\":$is_async"
+    json_out+=",\"has_try_catch\":$try_catch"
+    json_out+=",\"has_throw\":$throw"
+    json_out+=",\"has_recursion\":$recursion"
+    json_out+=",\"line_count\":$line_count"
+
+    if [[ "$visibility" != "null" ]]; then
+      json_out+=",\"visibility\":\"$visibility\""
+    else
+      json_out+=",\"visibility\":null"
+    fi
+
+    json_out+=",\"modifiers\":$mods_json"
+    json_out+='}'
+
+    echo "$json_out"
   done
 }
 
-# Get changed files based on arguments
+# =============================================================================
+# File List Handling
+# =============================================================================
+
 get_files() {
   local args=("$@")
 
   if [[ ${#args[@]} -eq 0 ]]; then
-    # Default: unstaged changes
     git diff --name-only 2>/dev/null
   elif [[ "${args[0]}" == "--staged" ]]; then
     git diff --cached --name-only 2>/dev/null
   elif [[ "${args[0]}" == "--files" ]]; then
-    # Explicit file list
     printf '%s\n' "${args[@]:1}"
   else
-    # Pass through to git diff
     git diff --name-only "${args[@]}" 2>/dev/null
   fi
 }
 
-# Check if we can parse a file (grammar available)
-can_parse_file() {
+# Skip non-code files
+should_skip_file() {
   local file="$1"
+  local ext="${file##*.}"
 
-  # Try to parse the file - tree-sitter auto-detects language by extension
-  tree-sitter parse --quiet "$file" 2>/dev/null
+  case "$ext" in
+    md|json|yaml|yml|txt|lock|toml|xml|config|html|css|scss|less|svg|png|jpg|jpeg|gif|ico|woff|woff2|ttf|eot)
+      return 0
+      ;;
+  esac
+
+  # Skip lockfiles and generated files
+  case "$file" in
+    *-lock.json|*.lock|*.generated.*|*.pb.*|*_generated.*|*.min.js|*.bundle.js)
+      return 0
+      ;;
+    */__snapshots__/*|*/vendor/*|*/node_modules/*)
+      return 0
+      ;;
+  esac
+
+  return 1
 }
 
+# =============================================================================
 # Main
+# =============================================================================
+
 main() {
   # Handle --status flag
   [[ "${1:-}" == "--status" ]] && check_status
 
+  # Check dependencies
+  check_deps
+
   local files
   files=$(get_files "$@")
 
-  # Track files needing LLM fallback
-  local fallback_files=()
-  local ts_available=true
-
-  # Check if tree-sitter is available
-  if ! command -v tree-sitter &>/dev/null; then
-    ts_available=false
-  fi
-
-  # Collect units and fallback files
-  local units_output=""
+  local skipped_files=()
+  local all_units=""
   local first=true
 
   while IFS= read -r file; do
@@ -770,27 +985,15 @@ main() {
     [[ ! -f "$file" ]] && continue
 
     # Skip non-code files
-    case "${file##*.}" in
-      md|json|yaml|yml|txt|lock|toml|xml|config) continue ;;
-    esac
-
-    # If tree-sitter not available, all code files need fallback
-    if [[ "$ts_available" != "true" ]]; then
-      fallback_files+=("$file")
+    if should_skip_file "$file"; then
       continue
     fi
 
-    # Check if we have a query file for this extension
-    local query_file
-    query_file=$(get_query_file_for_ext "$file")
-    if [[ -z "$query_file" ]]; then
-      fallback_files+=("$file")
-      continue
-    fi
-
-    # Check if grammar is available by trying to parse
-    if ! can_parse_file "$file"; then
-      fallback_files+=("$file")
+    # Check if we support this language
+    local lang_info
+    lang_info=$(get_language_info "$file")
+    if [[ -z "$lang_info" ]]; then
+      skipped_files+=("$file")
       continue
     fi
 
@@ -799,30 +1002,46 @@ main() {
     file_units=$(extract_file "$file")
 
     if [[ -n "$file_units" ]]; then
-      if [[ "$first" != "true" ]]; then
-        units_output+=","
-      fi
-      units_output+="$file_units"
-      first=false
+      while IFS= read -r unit; do
+        [[ -z "$unit" ]] && continue
+        if [[ "$first" != "true" ]]; then
+          all_units+=","
+        fi
+        all_units+="$unit"
+        first=false
+      done <<< "$file_units"
     fi
   done <<< "$files"
 
-  # Build fallback files JSON array
-  local fallback_json="["
-  local fb_first=true
-  if [[ ${#fallback_files[@]} -gt 0 ]]; then
-    for fb in "${fallback_files[@]}"; do
-      if [[ "$fb_first" != "true" ]]; then
-        fallback_json+=","
+  # Build skipped files array
+  local skipped_json="["
+  local sf_first=true
+  if [[ ${#skipped_files[@]} -gt 0 ]]; then
+    for sf in "${skipped_files[@]}"; do
+      if [[ "$sf_first" != "true" ]]; then
+        skipped_json+=","
       fi
-      fallback_json+="\"$fb\""
-      fb_first=false
+      skipped_json+="\"$sf\""
+      sf_first=false
     done
   fi
-  fallback_json+="]"
+  skipped_json+="]"
 
-  # Output final JSON
-  echo "{\"units\":[$units_output],\"fallback_files\":$fallback_json,\"tree_sitter_available\":$ts_available}"
+  # Deduplicate units by file+name+lines (multiple rules can match same code)
+  # Keep the most complete entry (most non-null fields) for each unique unit
+  local final_json
+  final_json=$(echo "{\"units\":[$all_units],\"skipped_files\":$skipped_json,\"sg_available\":true}" | jq '
+    .units |= (
+      group_by([.file, .name, .lines[0], .lines[1]]) |
+      map(
+        # Sort by number of true boolean fields to get most feature-rich entry
+        sort_by(-([.has_loops, .has_async, .has_try_catch, .has_throw, .has_recursion] | map(if . then 1 else 0 end) | add)) |
+        .[0]
+      )
+    )
+  ')
+
+  echo "$final_json"
 }
 
 main "$@"
