@@ -2,9 +2,15 @@
 description: "Profile-driven code review"
 argument-hint: "[--sanity | --pr | --profile <name>] [--staged | files...]"
 allowed-tools: ["Bash", "Glob", "Grep", "Read", "Task", "Skill", "Write", "TaskCreate", "TaskUpdate", "TaskList", "AskUserQuestion"]
+version: "3.5.0"
 ---
 
 # Profile-Driven Review
+
+**FIRST: Output this exact line before doing anything else:**
+```
+code-foundations:review v3.5.0
+```
 
 Unified review workflow. One flow, driven by profile configuration.
 
