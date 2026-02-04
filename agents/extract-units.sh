@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 #
+# extract-units.sh v3.5.0 - AST extraction via ast-grep
+#
 # Extract semantic units (functions, classes, methods) from code using ast-grep.
 #
 # Usage:
@@ -15,6 +17,9 @@
 #
 
 set -euo pipefail
+
+VERSION="3.5.0"
+echo "[extract-units.sh v$VERSION] Starting..." >&2
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SG_RULES_DIR="$SCRIPT_DIR/sg-rules"

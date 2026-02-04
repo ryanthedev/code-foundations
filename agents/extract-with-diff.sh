@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 #
+# extract-with-diff.sh v3.5.0 - Extraction with diff context
+#
 # Extract semantic units from changed files with diff context.
 #
 # Usage:
@@ -15,6 +17,9 @@
 #
 
 set -euo pipefail
+
+VERSION="3.5.0"
+echo "[extract-with-diff.sh v$VERSION] Starting..." >&2
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 EXTRACT_UNITS="$SCRIPT_DIR/extract-units.sh"

@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 #
+# orchestrate-batches.sh v3.5.0 - Deterministic file-based batching
+#
 # orchestrate-batches.sh - Deterministic file-based batching for code review
 #
 # Groups units by "logical source file" - each source file and its corresponding
@@ -13,6 +15,9 @@
 # Output: JSON array of batches to stdout
 
 set -euo pipefail
+
+VERSION="3.5.0"
+echo "[orchestrate-batches.sh v$VERSION] Starting..." >&2
 
 if ! command -v jq &>/dev/null; then
     echo '{"error": "jq is required but not installed"}' >&2
