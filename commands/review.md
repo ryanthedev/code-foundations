@@ -25,12 +25,12 @@ Unified review workflow. One flow, driven by profile configuration.
 ```
 ┌────────────┐   ┌─────────────┐   ┌───────────┐   ┌───────────────┐
 │ EXTRACTION │ → │ ORCHESTRATE │ → │ CHECKING  │ → │ INVESTIGATION │
-│  (haiku)   │   │  (sonnet)   │   │ (sonnet)  │   │   (sonnet)    │
+│  (script)  │   │   (bash)    │   │ (sonnet)  │   │   (sonnet)    │
 └────────────┘   └─────────────┘   └───────────┘   └───────────────┘
       ↓                 ↓                 ↓                  ↓
-  1 per 5 files   • Smart batching  1 agent per      1 agent per
-  Extract units   • Smart batching  batch, runs      5 findings,
-  + diffs                           14 core checks   provides fixes
+  tree-sitter     7-step batching  1 agent per      1 agent per
+  + diff parse    (deterministic)  batch, runs      5 findings,
+                                   14 core checks   provides fixes
 ```
 
 - **14 core checks** distilled via 7-agent consensus
@@ -385,9 +385,9 @@ TaskUpdate(taskId=phase1_id, status="completed")
 
 ---
 
-## SANITY STEP 2: ORCHESTRATE (Single Sonnet)
+## SANITY STEP 2: ORCHESTRATE (Bash Script)
 
-**Purpose:** Build intelligent batches from extracted units.
+**Purpose:** Build intelligent batches from extracted units using deterministic algorithm.
 
 **Mark phase in_progress:**
 
@@ -397,24 +397,27 @@ phase2_id = next(t.id for t in tasks if "Phase 2" in t.subject)
 TaskUpdate(taskId=phase2_id, status="in_progress")
 ```
 
-**Dispatch orchestrator:**
+**Execute orchestrator script:**
 
-```python
-Task(
-    subagent_type="code-foundations:orchestrate-checking-agent",
-    model="sonnet",
-    description="Orchestrate checking batches",
-    prompt=f"""
-BASE_DIR: {BASE_DIR}
-"""
-)
+```bash
+# Run batching algorithm (7-step: skip → test pairs → call graph → directory → layer → stragglers)
+ORCH_SCRIPT="{PLUGIN_ROOT}/agents/orchestrate-batches.sh"
+cat "{BASE_DIR}/units.jsonl" | "$ORCH_SCRIPT" > "{BASE_DIR}/checking-batches.json"
+
+# Verify output
+if [ ! -s "{BASE_DIR}/checking-batches.json" ]; then
+  echo "Orchestration produced no batches"
+  exit 1
+fi
+
+BATCH_COUNT=$(jq 'length' "{BASE_DIR}/checking-batches.json")
+echo "Created $BATCH_COUNT batches"
 ```
 
-**Wait for orchestrator. Read result and mark phase complete:**
+**Read result and mark phase complete:**
 
 ```python
-orch = read_json(f"{BASE_DIR}/checking-batches.json")
-BATCHES = orch["batches"]
+BATCHES = read_json(f"{BASE_DIR}/checking-batches.json")
 NUM_BATCHES = len(BATCHES)
 
 TaskUpdate(taskId=phase2_id, status="completed")
@@ -1350,10 +1353,11 @@ else:
 
 | Phase | Agents | Model | Scaling |
 |-------|--------|-------|---------|
-| Extraction | 1 per 5 files | haiku | `ceil(files / 5)` |
-| Check Orchestrate | 1 | haiku | Fixed |
-| Checking | 1 per prefix group | `profile.models.checking` | `len(unique_prefixes)` |
-| Orchestrate | 1 | haiku | Fixed |
+| Extraction | 1 (script) | bash | Single script call |
+| Orchestrate (sanity) | 1 (script) | bash | Single script call |
+| Check Orchestrate (PR) | 1 | haiku | Fixed |
+| Checking | 1 per batch/prefix | `profile.models.checking` | `len(batches)` |
+| Orchestrate Findings | 1 | haiku | Fixed |
 | Investigation | 1 per 5 findings | `profile.models.investigation` | `ceil(findings / 5)` |
 
 **All dispatched by main agent** - single message with multiple Task calls = true parallelism.
