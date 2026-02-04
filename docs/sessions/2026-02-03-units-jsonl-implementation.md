@@ -2,7 +2,7 @@
 
 **Date:** 2026-02-03
 **Branch:** `feat/agent-scripts-batch-mode`
-**Status:** Phase 1-6 complete, ready for integration testing
+**Status:** Phase 1-7 complete, ready for end-to-end testing
 
 ---
 
@@ -72,6 +72,18 @@ Created `agents/orchestrate-batches.sh` - deterministic batching:
 **Verified on booking-trip-creation:**
 - Test pairs: `LinkedPnrsController` + `LinkedPnrsControllerTests`
 - Call graph: 51 related units clustered together
+
+### Phase 7: Wired into /code-foundations:review
+Updated `commands/review.md` to use bash orchestrator:
+- SANITY STEP 2 now pipes `units.jsonl` through `orchestrate-batches.sh`
+- Updated architecture diagrams (sonnet → bash)
+- Updated parallelization summary
+
+**Full sanity pipeline now:**
+```
+extract-with-diff.sh → orchestrate-batches.sh → checker agents → investigation agents
+       (bash)               (bash)                (sonnet)           (sonnet)
+```
 
 ---
 
@@ -148,7 +160,7 @@ b68f5b0 feat(orchestrate): implement smart batching from units.jsonl
 
 1. ~~**Decide on orchestrator approach** - LLM vs bash vs hybrid~~ ✅ Bash script
 2. ~~**Implement testsUnit inference** - Enable test pairing~~ ✅ Done
-3. **Wire orchestrate-batches.sh into /code-foundations:review** - Replace LLM orchestrator
+3. ~~**Wire orchestrate-batches.sh into /code-foundations:review**~~ ✅ Done
 4. **Test full review flow** - Run `/code-foundations:review --sanity` on a real PR
 5. **Performance benchmark** - Measure extraction time on large repos
 
