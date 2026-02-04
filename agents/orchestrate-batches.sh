@@ -9,7 +9,7 @@
 #
 # Usage:
 #   cat units.jsonl | ./orchestrate-batches.sh > batches.json
-#   ./extract-with-diff.sh --staged | ./orchestrate-batches.sh
+#   ./extract-units.sh --staged | ./orchestrate-batches.sh
 #
 # Input:  JSONL from stdin (one JSON object per line)
 # Output: JSON array of batches to stdout

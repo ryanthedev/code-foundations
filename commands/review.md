@@ -5,12 +5,16 @@ allowed-tools: ["Bash", "Glob", "Grep", "Read", "Task", "Skill", "Write", "TaskC
 version: "3.5.0"
 ---
 
-# Profile-Driven Review
+## STEP 0: VERSION CHECK (REQUIRED)
 
-**FIRST: Output this exact line before doing anything else:**
+Run this command FIRST before anything else:
+```bash
+echo "code-foundations:review v3.5.0"
 ```
-code-foundations:review v3.5.0
-```
+
+---
+
+# Profile-Driven Review
 
 Unified review workflow. One flow, driven by profile configuration.
 
@@ -353,7 +357,7 @@ TaskUpdate(taskId=phase1_id, status="in_progress")
 
 ```bash
 # Define script path and output location
-SCRIPT_PATH="{PLUGIN_ROOT}/agents/extract-with-diff.sh"
+SCRIPT_PATH="{PLUGIN_ROOT}/agents/extract-units.sh"
 OUTPUT_FILE="{BASE_DIR}/units.jsonl"
 
 # Execute extraction script from repository root
@@ -726,7 +730,7 @@ TaskUpdate(taskId=phase1_id, status="in_progress")
 
 ```bash
 # Define script path and output location
-SCRIPT_PATH="{PLUGIN_ROOT}/agents/extract-with-diff.sh"
+SCRIPT_PATH="{PLUGIN_ROOT}/agents/extract-units.sh"
 OUTPUT_FILE="{BASE_DIR}/units.jsonl"
 
 # Execute extraction script from repository root
