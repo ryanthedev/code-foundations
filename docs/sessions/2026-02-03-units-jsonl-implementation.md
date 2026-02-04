@@ -2,7 +2,7 @@
 
 **Date:** 2026-02-03
 **Branch:** `feat/agent-scripts-batch-mode`
-**Status:** Phase 1-5 complete, orchestrator decision pending
+**Status:** Phase 1-6 complete, ready for integration testing
 
 ---
 
@@ -52,6 +52,27 @@ Added `infer_tests_unit()` function to `extract-units.sh`:
 - `booking-trip-creation`: `LinkedPnrsControllerTests.cs` → `tests_unit: "LinkedPnrsController"`
 - `PricingAPI`: `QuoteRequestAdapterDpMarketTests.cs` → `tests_unit: "QuoteRequestAdapterDpMarket"`
 
+### Phase 6: Replaced LLM Orchestrator with Bash Script
+Created `agents/orchestrate-batches.sh` - deterministic batching:
+- Pure bash + jq implementation (no LLM)
+- Union-find algorithm for call graph transitive closure
+- Cross-platform (macOS + Linux)
+- ~1.5s for 500+ units (vs seconds of API latency)
+- Free (no tokens)
+
+**7-step algorithm:**
+1. Skip lockfiles/generated
+2. Test pairs (uses `tests_unit` from Phase 5)
+3. Call graph clusters (transitive closure)
+4. Directory groups
+5. Layer groups
+6. Stragglers
+7. Output JSON
+
+**Verified on booking-trip-creation:**
+- Test pairs: `LinkedPnrsController` + `LinkedPnrsControllerTests`
+- Call graph: 51 related units clustered together
+
 ---
 
 ## Layer System
@@ -98,16 +119,8 @@ overrides:
 ### ~~1. `testsUnit` Not Populated (HIGH)~~ ✅ RESOLVED
 Implemented filename convention approach in Phase 5.
 
-### 2. Orchestrator is LLM-Based (MEDIUM)
-Using Sonnet to execute algorithmic batching logic is:
-- Expensive (tokens)
-- Non-deterministic
-- Slower than a script
-
-**Options:**
-- Keep as LLM (flexible, handles edge cases)
-- Convert to bash script (fast, deterministic, free)
-- Hybrid (bash for deterministic parts, LLM for fuzzy matching)
+### ~~2. Orchestrator is LLM-Based (MEDIUM)~~ ✅ RESOLVED
+Replaced with `agents/orchestrate-batches.sh` in Phase 6.
 
 ### 3. Call Graph Matching is Fuzzy (MEDIUM)
 Matching by function name alone can have false positives.
@@ -133,10 +146,11 @@ b68f5b0 feat(orchestrate): implement smart batching from units.jsonl
 
 ## Next Steps
 
-1. **Decide on orchestrator approach** - LLM vs bash vs hybrid
+1. ~~**Decide on orchestrator approach** - LLM vs bash vs hybrid~~ ✅ Bash script
 2. ~~**Implement testsUnit inference** - Enable test pairing~~ ✅ Done
-3. **Test full review flow** - Run `/code-foundations:review --sanity` on a real PR
-4. **Performance benchmark** - Measure extraction time on large repos
+3. **Wire orchestrate-batches.sh into /code-foundations:review** - Replace LLM orchestrator
+4. **Test full review flow** - Run `/code-foundations:review --sanity` on a real PR
+5. **Performance benchmark** - Measure extraction time on large repos
 
 ---
 
@@ -146,7 +160,8 @@ b68f5b0 feat(orchestrate): implement smart batching from units.jsonl
 |------|---------|
 | `agents/extract-units.sh` | AST extraction with tree-sitter |
 | `agents/extract-with-diff.sh` | Diff integration, produces units.jsonl |
-| `agents/orchestrate-checking-agent.md` | LLM agent for batching |
+| `agents/orchestrate-batches.sh` | Deterministic batching (bash+jq) |
+| `agents/orchestrate-checking-agent.md` | LLM agent for batching (deprecated) |
 | `commands/review.md` | Main review command |
 | `docs/specs/units-jsonl-spec.md` | Schema and batching rules |
 
