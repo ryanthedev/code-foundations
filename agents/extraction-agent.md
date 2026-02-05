@@ -20,7 +20,7 @@ Extract semantic units from changed files using AST, then enrich each with diff 
 ### 1. Run AST Extraction
 
 ```bash
-AST_OUTPUT=$($PLUGIN_ROOT/agents/extract-units.sh $DIFF_ARGS)
+AST_OUTPUT=$(bun $PLUGIN_ROOT/agents/extract-units.ts $DIFF_ARGS)
 echo "$AST_OUTPUT" | jq .
 ```
 

@@ -9,14 +9,14 @@
 #
 # Usage:
 #   cat units.jsonl | ./orchestrate-batches.sh > batches.json
-#   ./extract-units.sh --staged | ./orchestrate-batches.sh
+#   bun extract-units.ts --staged | ./orchestrate-batches.sh
 #
 # Input:  JSONL from stdin (one JSON object per line)
 # Output: JSON array of batches to stdout
 
 set -euo pipefail
 
-VERSION="3.5.0"
+VERSION="3.6.9"
 echo "[orchestrate-batches.sh v$VERSION] Starting..." >&2
 
 if ! command -v jq &>/dev/null; then
@@ -117,10 +117,12 @@ process_batches() {
         map(. + {_key: grouping_key}) |
         # Group by key
         group_by(._key) |
-        # Create batches
+        # Create batches with IDs
+        to_entries |
         map({
-            units: [.[] | del(._key)],
-            reason: "File: \(.[0]._key)"
+            batch_id: "batch-\(.key + 1)",
+            units: [.value[] | del(._key)],
+            reason: "File: \(.value[0]._key)"
         }) |
         # Sort for determinism
         sort_by(.reason)
