@@ -1,13 +1,13 @@
 #!/usr/bin/env bun
 /**
- * generate-checklists.ts v3.6.9 - Create checklist files for checker agents
+ * generate-checklists.ts v3.6.10 - Create checklist files for checker agents
  *
  * Usage:
  *   cat batches.json | bun generate-checklists.ts <output-dir>
  *   bun generate-checklists.ts <output-dir> < batches.json
  */
 
-const VERSION = "3.6.9";
+const VERSION = "3.6.10";
 console.error(`[generate-checklists.ts v${VERSION}]`);
 
 // The 14 core checks for sanity review

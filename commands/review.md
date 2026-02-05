@@ -2,13 +2,13 @@
 description: "Profile-driven code review"
 argument-hint: "[--sanity | --pr | --profile <name>] [diff-target]"
 allowed-tools: ["Bash", "Glob", "Grep", "Read", "Task", "Write", "AskUserQuestion"]
-version: "3.6.9"
+version: "3.6.10"
 ---
 
 # Code Review
 
 ```bash
-echo "code-foundations:review v3.6.9"
+echo "code-foundations:review v3.6.10"
 ```
 
 ---
@@ -127,15 +127,17 @@ BASE_DIR="/tmp/PricingAPI-feature-2107"
 
 ## Step 7: Dispatch Checker Agents
 
-For each checklist file, dispatch a checker agent:
+Dispatch ALL checker agents in parallel as background tasks:
 
 ```python
 checklist_files = Glob("$BASE_DIR/checklists/batch-*.md")
 
+# Dispatch all at once in a SINGLE message with multiple Task calls
 for checklist_file in checklist_files:
     Task(
         subagent_type="code-foundations:checker-agent",
         description=f"Check {basename(checklist_file)}",
+        run_in_background=True,
         prompt=f"""
 CHECKLIST_FILE: {checklist_file}
 REPO_ROOT: {REPO_ROOT}
@@ -145,15 +147,25 @@ Read the checklist, read each unit's source code, and fill in every checkbox.
     )
 ```
 
-**Dispatch in parallel** - up to 5 at a time.
+**IMPORTANT:** Send ALL Task calls in a single message to dispatch them simultaneously.
 
-Wait for all checker agents to complete.
+After dispatching, inform the user:
+```
+Dispatched {N} checker agents in background.
+Checklists will be filled in: $BASE_DIR/checklists/
+
+You can continue working. Check results with:
+  ls $BASE_DIR/checklists/
+  grep '\[!\]' $BASE_DIR/checklists/*.md
+```
+
+Then proceed to Step 8 to monitor/summarize when ready.
 
 ---
 
 ## Step 8: Summarize Results
 
-Read all completed checklists and count verdicts:
+Wait for background agents to complete, then read all checklists and count verdicts:
 
 ```bash
 cd "$BASE_DIR/checklists"

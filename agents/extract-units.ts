@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /**
- * extract-units.ts v3.6.9 - AST extraction with diff context
+ * extract-units.ts v3.6.10 - AST extraction with diff context
  *
  * Usage:
  *   bun extract-units.ts [--staged | --files file1 file2 | <git-diff-args>]
@@ -9,7 +9,7 @@
 
 import { $ } from "bun";
 
-const VERSION = "3.6.9";
+const VERSION = "3.6.10";
 console.error(`[extract-units.ts v${VERSION}]`);
 
 // Language config

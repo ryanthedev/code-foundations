@@ -1,6 +1,6 @@
 {
   "name": "code-foundations",
-  "version": "3.6.9",
+  "version": "3.6.10",
   "description": "Software engineering skills from Code Complete and A Philosophy of Software Design. Sanity review: 14 consensus-distilled checks with schema-enforced output. PR review: 614 checks with prefix-based grouping. Phase enforcement via TaskCreate/TaskUpdate.",
   "author": {
     "name": "ryanthedev"
