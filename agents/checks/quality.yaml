@@ -1,0 +1,496 @@
+## Quality Practices and Data Flow Checks
+## High-consistency checks from cc-quality-practices and cc-code-layout-and-style
+## Source: Code Complete 2nd Edition, Chapters 20-23, 31
+
+checks:
+  # Data Flow Anomaly Checks (from cc-quality-practices)
+
+  - id: DF-5
+    name: Uninitialized Variable Read
+    question: Is any variable used before being initialized (Entered-Used pattern)?
+    pass_when:
+      - All variables are assigned before first read
+      - Parameters are initialized by caller
+      - Class fields initialized in constructor or declaration
+      - Language provides default initialization (e.g., Go zero values)
+    fail_when:
+      - Local variable read before any assignment
+      - Field accessed before constructor completes initialization
+      - Conditional initialization but unconditional use
+    examples:
+      pass: |
+        // PASS - variable initialized before use
+        int count = 0;
+        for (int i = 0; i < items.Length; i++) {
+            count += items[i].Value;
+        }
+        return count;
+
+        // PASS - all branches initialize
+        string result;
+        if (condition) {
+            result = "yes";
+        } else {
+            result = "no";
+        }
+        Console.WriteLine(result);
+      fail: |
+        // FAIL - result used without initialization
+        int result;
+        if (condition) {
+            result = Calculate();
+        }
+        return result;  // result may be uninitialized
+
+        // FAIL - sum never initialized
+        int sum;
+        for (var item in items) {
+            sum += item.Value;  // reading uninitialized sum
+        }
+    confidence:
+      high: Variable declared without initializer and used before any assignment
+      medium: Complex control flow makes initialization path unclear
+
+  - id: DF-6
+    name: Double Free
+    question: Is any resource freed/disposed twice (Killed-Killed pattern)?
+    pass_when:
+      - Resource freed exactly once
+      - Using using/try-with-resources for automatic disposal
+      - Pointer/reference set to null after free
+      - Ownership transferred (moved) before second scope
+    fail_when:
+      - Explicit free/dispose called twice on same resource
+      - Free in loop without reallocation
+      - Free in both try and finally blocks
+    examples:
+      pass: |
+        // PASS - using statement handles disposal
+        using (var stream = File.OpenRead(path)) {
+            return stream.ReadAllBytes();
+        }
+
+        // PASS - single explicit disposal
+        var connection = new SqlConnection(connStr);
+        try {
+            connection.Open();
+            // use connection
+        } finally {
+            connection.Dispose();
+        }
+      fail: |
+        // FAIL - disposed in both try and finally
+        var stream = File.OpenRead(path);
+        try {
+            stream.Dispose();  // disposed here
+        } finally {
+            stream.Dispose();  // disposed again!
+        }
+
+        // FAIL - C: freed twice
+        char* buffer = malloc(1024);
+        free(buffer);
+        // ... later ...
+        free(buffer);  // double free!
+    confidence:
+      high: Same variable passed to free/Dispose/close twice in same scope
+      medium: Resource may be freed in multiple code paths
+
+  - id: DF-7
+    name: Use After Free
+    question: Is any resource used after being freed/disposed (Killed-Used pattern)?
+    pass_when:
+      - Resource not accessed after free/dispose/close
+      - Reference set to null after disposal (prevents accidental use)
+      - Scope ends immediately after disposal
+    fail_when:
+      - Method called on disposed object
+      - Pointer dereferenced after free
+      - File operations after close
+      - Collection accessed after Clear then immediate use
+    examples:
+      pass: |
+        // PASS - no use after dispose
+        using (var reader = new StreamReader(path)) {
+            return reader.ReadToEnd();
+        }
+        // reader out of scope, cannot be used
+
+        // PASS - null assignment prevents use
+        connection.Dispose();
+        connection = null;
+      fail: |
+        // FAIL - reading after dispose
+        var reader = new StreamReader(path);
+        reader.Dispose();
+        var content = reader.ReadToEnd();  // use after dispose!
+
+        // FAIL - C: use after free
+        char* name = malloc(100);
+        strcpy(name, "test");
+        free(name);
+        printf("%s", name);  // use after free!
+    confidence:
+      high: Clear sequence of dispose/free followed by access
+      medium: Disposal in one branch, use in another
+
+  # Test Coverage and Complexity Checks
+
+  - id: TC-4
+    name: Cyclomatic Complexity Calculation
+    question: Has minimum test count been computed using cyclomatic complexity formula?
+    gate: has_tests == true
+    pass_when:
+      - Test count >= 1 + (if + while + for + && + || + case)
+      - Each decision point has corresponding test path
+      - Ternary operators counted as decision points
+    fail_when:
+      - Fewer tests than decision points
+      - Only happy path tested for branching code
+      - Switch statement with N cases but < N tests
+    examples:
+      pass: |
+        // Code: complexity = 1 + 2 (if + &&) = 3
+        bool Validate(User user) {
+            if (user != null && user.IsActive) {
+                return true;
+            }
+            return false;
+        }
+
+        // Tests: 3 cases cover all paths
+        [Test] void Validate_NullUser_ReturnsFalse()
+        [Test] void Validate_InactiveUser_ReturnsFalse()
+        [Test] void Validate_ActiveUser_ReturnsTrue()
+      fail: |
+        // Code: complexity = 1 + 3 (if + && + ||) = 4
+        bool CanAccess(User user, Resource res) {
+            if (user != null && (user.IsAdmin || user.Owns(res))) {
+                return true;
+            }
+            return false;
+        }
+
+        // Only 1 test - missing 3 paths!
+        [Test] void CanAccess_AdminUser_ReturnsTrue()
+    confidence:
+      high: Can count decision points and compare to test count
+      medium: Complex expressions make counting ambiguous
+
+  - id: TC-7
+    name: Boundary Value Testing
+    question: Are boundary values tested (maximum, minimum, off-by-one)?
+    gate: has_tests == true
+    pass_when:
+      - Tests include minimum valid input
+      - Tests include maximum valid input
+      - Tests include just below minimum (invalid)
+      - Tests include just above maximum (invalid)
+      - Array/loop tests include 0, 1, N-1, N, N+1 elements
+    fail_when:
+      - Only middle-of-range values tested
+      - No edge case tests for numeric ranges
+      - Loop tested with typical count but not 0 or max
+    examples:
+      pass: |
+        // Function: age must be 0-120
+        [Test] void Age_Minimum_Zero_Valid()
+        [Test] void Age_Maximum_120_Valid()
+        [Test] void Age_BelowMinimum_Negative1_Invalid()
+        [Test] void Age_AboveMaximum_121_Invalid()
+        [Test] void Age_TypicalValue_25_Valid()
+
+        // Array processing boundaries
+        [Test] void Process_EmptyArray_ReturnsEmpty()
+        [Test] void Process_SingleElement_Works()
+        [Test] void Process_MaxElements_Works()
+      fail: |
+        // Only tests happy path in middle of range
+        [Test] void Age_TypicalValue_25_Valid()
+        [Test] void Age_TypicalValue_50_Valid()
+        // Missing: 0, 120, -1, 121
+
+        // Array test missing boundaries
+        [Test] void Process_TenElements_Works()
+        // Missing: empty, single, max
+    confidence:
+      high: Numeric range exists but boundary tests missing
+      medium: Boundaries implicit or domain-specific
+
+  - id: TC-3
+    name: Line Coverage Achieved
+    question: Has each line of code been executed by at least one test?
+    gate: has_tests == true
+    pass_when:
+      - Coverage tool shows all lines executed
+      - Uncovered lines are documented as unreachable
+      - Error handling paths have explicit tests
+    fail_when:
+      - Catch blocks never executed by tests
+      - Else branches untested
+      - Early return paths untested
+      - Dead code exists (0% coverage on reachable code)
+    examples:
+      pass: |
+        // All paths tested
+        public int Divide(int a, int b) {
+            if (b == 0) {           // covered by: DivideByZero_Throws
+                throw new DivideByZeroException();
+            }
+            return a / b;           // covered by: Divide_ValidInputs_Works
+        }
+
+        [Test] void Divide_ValidInputs_Works()
+        [Test] void DivideByZero_Throws()
+      fail: |
+        // Error path never tested
+        public User GetUser(int id) {
+            var user = _db.Find(id);
+            if (user == null) {     // NEVER EXECUTED
+                throw new NotFoundException();
+            }
+            return user;
+        }
+
+        [Test] void GetUser_ValidId_ReturnsUser()
+        // Missing: test for null/not found case
+    confidence:
+      high: Coverage report shows 0% on reachable lines
+      medium: No coverage tool, manual inspection needed
+
+  - id: FX-11
+    name: Defect Test Added
+    question: Has a unit test been added that exposes the defect before fixing?
+    gate: is_bugfix == true
+    pass_when:
+      - Test exists that would fail without the fix
+      - Test name or comment references bug/issue
+      - Test covers the specific reproduction case
+    fail_when:
+      - Bug fixed without any new test
+      - Test added but does not actually catch the bug
+      - Only manual verification performed
+    examples:
+      pass: |
+        // Bug: Negative quantities allowed in orders
+        // Fix: Added validation
+
+        [Test]
+        void CreateOrder_NegativeQuantity_ThrowsValidationError() {
+            // Arrange - reproduces reported bug
+            var order = new Order { Quantity = -5 };
+
+            // Act & Assert - would fail before fix
+            Assert.Throws<ValidationException>(() =>
+                _service.CreateOrder(order));
+        }
+
+        // In the fix:
+        if (order.Quantity < 0) {
+            throw new ValidationException("Quantity cannot be negative");
+        }
+      fail: |
+        // Bug fixed but no test added
+        // git diff shows:
+        + if (order.Quantity < 0) {
+        +     throw new ValidationException("...");
+        + }
+
+        // No corresponding test file changes
+        // Risk: Bug can regress undetected
+    confidence:
+      high: Commit labeled as bugfix with no new test files/methods
+      medium: Test exists but unclear if it covers the specific bug
+
+  - id: BF-5
+    name: Zero Compiler Warnings
+    question: Does code compile with zero warnings at highest warning level?
+    pass_when:
+      - Build produces no warnings
+      - Warnings-as-errors enabled
+      - Suppressed warnings have documented justification
+    fail_when:
+      - Warnings present in build output
+      - Warning level not set to maximum
+      - Warnings suppressed without explanation
+    examples:
+      pass: |
+        // Build output:
+        Build succeeded.
+        0 Warning(s)
+        0 Error(s)
+
+        // Or: justified suppression
+        #pragma warning disable CS0618 // Obsolete - required for backward compat until v3.0
+        client.LegacyConnect();
+        #pragma warning restore CS0618
+      fail: |
+        // Build output:
+        warning CS0168: The variable 'ex' is declared but never used
+        warning CS0219: The variable 'temp' is assigned but never used
+        warning CS8602: Dereference of a possibly null reference
+        Build succeeded.
+        3 Warning(s)
+
+        // Or: blanket suppression without reason
+        #pragma warning disable
+        // hundreds of lines of code
+        #pragma warning restore
+    confidence:
+      high: Build output shows warnings
+      medium: Warning level settings not visible
+
+  # Data Documentation Checks (from cc-code-layout-and-style)
+
+  - id: CD-1
+    name: Units Documented
+    question: Are units on data declarations commented?
+    pass_when:
+      - Numeric variables include unit in name or comment
+      - Time values specify seconds/milliseconds/etc
+      - Distance/size values specify meters/bytes/etc
+      - Currency values specify denomination
+    fail_when:
+      - Bare numeric name like timeout, delay, size, distance
+      - Units ambiguous between common options (ms vs s, KB vs bytes)
+      - Different units used inconsistently for same concept
+    examples:
+      pass: |
+        // Units in variable name
+        int timeoutMs = 5000;
+        long fileSizeBytes = 1024 * 1024;
+        double distanceKm = 150.5;
+
+        // Units in comment
+        int timeout = 5000;  // milliseconds
+        const int MAX_SIZE = 1048576;  // bytes
+        decimal price = 99.99m;  // USD
+      fail: |
+        // Ambiguous - seconds? milliseconds? minutes?
+        int timeout = 30;
+        int delay = 5000;
+
+        // Ambiguous - bytes? KB? MB?
+        int maxSize = 1024;
+
+        // Ambiguous - which currency?
+        decimal amount = 100.00m;
+    confidence:
+      high: Numeric variable with time/size/distance semantic but no units
+      medium: Context might make units obvious
+
+  - id: CD-2
+    name: Numeric Ranges Documented
+    question: Are the valid ranges on numeric data commented?
+    pass_when:
+      - Min/max values documented for bounded data
+      - Percentage fields note 0-100 or 0.0-1.0 convention
+      - Array indices document valid range
+      - Business rule constraints documented
+    fail_when:
+      - Score/rating without range
+      - Percentage without clarifying scale
+      - Index without bounds
+      - Age/count without stating limits
+    examples:
+      pass: |
+        int score;        // 0-100 inclusive
+        float progress;   // 0.0 to 1.0
+        int retryCount;   // 0-5, stops at max
+        int age;          // 0-150, validated on input
+
+        // Or in type/validation
+        [Range(0, 100)]
+        public int Percentage { get; set; }
+      fail: |
+        // What's the valid range?
+        int score;
+        float progress;
+        int priority;
+
+        // Is this 0-100 or 0.0-1.0?
+        double percentComplete;
+
+        // What's the max? Can it be negative?
+        int retryCount;
+    confidence:
+      high: Numeric field with obvious bounded semantic (score, percentage, count)
+      medium: Range might be obvious from type or context
+
+  - id: CD-3
+    name: Coded Meanings Documented
+    question: Are coded/enumerated meanings documented?
+    pass_when:
+      - Magic numbers have named constants
+      - Integer codes documented with meaning
+      - Status values explained
+      - Using enums instead of raw integers
+    fail_when:
+      - Numeric status codes without explanation
+      - Boolean with unclear true/false meaning
+      - String codes without documentation
+    examples:
+      pass: |
+        // Using enum - self-documenting
+        enum OrderStatus { Pending = 0, Processing = 1, Shipped = 2, Delivered = 3 }
+
+        // Or documented constants
+        const int STATUS_PENDING = 0;     // Order created, awaiting payment
+        const int STATUS_PROCESSING = 1;  // Payment received, preparing
+        const int STATUS_SHIPPED = 2;     // Handed to carrier
+        const int STATUS_DELIVERED = 3;   // Confirmed receipt
+
+        // Or inline documentation
+        int status;  // 0=pending, 1=active, 2=suspended, 3=deleted
+      fail: |
+        // What do these mean?
+        if (status == 2) { ... }
+        if (type == 7) { ... }
+
+        // Unclear boolean semantics
+        bool flag;  // true means what?
+
+        // Undocumented string codes
+        if (code == "A1") { ... }
+        else if (code == "B2") { ... }
+    confidence:
+      high: Integer comparison in conditional without visible constant/enum
+      medium: Code might be defined elsewhere
+
+  - id: CD-6
+    name: Global Variables Documented
+    question: Is each global variable documented at its declaration?
+    pass_when:
+      - Global/static variables have purpose comment
+      - Thread-safety characteristics documented
+      - Initialization requirements documented
+      - Module-level variables explain scope of use
+    fail_when:
+      - Undocumented public static fields
+      - Singleton without usage documentation
+      - Configuration globals without explanation
+      - Shared state without concurrency notes
+    examples:
+      pass: |
+        // Application-wide configuration, loaded at startup
+        // Thread-safe after initialization
+        public static readonly AppConfig Config;
+
+        // Request counter for metrics
+        // Incremented atomically, read for dashboard
+        private static int _requestCount;
+
+        // Connection pool shared across all handlers
+        // Thread-safe, initialized in Program.Main
+        internal static DbConnectionPool ConnectionPool;
+      fail: |
+        // No documentation - what is this for?
+        public static bool Flag;
+        public static int Counter;
+        private static Dictionary<string, object> _cache;
+
+        // What does this configure? When is it set?
+        public static string Mode;
+    confidence:
+      high: Public/internal static field without any comment
+      medium: Private static might be obvious from context

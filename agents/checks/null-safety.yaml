@@ -1,0 +1,546 @@
+## Null Safety and Bounds Checking
+## Deterministic, high-consistency checks for null/undefined/None handling and array bounds
+
+checks:
+  - id: NULL-1
+    name: Null Check Before Dereference
+    question: Is a null check performed before dereferencing a potentially null reference?
+    pass_when:
+      - Explicit null check before .Property or .Method() access
+      - Using null-conditional operator (?. in C#/TS, ?. or ?[] in Python 3.10+)
+      - Using pattern matching (is not null, is { })
+      - Comment documents why null is impossible (DI, framework guarantee)
+      - Variable declared with non-nullable type AND initialized
+      - Null-forgiving operator (!) with adjacent comment explaining guarantee
+    fail_when:
+      - Accessing .Property on potentially null without check
+      - Calling .Method() on potentially null without check
+      - Relying on undocumented assumptions about nullability
+      - No visible guard, assertion, or contract ensuring non-null
+    examples:
+      pass: |
+        // C# - explicit check
+        if (user != null) { return user.Name; }
+
+        // C# - null-conditional
+        return user?.Name ?? "default";
+
+        // C# - pattern matching
+        if (user is { Name: var name }) { return name; }
+
+        // C# - framework guarantee with comment
+        // Guaranteed non-null by DI container (constructor injection)
+        private readonly ILogger _logger;
+
+        // C# - null-forgiving with explanation
+        var config = GetConfig()!; // GetConfig() never returns null per ConfigProvider contract
+
+        // TypeScript - optional chaining
+        return user?.profile?.email ?? "no-email";
+
+        // Python - explicit check
+        if user is not None:
+            return user.name
+      fail: |
+        // C# - no protection
+        return user.Name;           // user could be null
+
+        // C# - null-forgiving without explanation
+        return user!.Name;          // no comment explaining why safe
+
+        // TypeScript - direct access
+        return response.data.items[0];  // data could be undefined
+
+        // Python - no guard
+        return user.name  # user might be None
+    confidence:
+      high: Clear dereference of parameter/return value without any null protection
+      medium: Depends on external guarantees (DI, middleware, framework) not visible in scope
+
+  - id: NULL-2
+    name: Null-Conditional Operator Usage
+    question: Is the null-conditional operator used appropriately instead of verbose null checks?
+    pass_when:
+      - Using ?. for optional property access chains
+      - Using ?? for default values after null-conditional
+      - Using ??= for lazy initialization
+      - Verbose check is intentional (for logging, different behavior on null)
+    fail_when:
+      - Nested if-null checks that could be simplified with ?.
+      - Ternary expressions checking null when ?. would suffice
+      - Missing ?? default when null-conditional could return null
+    examples:
+      pass: |
+        // C# - clean optional chaining
+        var city = user?.Address?.City ?? "Unknown";
+
+        // C# - intentionally verbose for logging
+        if (user == null) {
+            _logger.LogWarning("User was null");
+            return null;
+        }
+        return user.Name;
+
+        // C# - lazy initialization
+        _cache ??= new Dictionary<string, object>();
+
+        // TypeScript - optional chaining with nullish coalescing
+        const name = user?.profile?.displayName ?? user?.email ?? "Anonymous";
+      fail: |
+        // C# - verbose when ?. would work
+        string city = null;
+        if (user != null) {
+            if (user.Address != null) {
+                city = user.Address.City;
+            }
+        }
+        return city ?? "Unknown";
+
+        // C# - ternary that could be ?.
+        var name = user != null ? user.Name : null;
+
+        // TypeScript - nested checks
+        let email = undefined;
+        if (user && user.profile) {
+            email = user.profile.email;
+        }
+    confidence:
+      high: 3+ lines of null checks that collapse to one ?. expression
+      medium: 2-line check that might be intentionally verbose for clarity
+
+  - id: NULL-3
+    name: Null Parameter Validation
+    question: Are public method parameters validated for null at method entry?
+    gate: method_visibility == public OR method_visibility == protected
+    pass_when:
+      - Null check at method start with ArgumentNullException
+      - Using guard clause (ThrowIfNull, ArgumentNullException.ThrowIfNull)
+      - Parameter has non-nullable type with nullable reference types enabled
+      - Parameter has [NotNull] attribute with runtime check
+      - Comment documents that null is valid input with specific handling
+    fail_when:
+      - Public method uses parameter without null check
+      - Nullable parameter used directly without validation
+      - Check happens deep in method, not at entry
+    examples:
+      pass: |
+        // C# - guard clause
+        public void Process(User user) {
+            ArgumentNullException.ThrowIfNull(user);
+            // ... use user safely
+        }
+
+        // C# - explicit throw
+        public void Save(Document doc) {
+            if (doc == null) throw new ArgumentNullException(nameof(doc));
+            _repository.Save(doc);
+        }
+
+        // C# - nullable reference types (NRT enabled)
+        public string Format(User user) {  // User is non-nullable
+            return user.Name;  // safe - compiler enforces
+        }
+
+        // TypeScript - parameter validation
+        function processOrder(order: Order): void {
+            if (!order) {
+                throw new Error("order is required");
+            }
+            // ... use order
+        }
+
+        // Python - explicit check
+        def process_user(user: User) -> None:
+            if user is None:
+                raise ValueError("user cannot be None")
+      fail: |
+        // C# - no validation
+        public void Process(User user) {
+            _service.Handle(user.Id);  // NullReferenceException if null
+        }
+
+        // C# - late validation
+        public void Process(User user) {
+            var normalized = Normalize(user);
+            if (user == null) throw new ArgumentNullException(nameof(user));  // too late
+        }
+
+        // Python - no guard
+        def process_user(user: User) -> None:
+            print(user.name)  # AttributeError if None
+    confidence:
+      high: Public method with nullable parameter and no guard clause visible
+      medium: Method might have validation in called helper
+
+  - id: NULL-4
+    name: Array Bounds Checking
+    question: Is array/list index access protected against out-of-bounds access?
+    pass_when:
+      - Index checked against .Length/.Count before access
+      - Using .ElementAtOrDefault(), .FirstOrDefault(), .TryGetValue()
+      - Using foreach instead of index-based iteration
+      - Index is calculated from collection itself (e.g., items.Count - 1)
+      - Range is validated before slice/subarray operations
+    fail_when:
+      - Hardcoded index without length check (items[0], items[5])
+      - User-provided index used without validation
+      - Assuming minimum collection size without verification
+    examples:
+      pass: |
+        // C# - bounds check
+        if (items.Count > 0) {
+            return items[0];
+        }
+
+        // C# - safe accessor
+        var first = items.FirstOrDefault();
+        var item = items.ElementAtOrDefault(index);
+
+        // C# - foreach avoids bounds issues
+        foreach (var item in items) { Process(item); }
+
+        // C# - index derived from collection
+        var last = items[items.Count - 1];  // safe if Count > 0 checked
+
+        // TypeScript - optional chaining with array
+        const first = items?.[0];
+
+        // Python - safe access
+        first = items[0] if items else None
+        item = items[index] if 0 <= index < len(items) else None
+      fail: |
+        // C# - hardcoded index
+        return items[0];  // IndexOutOfRangeException if empty
+        return items[5];  // assumes 6+ elements
+
+        // C# - user input as index
+        var item = items[userProvidedIndex];  // could be negative or too large
+
+        // TypeScript - direct access
+        const third = items[2];  // undefined if < 3 elements
+
+        // Python - no guard
+        return items[0]  # IndexError if empty
+    confidence:
+      high: Hardcoded non-zero index with no visible length check
+      medium: Index comes from calculation that might be safe
+
+  - id: NULL-5
+    name: Off-by-One Prevention
+    question: Are loop bounds and array indices free from off-by-one errors?
+    pass_when:
+      - Loop uses < length (not <=) for zero-based indexing
+      - Loop uses <= for 1-based or inclusive ranges with clear intent
+      - Substring/slice end indices are exclusive and match convention
+      - Using Range syntax (..) or LINQ to avoid manual bounds
+    fail_when:
+      - Using <= with zero-based length (iterates one past end)
+      - Using < with 1-based bounds (skips last element)
+      - Substring length calculated incorrectly
+      - Fence-post errors in range calculations
+    examples:
+      pass: |
+        // C# - correct zero-based loop
+        for (int i = 0; i < items.Length; i++) { }
+
+        // C# - correct inclusive range (1 to N)
+        for (int i = 1; i <= totalPages; i++) { }  // pages are 1-indexed
+
+        // C# - using Range to avoid manual bounds
+        foreach (var item in items[1..^1]) { }  // skip first and last
+
+        // C# - correct substring
+        var sub = str.Substring(start, length);  // start + length <= str.Length checked
+
+        // Python - correct slicing (end is exclusive)
+        for i in range(len(items)):  # 0 to len-1
+            process(items[i])
+      fail: |
+        // C# - off by one (accesses items[Length])
+        for (int i = 0; i <= items.Length; i++) {
+            Process(items[i]);  // IndexOutOfRangeException on last iteration
+        }
+
+        // C# - skips last element
+        for (int i = 0; i < items.Length - 1; i++) { }  // unless intentional
+
+        // C# - substring overflow
+        var sub = str.Substring(start, str.Length);  // wrong if start > 0
+
+        // Python - fence-post error
+        for i in range(1, len(items)):  # skips items[0]
+    confidence:
+      high: Using <= with .Length or .Count in loop condition
+      medium: Unusual bounds that might be intentional
+
+  - id: NULL-6
+    name: Empty Collection Handling
+    question: Is empty collection case handled before operations that assume elements exist?
+    pass_when:
+      - Check for .Any() or .Count > 0 before .First(), .Max(), .Average()
+      - Using .FirstOrDefault() instead of .First()
+      - Using .DefaultIfEmpty() before aggregation
+      - Method documents that empty input is invalid (throws)
+    fail_when:
+      - Calling .First(), .Single(), .Max(), .Min() without empty check
+      - Assuming collection has elements without verification
+      - Average/Sum on empty enumerable without default handling
+    examples:
+      pass: |
+        // C# - safe first access
+        var first = items.FirstOrDefault();
+        if (first == null) return default;
+
+        // C# - check before aggregate
+        if (items.Any()) {
+            return items.Max();
+        }
+        return 0;
+
+        // C# - DefaultIfEmpty
+        var avg = items.DefaultIfEmpty(0).Average();
+
+        // C# - documented precondition
+        /// <exception cref="InvalidOperationException">Thrown when items is empty</exception>
+        public int GetMax(IEnumerable<int> items) => items.Max();
+
+        // Python - check before operation
+        if items:
+            return max(items)
+        return None
+      fail: |
+        // C# - throws on empty
+        return items.First();       // InvalidOperationException if empty
+        return items.Single();      // throws if empty or > 1
+        return items.Max();         // throws if empty
+
+        // C# - Average on empty
+        return scores.Average();    // InvalidOperationException if empty
+
+        // Python - no guard
+        return max(items)           # ValueError if empty
+        return items[0]             # IndexError if empty
+    confidence:
+      high: .First()/.Max()/.Min() without visible .Any() check
+      medium: Collection might be guaranteed non-empty by caller
+
+  - id: NULL-7
+    name: Dictionary Key Existence Check
+    question: Is dictionary/map key existence verified before access?
+    pass_when:
+      - Using TryGetValue() pattern
+      - Using ContainsKey() before index access
+      - Using .GetValueOrDefault() or indexer with default
+      - Using ConcurrentDictionary.GetOrAdd()
+      - Comment documents that key is guaranteed to exist
+    fail_when:
+      - Direct indexer access without key check (dict[key])
+      - Assuming key exists based on undocumented logic
+      - Using ContainsKey() and indexer separately (double lookup)
+    examples:
+      pass: |
+        // C# - TryGetValue pattern (single lookup)
+        if (cache.TryGetValue(key, out var value)) {
+            return value;
+        }
+
+        // C# - GetValueOrDefault
+        var value = dict.GetValueOrDefault(key, defaultValue);
+
+        // C# - ConcurrentDictionary
+        var value = _cache.GetOrAdd(key, k => ComputeValue(k));
+
+        // TypeScript - optional chaining
+        const value = map.get(key) ?? defaultValue;
+
+        // Python - .get() with default
+        value = cache.get(key, default_value)
+
+        // Python - check first
+        if key in data:
+            return data[key]
+      fail: |
+        // C# - direct access (KeyNotFoundException)
+        return cache[key];
+
+        // C# - double lookup (inefficient and risky)
+        if (cache.ContainsKey(key)) {
+            return cache[key];  // key could be removed between calls
+        }
+
+        // TypeScript - direct access
+        return config[key];  // undefined if missing
+
+        // Python - direct access
+        return data[key]  # KeyError if missing
+    confidence:
+      high: Direct indexer on dictionary without visible key check
+      medium: Key might be guaranteed by prior logic
+
+  - id: NULL-8
+    name: Optional/Nullable Return Handling
+    question: Is the nullable return value from a method call properly handled?
+    pass_when:
+      - Return value checked for null before use
+      - Using null-conditional on return value
+      - Using pattern matching to extract value
+      - Method return is non-nullable type (with NRT enabled)
+      - Documented that method never returns null
+    fail_when:
+      - Using return value without null check from nullable method
+      - Assuming method returns non-null without verification
+      - Ignoring TryParse/TryGet pattern result
+    examples:
+      pass: |
+        // C# - check nullable return
+        var user = await _repo.FindByIdAsync(id);
+        if (user == null) {
+            return NotFound();
+        }
+        return Ok(user.Name);
+
+        // C# - null-conditional on return
+        var name = GetUser(id)?.Name ?? "Unknown";
+
+        // C# - TryParse pattern
+        if (int.TryParse(input, out var value)) {
+            return value;
+        }
+        return 0;
+
+        // C# - pattern matching
+        if (GetUser(id) is { } user) {
+            return user.Name;
+        }
+
+        // TypeScript - handle undefined
+        const result = findItem(id);
+        if (!result) {
+            throw new Error("Item not found");
+        }
+      fail: |
+        // C# - ignoring nullable return
+        var user = await _repo.FindByIdAsync(id);
+        return user.Name;  // NullReferenceException if not found
+
+        // C# - ignoring TryParse result
+        int.TryParse(input, out var value);
+        return value * 2;  // value is 0 if parse failed - is that intended?
+
+        // TypeScript - assuming defined
+        const user = getUser(id);
+        console.log(user.email);  // undefined if not found
+
+        // Python - no check
+        user = find_user(id)
+        print(user.name)  # AttributeError if None returned
+    confidence:
+      high: Method name suggests nullable (Find, Try, OrDefault) but no check
+      medium: Method might have internal guarantee of non-null return
+
+  - id: NULL-9
+    name: Null-Forgiving Operator Justification
+    question: Is the null-forgiving operator (!) accompanied by a justifying comment?
+    gate: language == csharp
+    pass_when:
+      - Null-forgiving operator has adjacent comment explaining guarantee
+      - Used in test code with clear setup ensuring non-null
+      - Used after a framework pattern that guarantees non-null
+      - Used with [NotNull] annotation that provides runtime validation
+    fail_when:
+      - Bare ! operator without explanation
+      - Used to silence compiler without understanding nullability
+      - Multiple ! operators suggesting systematic null suppression
+    examples:
+      pass: |
+        // Contract: GetConfig() never returns null (throws on missing config)
+        var config = GetConfig()!;
+
+        // Guaranteed by EF Core - navigation property loaded via Include()
+        var orders = customer.Orders!;
+
+        // Test setup ensures this is initialized
+        private TestContext _context = null!;
+
+        [SetUp]
+        public void Setup() {
+            _context = new TestContext();  // Always initialized before tests
+        }
+
+        // After validation above, user cannot be null
+        ArgumentNullException.ThrowIfNull(user);
+        ProcessUser(user!);  // Redundant but silences flow analysis
+      fail: |
+        // No explanation - hiding potential bug
+        return user!.Name;
+
+        // Silencing warnings throughout
+        var a = GetA()!;
+        var b = a.GetB()!;
+        var c = b.GetC()!;  // Null suppression chain
+
+        // Suppressing without understanding
+        items!.Add(item);  // Why is items nullable?
+    confidence:
+      high: Null-forgiving operator with no comment within 2 lines
+      medium: Comment exists but explanation is vague
+
+  - id: NULL-10
+    name: Nullable Reference Type Consistency
+    question: Are nullable reference type annotations consistent and accurate?
+    gate: language == csharp AND nullable_context == enable
+    pass_when:
+      - Types accurately reflect nullability (string? when can be null)
+      - Non-nullable types are guaranteed by logic/initialization
+      - MaybeNull/NotNull attributes used where compiler cannot infer
+      - Consistent nullability across interface and implementation
+    fail_when:
+      - Non-nullable type but null is assigned or returned
+      - Nullable type but null is never possible (over-defensive)
+      - Inconsistent nullability between declaration and usage
+      - Suppressing warnings instead of fixing nullability
+    examples:
+      pass: |
+        // Accurate nullability
+        public string? FindName(int id) {  // Can return null
+            var user = _repo.Find(id);
+            return user?.Name;
+        }
+
+        // Non-nullable with guarantee
+        public string GetRequiredName(int id) {  // Never returns null
+            var user = _repo.Find(id)
+                ?? throw new NotFoundException(id);
+            return user.Name;
+        }
+
+        // Attribute for complex case
+        public bool TryGetValue(string key, [MaybeNullWhen(false)] out T value)
+
+        // Consistent interface implementation
+        public interface IProcessor {
+            Result? Process(Input input);
+        }
+        public class Processor : IProcessor {
+            public Result? Process(Input input) { ... }  // Matches interface
+        }
+      fail: |
+        // Claims non-null but can return null
+        public string GetName(int id) {
+            return _repo.Find(id)?.Name;  // Warning: may be null
+        }
+
+        // Over-defensive (never actually null)
+        public string? Name { get; }  // Constructor guarantees non-null
+
+        // Inconsistent with interface
+        public interface IRepo { User? Find(int id); }
+        public class Repo : IRepo {
+            public User Find(int id) { ... }  // Different nullability
+        }
+
+        // Suppressing instead of fixing
+        return items!.First()!.Name!;  // Why so many suppressions?
+    confidence:
+      high: Clear mismatch between declared nullability and actual behavior
+      medium: Nullability might be intentionally conservative

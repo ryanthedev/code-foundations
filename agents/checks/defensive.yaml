@@ -1,0 +1,533 @@
+## Defensive Programming Checks
+## High-consistency checks for error handling and security
+## Based on cc-defensive-programming checklist
+
+checks:
+  - id: EH-4
+    name: No Exceptions in Constructors/Destructors
+    question: Does the code avoid throwing exceptions in constructors and destructors?
+    pass_when:
+      - Constructor completes without throwing
+      - Constructor uses factory pattern for fallible initialization
+      - Destructor/finalizer never throws
+      - IDisposable.Dispose catches and suppresses exceptions
+    fail_when:
+      - Constructor throws exception directly
+      - Constructor calls throwing method without try-catch
+      - Destructor/finalizer contains throwing code
+      - Dispose propagates exceptions that could mask original exception
+    examples:
+      pass: |
+        // PASS - Factory pattern for fallible initialization
+        public class DatabaseConnection {
+            private readonly SqlConnection _conn;
+
+            private DatabaseConnection(SqlConnection conn) {
+                _conn = conn;  // Just assignment, never throws
+            }
+
+            public static DatabaseConnection? TryCreate(string connString) {
+                try {
+                    var conn = new SqlConnection(connString);
+                    conn.Open();
+                    return new DatabaseConnection(conn);
+                } catch {
+                    return null;
+                }
+            }
+        }
+
+        // PASS - Dispose suppresses exceptions
+        public void Dispose() {
+            try {
+                _stream?.Close();
+            } catch (IOException) {
+                // Intentionally suppressed - disposal must not throw
+            }
+        }
+      fail: |
+        // FAIL - Constructor throws on bad input
+        public class FileProcessor {
+            public FileProcessor(string path) {
+                if (!File.Exists(path))
+                    throw new FileNotFoundException(path);  // Throws in ctor!
+                _stream = File.OpenRead(path);  // Also can throw!
+            }
+        }
+
+        // FAIL - Destructor can throw
+        ~ResourceHolder() {
+            _connection.Close();  // Can throw if connection is bad
+        }
+    confidence:
+      high: Constructor contains throw statement or calls known-throwing method
+      medium: Constructor calls method that might throw based on implementation
+
+  - id: EC-3
+    name: No Empty Catch Blocks
+    question: Is the code free of empty catch blocks?
+    pass_when:
+      - Catch block logs the error
+      - Catch block rethrows (throw or throw ex)
+      - Catch block returns error value or sets error state
+      - Empty catch has explicit comment explaining why swallowing is intentional
+      - Using Result/Either type to convert exception to typed error
+    fail_when:
+      - Catch block is completely empty
+      - Catch block has only a TODO/FIXME comment
+      - Catch block has _ = ex or similar no-op
+      - Generic catch without any handling
+    examples:
+      pass: |
+        // PASS - Logs and rethrows
+        catch (DatabaseException ex) {
+            _logger.LogError(ex, "Database operation failed");
+            throw;
+        }
+
+        // PASS - Intentional swallow with explanation
+        catch (OperationCanceledException) {
+            // Expected when user cancels - not an error
+        }
+
+        // PASS - Converts to Result type
+        catch (Exception ex) {
+            _logger.LogWarning(ex, "Operation failed");
+            return Result.Failure<User>(ex.Message);
+        }
+      fail: |
+        // FAIL - Empty catch
+        try {
+            await SendEmailAsync(user);
+        } catch (SmtpException) {
+        }
+
+        // FAIL - TODO is not handling
+        catch (Exception ex) {
+            // TODO: handle this later
+        }
+
+        // FAIL - Bare catch, no action
+        catch { }
+
+        // FAIL - No-op assignment
+        catch (Exception ex) {
+            _ = ex;
+        }
+    confidence:
+      high: Catch block body is empty or contains only whitespace/comments
+
+  - id: SO-2
+    name: Error Return Codes Checked
+    question: Are all error return codes checked?
+    pass_when:
+      - Return value is stored and checked before proceeding
+      - Using Result/Option types that force handling
+      - Return value explicitly discarded with comment explaining why
+      - Void-returning method (no return value to check)
+    fail_when:
+      - Return value ignored (method called as statement)
+      - Return value stored but never checked
+      - Error code compared but wrong branch taken
+      - Boolean success/failure return ignored
+    examples:
+      pass: |
+        // PASS - Return value checked
+        int bytesRead = stream.Read(buffer, 0, buffer.Length);
+        if (bytesRead == 0) {
+            throw new EndOfStreamException();
+        }
+
+        // PASS - Boolean checked
+        if (!int.TryParse(input, out var value)) {
+            return BadRequest("Invalid number");
+        }
+
+        // PASS - Result type forces handling
+        var result = await userService.CreateAsync(dto);
+        return result.Match(
+            success: user => Ok(user),
+            failure: error => BadRequest(error)
+        );
+      fail: |
+        // FAIL - Return value ignored
+        stream.Read(buffer, 0, buffer.Length);  // How many bytes read?
+        ProcessBuffer(buffer);  // Buffer may be partially filled!
+
+        // FAIL - TryParse result ignored
+        int.TryParse(input, out var value);  // Proceeds even if parse failed
+        Calculate(value);  // value is 0 on failure!
+
+        // FAIL - Dictionary.TryGetValue ignored
+        dict.TryGetValue(key, out var item);
+        return item.Name;  // item is null if key missing!
+    confidence:
+      high: Method returns bool/int/result and return value is discarded
+      medium: Return value stored but checking logic unclear
+
+  - id: SM-3
+    name: No Command Injection
+    question: Does input validation prevent command injection attacks?
+    gate: has_shell_exec == true
+    pass_when:
+      - Using parameterized APIs (ProcessStartInfo.ArgumentList)
+      - Input validated against allowlist of permitted values
+      - Shell disabled (UseShellExecute = false) with direct executable
+      - Using library APIs instead of shell commands
+    fail_when:
+      - String concatenation or interpolation for shell commands
+      - User input passed directly to shell
+      - Using cmd.exe /c or bash -c with user data
+      - Blacklist-based filtering (removing characters)
+    examples:
+      pass: |
+        // PASS - Parameterized ArgumentList (no shell interpretation)
+        var psi = new ProcessStartInfo("git") {
+            UseShellExecute = false
+        };
+        psi.ArgumentList.Add("clone");
+        psi.ArgumentList.Add(userProvidedUrl);  // Safe - no shell parsing
+
+        // PASS - Allowlist validation
+        var allowedCommands = new[] { "status", "log", "diff" };
+        if (!allowedCommands.Contains(userCommand)) {
+            throw new ArgumentException("Invalid command");
+        }
+        RunGitCommand(userCommand);
+
+        // PASS - Using library instead of shell
+        using var repo = new Repository(path);
+        var status = repo.RetrieveStatus();  // LibGit2Sharp, not shell
+      fail: |
+        // FAIL - String concatenation with user input
+        Process.Start("cmd.exe", $"/c git clone {userUrl}");
+
+        // FAIL - Interpolation in shell command
+        var result = await Cli.Wrap("bash")
+            .WithArguments($"-c 'curl {userProvidedUrl}'")
+            .ExecuteAsync();
+
+        // FAIL - Blacklist filtering (incomplete)
+        var sanitized = userInput.Replace(";", "").Replace("|", "");
+        Process.Start("sh", $"-c 'echo {sanitized}'");  // Still exploitable!
+    confidence:
+      high: String concatenation visible with shell command
+      medium: Using safe API but input validation unclear
+
+  - id: SM-4
+    name: Safe XML Parsing (XXE Prevention)
+    question: Does XML parsing prevent XXE (XML External Entity) attacks?
+    gate: has_xml_parsing == true
+    pass_when:
+      - XmlReaderSettings.DtdProcessing = DtdProcessing.Prohibit
+      - XmlResolver set to null
+      - Using XDocument.Load with safe settings
+      - Using JSON instead of XML for untrusted input
+    fail_when:
+      - Default XmlDocument/XmlReader settings with untrusted input
+      - DtdProcessing.Parse enabled
+      - XmlResolver not explicitly disabled
+      - External entities not prohibited
+    examples:
+      pass: |
+        // PASS - Safe XmlReaderSettings
+        var settings = new XmlReaderSettings {
+            DtdProcessing = DtdProcessing.Prohibit,
+            XmlResolver = null
+        };
+        using var reader = XmlReader.Create(stream, settings);
+        var doc = XDocument.Load(reader);
+
+        // PASS - Safe XmlDocument configuration
+        var doc = new XmlDocument {
+            XmlResolver = null
+        };
+        doc.LoadXml(userInput);
+      fail: |
+        // FAIL - Default settings (XXE vulnerable)
+        var doc = new XmlDocument();
+        doc.LoadXml(userProvidedXml);  // Can load external entities!
+
+        // FAIL - DTD processing enabled
+        var settings = new XmlReaderSettings {
+            DtdProcessing = DtdProcessing.Parse  // Allows XXE!
+        };
+
+        // FAIL - XmlResolver not disabled
+        var doc = new XmlDocument();
+        // XmlResolver defaults to XmlUrlResolver - fetches external URLs!
+        doc.Load(untrustedPath);
+    confidence:
+      high: XmlDocument/XmlReader used without visible safe settings
+      medium: Settings present but completeness unclear
+
+  - id: SM-5
+    name: Safe Deserialization
+    question: Does deserialization of untrusted data use safe patterns?
+    gate: has_deserialization == true
+    pass_when:
+      - Using type-safe deserializers (System.Text.Json, Newtonsoft with TypeNameHandling.None)
+      - Allowlist of permitted types for polymorphic deserialization
+      - Using data contracts with explicit known types
+      - Input validated before deserialization
+    fail_when:
+      - BinaryFormatter, NetDataContractSerializer, or ObjectStateFormatter used
+      - TypeNameHandling.Auto/All/Objects enabled
+      - JavaScriptSerializer with type resolvers
+      - Deserializing to object or dynamic without type constraints
+    examples:
+      pass: |
+        // PASS - System.Text.Json (type-safe by default)
+        var user = JsonSerializer.Deserialize<User>(json);
+
+        // PASS - Newtonsoft with safe settings
+        var settings = new JsonSerializerSettings {
+            TypeNameHandling = TypeNameHandling.None  // Explicit safe
+        };
+        var user = JsonConvert.DeserializeObject<User>(json, settings);
+
+        // PASS - DataContract with known types
+        [DataContract]
+        [KnownType(typeof(AdminUser))]
+        [KnownType(typeof(GuestUser))]
+        public abstract class User { }
+      fail: |
+        // FAIL - BinaryFormatter (always dangerous)
+        var formatter = new BinaryFormatter();
+        var obj = formatter.Deserialize(stream);  // Remote code execution!
+
+        // FAIL - TypeNameHandling enables type attacks
+        var settings = new JsonSerializerSettings {
+            TypeNameHandling = TypeNameHandling.Auto  // Dangerous!
+        };
+        var obj = JsonConvert.DeserializeObject<object>(untrustedJson, settings);
+
+        // FAIL - Deserializing to object without constraints
+        var obj = JsonConvert.DeserializeObject(untrustedJson);
+    confidence:
+      high: BinaryFormatter or TypeNameHandling.Auto visible
+      medium: Using safe library but settings not fully visible
+
+  - id: SA-2
+    name: Async Try-Catch Coverage
+    question: Do async/await blocks have proper try-catch coverage?
+    gate: has_async == true
+    pass_when:
+      - Async method body wrapped in try-catch at appropriate level
+      - Using Result types to propagate errors
+      - Global exception handler for unhandled async exceptions
+      - Caller handles TaskCanceledException appropriately
+    fail_when:
+      - Await without any error handling in call chain
+      - Fire-and-forget async (no await, no ContinueWith error handler)
+      - Missing try-catch around multiple awaits where partial failure matters
+      - TaskCanceledException not distinguished from real errors
+    examples:
+      pass: |
+        // PASS - Try-catch around async operations
+        public async Task<User?> GetUserAsync(int id) {
+            try {
+                var response = await _httpClient.GetAsync($"/users/{id}");
+                response.EnsureSuccessStatusCode();
+                return await response.Content.ReadFromJsonAsync<User>();
+            } catch (HttpRequestException ex) {
+                _logger.LogError(ex, "Failed to get user {Id}", id);
+                return null;
+            }
+        }
+
+        // PASS - Cancellation handled separately
+        catch (OperationCanceledException) {
+            _logger.LogInformation("Request cancelled by user");
+            throw;  // Let cancellation propagate
+        }
+        catch (Exception ex) {
+            _logger.LogError(ex, "Unexpected error");
+            return Result.Failure(ex.Message);
+        }
+      fail: |
+        // FAIL - No error handling for async operation
+        public async Task ProcessOrderAsync(Order order) {
+            await _paymentService.ChargeAsync(order.Total);  // Can throw!
+            await _inventoryService.ReserveAsync(order.Items);  // Can throw!
+            await _emailService.SendConfirmationAsync(order);  // Can throw!
+            // If any fails, partial state - no cleanup!
+        }
+
+        // FAIL - Fire and forget without error handling
+        public void StartBackgroundWork() {
+            _ = DoWorkAsync();  // Exceptions silently lost!
+        }
+
+        // FAIL - Cancellation treated as error
+        catch (Exception ex) {
+            _logger.LogError(ex, "Failed");  // Logs cancel as error!
+            return null;
+        }
+    confidence:
+      high: Await statement outside any try-catch with no caller handling
+      medium: Error handling present but coverage unclear
+
+  - id: GC-1
+    name: Input Validation at Boundaries
+    question: Does the routine protect itself from bad input data?
+    pass_when:
+      - Public methods validate all parameters
+      - External input (HTTP, file, user) validated before use
+      - Validation at barricade/boundary, not scattered throughout
+      - Using guard clauses or validation frameworks
+    fail_when:
+      - Public method trusts caller to provide valid input
+      - External input used directly without validation
+      - Validation logic duplicated in multiple places
+      - Only checking some parameters, not all
+    examples:
+      pass: |
+        // PASS - Guard clauses validate input
+        public async Task<Order> CreateOrderAsync(CreateOrderDto dto) {
+            ArgumentNullException.ThrowIfNull(dto);
+            if (dto.Items.Count == 0)
+                throw new ArgumentException("Order must have items", nameof(dto));
+            if (dto.CustomerId <= 0)
+                throw new ArgumentException("Invalid customer ID", nameof(dto));
+
+            // Now safe to use dto
+            return await _repository.CreateAsync(dto);
+        }
+
+        // PASS - Validation at API boundary
+        [HttpPost]
+        public async Task<IActionResult> CreateUser([FromBody] CreateUserRequest request) {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var result = await _userService.CreateAsync(request);
+            return Ok(result);
+        }
+      fail: |
+        // FAIL - No validation of external input
+        public async Task<User> GetUserAsync(string email) {
+            // email could be null, empty, or invalid format
+            return await _db.Users.FirstOrDefaultAsync(u => u.Email == email);
+        }
+
+        // FAIL - Trusts caller for file path
+        public string ReadConfig(string path) {
+            return File.ReadAllText(path);  // Path traversal vulnerable!
+        }
+
+        // FAIL - Partial validation
+        public void Transfer(Account from, Account to, decimal amount) {
+            if (amount <= 0) throw new ArgumentException();
+            // from and to not validated - could be null!
+            from.Withdraw(amount);
+            to.Deposit(amount);
+        }
+    confidence:
+      high: Public method with no visible parameter validation
+      medium: Some validation present but completeness unclear
+
+  - id: SO-4
+    name: Safe Error Messages
+    question: Do error messages avoid exposing sensitive information?
+    pass_when:
+      - User-facing errors are generic ("An error occurred")
+      - Technical details logged server-side only
+      - Stack traces not included in API responses
+      - No internal paths, connection strings, or credentials in messages
+    fail_when:
+      - Stack trace returned to client
+      - Connection strings or credentials in error messages
+      - Internal file paths exposed
+      - SQL queries or table names revealed
+      - Detailed exception type/message returned to user
+    examples:
+      pass: |
+        // PASS - Generic message to user, details logged
+        catch (Exception ex) {
+            _logger.LogError(ex, "Database operation failed for user {UserId}", userId);
+            return StatusCode(500, new { message = "An error occurred processing your request" });
+        }
+
+        // PASS - Production vs development distinction
+        if (_env.IsDevelopment()) {
+            return Problem(detail: ex.ToString());
+        }
+        return Problem(detail: "An error occurred");
+      fail: |
+        // FAIL - Stack trace in response
+        catch (Exception ex) {
+            return StatusCode(500, new { error = ex.ToString() });
+        }
+
+        // FAIL - Connection string exposed
+        catch (SqlException ex) {
+            return BadRequest($"Database error: {ex.Message}");
+            // Message might contain: "Login failed for 'sa'@'192.168.1.1'"
+        }
+
+        // FAIL - Internal path revealed
+        catch (FileNotFoundException ex) {
+            return NotFound($"Config not found: {ex.FileName}");
+            // Reveals: "/app/secrets/config.json"
+        }
+    confidence:
+      high: Exception.ToString() or stack trace in HTTP response
+      medium: Exception message exposed (may or may not contain sensitive data)
+
+  - id: SM-1
+    name: Path Traversal Prevention
+    question: Does input validation prevent path traversal attacks?
+    gate: has_file_operations == true
+    pass_when:
+      - User input resolved to absolute path and validated against allowed directory
+      - Using Path.GetFullPath and checking it starts with allowed base
+      - Filename extracted with Path.GetFileName (strips directory components)
+      - Allowlist of permitted files/paths
+    fail_when:
+      - User-provided path used directly in File operations
+      - Only filtering ".." (incomplete - can be bypassed)
+      - Path combined with user input without validation
+      - Symbolic links not considered
+    examples:
+      pass: |
+        // PASS - Validate resolved path is under allowed directory
+        public string ReadUserFile(string filename) {
+            var basePath = Path.GetFullPath("/app/userfiles");
+            var requestedPath = Path.GetFullPath(Path.Combine(basePath, filename));
+
+            if (!requestedPath.StartsWith(basePath + Path.DirectorySeparatorChar)) {
+                throw new SecurityException("Access denied");
+            }
+
+            return File.ReadAllText(requestedPath);
+        }
+
+        // PASS - Extract filename only
+        public void SaveUpload(string userFilename, Stream content) {
+            var safeName = Path.GetFileName(userFilename);  // Strips ../
+            var path = Path.Combine(_uploadDir, safeName);
+            using var file = File.Create(path);
+            content.CopyTo(file);
+        }
+      fail: |
+        // FAIL - Direct path concatenation
+        public string GetDocument(string docName) {
+            return File.ReadAllText($"/app/documents/{docName}");
+            // docName = "../../../etc/passwd" reads system files!
+        }
+
+        // FAIL - Incomplete filtering
+        public string ReadFile(string filename) {
+            var safe = filename.Replace("..", "");  // "....//" bypasses!
+            return File.ReadAllText(Path.Combine(_baseDir, safe));
+        }
+
+        // FAIL - No validation after combine
+        public byte[] Download(string path) {
+            var fullPath = Path.Combine(_downloadsDir, path);
+            return File.ReadAllBytes(fullPath);  // path can escape!
+        }
+    confidence:
+      high: User input passed to File API without GetFullPath + StartsWith check
+      medium: Some validation present but completeness unclear

@@ -1,0 +1,532 @@
+## Naming and Spelling Checks
+## High-consistency checks for identifier naming and spelling quality
+## Sources: Code Complete 2nd Edition (Chapters 11, 31-32), internal analysis
+
+checks:
+  # ============================================================================
+  # SPELLING CHECKS
+  # ============================================================================
+
+  - id: SPELL-1
+    name: Identifier Spelling Accuracy
+    question: Are all identifier names spelled correctly?
+    pass_when:
+      - All words in identifiers are spelled correctly
+      - Standard abbreviations used (Id, Db, Http, Api, Config, Auth, Ctx, Msg, Req, Res)
+      - Domain-specific terms acceptable even if not in dictionary
+      - Intentional abbreviations documented or conventional
+    fail_when:
+      - Common misspellings (recieve, occured, seperate, responce, definately, accomodate)
+      - Typos with missing letters (loger, mesage, calcuate, reponse)
+      - Typos with swapped letters (recieve, teh, adn, wiht)
+      - Typos with doubled letters (occurrance, sucesss, adddress)
+      - Typos with wrong letters (responce, defualt, lenght)
+    examples:
+      pass: |
+        // PASS - correct spelling throughout
+        class UserAccountManager {
+            private readonly ILogger _logger;
+
+            public async Task<AuthResponse> GetAuthResponse(int userId) {
+                var httpClient = new HttpClient();
+                return await FetchUserCredentials(userId);
+            }
+        }
+      fail: |
+        // FAIL - multiple spelling errors
+        class UserAccontManager {           // accont -> account
+            private readonly ILogger _loger; // loger -> logger
+
+            public async Task<AuthResponce> GetAuthResponce(int userId) {  // responce -> response
+                var httpClinet = new HttpClient();  // clinet -> client
+                return await FetchUserCredentails(userId);  // credentails -> credentials
+            }
+        }
+    confidence:
+      high: Obvious misspelling of common English word (receive, response, separate)
+      medium: Could be intentional abbreviation or domain-specific term
+
+  - id: SPELL-2
+    name: Consistent Casing Convention
+    question: Is casing consistent for the same concept (userId vs userID)?
+    pass_when:
+      - Same concept uses same casing throughout codebase
+      - Follows language conventions (camelCase, PascalCase, snake_case)
+      - Acronyms follow consistent pattern (UserId OR UserID, not both)
+    fail_when:
+      - Mixed casing for same concept (userId in one place, userID in another)
+      - Inconsistent acronym handling (getHttpClient but getUserID)
+      - Case convention mismatch within same file/class
+    examples:
+      pass: |
+        // PASS - consistent casing throughout (camelCase with lowercase acronyms)
+        class UserService {
+            private int userId;
+            private string httpUrl;
+            private string apiKey;
+
+            public User GetUserById(int userId) { }
+            public void SetApiKey(string apiKey) { }
+            public HttpClient CreateHttpClient() { }
+        }
+      fail: |
+        // FAIL - inconsistent casing for same concepts
+        class UserService {
+            private int userId;      // lowercase 'id'
+            private int orderID;     // uppercase 'ID' - inconsistent!
+            private string httpUrl;  // lowercase 'http'
+            private string APIKey;   // uppercase 'API' - inconsistent!
+
+            public User GetUserByID(int userID) { }  // uppercase 'ID'
+            public void SetApiKey(string apiKey) { } // lowercase 'api' - inconsistent!
+        }
+    confidence:
+      high: Same word appears with different casing in same file
+      medium: Casing varies across files but might be intentional module boundary
+
+  # ============================================================================
+  # NAMING CHECKS
+  # ============================================================================
+
+  - id: NAME-1
+    name: No Single-Letter Variables Outside Loops
+    question: Are all single-letter variables confined to small loops or lambdas?
+    pass_when:
+      - Single-letter loop indices (i, j, k, x, y, n) in loops <= 5 lines
+      - Lambda parameters (x, e, _) in simple expressions
+      - Coordinates (x, y, z) in mathematical/graphics contexts
+      - Generic type parameters (T, K, V) in generics
+    fail_when:
+      - Single-letter variables outside loop context
+      - Single-letter variables in loops > 10 lines
+      - Abbreviated variables that should be descriptive (s, d, u, t, n, m, p)
+    examples:
+      pass: |
+        // PASS - single letters only in appropriate contexts
+        for (int i = 0; i < 5; i++) {
+            items[i].Process();
+        }
+
+        var names = users.Select(u => u.Name);  // lambda OK
+
+        public class Repository<T> { }  // generic type parameter OK
+
+        Point3D point = new Point3D(x: 10, y: 20, z: 30);  // coordinates OK
+      fail: |
+        // FAIL - single letters in non-loop contexts
+        var u = GetCurrentUser();           // u -> user or currentUser
+        string s = ReadFile(path);          // s -> content or fileContent
+        int n = CalculateTotal();           // n -> total or count
+
+        for (int i = 0; i < users.Count; i++) {
+            var u = users[i];               // 'u' in long loop
+            var a = u.GetAddress();         // 'a' -> address
+            var p = a.GetPostalCode();      // 'p' -> postalCode
+            // ... 15 more lines using u, a, p ...
+            ProcessUserAddress(u, a, p);
+        }
+    confidence:
+      high: Single-letter variable in method body outside loop/lambda
+      medium: Single letter in loop that might be longer than expected
+
+  - id: NAME-2
+    name: No Vague Generic Names
+    question: Are variable names specific rather than vague (data, temp, info, obj, result)?
+    pass_when:
+      - Names describe what the data represents (userProfile, orderTotal, errorMessage)
+      - Temporary variables have purpose-specific names (previousValue, cachedResult)
+      - Results are named by what they contain (validationErrors, fetchedUsers)
+    fail_when:
+      - Vague names as primary identifiers (data, temp, info, obj, result, value, item, thing)
+      - Manager/Handler/Processor without specificity (DataManager, ItemHandler)
+      - Numbers appended to vague names (data1, data2, temp3)
+    examples:
+      pass: |
+        // PASS - specific, descriptive names
+        var userProfile = await GetUserProfile(userId);
+        var orderTotal = CalculateOrderTotal(lineItems);
+        var validationErrors = ValidateInput(request);
+        var previousBalance = account.Balance;  // not just "temp"
+        var cachedResponse = _cache.Get(key);   // not just "result"
+      fail: |
+        // FAIL - vague generic names
+        var data = await GetUserProfile(userId);     // data -> userProfile
+        var temp = account.Balance;                  // temp -> previousBalance
+        var info = GetCustomerInfo(customerId);      // info -> customerDetails
+        var obj = CreateOrder(items);                // obj -> order
+        var result = ValidateInput(request);         // result -> validationErrors
+        var value = CalculateTotal();                // value -> orderTotal
+        var item = GetFirstItem();                   // item -> firstProduct
+
+        // Numbered vague names are worse
+        var data1 = GetSource();
+        var data2 = Transform(data1);
+        var data3 = Validate(data2);
+    confidence:
+      high: Variable named exactly 'data', 'temp', 'info', 'obj', 'result', 'value'
+      medium: Slightly more specific but still vague (userData, tempValue)
+
+  - id: NAME-3
+    name: Boolean Naming Convention
+    question: Do boolean variables use is/has/can/should/was/will prefix?
+    pass_when:
+      - Boolean variables start with is, has, can, should, was, will, does, did
+      - Boolean methods follow same convention (IsValid(), HasPermission())
+      - Negative booleans avoided or clearly named (isDisabled vs isNotEnabled)
+    fail_when:
+      - Boolean without conventional prefix (valid, active, enabled, visible)
+      - Ambiguous boolean names (status, flag, check, state)
+      - Double negatives (isNotInvalid, hasNoErrors)
+    examples:
+      pass: |
+        // PASS - clear boolean naming
+        bool isActive = user.Status == "active";
+        bool hasPermission = CheckPermission(user, resource);
+        bool canEdit = isActive && hasPermission;
+        bool shouldRetry = attemptCount < maxRetries;
+        bool wasSuccessful = response.StatusCode == 200;
+        bool willExpire = expirationDate < DateTime.Now.AddDays(30);
+
+        public bool IsValid() { }
+        public bool HasChildren() { }
+        public bool CanDelete() { }
+      fail: |
+        // FAIL - unclear boolean naming
+        bool active = user.Status == "active";       // active -> isActive
+        bool permission = CheckPermission(user);     // permission -> hasPermission
+        bool valid = Validate(input);                // valid -> isValid
+        bool enabled = feature.Enabled;              // enabled -> isEnabled
+        bool success = response.StatusCode == 200;   // success -> wasSuccessful
+        bool flag = SomeCondition();                 // flag -> ??? (totally unclear)
+        bool check = Verify(data);                   // check -> isVerified
+
+        public bool Valid() { }        // should be IsValid()
+        public bool Permission() { }   // should be HasPermission()
+    confidence:
+      high: Boolean variable named without any prefix (valid, active, enabled)
+      medium: Boolean with unconventional prefix that might be acceptable
+
+  - id: NAME-4
+    name: Method Names Describe Action
+    question: Do method names clearly describe what the method does?
+    pass_when:
+      - Verb-first naming (GetUser, CalculateTotal, ValidateInput, SendEmail)
+      - Action is specific and unambiguous
+      - Side effects reflected in name (SaveAndNotify, CreateOrUpdate)
+    fail_when:
+      - Vague verbs (Process, Handle, Manage, Do, Execute, Run, Perform)
+      - Missing verb (UserData instead of GetUserData)
+      - Name doesn't match behavior (GetUser that also saves to cache)
+    examples:
+      pass: |
+        // PASS - clear action-oriented names
+        public User GetUserById(int userId) { }
+        public decimal CalculateOrderTotal(Order order) { }
+        public ValidationResult ValidateEmailAddress(string email) { }
+        public void SendWelcomeEmail(User user) { }
+        public Order CreateOrderFromCart(Cart cart) { }
+        public User FindOrCreateUser(string email) { }  // clear dual action
+        public void SaveAndPublish(Document doc) { }     // side effects explicit
+      fail: |
+        // FAIL - vague or misleading names
+        public User ProcessUser(int userId) { }     // process how?
+        public void HandleOrder(Order order) { }    // handle how?
+        public void ManageData(Data data) { }       // manage how?
+        public void DoWork() { }                    // what work?
+        public void Execute() { }                   // execute what?
+        public User UserData(int userId) { }        // missing verb - GetUserData
+
+        // Misleading - name doesn't match behavior
+        public User GetUser(int userId) {
+            var user = _db.Find(userId);
+            _cache.Set(userId, user);    // side effect not in name!
+            _logger.Log("User accessed");  // another side effect!
+            return user;
+        }
+    confidence:
+      high: Method named Process, Handle, Manage, Do, Execute without specificity
+      medium: Method does more than name suggests (hidden side effects)
+
+  - id: NAME-5
+    name: Class Names Are Nouns
+    question: Are class names nouns or noun phrases describing the entity?
+    pass_when:
+      - Class names are nouns (User, Order, PaymentProcessor, EmailService)
+      - Names describe what the class IS, not what it DOES
+      - Suffixes clarify role (Controller, Service, Repository, Factory, Builder)
+    fail_when:
+      - Class names are verbs (Calculate, Validate, Process)
+      - Vague suffixes without meaning (Manager, Handler, Helper, Utils, Stuff)
+      - Names describe behavior not entity (DoCalculation, RunValidation)
+    examples:
+      pass: |
+        // PASS - noun-based class names
+        public class User { }
+        public class OrderRepository { }
+        public class PaymentProcessor { }      // noun: processor
+        public class EmailService { }
+        public class ShoppingCartController { }
+        public class InvoiceBuilder { }        // noun: builder
+        public class UserFactory { }           // noun: factory
+        public class ValidationResult { }      // noun: result
+      fail: |
+        // FAIL - verb-based or vague class names
+        public class Calculate { }          // verb - should be Calculator
+        public class Validate { }           // verb - should be Validator
+        public class DoPayment { }          // verb - should be PaymentProcessor
+        public class HandleErrors { }       // verb - should be ErrorHandler or ErrorService
+
+        // Vague suffixes
+        public class DataManager { }        // manager of what?
+        public class ItemHandler { }        // handles how?
+        public class StringHelper { }       // helper doing what? -> StringFormatter
+        public class MiscUtils { }          // grab bag - split into specific classes
+        public class Stuff { }              // completely meaningless
+    confidence:
+      high: Class name is a bare verb (Calculate, Validate, Process)
+      medium: Class uses vague suffix (Manager, Handler, Helper) but might be acceptable
+
+  - id: NAME-6
+    name: No Abbreviations Unless Standard
+    question: Are abbreviations avoided except for standard ones (Id, Db, Http, Api)?
+    pass_when:
+      - Standard abbreviations used (Id, Db, Http, Api, Url, Html, Xml, Json, Sql, Io, Ui)
+      - Domain abbreviations documented or universally understood (SSN, ISBN, VIN)
+      - Full words used for clarity (configuration not cfg, message not msg)
+    fail_when:
+      - Non-standard abbreviations (cfg, msg, btn, ctx, req, res, usr, pwd, addr)
+      - Inconsistent abbreviation (config in one place, cfg in another)
+      - Vowel-dropping abbreviations (mgr, cnt, qty, amt, num, str, val)
+    examples:
+      pass: |
+        // PASS - standard abbreviations only
+        public class HttpClient { }
+        public class SqlConnection { }
+        public int UserId { get; set; }
+        public string ApiKey { get; set; }
+        public string DatabaseUrl { get; set; }
+
+        // Full words for non-standard concepts
+        public string Configuration { get; set; }  // not cfg
+        public string Message { get; set; }        // not msg
+        public string Password { get; set; }       // not pwd
+        public string Address { get; set; }        // not addr
+        public int Quantity { get; set; }          // not qty
+      fail: |
+        // FAIL - non-standard abbreviations
+        public string cfg { get; set; }        // cfg -> configuration
+        public string msg { get; set; }        // msg -> message
+        public string pwd { get; set; }        // pwd -> password
+        public string addr { get; set; }       // addr -> address
+        public string btn { get; set; }        // btn -> button
+        public int qty { get; set; }           // qty -> quantity
+        public int amt { get; set; }           // amt -> amount
+        public int cnt { get; set; }           // cnt -> count
+        public string usr { get; set; }        // usr -> user
+        public string str { get; set; }        // str -> (what string?)
+        public UserCtx ctx { get; set; }       // ctx -> context
+        public Request req { get; set; }       // req -> request
+        public Response res { get; set; }      // res -> response
+        public Manager mgr { get; set; }       // mgr -> manager
+    confidence:
+      high: Common non-standard abbreviation (cfg, msg, pwd, btn, qty)
+      medium: Abbreviation might be domain-standard or team convention
+
+  # ============================================================================
+  # MIGRATED FROM CC-CODE-LAYOUT-AND-STYLE (RF-4, DN-4, CD-8)
+  # ============================================================================
+
+  - id: RF-4
+    name: Vague Names Detection
+    question: Are domain-specific names used instead of vague generic ones?
+    pass_when:
+      - Functions named with specific verbs (CalculateTax, ValidateEmail, FetchUser)
+      - Variables describe domain concepts (orderTotal, customerEmail, paymentStatus)
+      - Classes represent domain entities (Invoice, ShoppingCart, PaymentGateway)
+    fail_when:
+      - Functions with vague verbs (process, handle, manage, do, execute)
+      - Variables with generic names (data, temp, info, obj, result, value, item)
+      - Classes with meaningless names (Manager, Handler, Helper, Processor without context)
+    examples:
+      pass: |
+        // PASS - domain-specific naming
+        public class InvoiceGenerator {
+            public Invoice CreateInvoiceFromOrder(Order order) {
+                decimal taxAmount = CalculateTax(order.Subtotal);
+                var lineItems = MapOrderItemsToInvoiceLines(order.Items);
+                return new Invoice(lineItems, taxAmount);
+            }
+        }
+      fail: |
+        // FAIL - vague names throughout
+        public class DataProcessor {                // processor of what?
+            public object ProcessData(object data) {   // process how? data of what?
+                var temp = HandleItem(data);           // handle how?
+                var result = ManageInfo(temp);         // manage how? info of what?
+                return result;
+            }
+        }
+    confidence:
+      high: Method named Process/Handle/Manage + variable named data/temp/result
+      medium: Single vague name in otherwise clear code
+
+  - id: DN-4
+    name: Loop Counter Informative Names
+    question: Do loop counters have informative names in complex loops?
+    pass_when:
+      - Simple loops (1-5 lines) may use i, j, k
+      - Complex loops use descriptive names (userIndex, rowNumber, attemptCount)
+      - Nested loops use distinguishable names (outerIndex/innerIndex or rowIndex/colIndex)
+    fail_when:
+      - Single-letter counters in loops > 10 lines
+      - Nested loops with i, j, k that are hard to track
+      - Loop counter reused for different purposes
+    examples:
+      pass: |
+        // PASS - simple loop OK with i
+        for (int i = 0; i < 3; i++) {
+            items[i].Activate();
+        }
+
+        // PASS - complex loop with descriptive name
+        for (int userIndex = 0; userIndex < users.Count; userIndex++) {
+            var user = users[userIndex];
+            var orders = GetOrders(user.Id);
+            foreach (var order in orders) {
+                ValidateOrder(order);
+                ProcessPayment(order.PaymentInfo);
+                SendConfirmation(user.Email, order);
+                UpdateInventory(order.Items);
+                LogTransaction(user.Id, order.Id);
+            }
+        }
+
+        // PASS - nested loops with clear names
+        for (int rowIndex = 0; rowIndex < rows; rowIndex++) {
+            for (int colIndex = 0; colIndex < cols; colIndex++) {
+                matrix[rowIndex, colIndex] = Calculate(rowIndex, colIndex);
+            }
+        }
+      fail: |
+        // FAIL - single-letter in complex loop
+        for (int i = 0; i < users.Count; i++) {
+            var user = users[i];
+            var orders = GetOrders(user.Id);
+            for (int j = 0; j < orders.Count; j++) {   // nested i, j hard to track
+                var order = orders[j];
+                ValidateOrder(order);
+                ProcessPayment(order.PaymentInfo);
+                SendConfirmation(user.Email, order);
+                // Is this i or j? Easy to confuse
+                UpdateAuditLog(i, j, order.Status);
+            }
+        }
+    confidence:
+      high: Nested i/j/k loops with > 5 lines each
+      medium: Single letter in medium-length loop (5-10 lines)
+
+  - id: CD-8
+    name: Magic Numbers Named Constants
+    question: Are magic numbers replaced with named constants?
+    pass_when:
+      - Business rule numbers have named constants (MAX_LOGIN_ATTEMPTS, SHIPPING_THRESHOLD)
+      - Technical constants named (SECONDS_PER_HOUR, BYTES_PER_MEGABYTE)
+      - 0, 1, -1 OK for obvious uses (initialization, increment, not-found)
+      - Empty string "" and null OK for obvious initialization
+    fail_when:
+      - Unexplained numeric literals (86400, 1024, 3.14159, 7, 30, 100, 255)
+      - Status codes without names (if status == 7)
+      - Threshold values without context (if amount > 500)
+      - Timeout/retry values unexplained (Thread.Sleep(30000))
+    examples:
+      pass: |
+        // PASS - named constants
+        private const int MaxLoginAttempts = 3;
+        private const int SessionTimeoutMinutes = 30;
+        private const decimal FreeShippingThreshold = 50.00m;
+        private const int SecondsPerDay = 86400;
+
+        if (attempts >= MaxLoginAttempts) { LockAccount(); }
+        if (orderTotal >= FreeShippingThreshold) { waiveFee = true; }
+
+        // OK - obvious uses of 0, 1, -1
+        for (int i = 0; i < items.Count; i++) { }
+        if (index == -1) { /* not found */ }
+        count = 0;
+      fail: |
+        // FAIL - magic numbers without context
+        Thread.Sleep(86400000);              // 86400000 what? milliseconds?
+        if (age >= 21) { ServeAlcohol(); }   // why 21? legal drinking age
+        if (attempts >= 3) { LockAccount(); }  // why 3?
+        if (orderTotal >= 50) { waiveFee = true; }  // why 50?
+
+        if (status == 7) { }                 // what does 7 mean?
+        if (errorCode == 404) { }            // use HttpStatusCode.NotFound
+
+        var timeout = 30;                    // 30 what? seconds? minutes? retries?
+        var buffer = new byte[1024];         // why 1024?
+        if (percentage > 100) { }            // MAX_PERCENTAGE constant
+    confidence:
+      high: Multi-digit number in business logic without explanation
+      medium: Small number that might be obvious from context (2, 3, 10)
+
+  # ============================================================================
+  # ADDITIONAL HIGH-VALUE CHECK
+  # ============================================================================
+
+  - id: NAME-7
+    name: Opposites Used Consistently
+    question: Are naming opposites used consistently (get/set, add/remove, open/close)?
+    pass_when:
+      - Paired operations use standard opposites
+      - Common pairs: get/set, add/remove, create/destroy, open/close, start/stop
+      - Common pairs: begin/end, insert/delete, show/hide, enable/disable
+      - Common pairs: acquire/release, lock/unlock, attach/detach
+    fail_when:
+      - Mismatched opposites (add/delete instead of add/remove)
+      - Missing pair (has Add but no Remove)
+      - Inconsistent pairs in same class (start/end but begin/stop)
+    examples:
+      pass: |
+        // PASS - consistent opposites
+        public class ConnectionPool {
+            public Connection Acquire() { }
+            public void Release(Connection conn) { }
+
+            public void Open() { }
+            public void Close() { }
+
+            public void Enable() { }
+            public void Disable() { }
+        }
+
+        public class List<T> {
+            public void Add(T item) { }
+            public void Remove(T item) { }
+
+            public void Insert(int index, T item) { }
+            public void Delete(int index) { }  // or RemoveAt - pick one pair
+        }
+      fail: |
+        // FAIL - inconsistent opposites
+        public class ConnectionPool {
+            public Connection Open() { }
+            public void Destroy() { }     // should be Close, not Destroy
+
+            public void Start() { }
+            public void Finish() { }      // should be Stop, not Finish
+
+            public void Add() { }
+            public void Delete() { }      // should be Remove, not Delete
+        }
+
+        public class EventHandler {
+            public void Attach() { }
+            public void Remove() { }      // should be Detach, not Remove
+
+            public void Begin() { }
+            public void Stop() { }        // should be End, not Stop
+        }
+    confidence:
+      high: Clearly mismatched opposites (open/destroy, start/finish, add/delete)
+      medium: Unconventional pair that might be intentional domain terminology

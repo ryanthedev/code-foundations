@@ -2,13 +2,13 @@
 description: "Profile-driven code review"
 argument-hint: "[--sanity | --pr | --profile <name>] [diff-target]"
 allowed-tools: ["Bash", "Glob", "Grep", "Read", "Task", "Write", "AskUserQuestion"]
-version: "3.6.10"
+version: "3.7.2"
 ---
 
 # Code Review
 
 ```bash
-echo "code-foundations:review v3.6.10"
+echo "code-foundations:review v3.7.2"
 ```
 
 ---
@@ -31,12 +31,12 @@ echo "PLUGIN_ROOT: $PLUGIN_ROOT"
 
 | Argument | Meaning |
 |----------|---------|
-| `--sanity` | 14 core checks (default) |
+| `--sanity` | 14 core checks (default when no benchmark checks) |
 | `--pr` | Full PR review (614 checks) |
 | `--profile <name>` | Custom profile |
 | `main`, `--staged`, etc. | Diff target |
 
-If no diff target specified, ask:
+**Default diff target:** Branch diff (changes since branching from main). Only prompt if no diff target is specified AND the current branch is `main`:
 
 ```
 AskUserQuestion(
@@ -44,8 +44,7 @@ AskUserQuestion(
     header: "Target",
     question: "What do you want to review?",
     options: [
-      {label: "Branch diff (Recommended)", description: "Changes since branching from main"},
-      {label: "Staged changes", description: "git diff --staged"},
+      {label: "Staged changes (Recommended)", description: "git diff --staged"},
       {label: "Unstaged changes", description: "git diff"},
       {label: "All uncommitted", description: "git diff HEAD"}
     ]
@@ -54,7 +53,7 @@ AskUserQuestion(
 ```
 
 Map to diff command:
-- Branch diff → `git diff $(git merge-base main HEAD) HEAD`
+- Branch diff (auto when on feature branch) → `git diff $(git merge-base main HEAD) HEAD`
 - Staged → `git diff --staged`
 - Unstaged → `git diff`
 - All uncommitted → `git diff HEAD`
@@ -78,7 +77,7 @@ Show configuration:
 ```markdown
 ## Review Configuration
 
-**Profile:** sanity - 14 core checks
+**Profile:** [profile name]
 **Target:** [diff description] ([N] files)
 **Output:** $BASE_DIR
 ```
@@ -100,7 +99,7 @@ If 0 units, stop: "No code units found in diff. Nothing to review."
 
 ## Step 5: Create Batches & Generate Checklists
 
-Run batching and checklist generation together. **Replace {PLUGIN_ROOT} and {BASE_DIR} with actual paths from previous steps:**
+Run batching and checklist generation together. **Replace {PLUGIN_ROOT} and {BASE_DIR} with actual paths from previous steps.**
 
 ```bash
 PLUGIN_ROOT="{PLUGIN_ROOT}"
@@ -111,16 +110,9 @@ tail -n +2 "$BASE_DIR/units.jsonl" | "$PLUGIN_ROOT/agents/orchestrate-batches.sh
 BATCH_COUNT=$(jq 'length' "$BASE_DIR/batches.json")
 echo "Created $BATCH_COUNT batches"
 
-# Generate checklists
+# Generate checklists (auto-loads from benchmarks/checks/*.yaml)
 cat "$BASE_DIR/batches.json" | bun "$PLUGIN_ROOT/agents/generate-checklists.ts" "$BASE_DIR"
 echo "Generated $BATCH_COUNT checklists"
-```
-
-**Example with real paths:**
-```bash
-PLUGIN_ROOT="/Users/r/repos/code-foundations"
-BASE_DIR="/tmp/PricingAPI-feature-2107"
-# ... rest of commands
 ```
 
 ---
@@ -185,7 +177,7 @@ Display summary:
 ```markdown
 ## Review Complete
 
-**$BATCH_COUNT batches** | **$UNIT_COUNT units** | **14 checks each**
+**$BATCH_COUNT batches** | **$UNIT_COUNT units**
 
 ### Results
 - 🔴 Findings: $FINDINGS

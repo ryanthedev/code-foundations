@@ -1,0 +1,568 @@
+## Architecture and Design Checks
+## High-consistency checks (4-5/5 reviewer agreement) from APOSD and CC
+## Focus: deterministic, pattern-based detection
+
+checks:
+  - id: ARCH-IH1
+    name: Information Leakage
+    question: Is the same knowledge duplicated in multiple modules?
+    pass_when:
+      - Knowledge about data format, algorithm, or protocol exists in ONE place
+      - Shared knowledge is extracted to a single authoritative source
+      - Changes to a concept require modifying only one location
+    fail_when:
+      - Same parsing logic appears in multiple files
+      - Same validation rules duplicated across modules
+      - Same magic values or format strings scattered across codebase
+      - Same calculation or transformation repeated
+    examples:
+      pass: |
+        // PASS - Format knowledge in one place
+        class DateFormatter {
+            static readonly string ISO_FORMAT = "yyyy-MM-dd";
+            public string Format(DateTime date) => date.ToString(ISO_FORMAT);
+            public DateTime Parse(string s) => DateTime.ParseExact(s, ISO_FORMAT, null);
+        }
+
+        // Both callers use the authoritative source
+        var formatted = DateFormatter.Format(order.CreatedAt);
+        var parsed = DateFormatter.Parse(input);
+      fail: |
+        // FAIL - Format knowledge duplicated
+        // In OrderService.cs:
+        var dateStr = order.CreatedAt.ToString("yyyy-MM-dd");
+
+        // In ReportService.cs:
+        var dateStr = report.Date.ToString("yyyy-MM-dd");
+
+        // In ImportService.cs:
+        var date = DateTime.ParseExact(input, "yyyy-MM-dd", null);
+    confidence:
+      high: Same literal string/regex/magic number in 2+ files
+      medium: Similar but slightly different logic in multiple places
+
+  - id: ARCH-LA1
+    name: Pass-Through Methods
+    question: Does the method only delegate to another with the same API?
+    pass_when:
+      - Method adds validation, logging, or transformation
+      - Method adapts interface (different signature)
+      - Method is documented facade/adapter pattern
+      - Method applies cross-cutting concern (auth, caching, metrics)
+    fail_when:
+      - Single-line return delegating to another method
+      - Parameters forwarded unchanged to inner call
+      - No added logic between entry and delegation
+      - Undocumented thin wrapper
+    examples:
+      pass: |
+        // PASS - Adds validation and logging
+        public User GetUser(int id) {
+            if (id <= 0) throw new ArgumentException("Invalid ID");
+            _logger.LogDebug("Fetching user {Id}", id);
+            return _repository.GetUser(id);
+        }
+
+        // PASS - Adapts interface
+        public User FindByEmail(string email) {
+            return _repository.GetUser(new UserQuery { Email = email });
+        }
+      fail: |
+        // FAIL - Pure delegation, no added value
+        public User GetUser(int id) {
+            return _repository.GetUser(id);
+        }
+
+        // FAIL - Just forwarding
+        public void Save(User user) {
+            _repository.Save(user);
+        }
+
+        // FAIL - Wrapper adds nothing
+        public List<Order> GetOrders() => _orderRepo.GetOrders();
+    confidence:
+      high: Method body is single return/call statement
+      medium: Minimal wrapping that might be intentional adapter
+
+  - id: ARCH-TA3
+    name: Code Duplication
+    question: Does the same code appear in multiple places?
+    pass_when:
+      - Similar code has meaningful differences justifying separation
+      - Shared logic is extracted to reusable function
+      - Apparent duplication is coincidental (will diverge)
+    fail_when:
+      - Identical or near-identical code blocks in 2+ locations
+      - Copy-paste with only variable name changes
+      - Same sequence of operations repeated
+      - Same error handling pattern duplicated
+    examples:
+      pass: |
+        // PASS - Shared logic extracted
+        private void ValidateAndSave(Entity entity) {
+            Validate(entity);
+            _context.SaveChanges();
+            _cache.Invalidate(entity.Id);
+        }
+
+        public void CreateUser(User u) => ValidateAndSave(u);
+        public void CreateOrder(Order o) => ValidateAndSave(o);
+      fail: |
+        // FAIL - Same pattern duplicated
+        public void CreateUser(User user) {
+            Validate(user);
+            _context.Users.Add(user);
+            _context.SaveChanges();
+            _cache.Invalidate(user.Id);
+        }
+
+        public void CreateOrder(Order order) {
+            Validate(order);
+            _context.Orders.Add(order);
+            _context.SaveChanges();
+            _cache.Invalidate(order.Id);
+        }
+    confidence:
+      high: 5+ lines of identical code in 2+ places
+      medium: Similar structure but different details
+
+  - id: ARCH-RF1
+    name: Scattered Exception Handling
+    question: Is the same error handled in many places?
+    pass_when:
+      - Error handling consolidated in single location
+      - Exceptions aggregated to common handler
+      - Retry/fallback logic in one place
+    fail_when:
+      - Same try-catch pattern in multiple methods
+      - Same error message/logging scattered across files
+      - Same recovery logic duplicated
+      - Multiple methods catching same exception type identically
+    examples:
+      pass: |
+        // PASS - Centralized error handling
+        public class ApiClient {
+            public async Task<T> ExecuteWithRetry<T>(Func<Task<T>> operation) {
+                for (int i = 0; i < 3; i++) {
+                    try { return await operation(); }
+                    catch (HttpRequestException) when (i < 2) {
+                        await Task.Delay(1000 * (i + 1));
+                    }
+                }
+                throw new ServiceUnavailableException();
+            }
+        }
+
+        // Callers use the centralized handler
+        var user = await _api.ExecuteWithRetry(() => GetUserAsync(id));
+        var order = await _api.ExecuteWithRetry(() => GetOrderAsync(id));
+      fail: |
+        // FAIL - Same try-catch duplicated everywhere
+        public async Task<User> GetUser(int id) {
+            for (int i = 0; i < 3; i++) {
+                try { return await _http.GetAsync<User>($"/users/{id}"); }
+                catch (HttpRequestException) when (i < 2) {
+                    await Task.Delay(1000 * (i + 1));
+                }
+            }
+            throw new ServiceUnavailableException();
+        }
+
+        public async Task<Order> GetOrder(int id) {
+            for (int i = 0; i < 3; i++) {
+                try { return await _http.GetAsync<Order>($"/orders/{id}"); }
+                catch (HttpRequestException) when (i < 2) {
+                    await Task.Delay(1000 * (i + 1));
+                }
+            }
+            throw new ServiceUnavailableException();
+        }
+    confidence:
+      high: Identical try-catch blocks in 2+ methods
+      medium: Similar error handling with minor variations
+
+  - id: ARCH-RF2
+    name: Configuration Explosion
+    question: Are configuration parameters minimized with sensible defaults?
+    pass_when:
+      - Reasonable defaults for most use cases
+      - Configuration only for genuinely variable settings
+      - Parameters computed automatically when possible
+    fail_when:
+      - Many parameters with obvious correct values
+      - User must configure internal implementation details
+      - No defaults, all values required
+      - Parameters that almost never change from default
+    examples:
+      pass: |
+        // PASS - Sensible defaults, minimal required config
+        public class HttpClient {
+            public int Timeout { get; set; } = 30_000;      // 30 sec default
+            public int MaxRetries { get; set; } = 3;         // retry by default
+            public string BaseUrl { get; }                   // only required param
+
+            public HttpClient(string baseUrl) {
+                BaseUrl = baseUrl;
+            }
+        }
+
+        var client = new HttpClient("https://api.example.com");
+      fail: |
+        // FAIL - Configuration explosion, no defaults
+        public class HttpClient {
+            public HttpClient(
+                string baseUrl,
+                int timeout,                  // could default to 30s
+                int maxRetries,               // could default to 3
+                int bufferSize,               // internal detail
+                bool enableCompression,       // could default to true
+                string userAgent,             // could have default
+                int connectionPoolSize,       // internal detail
+                bool validateCertificates     // could default to true
+            ) { ... }
+        }
+
+        // Caller must know all these values
+        var client = new HttpClient(url, 30000, 3, 4096, true, "MyApp/1.0", 10, true);
+    confidence:
+      high: Constructor/method requires 5+ parameters with obvious defaults
+      medium: Several optional parameters that could have better defaults
+
+  - id: ARCH-OP1
+    name: Generic Container Anti-Pattern
+    question: Are generic containers (Tuple, Pair) avoided for domain concepts?
+    pass_when:
+      - Named types with descriptive field names
+      - Return types clearly express their meaning
+      - Record/class used for multi-value returns
+    fail_when:
+      - Tuple<T1, T2> returned from public methods
+      - Pair/Triple used to bundle related data
+      - Item1, Item2 access in calling code
+      - Anonymous types escaping method scope
+    examples:
+      pass: |
+        // PASS - Named type with clear fields
+        public record GeoLocation(double Latitude, double Longitude);
+        public record ParseResult(bool Success, string Value, string Error);
+
+        var location = GetLocation(address);
+        Console.WriteLine($"Lat: {location.Latitude}, Long: {location.Longitude}");
+
+        var result = Parse(input);
+        if (result.Success) Process(result.Value);
+      fail: |
+        // FAIL - Generic tuple obscures meaning
+        public Tuple<double, double> GetLocation(string address) { ... }
+        public (bool, string, string) Parse(string input) { ... }
+
+        var location = GetLocation(address);
+        Console.WriteLine($"Lat: {location.Item1}, Long: {location.Item2}");
+
+        var result = Parse(input);
+        if (result.Item1) Process(result.Item2);  // What is Item2?
+    confidence:
+      high: Tuple/Pair in public API with Item1/Item2 access
+      medium: Internal use of tuples that could be clearer
+
+  - id: ARCH-OP3
+    name: Type Declaration Mismatch
+    question: Do variable declarations match their actual types?
+    pass_when:
+      - Declared type matches allocated type
+      - Interface used only when polymorphism needed
+      - var/auto used for obvious local types
+    fail_when:
+      - List declared but ArrayList/LinkedList allocated
+      - Abstract type declared, concrete type never varies
+      - Interface variable when only one implementation exists
+    examples:
+      pass: |
+        // PASS - Declaration matches usage
+        List<User> users = new List<User>();
+        Dictionary<int, Order> cache = new Dictionary<int, Order>();
+
+        // PASS - Interface justified by multiple implementations
+        IPaymentProcessor processor = GetProcessor(paymentType);  // returns Stripe or PayPal
+
+        // PASS - var for obvious types
+        var users = new List<User>();
+        var response = await client.GetAsync(url);
+      fail: |
+        // FAIL - IList but always List, no polymorphism
+        IList<User> users = new List<User>();  // never assigned ArrayList
+
+        // FAIL - Abstract type, concrete never varies
+        Stream stream = new MemoryStream();  // always MemoryStream
+
+        // FAIL - Interface but only one implementation exists
+        IUserRepository repo = new SqlUserRepository();  // only impl in codebase
+    confidence:
+      high: Interface declared, only one concrete type ever assigned
+      medium: Could be future-proofing for planned polymorphism
+
+  - id: ARCH-CS1
+    name: Change Amplification
+    question: Does a simple change require modifications in many places?
+    pass_when:
+      - Single concept changed in single location
+      - Related changes co-located
+      - DRY principle followed
+    fail_when:
+      - Adding field requires changes in 3+ files
+      - Same constant/format updated in multiple locations
+      - Feature toggle requires scattered modifications
+      - New enum value needs updates throughout codebase
+    examples:
+      pass: |
+        // PASS - Adding status only touches one place
+        public enum OrderStatus { Pending, Processing, Shipped, Delivered, Returned }
+
+        // Single mapping table handles all display logic
+        private static readonly Dictionary<OrderStatus, string> StatusLabels = new() {
+            [OrderStatus.Pending] = "Awaiting Processing",
+            [OrderStatus.Processing] = "In Progress",
+            // Adding new status: just add one line here
+        };
+      fail: |
+        // FAIL - Adding status requires changes in many files
+        // OrderStatus.cs - add enum value
+        // OrderValidator.cs - add validation case
+        // OrderController.cs - add API mapping
+        // OrderView.cshtml - add display case
+        // order-status.css - add styling
+        // OrderTests.cs - add test cases
+        // OrderStatusConverter.cs - add serialization
+        // OrderReport.cs - add report handling
+    confidence:
+      high: Same literal/constant changed in 3+ files in one commit
+      medium: Architectural issue requiring deeper analysis
+
+  - id: STYLE-RF2
+    name: Deep Nesting
+    question: Is nesting depth kept to 3 levels or less?
+    pass_when:
+      - Maximum nesting depth is 3 or fewer
+      - Early returns reduce nesting
+      - Complex conditions extracted to methods
+    fail_when:
+      - 4+ levels of control structure nesting
+      - Deeply nested if/for/while/try blocks
+      - Arrow code (code forming arrow shape)
+    examples:
+      pass: |
+        // PASS - Early returns keep nesting shallow
+        public void ProcessOrder(Order order) {
+            if (order == null) return;
+            if (!order.IsValid) return;
+
+            foreach (var item in order.Items) {          // Level 1
+                if (item.RequiresProcessing) {           // Level 2
+                    ProcessItem(item);                   // Level 2 - OK
+                }
+            }
+        }
+      fail: |
+        // FAIL - 4+ levels of nesting (arrow code)
+        public void ProcessOrder(Order order) {
+            if (order != null) {                          // Level 1
+                if (order.IsValid) {                      // Level 2
+                    foreach (var item in order.Items) {   // Level 3
+                        if (item.RequiresProcessing) {    // Level 4 - TOO DEEP
+                            if (item.InStock) {           // Level 5 - WAY TOO DEEP
+                                ProcessItem(item);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    confidence:
+      high: Can count indentation levels directly
+
+  - id: STYLE-RF5
+    name: Single Statement Per Line
+    question: Does each line contain at most one statement?
+    pass_when:
+      - One statement per line
+      - Chained method calls on separate lines if long
+      - Simple one-liner properties acceptable
+    fail_when:
+      - Multiple semicolons on same line
+      - Multiple assignments on same line
+      - Compound statements crammed together
+    examples:
+      pass: |
+        // PASS - One statement per line
+        int x = 10;
+        int y = 20;
+        int z = x + y;
+
+        user.Name = name;
+        user.Email = email;
+        user.Save();
+
+        // PASS - Simple property
+        public int Count => _items.Count;
+      fail: |
+        // FAIL - Multiple statements per line
+        int x = 10; int y = 20; int z = x + y;
+
+        user.Name = name; user.Email = email; user.Save();
+
+        // FAIL - Crammed together
+        for (int i = 0; i < n; i++) { sum += arr[i]; count++; }
+    confidence:
+      high: Multiple semicolons visible on same line
+
+  - id: STYLE-RF6
+    name: No Side Effects in Conditions
+    question: Are conditions free of assignments and side effects?
+    pass_when:
+      - Conditions only test values
+      - Assignments done before condition check
+      - Method calls in conditions are pure (no side effects)
+    fail_when:
+      - Assignment inside if/while condition
+      - Increment/decrement in condition
+      - State-modifying method call in condition
+    examples:
+      pass: |
+        // PASS - Assignment separate from condition
+        var user = GetUser(id);
+        if (user != null) {
+            Process(user);
+        }
+
+        // PASS - Pure method in condition
+        if (user.IsActive && user.HasPermission("admin")) {
+            GrantAccess();
+        }
+
+        // PASS - Pattern matching (not assignment)
+        if (result is Success s) {
+            return s.Value;
+        }
+      fail: |
+        // FAIL - Assignment in condition
+        if ((user = GetUser(id)) != null) {
+            Process(user);
+        }
+
+        // FAIL - Side effect in condition
+        if (queue.TryDequeue(out var item) && Process(item)) {
+            // Both dequeue AND process happen in condition
+        }
+
+        // FAIL - Increment in condition
+        while ((c = reader.Read()) != -1) {
+            buffer[i++] = c;  // Side effect
+        }
+    confidence:
+      high: Assignment operator (=) visible in if/while condition
+      medium: Method call that might have side effects
+
+  - id: STYLE-LS4
+    name: One Statement Per Line
+    question: Is there exactly one statement per line?
+    pass_when:
+      - Each statement on its own line
+      - Logical separation between operations
+      - Readable vertical flow
+    fail_when:
+      - Multiple statements separated by semicolons on one line
+      - Chained operations that should be separate
+    examples:
+      pass: |
+        // PASS - Clear, one per line
+        ValidateInput(data);
+        ProcessData(data);
+        SaveResults(data);
+        NotifyUser(data);
+      fail: |
+        // FAIL - Multiple statements crammed together
+        ValidateInput(data); ProcessData(data); SaveResults(data); NotifyUser(data);
+
+        // FAIL - Even two is too many
+        x++; y--;
+    confidence:
+      high: Multiple semicolons on non-for-loop line
+
+  - id: STYLE-LS6
+    name: One Declaration Per Line
+    question: Is there at most one variable declaration per line?
+    pass_when:
+      - Each variable declared on separate line
+      - Clear initialization for each variable
+      - Related variables grouped but separate
+    fail_when:
+      - Multiple variables in one declaration
+      - Comma-separated declarations
+      - Different types or initializers on same line
+    examples:
+      pass: |
+        // PASS - One declaration per line
+        int width = 100;
+        int height = 200;
+        int depth = 50;
+
+        string firstName = user.First;
+        string lastName = user.Last;
+
+        // PASS - For loop initializers (exception)
+        for (int i = 0, j = n - 1; i < j; i++, j--) { }
+      fail: |
+        // FAIL - Multiple declarations
+        int width, height, depth;
+        int x = 10, y = 20, z = 30;
+        string first = "a", second = "b", third = "c";
+
+        // FAIL - Mixed initialization
+        int initialized = 5, uninitialized;
+    confidence:
+      high: Comma-separated variable names in declaration
+
+  - id: ARCH-IH2
+    name: Temporal Decomposition
+    question: Is code structured by knowledge/abstraction rather than execution order?
+    pass_when:
+      - Modules organized around concepts/responsibilities
+      - Related operations grouped by what they do, not when
+      - Clear separation of concerns
+    fail_when:
+      - File/class named after phase (Step1, Phase2, PreProcess)
+      - Methods that must be called in specific order
+      - Logic split by time rather than responsibility
+    examples:
+      pass: |
+        // PASS - Organized by responsibility
+        class OrderValidator { ... }
+        class OrderRepository { ... }
+        class OrderNotifier { ... }
+        class PricingEngine { ... }
+
+        // PASS - Single responsibility, clear purpose
+        public class PaymentProcessor {
+            public PaymentResult Process(Payment payment) {
+                Validate(payment);
+                var result = ExecuteTransaction(payment);
+                RecordTransaction(result);
+                return result;
+            }
+        }
+      fail: |
+        // FAIL - Organized by execution phase
+        class Step1_ValidateInput { ... }
+        class Step2_ProcessData { ... }
+        class Step3_SaveResults { ... }
+
+        // FAIL - Must be called in order, leaks implementation
+        public class OrderProcessor {
+            public void Phase1_Initialize() { ... }
+            public void Phase2_Validate() { ... }    // Must call after Phase1
+            public void Phase3_Calculate() { ... }  // Must call after Phase2
+            public void Phase4_Complete() { ... }   // Must call last
+        }
+    confidence:
+      high: Classes/methods named with Step/Phase/Stage numbers
+      medium: Implicit ordering requirements without documentation

@@ -1,0 +1,225 @@
+## Optimized Checks for Consistency Testing
+## Each check has examples and clear PASS/FAIL criteria
+
+checks:
+  - id: SPELL-1
+    name: Identifier Spelling
+    question: Are all identifier names spelled correctly?
+    pass_when:
+      - All words in identifiers are spelled correctly
+      - Standard abbreviations OK (Id, Db, Http, Api, Config, Auth, Ctx, Msg)
+      - Domain-specific terms OK even if not in dictionary
+    fail_when:
+      - Common misspellings (recieve, occured, seperate, responce)
+      - Typos (missing letters, swapped letters, doubled letters)
+      - NOT intentional abbreviations (msg, btn, ctx, req, res)
+    examples:
+      pass: |
+        QuoteRequestAdapter    // correct spelling
+        _logger                // correct
+        GetQuoteResponse       // correct
+        userId, httpClient     // standard abbreviations
+      fail: |
+        QuoteRequestAdaptor    // adaptor→adapter
+        _loger                 // missing 'g'
+        GetQuoteResponce       // responce→response
+        calcuatedPrice         // missing 'l'
+    confidence:
+      high: Obvious misspelling of common word
+      medium: Could be intentional abbreviation or domain term
+
+  - id: NULL-1
+    name: Null Dereference Safety
+    question: Does code check for null before dereferencing?
+    pass_when:
+      - Variables null-checked before .Property or [index] access
+      - Using null-conditional (?.) or null-coalescing (??) operators
+      - Using pattern matching (is not null)
+      - Comment explicitly documents why null is impossible
+      - Constructor/framework guarantees non-null
+    fail_when:
+      - Accessing .Property on potentially null reference without check
+      - Array/dictionary indexing without null check on collection
+      - Relying on undocumented assumptions about nullability
+    examples:
+      pass: |
+        if (user != null) { return user.Name; }
+        return user?.Name ?? "default";
+        // Guaranteed non-null by DI container
+        var name = _service.Name;
+      fail: |
+        return user.Name;           // user could be null
+        return features[key];       // features could be null
+    confidence:
+      high: Clear dereference without any null protection
+      medium: Depends on external guarantees not visible in this code
+
+  - id: NEST-1
+    name: Nesting Depth
+    question: Is nesting depth ≤ 3 levels?
+    pass_when:
+      - Maximum nesting depth is 3 or less
+      - Method/function body is at level 1
+      - First if/for/while is level 2
+      - Nested control structure is level 3
+    fail_when:
+      - Nesting depth exceeds 3 levels
+      - 4+ levels of if/for/while/try nesting
+    examples:
+      pass: |
+        void Process() {                    // level 1
+            if (condition) {                // level 2
+                foreach (var item in items) { // level 3
+                    DoWork(item);           // OK - still level 3
+                }
+            }
+        }
+      fail: |
+        void Process() {                    // level 1
+            if (condition) {                // level 2
+                foreach (var item in items) { // level 3
+                    if (item.IsValid) {     // level 4 - TOO DEEP
+                        DoWork(item);
+                    }
+                }
+            }
+        }
+    confidence:
+      high: Can count nesting levels directly
+
+  - id: NAME-1
+    name: Descriptive Variable Names
+    question: Are variable names descriptive (not single letters outside loops)?
+    pass_when:
+      - Variables have meaningful names describing their purpose
+      - Loop indices (i, j, k, x, y) OK in small loops (≤5 lines)
+      - Lambda parameters (x, e, _) OK for simple expressions
+    fail_when:
+      - Single letter variables outside small loops
+      - Vague names (data, temp, info, obj, result, value, item) as primary identifiers
+      - Abbreviations that aren't obvious (n, s, t, d for non-loop use)
+    examples:
+      pass: |
+        foreach (var user in users) { }        // clear
+        for (int i = 0; i < 5; i++) { }        // loop index OK
+        var userName = GetUserName();          // descriptive
+        items.Select(x => x.Id)                // lambda OK
+      fail: |
+        var d = GetData();                     // what is d?
+        string s = user.Name;                  // why 's'?
+        var temp = Calculate();                // temp for what?
+        for (int i = 0; i < users.Count; i++) {
+            var u = users[i];                  // 'u' in long loop
+            // ... 20 more lines using 'u'
+        }
+    confidence:
+      high: Single letter in non-loop context
+      medium: Vague name that might be acceptable in context
+
+  - id: MAGIC-1
+    name: No Magic Numbers
+    question: Are literal values replaced with named constants?
+    pass_when:
+      - Numeric literals are named constants or explained
+      - 0, 1, -1 OK for obvious uses (init, increment, not found)
+      - String literals OK if used once or self-documenting
+    fail_when:
+      - Unexplained numbers (86400, 1024, 3.14159, 7, 30)
+      - Repeated literal values that should be constants
+      - Business rule numbers without names
+    examples:
+      pass: |
+        const int MaxRetries = 3;
+        const int SecondsPerDay = 86400;
+        if (index == -1) { /* not found */ }
+        for (int i = 0; i < items.Count; i++) { }
+      fail: |
+        Thread.Sleep(86400000);            // what is this number?
+        if (age >= 21) { }                 // why 21?
+        var timeout = 30;                  // 30 what? seconds? minutes?
+        if (status == 7) { }               // magic status code
+    confidence:
+      high: Unexplained multi-digit number in business logic
+      medium: Could be obvious from context
+
+  - id: CATCH-1
+    name: No Empty Catch Blocks
+    question: Do all catch blocks do something meaningful?
+    pass_when:
+      - Catch block logs, rethrows, or handles the error
+      - Empty catch has comment explaining intentional swallow
+      - Using 'when' filter to catch specific cases
+    fail_when:
+      - Empty catch block with no comment
+      - Catch that only has comment but no action
+      - Swallowing exceptions without logging
+    examples:
+      pass: |
+        catch (IOException ex) {
+            _logger.LogError(ex, "File operation failed");
+            throw;
+        }
+        catch (OperationCanceledException) {
+            // Intentionally ignored - user cancelled
+        }
+      fail: |
+        catch (Exception) { }              // silent swallow
+        catch (Exception ex) {
+            // TODO: handle this
+        }
+        catch { }                          // bare catch, no action
+    confidence:
+      high: Empty catch block is visible
+
+  - id: ASYNC-1
+    name: No Blocking in Async
+    question: Does async code avoid blocking calls?
+    gate: has_async == true
+    pass_when:
+      - All async operations use await
+      - No .Result, .Wait(), .GetAwaiter().GetResult()
+      - Task.Run used appropriately for CPU-bound work
+    fail_when:
+      - Using .Result on Task (blocks thread)
+      - Using .Wait() on Task (blocks thread)
+      - Using Task.Run for IO-bound work
+    examples:
+      pass: |
+        var result = await httpClient.GetAsync(url);
+        var data = await ReadFileAsync(path);
+      fail: |
+        var result = httpClient.GetAsync(url).Result;    // blocks!
+        task.Wait();                                      // blocks!
+        var data = ReadFileAsync(path).GetAwaiter().GetResult();
+    confidence:
+      high: .Result or .Wait() is visible in code
+
+  - id: ARCH-1
+    name: No Pass-Through Methods
+    question: Does the method do more than just delegate to another?
+    pass_when:
+      - Method adds value (validation, transformation, logging)
+      - Method adapts interface (different parameters/return type)
+      - Method is an intentional facade with documentation
+    fail_when:
+      - Method only calls another method with same/similar parameters
+      - No added logic, validation, or transformation
+      - Just forwarding without explanation
+    examples:
+      pass: |
+        public User GetUser(int id) {
+            ValidateId(id);
+            var user = _repository.GetUser(id);
+            _logger.LogDebug("Retrieved user {Id}", id);
+            return user;
+        }
+      fail: |
+        public User GetUser(int id) {
+            return _repository.GetUser(id);  // just forwarding
+        }
+        public void Save(User user) {
+            _repository.Save(user);          // no added value
+        }
+    confidence:
+      high: Method body is single return/call statement
+      medium: Method has minimal wrapping that might be intentional

@@ -13,7 +13,7 @@ You receive a checklist file with empty checkboxes. Your job: read the code for 
 
 **Input**: A checklist markdown file at `CHECKLIST_FILE` containing:
 - A units table (name, file, line range, type)
-- 14 checks, each with one checkbox per unit
+- Checks, each with one checkbox per unit (may include pass/fail guidance and examples)
 
 **Output**: The same file with every `- [ ]` replaced by a detailed verdict.
 
@@ -180,39 +180,26 @@ Edit(
 
 ## When to Mark N/A
 
-Mark N/A when the check's concern doesn't exist in the code:
+Mark N/A when the check's concern doesn't exist in the code. Common patterns:
 
-| If the unit has... | These checks are N/A |
+| If the unit has... | N/A checks about... |
 |-------------------|---------------------|
-| No loops | LOGIC-1, PERF-1 |
-| No async/threading/shared state | CONC-2, CONC-3 |
-| No array/list access | NULL-4, NULL-5 |
-| No recursion | LOGIC-6 |
-| No external calls that return status | ERR-3 |
-| No resource acquisition | RES-1 |
+| No loops | Loop termination, loop index, N+1 queries |
+| No async/threading | Concurrency, race conditions, async error handling |
+| No array/list access | Bounds checking, off-by-one |
+| No recursion | Recursion base cases |
+| No external calls returning status | Error return code checking |
+| No resource acquisition | Resource release |
 
 **Always provide evidence** for why the check doesn't apply.
 
----
+## Using Check Guidance
 
-## Check Reference
-
-| ID | The Check |
-|----|-----------|
-| ERR-3 | Are all error-return codes checked? |
-| ERR-8 | Are partial failures handled (rollback, cleanup)? |
-| NULL-2 | Does code check for null before use? |
-| NULL-4 | Are array indexes within bounds? |
-| NULL-5 | Are array references free of off-by-one errors? |
-| NULL-6 | What happens with empty input? |
-| LOGIC-1 | Does the loop end under all conditions? |
-| LOGIC-6 | Does recursive code have a path to stop? |
-| LOGIC-11 | Are all cases covered in switch/if-else? |
-| LOGIC-15 | No accidental assignment in conditionals? |
-| CONC-2 | Is each shared access point protected? |
-| CONC-3 | Are there no TOCTOU race conditions? |
-| RES-1 | Does every acquire have corresponding release? |
-| PERF-1 | Are database queries not in loops (N+1)? |
+Checks may include **PASS when**, **FAIL when**, and **Examples** sections. Use these to calibrate your verdicts:
+- **PASS when** lists conditions that satisfy the check
+- **FAIL when** lists conditions that violate the check
+- **Examples** show concrete PASS/FAIL code patterns
+- When in doubt, match the code against the examples for the closest fit
 
 ---
 

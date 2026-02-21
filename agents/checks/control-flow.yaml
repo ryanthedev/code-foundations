@@ -1,0 +1,576 @@
+## Control Flow Quality Checks
+## High-consistency checks from cc-control-flow-quality (5/5 inter-rater agreement)
+## Source: Code Complete 2nd Edition, Chapters 14-19
+
+checks:
+  - id: CF-NEST-1
+    name: Nesting Depth Limit
+    question: Is nesting depth limited to 3 levels or less?
+    pass_when:
+      - Maximum nesting depth is 3 or less
+      - Method/function body counts as level 1
+      - Each control structure (if, for, while, try) adds one level
+      - Early returns used to reduce nesting
+    fail_when:
+      - Nesting exceeds 3 levels (4+ levels)
+      - Deeply nested conditionals inside loops
+      - Multiple levels of nested callbacks
+    examples:
+      pass: |
+        // PASS - 3 levels max
+        function processOrders(orders) {           // level 1
+            for (const order of orders) {          // level 2
+                if (order.isValid) {               // level 3
+                    processOrder(order);           // still level 3
+                }
+            }
+        }
+      fail: |
+        // FAIL - 4 levels
+        function processOrders(orders) {           // level 1
+            for (const order of orders) {          // level 2
+                if (order.isValid) {               // level 3
+                    for (const item of order.items) {  // level 4 - TOO DEEP
+                        processItem(item);
+                    }
+                }
+            }
+        }
+    confidence:
+      high: Can count nesting levels directly
+
+  - id: CF-ELSE-1
+    name: Else Clause Present
+    question: Is an else clause present or explicitly documented as unnecessary?
+    pass_when:
+      - Every if has a corresponding else clause
+      - Missing else is explicitly commented (e.g., "no else needed - guard clause")
+      - Guard clause pattern (early return) makes else unnecessary
+    fail_when:
+      - if-then without else and no explanation
+      - Complex if-then-else-if chain with missing final else
+      - Unclear what happens when condition is false
+    examples:
+      pass: |
+        // PASS - else present
+        if (user.isAdmin) {
+            showAdminPanel();
+        } else {
+            showUserPanel();
+        }
+
+        // PASS - guard clause (no else needed)
+        if (!user.isAuthenticated) {
+            return redirectToLogin();
+        }
+        // else: user is authenticated, continue
+        showDashboard();
+      fail: |
+        // FAIL - missing else, unclear intent
+        if (user.isAdmin) {
+            permissions = "full";
+        }
+        // What permissions does non-admin get?
+        usePermissions(permissions);
+    confidence:
+      high: Missing else with unclear consequences
+      medium: Could be intentional guard clause
+
+  - id: CF-CASE-1
+    name: All Cases Covered
+    question: Does the switch/case cover all possible values?
+    gate: has_switch == true
+    pass_when:
+      - All enum values have explicit cases
+      - Default clause handles unexpected values appropriately
+      - Default clause logs/throws for truly unexpected cases
+    fail_when:
+      - Switch on enum missing cases
+      - No default clause and not exhaustive
+      - Default clause silently ignores unexpected values
+    examples:
+      pass: |
+        // PASS - all cases covered
+        switch (status) {
+            case Status.Pending:
+                return "Waiting";
+            case Status.Active:
+                return "Processing";
+            case Status.Complete:
+                return "Done";
+            default:
+                throw new Error(`Unknown status: ${status}`);
+        }
+      fail: |
+        // FAIL - missing cases
+        switch (status) {
+            case Status.Pending:
+                return "Waiting";
+            case Status.Active:
+                return "Processing";
+            // Status.Complete not handled!
+        }
+    confidence:
+      high: Enum switch missing visible values
+
+  - id: CF-BREAK-1
+    name: Case Ends With Break
+    question: Does each case end with break (or explicit fall-through comment)?
+    gate: has_switch == true
+    pass_when:
+      - Each case ends with break, return, or throw
+      - Fall-through has explicit comment explaining why
+      - Empty cases grouped together are OK
+    fail_when:
+      - Case without break, return, or throw
+      - Fall-through without comment
+      - Accidental fall-through
+    examples:
+      pass: |
+        // PASS - all cases end properly
+        switch (command) {
+            case "start":
+                startEngine();
+                break;
+            case "stop":
+                stopEngine();
+                return;
+            case "a":
+            case "A":  // fall-through OK - same handling
+                handleA();
+                break;
+            case "legacy":
+                // FALL-THROUGH: legacy also needs init
+            case "new":
+                initialize();
+                break;
+        }
+      fail: |
+        // FAIL - missing break
+        switch (command) {
+            case "start":
+                startEngine();    // falls through!
+            case "stop":
+                stopEngine();
+                break;
+        }
+    confidence:
+      high: Case without break/return is visible
+
+  - id: CF-BRACE-1
+    name: Loop Body Has Braces
+    question: Does the loop body use braces (even for single statements)?
+    gate: has_loops == true
+    pass_when:
+      - All for/while/do-while have braced bodies
+      - Even single-line bodies use braces
+    fail_when:
+      - Loop without braces around body
+      - Single-statement body without braces
+    examples:
+      pass: |
+        // PASS - braces present
+        for (int i = 0; i < 10; i++) {
+            process(i);
+        }
+
+        while (hasNext()) {
+            advance();
+        }
+      fail: |
+        // FAIL - no braces
+        for (int i = 0; i < 10; i++)
+            process(i);  // dangerous - easy to add unguarded line
+
+        while (hasNext())
+            advance();   // same problem
+    confidence:
+      high: Missing braces are visually obvious
+
+  - id: CF-BODY-1
+    name: Loop Body Non-Empty
+    question: Does the loop body contain actual statements (not empty)?
+    gate: has_loops == true
+    pass_when:
+      - Loop body has meaningful statements
+      - Empty body is explicitly commented explaining why
+      - Logic is in loop header with comment
+    fail_when:
+      - Empty loop body without comment
+      - Semicolon-terminated loop (for(...);)
+      - Body appears to be accidentally empty
+    examples:
+      pass: |
+        // PASS - body has content
+        while (iterator.hasNext()) {
+            results.push(iterator.next());
+        }
+
+        // PASS - empty but explained
+        while (buffer.read() != -1) {
+            // consume bytes until EOF
+        }
+      fail: |
+        // FAIL - empty body, unclear intent
+        for (int i = 0; i < n; i++);  // does nothing!
+
+        while (reader.read() != null) { }  // what's the point?
+    confidence:
+      high: Empty loop body is visible
+
+  - id: CF-INDEX-1
+    name: No Loop Index Modification
+    question: Does code inside for loops avoid modifying the loop index?
+    gate: has_for_loops == true
+    pass_when:
+      - Loop index only modified in for header
+      - If index must change, use while loop instead
+      - Index is effectively const inside body
+    fail_when:
+      - Loop index modified inside body (i++, i--, i = x)
+      - Index used in expression that modifies it
+      - Skipping iterations by modifying index
+    examples:
+      pass: |
+        // PASS - index only changes in header
+        for (int i = 0; i < items.length; i++) {
+            process(items[i]);
+        }
+
+        // PASS - use while when index varies
+        int i = 0;
+        while (i < items.length) {
+            if (shouldSkip(items[i])) {
+                i += 2;
+            } else {
+                i++;
+            }
+        }
+      fail: |
+        // FAIL - modifying index in body
+        for (int i = 0; i < items.length; i++) {
+            if (items[i].shouldSkip) {
+                i++;  // skipping - confusing!
+            }
+            process(items[i]);
+        }
+    confidence:
+      high: Index modification inside body is visible
+
+  - id: CF-FLOAT-1
+    name: No Floating-Point Loop Index
+    question: Is the loop index an ordinal type (not floating-point)?
+    gate: has_for_loops == true
+    pass_when:
+      - Loop index is int, long, or enum
+      - Float values computed from int index
+      - Iterator/pointer loop (not numeric comparison)
+    fail_when:
+      - Loop index is float or double
+      - Loop termination compares floats
+      - Floating-point step increment
+    examples:
+      pass: |
+        // PASS - integer index
+        for (int i = 0; i < 100; i++) {
+            float x = i * 0.1f;  // compute float from int
+            plot(x);
+        }
+
+        // PASS - iterator
+        for (const auto& item : items) {
+            process(item);
+        }
+      fail: |
+        // FAIL - float index
+        for (float x = 0.0; x < 1.0; x += 0.1) {
+            plot(x);  // may miss 1.0 due to precision!
+        }
+
+        for (double t = 0; t != 10.0; t += 0.5) {
+            simulate(t);  // equality check on float!
+        }
+    confidence:
+      high: Float/double in for loop declaration is visible
+
+  - id: CF-CROSSTALK-1
+    name: No Loop Index Cross-Talk
+    question: Does each loop use its own dedicated index variable?
+    gate: has_nested_loops == true
+    pass_when:
+      - Each nested loop has unique index variable
+      - Index variables not reused after loop
+      - Clear naming distinguishes indices (i vs j vs k, or descriptive names)
+    fail_when:
+      - Same variable used as index in sibling loops
+      - Index modified by inner loop affects outer
+      - Reusing index between unrelated loops
+    examples:
+      pass: |
+        // PASS - separate indices
+        for (int row = 0; row < rows; row++) {
+            for (int col = 0; col < cols; col++) {
+                matrix[row][col] = 0;
+            }
+        }
+
+        for (int i = 0; i < listA.length; i++) { }
+        for (int j = 0; j < listB.length; j++) { }  // different variable
+      fail: |
+        // FAIL - index cross-talk
+        int i;
+        for (i = 0; i < rows; i++) {
+            for (i = 0; i < cols; i++) {  // reuses outer 'i'!
+                matrix[i][i] = 0;
+            }
+        }
+    confidence:
+      high: Same index variable in nested loops is visible
+
+  - id: CF-BOOL-1
+    name: Use True/False Not 1/0
+    question: Do expressions use true/false rather than 1/0 for booleans?
+    pass_when:
+      - Boolean variables assigned true/false
+      - Conditions use boolean expressions
+      - Language-specific bool type used
+    fail_when:
+      - Using 1/0 as boolean values
+      - Assigning integers to boolean variables
+      - Comparing booleans to 1/0
+    examples:
+      pass: |
+        // PASS - proper booleans
+        bool isValid = true;
+        bool hasPermission = user.checkAccess();
+        if (isValid && hasPermission) { }
+      fail: |
+        // FAIL - using integers as booleans
+        int isValid = 1;
+        int hasPermission = 0;
+        if (isValid == 1 && hasPermission == 0) { }
+
+        bool success = 1;  // should be true
+    confidence:
+      high: Integer literals used as booleans is visible
+
+  - id: CF-COMPLEX-1
+    name: Cyclomatic Complexity Limit
+    question: Is cyclomatic complexity 10 or less?
+    pass_when:
+      - Function has 10 or fewer decision points
+      - Complex logic extracted to helper functions
+      - Table-driven approach used for many cases
+    fail_when:
+      - More than 10 decision points (if, else, case, &&, ||, ?, catch)
+      - Long chains of if-else-if
+      - Many nested conditions
+    examples:
+      pass: |
+        // PASS - complexity ~4
+        function getDiscount(customer) {
+            if (customer.isVIP) {           // +1
+                return 0.20;
+            } else if (customer.years > 5) { // +1
+                return 0.10;
+            } else if (customer.orders > 10) { // +1
+                return 0.05;
+            }
+            return 0;
+        }
+      fail: |
+        // FAIL - complexity >10
+        function validate(order) {
+            if (order && order.items) {     // +2
+                for (item of order.items) { // +1
+                    if (item.price > 0 &&   // +2
+                        item.qty > 0) {
+                        if (item.type == "A" || // +2
+                            item.type == "B" ||
+                            item.type == "C") {
+                            if (checkStock(item)) { // +1
+                                if (checkPrice(item)) { // +1
+                                    // ... continues
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    confidence:
+      high: Can count decision points
+      medium: Some operators may or may not count based on style
+
+  - id: CF-GOTO-1
+    name: No Goto Statements
+    question: Are goto statements avoided (or used only as absolute last resort)?
+    pass_when:
+      - No goto statements present
+      - If goto exists, documented why alternatives fail
+      - Goto only used for error cleanup in C (before RAII)
+    fail_when:
+      - Goto used for normal control flow
+      - Goto without documentation
+      - Goto jumps backward
+    examples:
+      pass: |
+        // PASS - no goto, proper structure
+        function process() {
+            try {
+                step1();
+                step2();
+                step3();
+            } finally {
+                cleanup();
+            }
+        }
+
+        // PASS (C) - documented cleanup goto
+        int process(void) {
+            if (init_a() < 0) return -1;
+            if (init_b() < 0) goto cleanup_a;
+            if (init_c() < 0) goto cleanup_b;
+            do_work();
+            // fall through to cleanup
+        cleanup_b:
+            free_b();
+        cleanup_a:
+            free_a();
+            return 0;
+        }
+      fail: |
+        // FAIL - goto for control flow
+        start:
+            process();
+            if (shouldRetry) {
+                goto start;  // use while loop instead!
+            }
+    confidence:
+      high: goto keyword is visible
+
+  - id: CF-MATCH-1
+    name: Pattern Match Exhaustive
+    question: Does pattern matching handle all possible cases?
+    gate: has_pattern_matching == true
+    pass_when:
+      - All variants/cases explicitly handled
+      - Wildcard (_) used with comment for catch-all
+      - Compiler reports exhaustiveness
+    fail_when:
+      - Missing match arms for known variants
+      - No default/wildcard and not exhaustive
+      - Wildcard swallows cases that should be explicit
+    examples:
+      pass: |
+        // PASS - exhaustive
+        match result {
+            Ok(value) => process(value),
+            Err(e) => handle_error(e),
+        }
+
+        match color {
+            Color::Red => "#FF0000",
+            Color::Green => "#00FF00",
+            Color::Blue => "#0000FF",
+        }  // compiler verifies all variants covered
+      fail: |
+        // FAIL - missing case
+        match status {
+            Status::Pending => "waiting",
+            Status::Active => "running",
+            // Status::Failed not handled!
+        }
+    confidence:
+      high: Compiler warning or visible missing case
+
+  - id: CF-ASYNC-1
+    name: Async Error Handling Present
+    question: Do async functions have proper error handling?
+    gate: has_async == true
+    pass_when:
+      - try/catch around await statements
+      - .catch() on promise chains
+      - Error propagated to caller explicitly
+      - Global error handler documented
+    fail_when:
+      - await without try/catch
+      - Promise without .catch()
+      - Unhandled rejection possible
+    examples:
+      pass: |
+        // PASS - proper error handling
+        async function fetchUser(id) {
+            try {
+                const response = await api.get(`/users/${id}`);
+                return response.data;
+            } catch (error) {
+                logger.error("Failed to fetch user", { id, error });
+                throw new UserFetchError(id, error);
+            }
+        }
+
+        // PASS - promise chain
+        api.get('/data')
+            .then(processData)
+            .catch(handleError);
+      fail: |
+        // FAIL - no error handling
+        async function fetchUser(id) {
+            const response = await api.get(`/users/${id}`);
+            return response.data;  // what if this fails?
+        }
+
+        // FAIL - unhandled promise
+        api.get('/data').then(processData);  // no .catch()
+    confidence:
+      high: await without try/catch is visible
+      medium: Error might be handled at call site
+
+  - id: CF-RECURSE-1
+    name: Recursion Has Base Case
+    question: Does recursive code include a clear path to stop recursion?
+    gate: has_recursion == true
+    pass_when:
+      - Clear base case that returns without recursing
+      - Base case checked before recursive call
+      - Maximum depth limit for safety
+    fail_when:
+      - No visible base case
+      - Base case unreachable under some inputs
+      - Recursion depth unbounded
+    examples:
+      pass: |
+        // PASS - clear base case
+        function factorial(n) {
+            if (n <= 1) {        // base case
+                return 1;
+            }
+            return n * factorial(n - 1);
+        }
+
+        // PASS - with safety limit
+        function traverse(node, depth = 0) {
+            if (!node || depth > 100) {  // base cases
+                return;
+            }
+            process(node);
+            traverse(node.left, depth + 1);
+            traverse(node.right, depth + 1);
+        }
+      fail: |
+        // FAIL - no base case visible
+        function process(node) {
+            doWork(node);
+            process(node.next);  // when does this stop?
+        }
+
+        // FAIL - base case unreachable
+        function countdown(n) {
+            if (n == 0) return;  // never reached if n is negative!
+            console.log(n);
+            countdown(n - 1);
+        }
+    confidence:
+      high: No visible termination condition
+      medium: Base case exists but may be unreachable
