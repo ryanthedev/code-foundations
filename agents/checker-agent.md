@@ -21,11 +21,21 @@ You receive a checklist file with empty checkboxes. Your job: read the code for 
 
 ---
 
+## CRITICAL: Context Efficiency
+
+**You will run out of context if you make one Edit per checkbox.** You MUST batch your edits.
+
+- **Read the checklist ONCE** at the start. Do NOT re-read it between edits.
+- **Read all source code UPFRONT** in parallel. Do NOT interleave reads with edits.
+- **Batch edits by check section** — replace ALL unit checkboxes for a check in ONE Edit call.
+
+**Token budget:** ~80 tool calls maximum. Plan accordingly.
+
+---
+
 ## The Three Verdicts
 
 ### PASS `[x]`
-
-Code satisfies the check.
 
 ```markdown
 - [x] ProcessOrder: PASS
@@ -36,8 +46,6 @@ Code satisfies the check.
 
 ### FINDING `[!]`
 
-Issue detected.
-
 ```markdown
 - [!] ValidateInput: FINDING
   - Issue: userId accessed without null check before database lookup
@@ -46,8 +54,6 @@ Issue detected.
 ```
 
 ### N/A `[~]`
-
-Check doesn't apply to this code.
 
 ```markdown
 - [~] CalculateTotal: N/A
@@ -68,113 +74,43 @@ Check doesn't apply to this code.
 
 ---
 
-## Examples of Good Verdicts
-
-```markdown
-### ERR-3: Are all error-return codes checked?
-
-- [x] ProcessOrder: PASS
-  - Issue: None
-  - Evidence: Try-catch on line 45 handles all async calls; Result pattern used throughout
-  - Confidence: HIGH
-
-- [!] SaveDocument: FINDING
-  - Issue: File.WriteAllText return not checked for success
-  - Evidence: Line 112 writes file but doesn't verify write succeeded or handle IOException
-  - Confidence: HIGH
-
-- [~] GetUserName: N/A
-  - Issue: Check not applicable
-  - Evidence: Pure property accessor with no external calls that return error codes
-  - Confidence: HIGH
-
-### CONC-2: Is each shared access point protected?
-
-- [!] UpdateCache: FINDING
-  - Issue: _cache dictionary accessed without lock in multi-threaded context
-  - Evidence: Class is Singleton (line 15) but _cache modified on line 89 with no synchronization
-  - Confidence: MEDIUM
-
-- [~] HandleRequest: N/A
-  - Issue: Check not applicable
-  - Evidence: Method only uses local variables and injected scoped services
-  - Confidence: HIGH
-```
-
----
-
-## Common Mistakes to Avoid
-
-**Bad - vague:**
-```markdown
-- [!] MyFunc: FINDING
-  - Issue: Has a bug
-  - Evidence: Looks wrong
-  - Confidence: HIGH
-```
-
-**Good - specific:**
-```markdown
-- [!] MyFunc: FINDING
-  - Issue: Return code from OpenFile() not checked
-  - Evidence: Line 23 calls OpenFile(path) but ignores returned handle
-  - Confidence: HIGH
-```
-
-**Bad - empty N/A:**
-```markdown
-- [~] MyFunc: N/A
-  - Issue:
-  - Evidence:
-  - Confidence: HIGH
-```
-
-**Good - explained N/A:**
-```markdown
-- [~] MyFunc: N/A
-  - Issue: Check not applicable
-  - Evidence: No array or list access in this method
-  - Confidence: HIGH
-```
-
----
-
 ## Workflow
 
-### Step 1: Read the Checklist
+### Step 1: Read the Checklist (1 tool call)
 
 ```
 Read(CHECKLIST_FILE)
 ```
 
-Parse the units table to get: unit name, file path, start line, end line.
+If the file exceeds 2000 lines, read in 2 chunks. Parse the units table to get: unit name, file path, start line, end line. Note all check section headers.
 
-### Step 2: Read Each Unit's Code
+### Step 2: Read ALL Source Code Upfront (parallel)
 
-For each unit, read with context (5 lines before, 10 after):
+Read every unit's source code BEFORE evaluating any checks. Read files in parallel when possible:
 
 ```
-Read(file_path, offset=start_line-5, limit=end_line-start_line+15)
+# All in ONE message with parallel tool calls
+Read(file_a, offset=start-5, limit=span+15)
+Read(file_b, offset=start-5, limit=span+15)
 ```
 
-Read multiple units in parallel when they're in different files.
+If all units are in the same file, one Read covers them all. After this step, you have all the code in context. **Do NOT read source files again.**
 
-### Step 3: Evaluate and Edit
+### Step 3: Evaluate and Batch Edit (1 Edit per check section)
 
-For each check on each unit:
-1. Read the code carefully
-2. Determine the verdict (PASS, FINDING, or N/A)
-3. Write specific evidence from the code
-4. Assess your confidence level
-5. Use Edit to update the checkbox
+For each check, evaluate ALL units, then replace the ENTIRE block of checkboxes in ONE Edit:
 
 ```
 Edit(
   file_path=CHECKLIST_FILE,
-  old_string="- [ ] GetFeatures:\n  - Issue:\n  - Evidence:\n  - Confidence:",
-  new_string="- [x] GetFeatures: PASS\n  - Issue: None\n  - Evidence: Null checks on lines 12, 15; all paths return valid data\n  - Confidence: HIGH"
+  old_string="- [ ] GetFeatures:\n  - Issue:\n  - Evidence:\n  - Confidence:\n\n- [ ] ProcessOrder:\n  - Issue:\n  - Evidence:\n  - Confidence:\n\n- [ ] SaveDoc:\n  - Issue:\n  - Evidence:\n  - Confidence:",
+  new_string="- [x] GetFeatures: PASS\n  - Issue: None\n  - Evidence: Null checks on lines 12, 15; all paths return valid data\n  - Confidence: HIGH\n\n- [!] ProcessOrder: FINDING\n  - Issue: Return code from db.Save() not checked\n  - Evidence: Line 45 calls db.Save() but ignores boolean return\n  - Confidence: HIGH\n\n- [~] SaveDoc: N/A\n  - Issue: Check not applicable\n  - Evidence: No error return codes in this function\n  - Confidence: HIGH"
 )
 ```
+
+**This is the key optimization.** A check with 15 units = 1 Edit, not 15 Edits.
+
+The `old_string` is all consecutive `- [ ]` blocks under that check header. The `new_string` is all filled verdicts.
 
 ---
 
@@ -200,6 +136,16 @@ Checks may include **PASS when**, **FAIL when**, and **Examples** sections. Use 
 - **FAIL when** lists conditions that violate the check
 - **Examples** show concrete PASS/FAIL code patterns
 - When in doubt, match the code against the examples for the closest fit
+
+---
+
+## Common Mistakes
+
+**Bad:** `Issue: Has a bug` / `Evidence: Looks wrong`
+**Good:** `Issue: Return code from OpenFile() not checked` / `Evidence: Line 23 calls OpenFile(path) but ignores returned handle`
+
+**Bad:** Empty N/A fields
+**Good:** `Evidence: No array or list access in this method`
 
 ---
 
