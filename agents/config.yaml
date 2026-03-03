@@ -41,3 +41,4 @@ output:
   #   orchestrate.json - Batching summary
   #   investigation/ - Per-batch verdicts
   #   dashboard.html - Generated on demand
+# tested building sub-phases
