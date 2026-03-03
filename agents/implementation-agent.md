@@ -1,7 +1,6 @@
 ---
 name: implementation-agent
 description: "Implement code from pseudocode with quality gates. Use when executing building phases. Translates pseudocode to code, applies defensive programming, verifies implementation matches spec."
-model: sonnet
 ---
 
 # Implementation Agent
@@ -21,11 +20,11 @@ Your inputs come via files. Read these BEFORE writing any code:
 
 | File | Purpose | Required |
 |------|---------|----------|
-| Discovery file (`docs/building/*-discovery.md`) | Current state, what exists | YES |
-| Pseudocode file (`docs/building/*-pseudocode.md`) | Implementation spec | YES |
+| Discovery file (`docs/building/*-discovery.md`) | Current state, what exists (from pre-gate agent) | YES |
+| Pseudocode file (`docs/building/*-pseudocode.md`) | Implementation spec (from pre-gate agent) | YES |
 | Plan file (`docs/plans/*.md`) | Requirements context | YES |
 
-**If pseudocode file is missing or empty, STOP and return: BLOCKED - no pseudocode file**
+**If pseudocode file is missing or empty, STOP and return: BLOCKED - no pseudocode file (pre-gate agent did not complete)**
 
 ---
 

@@ -1,7 +1,7 @@
 ---
 description: "Execute whiteboard plans with checklist-based tracking. Produces working code with tests."
 argument-hint: "[path/to/plan.md]"
-allowed-tools: ["Read", "Write", "Edit", "Glob", "Grep", "Bash", "Task", "Skill", "TodoWrite"]
+allowed-tools: ["Read", "Write", "Edit", "Glob", "Grep", "Bash", "Task", "Skill"]
 ---
 
 # /building
@@ -12,11 +12,11 @@ allowed-tools: ["Read", "Write", "Edit", "Glob", "Grep", "Bash", "Task", "Skill"
 - **DO NOT implement directly** - Dispatch subagent for implementation
 - **PRE-GATE must pass** - Pseudocode required before any code
 - **POST-GATE must pass** - Reviewer agent must return PASS
-- **Cannot skip gates** - All gates are blocking, not advisory
+- **Cannot skip gates** - Sub-phases enforced via TaskCreate with blockedBy chains
 
 ---
 
-**Load Plan → Checklist → Execute → Verify → Report**
+**Load Plan → Setup → Execute → Verify → Report**
 
 ---
 
@@ -57,114 +57,103 @@ ls -la docs/plans/*.md | head -20
 
 Ask: "Which plan should I execute?"
 
-### 2. Initialize Tracking
-
-Convert plan phases to TodoWrite:
-```
-TodoWrite([
-  {content: "Phase 1 task", status: "pending", activeForm: "..."},
-  ...
-])
-```
+### 2. Initialize Tracking + Create ALL Sub-Phase Tasks
 
 Update plan: `Status: in-progress`
 
-### 3. Execute Each Phase (Gated, File-Based)
+**DO NOT create phase-level tasks. DO NOT use TodoWrite.**
 
-For each phase, run this **mandatory** sequence. All outputs go to files in `docs/building/`:
-
-```
-DISCOVERY (via subagent)
-├─ Explore subagent reads codebase
-├─ Writes: docs/building/<plan>-phase-N-discovery.md
-└─ Returns: file path only
-
-PRE-GATE (via subagent)
-├─ Reads discovery file
-├─ Runs pseudocode + design skills
-├─ Writes: docs/building/<plan>-phase-N-pseudocode.md
-└─ Returns: file path only
-
-IMPLEMENT (via subagent)
-├─ Reads discovery + pseudocode files
-├─ Implementation agent writes code
-└─ Returns: DONE or BLOCKED
-
-POST-GATE (via subagent)
-├─ Reads all phase files
-├─ Reviewer agent runs checklists
-├─ Writes: docs/building/<plan>-phase-N-review.md
-└─ Returns: PASS or FAIL
-
-CHECKPOINT (only if PASS)
-├─ Commit
-└─ Update execution log
-```
-
-### 4. Discovery Subagent (MANDATORY)
+Create 4 sub-phase tasks for EVERY phase upfront, then chain them all:
 
 ```
-Task tool:
-- subagent_type: "Explore"
-- description: "Discovery for Phase N"
-- prompt: |
-    Explore Phase N files.
-    Write findings to: docs/building/<plan>-phase-N-discovery.md
-    Return: file path only
+For each phase N:
+  TaskCreate: "Phase N.1: PRE-GATE - [name]"
+  TaskCreate: "Phase N.2: IMPLEMENT - [name]"
+  TaskCreate: "Phase N.3: POST-GATE - [name]"
+  TaskCreate: "Phase N.4: CHECKPOINT - [name]"
+
+Chain within phase: N.2 blockedBy N.1, N.3 blockedBy N.2, N.4 blockedBy N.3
+Chain between phases: (N+1).1 blockedBy N.4
 ```
 
-### 5. PRE-GATE Subagent (MANDATORY)
+**The user sees the full pipeline immediately.**
+
+### 3. Execute Each Phase (TaskCreate-Enforced)
+
+For each phase, **auto-detect model** then create 5 TaskCreate tasks with blockedBy chains:
+
+#### Model Auto-Detection
 
 ```
-Task tool:
-- subagent_type: "general-purpose"
+Parse phase: count tasks, count files, scan keywords
+
+task_count <= 2 AND file_count <= 2 → haiku
+task_count >= 6 OR file_count >= 6  → opus
+OPUS_KEYWORDS in heading            → opus
+Otherwise                           → sonnet
+
+Plan **Model:** override wins over auto-detection.
+```
+
+#### Execute Sub-Phases (tasks already created in step 2)
+
+For each sub-phase:
+1. TaskGet → verify blockedBy is empty
+2. TaskUpdate → in_progress
+3. Dispatch subagent with resolved model
+4. If gate FAIL → do NOT mark completed → re-dispatch
+5. If success → TaskUpdate → completed
+
+### 4. PRE-GATE Agent (Discovery + Pseudocode)
+
+Skills are baked into the agent template. No skill loading needed in prompt.
+
+```
+Agent tool:
+- subagent_type: "code-foundations:pre-gate-agent"
+- model: [resolved_model]
 - description: "PRE-GATE for Phase N"
 - prompt: |
-    FIRST: Load your skills using the Skill tool:
-    1. Skill(code-foundations:cc-pseudocode-programming)
-    2. Skill(code-foundations:aposd-designing-deep-modules)
-
-    THEN:
-    Read: docs/building/<plan>-phase-N-discovery.md
-    Write pseudocode to: docs/building/<plan>-phase-N-pseudocode.md
-    Return: file path only
+    Run PRE-GATE for Phase N.
+    Plan: docs/plans/<plan>.md
+    Output discovery to: docs/building/<plan>-phase-N-discovery.md
+    Output pseudocode to: docs/building/<plan>-phase-N-pseudocode.md
 ```
 
-### 6. Implementation Agent (MANDATORY)
+### 5. Implementation Agent
 
 ```
-Task tool:
+Agent tool:
 - subagent_type: "code-foundations:implementation-agent"
+- model: [resolved_model]
 - description: "Implement Phase N"
 - prompt: |
-    FIRST: Load your skills using the Skill tool:
-    1. Skill(code-foundations:cc-pseudocode-programming)
-    2. Skill(code-foundations:cc-defensive-programming)
-    3. Skill(code-foundations:aposd-designing-deep-modules)
-
-    THEN:
     Read input files:
     - docs/building/<plan>-phase-N-discovery.md
     - docs/building/<plan>-phase-N-pseudocode.md
     Return: DONE or BLOCKED
 ```
 
-### 7. POST-GATE Reviewer (MANDATORY)
+### 6. POST-GATE Reviewer
 
-| Focus | Agent |
+**CRITICAL: Use a `code-foundations:*-reviewer` agent (NOT quick-checklist). Include skill loading VERBATIM.**
+
+| Focus | Agent Type |
 |-------|-------|
 | General | `code-foundations:correctness-reviewer` |
 | Error handling | `code-foundations:defensive-reviewer` |
 | Design | `code-foundations:quality-reviewer` |
 
 ```
-Task tool:
+Agent tool:
 - subagent_type: "code-foundations:correctness-reviewer"
+- model: [resolved_model]
 - description: "POST-GATE for Phase N"
 - prompt: |
-    FIRST: Load your skills using the Skill tool:
+    ## MANDATORY - Load Skills FIRST
+    You MUST call the Skill tool for each BEFORE reading any files:
     1. Skill(code-foundations:aposd-verifying-correctness)
-    2. Skill(code-foundations:cc-quality-practices)
+    2. Skill(code-foundations:cc-defensive-programming)
 
     THEN:
     Read all phase files in docs/building/<plan>-phase-N-*
@@ -182,23 +171,34 @@ npm test  # or equivalent
 
 All tests must pass before completion.
 
-### 8. Report
+### 8. Report (Trust Report)
 
 Update plan: `Status: complete`
 
-Output summary:
-```markdown
-# Build Complete
+Output a **trust report** (not a status dashboard):
 
-**Plan:** [name]
-**Phases:** N/N complete
-**Tests:** All passing
+```markdown
+# Build Complete: [plan name]
+
+## Pipeline: N/N phases, M/M sub-phases
+
+### Phase 1: [name] ([model])
+- PRE-GATE: Pseudocode covered N tasks, M files
+- POST-GATE: PASS (attempt 1)
+  - [What reviewer verified/found]
+- Commit: [hash]
+- Artifacts: docs/building/<plan>-phase-1-*.md
+
+## Gate Summary
+| Phase | PRE-GATE | POST-GATE | Retries |
+|-------|----------|-----------|---------|
+| 1     | PASS     | PASS      | 0       |
 
 ## Files Changed
-- [list]
+- [file] - [what changed]
 
-## Commits
-- [hash] Phase 1: ...
+## Follow-up
+- [Reviewer-flagged items, or "None"]
 ```
 
 ---

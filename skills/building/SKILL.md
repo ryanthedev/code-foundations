@@ -5,7 +5,7 @@ description: "Execute whiteboard plans through gated phases with subagent dispat
 
 # Skill: building
 
-**Load Plan → Checklist → Execute → Verify → Report**
+**Load Plan → Setup → Execute → Verify → Report**
 
 ---
 
@@ -14,7 +14,7 @@ description: "Execute whiteboard plans through gated phases with subagent dispat
 | Phase | Goal | Output |
 |-------|------|--------|
 | LOAD | Read plan file | Parsed implementation checklist |
-| SETUP | Initialize tracking | TodoWrite populated |
+| SETUP | Initialize tracking | Plan status updated |
 | EXECUTE | Implement each section | Working code |
 | VERIFY | Run tests, confirm completion | All tests pass |
 | REPORT | Update plan, summarize | Execution log |
@@ -33,6 +33,7 @@ description: "Execute whiteboard plans through gated phases with subagent dispat
 | **Reviewer agent per phase** | Self-review is blind; fresh agent catches issues |
 | **Mark complete only when gates pass** | Premature completion = unverified work shipped |
 | **Update execution log** | Log enables debugging failed builds |
+| **TaskCreate sub-phases** | Prompt-only enforcement gets skipped. blockedBy chains cannot be skipped. |
 
 ---
 
@@ -93,6 +94,7 @@ Extract from plan file:
 3. **Phases** - Implementation sections
 4. **Test Coverage** - What level of tests required (100%, backend only, etc.)
 5. **Test Plan** - Specific verification criteria
+6. **Model overrides** - Optional `**Model:** <model>` per phase
 
 **If Test Coverage is missing:** Default to "100% coverage" and inform user.
 
@@ -108,25 +110,6 @@ Check plan status:
 
 ## Phase 2: SETUP (Initialize Tracking)
 
-### Convert Plan to TodoWrite
-
-Transform each plan phase into todos:
-
-```
-Plan Phase 1: Database Schema
-- [ ] Create migration file
-- [ ] Define User table
-- [ ] Define Session table
-
-↓ Becomes ↓
-
-TodoWrite([
-  {content: "Create migration file", status: "pending", activeForm: "Creating migration file"},
-  {content: "Define User table", status: "pending", activeForm: "Defining User table"},
-  {content: "Define Session table", status: "pending", activeForm: "Defining Session table"}
-])
-```
-
 ### Update Plan Status
 
 ```markdown
@@ -134,6 +117,37 @@ TodoWrite([
 **Started:** YYYY-MM-DD HH:MM
 **Current Phase:** 1
 ```
+
+### Create ALL Sub-Phase Tasks Upfront
+
+**DO NOT create phase-level tasks like "Phase 1: [Name]". DO NOT use TodoWrite.**
+
+Create the 4 sub-phase tasks for EVERY phase in the plan NOW, before executing anything.
+
+For each phase N, run Model Auto-Detection (see below), then create:
+
+1. `TaskCreate(subject: "Phase N.1: PRE-GATE - [phase name]", description: "Explore codebase + write pseudocode. Model: [resolved_model].", activeForm: "Running pre-gate for Phase N")`
+2. `TaskCreate(subject: "Phase N.2: IMPLEMENT - [phase name]", description: "Implement from pseudocode. Model: [resolved_model].", activeForm: "Implementing Phase N")`
+3. `TaskCreate(subject: "Phase N.3: POST-GATE - [phase name]", description: "Review implementation. Model: [resolved_model]. Must return PASS.", activeForm: "Running post-gate for Phase N")`
+4. `TaskCreate(subject: "Phase N.4: CHECKPOINT - [phase name]", description: "Commit after all gates pass.", activeForm: "Committing Phase N")`
+
+**Then chain ALL dependencies:**
+- Within each phase: N.2 blockedBy N.1, N.3 blockedBy N.2, N.4 blockedBy N.3
+- **Between phases:** Phase (N+1).1 blockedBy Phase N.4
+
+Example for a 2-phase plan (8 tasks total):
+```
+Phase 1.1: PRE-GATE        → no blockedBy
+Phase 1.2: IMPLEMENT       → blockedBy: [1.1]
+Phase 1.3: POST-GATE       → blockedBy: [1.2]
+Phase 1.4: CHECKPOINT      → blockedBy: [1.3]
+Phase 2.1: PRE-GATE        → blockedBy: [1.4]  ← chains to previous phase
+Phase 2.2: IMPLEMENT       → blockedBy: [2.1]
+Phase 2.3: POST-GATE       → blockedBy: [2.2]
+Phase 2.4: CHECKPOINT      → blockedBy: [2.3]
+```
+
+**The user sees the full pipeline immediately.**
 
 ---
 
@@ -144,188 +158,147 @@ TodoWrite([
 **You MUST dispatch subagents for ALL work. DO NOT:**
 - Read/explore code files directly during building
 - Edit code files directly during building
-- Skip DISCOVERY subagent
-- Skip PRE-GATE pseudocode
-- Skip POST-GATE reviewer agent
-- Proceed after reviewer returns FAIL
+- Skip any sub-phase task
+- Proceed when a blockedBy dependency is not completed
+- Mark a gate task completed when it returned FAIL
+- Create phase-level tasks (NO "Phase 1: [Name]" tasks)
 
-**The gates are BLOCKING, not advisory. All exploration and implementation is done by subagents.**
-
-### Execution Loop - Gated
-
-For each phase, execute this **mandatory** sequence:
-
-```
-┌──────────────────────────────────────────────────────────┐
-│  DISCOVERY (via subagent - DO NOT explore directly)      │
-│  ├─ Task tool → dispatch Explore subagent                │
-│  ├─ Subagent reads files, understands current state      │
-│  └─ Returns: findings, gaps, what exists vs plan         │
-│                                                          │
-│  ⛔ STOP: Cannot proceed until discovery complete        │
-├──────────────────────────────────────────────────────────┤
-│  PRE-GATE (BLOCKS IMPLEMENTATION)                        │
-│  ├─ Skill(cc-pseudocode-programming) → pseudocode        │
-│  ├─ Skill(aposd-designing-deep-modules) → design review  │
-│  └─ CONFIRM: Pseudocode exists? Design passed?           │
-│                                                          │
-│  ⛔ STOP: Cannot proceed until PRE-GATE checklist TRUE   │
-├──────────────────────────────────────────────────────────┤
-│  IMPLEMENT (via subagent - DO NOT code directly)         │
-│  ├─ Task tool → dispatch implementation subagent         │
-│  ├─ Wait for subagent DONE                               │
-│  └─ Run tests to verify                                  │
-├──────────────────────────────────────────────────────────┤
-│  POST-GATE (BLOCKS CHECKPOINT)                           │
-│  ├─ Skill(aposd-verifying-correctness)                   │
-│  ├─ Skill(cc-defensive-programming)                      │
-│  ├─ Task tool → dispatch reviewer agent                  │
-│  └─ Wait for PASS                                        │
-│                                                          │
-│  ⛔ STOP: Cannot proceed until reviewer returns PASS     │
-├──────────────────────────────────────────────────────────┤
-│  CHECKPOINT (Only after PASS)                            │
-│  ├─ Commit with phase summary                            │
-│  └─ Update execution log                                 │
-└──────────────────────────────────────────────────────────┘
-```
+**The ONLY tasks you create are the 4 sub-phase tasks per phase (PRE-GATE, IMPLEMENT, POST-GATE, CHECKPOINT).**
 
 ---
 
-### DISCOVERY (MANDATORY - VIA SUBAGENT)
+### Mandatory Skill Loading Per Sub-Phase
 
-## STOP. YOU CANNOT EXPLORE CODE DIRECTLY.
+Each sub-phase dispatches a specific agent type with specific skills. **Do NOT paraphrase the prompts below. Include the skill loading instructions VERBATIM.**
 
-**Dispatch an Explore subagent that writes findings to a file:**
+| Sub-Phase | Agent Type | Skills (baked into agent template) |
+|-----------|-----------|-------------------------------|
+| N.1 PRE-GATE | `code-foundations:pre-gate-agent` | `cc-construction-prerequisites`, `cc-pseudocode-programming`, `aposd-designing-deep-modules` |
+| N.2 IMPLEMENT | `code-foundations:implementation-agent` | `cc-pseudocode-programming`, `cc-defensive-programming`, `aposd-designing-deep-modules` |
+| N.3 POST-GATE | `code-foundations:correctness-reviewer` | `aposd-verifying-correctness`, `cc-defensive-programming` |
+| N.4 CHECKPOINT | None (you do this) | N/A |
+
+**POST-GATE agent type selection:**
+
+| Phase Focus | Agent Type |
+|-------------|-----------|
+| General | `code-foundations:correctness-reviewer` |
+| Error handling | `code-foundations:defensive-reviewer` |
+| Design/architecture | `code-foundations:quality-reviewer` |
+| Performance | `code-foundations:performance-reviewer` |
+
+**DO NOT substitute `code-foundations:quick-checklist` or `general-purpose` for POST-GATE. Use the reviewer agent types listed above.**
+
+---
+
+### Model Auto-Detection
+
+Before creating sub-phase tasks for a phase, determine the model for PRE-GATE, IMPLEMENT, and POST-GATE agents.
+
+**Resolution order** (first match wins):
+
+1. **Plan override:** If phase has a `**Model:** <model>` line below the heading, use that model for all three agents.
+2. **Auto-detect** from phase signals:
 
 ```
-Task tool:
-- subagent_type: "Explore"
-- description: "Discovery for Phase N"
+Parse the phase section from the plan:
+  task_count  = number of bullet tasks (- [ ] lines)
+  file_count  = number of unique file paths mentioned
+  phase_text  = lowercase phase heading + all task text
+
+OPUS_KEYWORDS  = [refactor, architect, migrate, redesign, rewrite, overhaul]
+HAIKU_KEYWORDS = [config, rename, typo, bump, cleanup, delete, remove]
+
+If task_count <= 2 AND file_count <= 2
+   AND no OPUS_KEYWORDS in phase_text:
+  → haiku
+
+If task_count >= 6 OR file_count >= 6
+   OR any OPUS_KEYWORD in phase_text:
+  → opus
+
+Otherwise:
+  → sonnet
+```
+
+**State the resolved model when creating tasks:**
+"Phase N model: [model] (reason: [auto: N tasks, M files] or [plan override])"
+
+---
+
+### Execution Loop - Enforced via TaskCreate
+
+All sub-phase tasks were created in SETUP. Now execute them in order.
+
+#### Execute Each Sub-Phase
+
+For each sub-phase task in order:
+
+```
+1. TaskGet(task_id) → verify blockedBy list is empty (all predecessors completed)
+2. TaskUpdate(task_id, status: "in_progress")
+3. Dispatch subagent (see templates below)
+4. Wait for completion
+5. If gate task (PRE-GATE or POST-GATE) and result is FAIL:
+   → Do NOT mark completed
+   → Follow Gate Failure Protocol
+6. If success:
+   → TaskUpdate(task_id, status: "completed")
+7. Proceed to next sub-phase
+```
+
+**All 4 completed → proceed to Phase N+1.**
+
+---
+
+### Sub-Phase N.1: PRE-GATE (Discovery + Pseudocode)
+
+## STOP. YOU CANNOT EXPLORE CODE OR WRITE PSEUDOCODE DIRECTLY.
+
+**TaskUpdate → in_progress, then dispatch the pre-gate agent.**
+
+The pre-gate agent combines discovery (what exists) and design (what to build) into one step. Skills are baked into the agent template - no need to include skill loading in your prompt.
+
+```
+Agent tool:
+- subagent_type: "code-foundations:pre-gate-agent"
+- model: [resolved_model]
+- description: "PRE-GATE for Phase N"
 - prompt: |
-    Explore the codebase to understand what exists for Phase N.
+    Run PRE-GATE for Phase N of the building plan.
 
     ## Phase N: [name]
     [paste phase description and file list from plan]
 
-    ## Questions to Answer
-    1. Do the files listed in the plan exist?
-    2. What is the current implementation state?
-    3. What already exists vs what needs to be built?
-    4. Are there any gaps between plan assumptions and reality?
-
-    ## OUTPUT REQUIREMENT
-    Write your findings to: docs/building/<plan-name>-phase-N-discovery.md
-
-    Use this format:
-    ```markdown
-    # Discovery: Phase N - [name]
-
-    ## Files Found
-    - [list existing files relevant to this phase]
-
-    ## Current State
-    [summary of what already exists]
-
-    ## Gaps
-    [differences between plan and reality]
-
-    ## Recommendation
-    [BUILD | SKIP | UPDATE_PLAN]
-    [what actually needs to be done]
-    ```
-
-    Return only: "Discovery written to docs/building/<plan-name>-phase-N-discovery.md"
-```
-
-**Wait for Explore subagent to complete.**
-
-**After discovery:**
-1. Read the discovery file (quick scan, not full context load)
-2. If SKIP recommended - mark phase complete, proceed to next
-3. If UPDATE_PLAN recommended - pause and ask user
-4. If BUILD recommended - proceed to PRE-GATE
-
----
-
-### PRE-GATE (MANDATORY - VIA SUBAGENT)
-
-## STOP. YOU CANNOT WRITE CODE UNTIL THIS GATE PASSES.
-
-**Dispatch a PRE-GATE subagent that writes pseudocode to a file:**
-
-```
-Task tool:
-- subagent_type: "general-purpose"
-- description: "PRE-GATE for Phase N"
-- prompt: |
-    You are the PRE-GATE agent for Phase N.
-
-    ## STOP - Load Skills First
-    Before proceeding, load these skills using the Skill tool:
-    - [ ] `cc-pseudocode-programming`
-    - [ ] `aposd-designing-deep-modules`
-
     ## Inputs
-    - Discovery file: docs/building/<plan-name>-phase-N-discovery.md
     - Plan file: docs/plans/<plan-name>.md
     - Phase: N - [name]
 
-    ## Your Tasks
-    1. Read the discovery file to understand current state
-    2. Read the plan file to understand requirements for Phase N
-    3. Use cc-pseudocode-programming to write pseudocode
-    4. Use aposd-designing-deep-modules to review design (if new modules)
-
-    ## OUTPUT REQUIREMENT
-    Write your pseudocode to: docs/building/<plan-name>-phase-N-pseudocode.md
-
-    Use this format:
-    ```markdown
-    # Pseudocode: Phase N - [name]
-
-    ## Files to Create/Modify
-    - [list from discovery + plan]
-
-    ## Pseudocode
-
-    ### [file1.ext]
-    [pseudocode for file 1]
-
-    ### [file2.ext]
-    [pseudocode for file 2]
-
-    ## Design Notes
-    [any design decisions, interface choices, information hiding]
-
-    ## PRE-GATE Status
-    - [x] Pseudocode complete
-    - [x] Design reviewed (if applicable)
-    - [ ] Ready for implementation
-    ```
-
-    Return only: "PRE-GATE complete. Pseudocode written to docs/building/<plan-name>-phase-N-pseudocode.md"
+    ## Output Files
+    - Discovery: docs/building/<plan-name>-phase-N-discovery.md
+    - Pseudocode: docs/building/<plan-name>-phase-N-pseudocode.md
 ```
 
-**Wait for PRE-GATE subagent to complete.**
-
-**After PRE-GATE:**
-1. Verify the pseudocode file exists
-2. Quick scan - does it cover all tasks in phase?
-3. If incomplete, re-dispatch PRE-GATE agent
-4. If complete, proceed to IMPLEMENT
+**After PRE-GATE returns:**
+1. Check status: DONE, SKIP, or UPDATE_PLAN
+2. If SKIP → mark remaining sub-phase tasks as completed, proceed to next phase
+3. If UPDATE_PLAN → pause and ask user
+4. If DONE → verify pseudocode file exists and covers all tasks
+5. If incomplete → do NOT mark completed → re-dispatch
+6. If complete → TaskUpdate → completed
 
 ---
 
-### IMPLEMENT (ONLY AFTER PRE-GATE PASSES)
+### Sub-Phase N.2: IMPLEMENT
 
-## STOP. Confirm PRE-GATE passed before proceeding.
+## STOP. Verify PRE-GATE task is completed before proceeding.
 
-**Dispatch implementation agent with file references** - DO NOT implement directly:
+**TaskGet → confirm blockedBy is empty. TaskUpdate → in_progress, then dispatch:**
 
 ```
-Task tool:
+Agent tool:
 - subagent_type: "code-foundations:implementation-agent"
+- model: [resolved_model]
 - description: "Implement Phase N"
 - prompt: |
     Implement Phase N of the building plan.
@@ -350,25 +323,25 @@ Task tool:
 - Artifacts are persistent and reviewable
 - Enables resume if interrupted
 
-**Wait for subagent to complete before proceeding.**
-
 **After subagent returns:**
-
 1. Verify subagent returned DONE (not BLOCKED)
 2. Run tests to confirm implementation works
-3. If BLOCKED, debug and re-dispatch or escalate
+3. If BLOCKED → do NOT mark completed → debug and re-dispatch or escalate
+4. If DONE → TaskUpdate → completed
 
 ---
 
-### POST-GATE (MANDATORY - VIA SUBAGENT)
+### Sub-Phase N.3: POST-GATE
 
-## STOP. YOU CANNOT COMMIT UNTIL THIS GATE PASSES.
+## STOP. Verify IMPLEMENT task is completed before proceeding.
 
-**Dispatch a reviewer agent with file references:**
+**TaskGet → confirm blockedBy is empty. TaskUpdate → in_progress, then dispatch.**
+
+**CRITICAL: Use a `code-foundations:*-reviewer` agent type (NOT `quick-checklist` or `general-purpose`). Your prompt MUST include the skill loading block.**
 
 Choose reviewer based on phase focus:
 
-| Phase Focus | Use Agent |
+| Phase Focus | Agent Type (use EXACTLY this) |
 |-------------|-----------|
 | General implementation | `code-foundations:correctness-reviewer` |
 | Error handling heavy | `code-foundations:defensive-reviewer` |
@@ -376,13 +349,21 @@ Choose reviewer based on phase focus:
 | Performance critical | `code-foundations:performance-reviewer` |
 
 ```
-Task tool:
+Agent tool:
 - subagent_type: "code-foundations:correctness-reviewer"
+- model: [resolved_model]
 - description: "POST-GATE for Phase N"
 - prompt: |
     Review Phase N implementation.
 
-    ## Input Files (READ THESE FIRST)
+    ## MANDATORY - Load Skills FIRST (before any other work)
+    You MUST call the Skill tool for each of these BEFORE reading any files:
+    1. Skill(code-foundations:aposd-verifying-correctness)
+    2. Skill(code-foundations:cc-defensive-programming)
+
+    Do NOT proceed until both skills are loaded.
+
+    ## Input Files (READ THESE AFTER loading skills)
     - Discovery: docs/building/<plan-name>-phase-N-discovery.md
     - Pseudocode: docs/building/<plan-name>-phase-N-pseudocode.md
     - Plan: docs/plans/<plan-name>.md (Phase N section)
@@ -395,7 +376,7 @@ Task tool:
     2. Are all requirements from plan covered?
     3. Any deviations from spec?
     4. **Test coverage matches plan level** (check Test Coverage field in plan)
-    5. Run your skill checklists (loaded via Skill tool)
+    5. Run your loaded skill checklists
 
     ## OUTPUT REQUIREMENT
     Write your review to: docs/building/<plan-name>-phase-N-review.md
@@ -424,24 +405,25 @@ Task tool:
     Return: "POST-GATE [PASS|FAIL]. Review written to docs/building/<plan-name>-phase-N-review.md"
 ```
 
-**Wait for reviewer agent response.**
-
 **After POST-GATE:**
 1. Read the review file
-2. If PASS - proceed to CHECKPOINT
-3. If FAIL - fix issues and re-run POST-GATE
-
-**You CANNOT proceed to CHECKPOINT until reviewer returns PASS.**
+2. If PASS → TaskUpdate → completed
+3. If FAIL → do NOT mark completed → follow Gate Failure Protocol
 
 ---
 
-### CHECKPOINT (Only After Gates Pass)
+### Sub-Phase N.4: CHECKPOINT
+
+## STOP. Verify POST-GATE task is completed before proceeding.
+
+**TaskGet → confirm blockedBy is empty. TaskUpdate → in_progress, then:**
 
 ```bash
 git add .
 git commit -m "Phase N: [name]
 
 - [summary of what was implemented]
+- Model: [resolved_model] ([reason])
 - PRE-GATE: pseudocode reviewed
 - POST-GATE: verification passed, reviewer approved"
 ```
@@ -449,15 +431,18 @@ git commit -m "Phase N: [name]
 Update plan file execution log:
 ```markdown
 ### Phase N: [Name]
+- [x] DISCOVERY: Codebase explored
 - [x] PRE-GATE: Pseudocode complete
-- [x] Task 1 - Completed
-- [x] Task 2 - Completed
-- [x] POST-GATE: Verification passed
-- [x] POST-GATE: Reviewer approved
+- [x] IMPLEMENT: Code written, tests pass
+- [x] POST-GATE: Verification passed, reviewer approved
+- [x] CHECKPOINT: Committed
+Model: [resolved_model] ([reason])
 Commit: [hash]
 ```
 
-**State:** "Phase N complete. All gates passed. Proceeding to Phase N+1."
+**TaskUpdate → completed.**
+
+**State:** "Phase N complete. All sub-phases passed. Proceeding to Phase N+1."
 
 ---
 
@@ -467,12 +452,14 @@ If any gate fails:
 
 | Gate | Failure | Action |
 |------|---------|--------|
-| PRE-GATE | Pseudocode unclear | Refine pseudocode, re-run gate |
-| PRE-GATE | Design issues | Redesign, re-run gate |
-| POST-GATE | Verification fails | Fix code, re-run POST-GATE |
-| POST-GATE | Reviewer finds issues | Fix issues, re-run reviewer |
+| PRE-GATE | Pseudocode unclear | Refine pseudocode, re-dispatch PRE-GATE agent |
+| PRE-GATE | Design issues | Redesign, re-dispatch PRE-GATE agent |
+| POST-GATE | Verification fails | Fix code, re-dispatch POST-GATE agent |
+| POST-GATE | Reviewer finds issues | Fix issues, re-dispatch POST-GATE agent |
 
-**You CANNOT proceed to next phase until current phase passes all gates.**
+**The failed task stays `in_progress` until it passes. You CANNOT mark it completed on FAIL.**
+**You CANNOT proceed to next sub-phase until the current task is completed.**
+**blockedBy enforcement prevents skipping - the next task's blockedBy list is not empty until the predecessor is completed.**
 
 ---
 
@@ -548,31 +535,46 @@ Notes: [any issues encountered]
 ...
 ```
 
-### Summary Output
+### Summary Output (Trust Report)
+
+The summary is a **trust report**, not a status dashboard. Engineers need to verify what the AI built.
 
 ```markdown
-# Build Complete
+# Build Complete: [plan name]
 
-**Plan:** [plan name]
-**Phases Completed:** N/N
-**Tests:** All passing
+## Pipeline: N/N phases, M/M sub-phases
 
-## What Was Built
-- [summary of implemented features]
+### Phase 1: [name] ([resolved_model])
+- PRE-GATE: Pseudocode covered N tasks, M files
+- POST-GATE: [PASS|FAIL] (attempt N)
+  - [What reviewer found or verified]
+  - [Any notes or observations]
+- Commit: [hash]
+- Artifacts: docs/building/<plan>-phase-1-*.md
+
+### Phase 2: [name] ([resolved_model])
+...
+
+## Gate Summary
+| Phase | PRE-GATE | POST-GATE | Retries |
+|-------|----------|-----------|---------|
+| 1     | PASS     | PASS      | 0       |
+| 2     | PASS     | FAIL→PASS | 1       |
 
 ## Files Changed
-- `path/to/file.ts` - [what changed]
-- ...
+- `path/to/file` - [what changed]
 
-## Commits
-- [hash] Phase 1: [name]
-- [hash] Phase 2: [name]
-- ...
-
-## Next Steps
-- [any follow-up tasks identified]
-- [documentation to update]
+## Follow-up
+- [Issues flagged by reviewers for future work]
+- [Or: "None identified"]
 ```
+
+**Key elements:**
+- **Per-phase reviewer findings** - not just PASS/FAIL, but what was verified and any notes
+- **Retry count** - shows if gates caught issues (retries > 0 = the system worked)
+- **Artifact links** - engineer can read the discovery, pseudocode, and review files
+- **Model used** - shows which model was auto-detected per phase
+- **Follow-up** - anything the reviewer flagged that wasn't a blocker
 
 ---
 
@@ -633,6 +635,12 @@ When resuming blocked plan:
 | "I already know this codebase" | Your context is stale. Discovery subagent has fresh eyes and finds what changed. |
 | "I'll tell the subagent to invoke a skill" | Subagents can't invoke skills (fresh context). Use specialized agent types instead. |
 | "general-purpose is fine for review" | Specialized reviewer agents have skills built-in. Use `code-foundations:*-reviewer`. |
+| "I'll skip TaskCreate, it's overhead" | TaskCreate with blockedBy is the enforcement mechanism. Without it, gates are just suggestions. |
+| "I'll just mark the blocker completed manually" | Marking a gate completed without PASS is lying. The next sub-phase will inherit false confidence. |
+| "Haiku is fine for this complex phase" | Auto-detection chose opus for a reason. Override down only with explicit `**Model:**` in the plan. |
+| "The subagent doesn't need those skills" | Skills provide checklists and mental models. Without them, the subagent improvises. Include the skill loading block VERBATIM. |
+| "I'll summarize the prompt instead" | Paraphrased prompts drop skill loading, output formats, and file paths. Use the templates AS WRITTEN. |
+| "quick-checklist is fine for POST-GATE" | Quick-checklist has no reviewer skills. Use `code-foundations:correctness-reviewer` (or defensive/quality/performance variants). |
 
 ---
 
@@ -689,6 +697,22 @@ When resuming blocked plan:
 [Tests pass]
 [Summary report]
 ```
+
+### Plan File Model Override Syntax
+
+Plans can optionally specify model per phase:
+
+```markdown
+### Phase 1: Simple Config
+- [ ] Update config file
+
+### Phase 2: Complex Engine
+**Model:** opus
+- [ ] Build query parser
+- [ ] Implement optimizer
+```
+
+If `**Model:**` is omitted, auto-detection applies.
 
 ### Context Refresh Benefits
 
