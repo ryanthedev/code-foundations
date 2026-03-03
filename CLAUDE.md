@@ -198,7 +198,7 @@ Three-stage pattern for feature development:
 
 /code-foundations:building docs/plans/<plan>.md
   → Feature branch required
-  → 5 sub-phases per phase (TaskCreate with blockedBy chains)
+  → Execute phases with quality gates
   → Model auto-detected per phase (haiku/sonnet/opus)
   → Per-phase commits only after POST-GATE passes
   → Final verification + report
@@ -214,17 +214,15 @@ Three-stage pattern for feature development:
 
 **Quality Gates (per phase during /code-foundations:building):**
 ```
-N.1 DISCOVERY:   Explore subagent reads codebase, writes findings
-N.2 PRE-GATE:    cc-pseudocode-programming + aposd-designing-deep-modules
-N.3 IMPLEMENT:   Implementation agent guided by pseudocode + discovery
-N.4 POST-GATE:   aposd-verifying-correctness + cc-defensive-programming + reviewer agent must PASS
-N.5 CHECKPOINT:  Commit only after POST-GATE passes
+PRE-GATE:  cc-pseudocode-programming + aposd-designing-deep-modules
+IMPLEMENT: Write code, run tests
+POST-GATE: aposd-verifying-correctness + cc-defensive-programming + reviewer agent
+CHECKPOINT: Commit only after all gates pass
 ```
 
-Sub-phase enforcement via TaskCreate with blockedBy chains (N.2 blocked by N.1, N.3 blocked by N.2, etc.).
 Model auto-detected per phase: haiku (<=2 tasks/files), opus (>=6 tasks/files or OPUS keyword), sonnet (default).
 Plan `**Model:**` field overrides auto-detection.
-Cannot proceed to next phase until N.4 POST-GATE reviewer agent returns PASS.
+Cannot proceed to next phase until current phase passes all gates including reviewer agent PASS.
 
 ## Skill File Structure
 
