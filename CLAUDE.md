@@ -214,7 +214,7 @@ Three-stage pattern for feature development:
 
 **Quality Gates (per phase during /code-foundations:building):**
 ```
-PRE-GATE:  cc-pseudocode-programming + aposd-designing-deep-modules
+PRE-GATE:  cc-construction-prerequisites + cc-pseudocode-programming + aposd-designing-deep-modules
 IMPLEMENT: Write code, run tests
 POST-GATE: aposd-verifying-correctness + cc-defensive-programming + reviewer agent
 CHECKPOINT: Commit only after all gates pass

@@ -126,15 +126,12 @@ User: "/code-foundations:building docs/plans/2026-01-30-notifications.md"
 
   FOR EACH PHASE:
   ┌────────────────────────────────────────────────────────────┐
-  │  DISCOVERY     Explore subagent reads codebase             │
-  │       ⛔ Cannot proceed until discovery complete           │
-  ├────────────────────────────────────────────────────────────┤
-  │  PRE-GATE      Pseudocode subagent designs the solution    │
+  │  PRE-GATE      Pre-gate agent explores + writes pseudocode │
   │       ⛔ Cannot implement until pseudocode exists          │
   ├────────────────────────────────────────────────────────────┤
-  │  IMPLEMENT     Implementation subagent writes code         │
+  │  IMPLEMENT     Implementation agent writes code            │
   ├────────────────────────────────────────────────────────────┤
-  │  POST-GATE     Reviewer subagent checks quality            │
+  │  POST-GATE     Reviewer agent checks quality               │
   │       ⛔ Cannot commit until reviewer returns PASS         │
   ├────────────────────────────────────────────────────────────┤
   │  CHECKPOINT    Commit with phase summary                   │
@@ -145,6 +142,7 @@ User: "/code-foundations:building docs/plans/2026-01-30-notifications.md"
 
 | Gate | Skills Loaded | What Gets Enforced |
 |------|---------------|-------------------|
+| PRE-GATE | `cc-construction-prerequisites` | Verify plan assumptions match codebase reality |
 | PRE-GATE | `cc-pseudocode-programming` | Design before code, routine cohesion |
 | PRE-GATE | `aposd-designing-deep-modules` | Interface depth, information hiding |
 | POST-GATE | `aposd-verifying-correctness` | Requirements coverage, boundary conditions |
