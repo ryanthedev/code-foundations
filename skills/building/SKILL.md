@@ -175,19 +175,10 @@ Each sub-phase dispatches a specific agent type with specific skills. **Do NOT p
 |-----------|-----------|-------------------------------|
 | N.1 PRE-GATE | `code-foundations:pre-gate-agent` | `cc-construction-prerequisites`, `cc-pseudocode-programming`, `aposd-designing-deep-modules` |
 | N.2 IMPLEMENT | `code-foundations:implementation-agent` | `cc-pseudocode-programming`, `cc-defensive-programming`, `aposd-designing-deep-modules` |
-| N.3 POST-GATE | `code-foundations:correctness-reviewer` | `aposd-verifying-correctness`, `cc-defensive-programming` |
+| N.3 POST-GATE | `code-foundations:post-gate-agent` | `aposd-verifying-correctness`, `cc-defensive-programming` |
 | N.4 CHECKPOINT | None (you do this) | N/A |
 
-**POST-GATE agent type selection:**
-
-| Phase Focus | Agent Type |
-|-------------|-----------|
-| General | `code-foundations:correctness-reviewer` |
-| Error handling | `code-foundations:defensive-reviewer` |
-| Design/architecture | `code-foundations:quality-reviewer` |
-| Performance | `code-foundations:performance-reviewer` |
-
-**DO NOT substitute `code-foundations:quick-checklist` or `general-purpose` for POST-GATE. Use the reviewer agent types listed above.**
+**POST-GATE uses `code-foundations:post-gate-agent`.** Skills are baked into the agent template — no skill loading needed in the dispatch prompt.
 
 ---
 
@@ -337,72 +328,26 @@ Agent tool:
 
 **TaskGet → confirm blockedBy is empty. TaskUpdate → in_progress, then dispatch.**
 
-**CRITICAL: Use a `code-foundations:*-reviewer` agent type (NOT `quick-checklist` or `general-purpose`). Your prompt MUST include the skill loading block.**
-
-Choose reviewer based on phase focus:
-
-| Phase Focus | Agent Type (use EXACTLY this) |
-|-------------|-----------|
-| General implementation | `code-foundations:correctness-reviewer` |
-| Error handling heavy | `code-foundations:defensive-reviewer` |
-| Design/architecture | `code-foundations:quality-reviewer` |
-| Performance critical | `code-foundations:performance-reviewer` |
+**Always use `code-foundations:post-gate-agent`.** Skills are baked into the agent template.
 
 ```
 Agent tool:
-- subagent_type: "code-foundations:correctness-reviewer"
+- subagent_type: "code-foundations:post-gate-agent"
 - model: [resolved_model]
 - description: "POST-GATE for Phase N"
 - prompt: |
     Review Phase N implementation.
 
-    ## MANDATORY - Load Skills FIRST (before any other work)
-    You MUST call the Skill tool for each of these BEFORE reading any files:
-    1. Skill(code-foundations:aposd-verifying-correctness)
-    2. Skill(code-foundations:cc-defensive-programming)
-
-    Do NOT proceed until both skills are loaded.
-
-    ## Input Files (READ THESE AFTER loading skills)
+    ## Inputs
+    - Plan: docs/plans/<plan-name>.md (Phase N section)
     - Discovery: docs/building/<plan-name>-phase-N-discovery.md
     - Pseudocode: docs/building/<plan-name>-phase-N-pseudocode.md
-    - Plan: docs/plans/<plan-name>.md (Phase N section)
 
     ## Files Changed
     [list files from implementation subagent]
 
-    ## Review Checklist
-    1. Does implementation match pseudocode?
-    2. Are all requirements from plan covered?
-    3. Any deviations from spec?
-    4. **Test coverage matches plan level** (check Test Coverage field in plan)
-    5. Run your loaded skill checklists
-
-    ## OUTPUT REQUIREMENT
-    Write your review to: docs/building/<plan-name>-phase-N-review.md
-
-    Use this format:
-    ```markdown
-    # Review: Phase N - [name]
-
-    ## Verdict: PASS | FAIL
-
-    ## Checklist
-    - [x] Implementation matches pseudocode
-    - [x] Requirements covered
-    - [x] Defensive programming applied
-    - [x] Correctness verified
-
-    ## Issues (if FAIL)
-    1. [issue description]
-       - File: [path:line]
-       - Fix: [what to do]
-
-    ## Notes
-    [any observations]
-    ```
-
-    Return: "POST-GATE [PASS|FAIL]. Review written to docs/building/<plan-name>-phase-N-review.md"
+    ## Output
+    Write review to: docs/building/<plan-name>-phase-N-review.md
 ```
 
 **After POST-GATE:**
@@ -634,13 +579,13 @@ When resuming blocked plan:
 | "Discovery is overkill for a simple phase" | Plan assumptions often mismatch reality. Discovery catches this before wasted work. |
 | "I already know this codebase" | Your context is stale. Discovery subagent has fresh eyes and finds what changed. |
 | "I'll tell the subagent to invoke a skill" | Subagents can't invoke skills (fresh context). Use specialized agent types instead. |
-| "general-purpose is fine for review" | Specialized reviewer agents have skills built-in. Use `code-foundations:*-reviewer`. |
+| "general-purpose is fine for review" | post-gate-agent has skills built-in. Use `code-foundations:post-gate-agent`. |
 | "I'll skip TaskCreate, it's overhead" | TaskCreate with blockedBy is the enforcement mechanism. Without it, gates are just suggestions. |
 | "I'll just mark the blocker completed manually" | Marking a gate completed without PASS is lying. The next sub-phase will inherit false confidence. |
 | "Haiku is fine for this complex phase" | Auto-detection chose opus for a reason. Override down only with explicit `**Model:**` in the plan. |
 | "The subagent doesn't need those skills" | Skills provide checklists and mental models. Without them, the subagent improvises. Include the skill loading block VERBATIM. |
 | "I'll summarize the prompt instead" | Paraphrased prompts drop skill loading, output formats, and file paths. Use the templates AS WRITTEN. |
-| "quick-checklist is fine for POST-GATE" | Quick-checklist has no reviewer skills. Use `code-foundations:correctness-reviewer` (or defensive/quality/performance variants). |
+| "quick-checklist is fine for POST-GATE" | Quick-checklist has no reviewer skills. Use `code-foundations:post-gate-agent`. |
 
 ---
 

@@ -134,34 +134,24 @@ Agent tool:
     Return: DONE or BLOCKED
 ```
 
-### 6. POST-GATE Reviewer
+### 6. POST-GATE Agent
 
-**CRITICAL: Use a `code-foundations:*-reviewer` agent (NOT quick-checklist). Include skill loading VERBATIM.**
-
-| Focus | Agent Type |
-|-------|-------|
-| General | `code-foundations:correctness-reviewer` |
-| Error handling | `code-foundations:defensive-reviewer` |
-| Design | `code-foundations:quality-reviewer` |
+Skills baked into the agent template. No skill loading needed in prompt.
 
 ```
 Agent tool:
-- subagent_type: "code-foundations:correctness-reviewer"
+- subagent_type: "code-foundations:post-gate-agent"
 - model: [resolved_model]
 - description: "POST-GATE for Phase N"
 - prompt: |
-    ## MANDATORY - Load Skills FIRST
-    You MUST call the Skill tool for each BEFORE reading any files:
-    1. Skill(code-foundations:aposd-verifying-correctness)
-    2. Skill(code-foundations:cc-defensive-programming)
-
-    THEN:
-    Read all phase files in docs/building/<plan>-phase-N-*
+    Review Phase N implementation.
+    Plan: docs/plans/<plan>.md
+    Discovery: docs/building/<plan>-phase-N-discovery.md
+    Pseudocode: docs/building/<plan>-phase-N-pseudocode.md
     Write review to: docs/building/<plan>-phase-N-review.md
-    Return: PASS or FAIL
 ```
 
-**STOP. Cannot proceed until reviewer returns PASS.**
+**STOP. Cannot proceed until post-gate-agent returns PASS.**
 
 ### 7. Final Verification
 
