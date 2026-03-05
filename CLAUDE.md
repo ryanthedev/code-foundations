@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Code-foundations is a Claude Code plugin providing software engineering skills based on *Code Complete* (McConnell) and *A Philosophy of Software Design* (Ousterhout). It includes a profile-driven code review system that dispatches one agent per checklist.
+Code-foundations is a Claude Code plugin providing software engineering skills based on *Code Complete* (McConnell) and *A Philosophy of Software Design* (Ousterhout). It includes a building workflow with gated sub-phases (pre-gate, implement, post-gate, checkpoint) and an experimental code review system.
 
 ## Architecture
 
@@ -27,7 +27,7 @@ Code-foundations is a Claude Code plugin providing software engineering skills b
 
 **Single entry point:** `/code-foundations:review`
 
-**Profile-driven architecture:** Two flows based on profile type.
+**Two presets:**
 
 **Sanity Flow (--sanity):** 14 core checks, intelligent batching
 ```
@@ -72,11 +72,11 @@ Code-foundations is a Claude Code plugin providing software engineering skills b
 | cc-performance-tuning | 50 |
 | aposd-optimizing-critical-paths | 40 |
 | cc-documentation-quality | 49 |
-| **Total (PR profile)** | **614** |
+| **Total (PR preset)** | **614** |
 
 ### Review Execution Flow
 
-1. **Load profile** → Parse checklists and skills
+1. **Load preset** → Parse checklists and skills
 2. **Validate** → Check checklist paths exist, warn on missing skills
 3. **Get target** → Ask for diff args (staged, unstaged, branch)
 4. **Create phase tasks** → TaskCreate for each phase (enforces flow)
