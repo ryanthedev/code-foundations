@@ -19,9 +19,7 @@ Code-foundations is a Claude Code plugin providing software engineering skills b
 
 - `skills/` - Individual skill definitions (SKILL.md + checklists.md)
 - `commands/` - User-invocable commands (slash commands)
-- `agents/` - Agent templates, profiles, and configuration
-  - `agents/profiles/` - Built-in profiles (sanity.yaml, pr.yaml)
-  - `agents/config.yaml` - Agent settings
+- `agents/` - Agent templates (pre-gate-agent, implementation-agent, post-gate-agent)
 - `references/` - Shared reference materials
 - `docs/` - Case study examples
 
@@ -59,50 +57,6 @@ Code-foundations is a Claude Code plugin providing software engineering skills b
 |--------|--------|----------|
 | `--sanity` | 14 core (consensus-distilled) | Pre-commit sanity |
 | `--pr` | 614 (10 checklists) | Full PR review |
-| `--profile <name>` | varies | Custom configuration |
-
-**Interactive mode:** `/code-foundations:review` (no flags) asks for profile.
-**Profile management:** `/code-foundations:review-profile --setup`
-
-### Profile Structure
-
-Profiles define which checklists to run and which skills inform each:
-
-```yaml
-# agents/profiles/pr.yaml or .code-foundations/profiles/custom.yaml
-name: my-profile
-description: "Description"
-
-# Parallelism (default: 3)
-max_parallelism: 3      # Max concurrent agents per phase (0 = unlimited)
-
-# Model configuration (optional - defaults shown)
-models:
-  checking: sonnet       # Checklist execution
-  investigation: sonnet  # Finding verification
-
-checklists:
-  # Skill checklist with its persona
-  - path: skills/cc-defensive-programming/checklists.md
-    skills: [cc-defensive-programming]
-
-  # Custom checklist with skill persona
-  - path: .code-foundations/checklists/owasp.md
-    skills: [cc-defensive-programming]
-
-  # Self-contained checklist
-  - path: agents/quick-checklist.md
-    skills: []
-```
-
-**1 prefix group = 1 checking agent** during review (e.g., all `GC-` checks together). Orchestrator picks 1-3 relevant skills per group.
-
-### Built-in Profiles
-
-| Profile | Location | Checklists | Checks |
-|---------|----------|------------|--------|
-| sanity | `agents/profiles/sanity.yaml` | 1 | 99 |
-| pr | `agents/profiles/pr.yaml` | 10 | 614 |
 
 ### Skill Checklist Counts
 
