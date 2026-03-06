@@ -6,6 +6,5 @@
     "name": "ryanthedev"
   },
   "license": "MIT",
-  "agents": "./agents/",
-  "keywords": ["code-complete", "aposd", "skills", "software-engineering", "best-practices", "design-philosophy", "code-review", "pr-review", "prototyping", "planning", "profile-driven"]
+  "keywords": ["code-complete", "aposd", "skills", "software-engineering", "best-practices", "design-philosophy", "code-review", "pr-review", "prototyping", "planning"]
 }
