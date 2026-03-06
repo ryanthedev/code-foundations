@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Code-foundations is a Claude Code plugin providing software engineering skills based on *Code Complete* (McConnell) and *A Philosophy of Software Design* (Ousterhout). It includes a profile-driven code review system that dispatches one agent per checklist.
+Code-foundations is a Claude Code plugin providing software engineering skills based on *Code Complete* (McConnell) and *A Philosophy of Software Design* (Ousterhout). It includes a building workflow with gated sub-phases (pre-gate, implement, post-gate, checkpoint) and an experimental code review system.
 
 ## Architecture
 
@@ -19,9 +19,7 @@ Code-foundations is a Claude Code plugin providing software engineering skills b
 
 - `skills/` - Individual skill definitions (SKILL.md + checklists.md)
 - `commands/` - User-invocable commands (slash commands)
-- `agents/` - Agent templates, profiles, and configuration
-  - `agents/profiles/` - Built-in profiles (sanity.yaml, pr.yaml)
-  - `agents/config.yaml` - Agent settings
+- `agents/` - Agent templates (pre-gate-agent, implementation-agent, post-gate-agent)
 - `references/` - Shared reference materials
 - `docs/` - Case study examples
 
@@ -29,7 +27,7 @@ Code-foundations is a Claude Code plugin providing software engineering skills b
 
 **Single entry point:** `/code-foundations:review`
 
-**Profile-driven architecture:** Two flows based on profile type.
+**Two presets:**
 
 **Sanity Flow (--sanity):** 14 core checks, intelligent batching
 ```
@@ -59,50 +57,6 @@ Code-foundations is a Claude Code plugin providing software engineering skills b
 |--------|--------|----------|
 | `--sanity` | 14 core (consensus-distilled) | Pre-commit sanity |
 | `--pr` | 614 (10 checklists) | Full PR review |
-| `--profile <name>` | varies | Custom configuration |
-
-**Interactive mode:** `/code-foundations:review` (no flags) asks for profile.
-**Profile management:** `/code-foundations:review-profile --setup`
-
-### Profile Structure
-
-Profiles define which checklists to run and which skills inform each:
-
-```yaml
-# agents/profiles/pr.yaml or .code-foundations/profiles/custom.yaml
-name: my-profile
-description: "Description"
-
-# Parallelism (default: 3)
-max_parallelism: 3      # Max concurrent agents per phase (0 = unlimited)
-
-# Model configuration (optional - defaults shown)
-models:
-  checking: sonnet       # Checklist execution
-  investigation: sonnet  # Finding verification
-
-checklists:
-  # Skill checklist with its persona
-  - path: skills/cc-defensive-programming/checklists.md
-    skills: [cc-defensive-programming]
-
-  # Custom checklist with skill persona
-  - path: .code-foundations/checklists/owasp.md
-    skills: [cc-defensive-programming]
-
-  # Self-contained checklist
-  - path: agents/quick-checklist.md
-    skills: []
-```
-
-**1 prefix group = 1 checking agent** during review (e.g., all `GC-` checks together). Orchestrator picks 1-3 relevant skills per group.
-
-### Built-in Profiles
-
-| Profile | Location | Checklists | Checks |
-|---------|----------|------------|--------|
-| sanity | `agents/profiles/sanity.yaml` | 1 | 99 |
-| pr | `agents/profiles/pr.yaml` | 10 | 614 |
 
 ### Skill Checklist Counts
 
@@ -118,11 +72,11 @@ checklists:
 | cc-performance-tuning | 50 |
 | aposd-optimizing-critical-paths | 40 |
 | cc-documentation-quality | 49 |
-| **Total (PR profile)** | **614** |
+| **Total (PR preset)** | **614** |
 
 ### Review Execution Flow
 
-1. **Load profile** → Parse checklists and skills
+1. **Load preset** → Parse checklists and skills
 2. **Validate** → Check checklist paths exist, warn on missing skills
 3. **Get target** → Ask for diff args (staged, unstaged, branch)
 4. **Create phase tasks** → TaskCreate for each phase (enforces flow)
@@ -199,7 +153,8 @@ Three-stage pattern for feature development:
 /code-foundations:building docs/plans/<plan>.md
   → Feature branch required
   → Execute phases with quality gates
-  → Per-phase commits + reviewer agent
+  → Model auto-detected per phase (haiku/sonnet/opus)
+  → Per-phase commits only after POST-GATE passes
   → Final verification + report
 ```
 
@@ -213,12 +168,14 @@ Three-stage pattern for feature development:
 
 **Quality Gates (per phase during /code-foundations:building):**
 ```
-PRE-GATE:  cc-pseudocode-programming + aposd-designing-deep-modules
+PRE-GATE:  cc-construction-prerequisites + cc-pseudocode-programming + aposd-designing-deep-modules
 IMPLEMENT: Write code, run tests
 POST-GATE: aposd-verifying-correctness + cc-defensive-programming + reviewer agent
 CHECKPOINT: Commit only after all gates pass
 ```
 
+Model auto-detected per phase: haiku (<=2 tasks/files), opus (>=6 tasks/files or OPUS keyword), sonnet (default).
+Plan `**Model:**` field overrides auto-detection.
 Cannot proceed to next phase until current phase passes all gates including reviewer agent PASS.
 
 ## Skill File Structure

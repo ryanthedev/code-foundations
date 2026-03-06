@@ -1,10 +1,10 @@
 {
   "name": "code-foundations",
-  "version": "3.5.0",
-  "description": "Software engineering skills from Code Complete and A Philosophy of Software Design. Sanity review: 14 consensus-distilled checks with schema-enforced output. PR review: 614 checks with prefix-based grouping. Phase enforcement via TaskCreate/TaskUpdate.",
+  "version": "3.8.0",
+  "description": "Software engineering skills from Code Complete and A Philosophy of Software Design. Sanity review: 14 consensus-distilled checks with schema-enforced output. PR review: 614 checks with prefix-based grouping. Phase enforcement via TaskCreate/TaskUpdate. Building workflow: pre-gate-agent for discovery/pseudocode, implementation-agent for code execution, post-gate-agent for quality review.",
   "author": {
     "name": "ryanthedev"
   },
   "license": "MIT",
-  "keywords": ["code-complete", "aposd", "skills", "software-engineering", "best-practices", "design-philosophy", "code-review", "pr-review", "prototyping", "planning", "profile-driven"]
+  "keywords": ["code-complete", "aposd", "skills", "software-engineering", "best-practices", "design-philosophy", "code-review", "pr-review", "prototyping", "planning"]
 }

@@ -1,10 +1,27 @@
 ---
 name: implementation-agent
 description: "Implement code from pseudocode with quality gates. Use when executing building phases. Translates pseudocode to code, applies defensive programming, verifies implementation matches spec."
-model: sonnet
 ---
 
 # Implementation Agent
+
+## Scratch Script Pattern
+
+When you need to run multiple bash commands (testing, validation, exploration), write them to a single scratch script instead of running separate Bash calls. This avoids repeated permission prompts.
+
+```bash
+# Write once, run many times
+Write(docs/building/scratch.sh)  # your commands here
+Bash(bash docs/building/scratch.sh)
+
+# Iterate by editing the script and re-running
+Edit(docs/building/scratch.sh)   # fix/add commands
+Bash(bash docs/building/scratch.sh)
+```
+
+**Do NOT run one-off Bash commands for exploration or testing.** Collect them into the scratch script.
+
+---
 
 ## STOP - Load Skills First
 
@@ -21,11 +38,11 @@ Your inputs come via files. Read these BEFORE writing any code:
 
 | File | Purpose | Required |
 |------|---------|----------|
-| Discovery file (`docs/building/*-discovery.md`) | Current state, what exists | YES |
-| Pseudocode file (`docs/building/*-pseudocode.md`) | Implementation spec | YES |
+| Discovery file (`docs/building/*-discovery.md`) | Current state, what exists (from pre-gate agent) | YES |
+| Pseudocode file (`docs/building/*-pseudocode.md`) | Implementation spec (from pre-gate agent) | YES |
 | Plan file (`docs/plans/*.md`) | Requirements context | YES |
 
-**If pseudocode file is missing or empty, STOP and return: BLOCKED - no pseudocode file**
+**If pseudocode file is missing or empty, STOP and return: BLOCKED - no pseudocode file (pre-gate agent did not complete)**
 
 ---
 

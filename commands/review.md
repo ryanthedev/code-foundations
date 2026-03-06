@@ -1,20 +1,17 @@
 ---
-description: "Profile-driven code review"
-argument-hint: "[--sanity | --pr | --profile <name>] [--staged | files...]"
+description: "Code review with checklist-driven checks"
+argument-hint: "[--sanity | --pr] [--staged | files...]"
 allowed-tools: ["Bash", "Glob", "Grep", "Read", "Task", "Skill", "Write", "TaskCreate", "TaskUpdate", "TaskList", "AskUserQuestion"]
 ---
 
-# Profile-Driven Review
+# Code Review
 
-Unified review workflow. One flow, driven by profile configuration.
+Checklist-driven review workflow.
 
 ```
 /code-foundations:review --sanity          # 99 checks, quick pre-commit
 /code-foundations:review --pr              # 614 checks, full PR review
-/code-foundations:review --profile <name>  # Custom profile
 ```
-
-**Manage profiles:** `/code-foundations:review-profile --setup`
 
 ---
 
@@ -93,19 +90,6 @@ if "--sanity" in args:
     PROFILE_PATH = f"{PLUGIN_ROOT}/agents/profiles/sanity.yaml"
 elif "--pr" in args:
     PROFILE_PATH = f"{PLUGIN_ROOT}/agents/profiles/pr.yaml"
-elif "--profile" in args:
-    name = args["--profile"]
-    # Try user profiles first (in project), then built-in (in plugin)
-    if exists(f".code-foundations/profiles/{name}.yaml"):
-        PROFILE_PATH = f".code-foundations/profiles/{name}.yaml"
-    elif exists(f"{PLUGIN_ROOT}/agents/profiles/{name}.yaml"):
-        PROFILE_PATH = f"{PLUGIN_ROOT}/agents/profiles/{name}.yaml"
-    else:
-        error(f"Profile not found: {name}")
-        print("Available profiles:")
-        print("  Built-in: sanity, pr")
-        print("  User: /code-foundations:review-profile --list")
-        exit()
 else:
     # No profile specified - ask user
     goto STEP 1b: ASK FOR PROFILE
@@ -121,15 +105,12 @@ AskUserQuestion(
       question: "Which review profile do you want to use?",
       options: [
         {label: "Sanity (Recommended)", description: "99 critical checks. Quick pre-commit sanity."},
-        {label: "PR", description: "614 checks across 10 skills. Full PR review."},
-        {label: "Custom", description: "Use a saved profile or create one."}
+        {label: "PR", description: "614 checks across 10 skills. Full PR review."}
       ]
     }
   ]
 )
 ```
-
-If "Custom" → ask for profile name or offer to run `/code-foundations:review-profile --setup`
 
 ---
 
@@ -1062,7 +1043,7 @@ for wave in waves:
 
         Task(
             subagent_type="general-purpose",
-            model=MODELS["checking"],  # From profile config
+            model=MODELS["checking"],  # sonnet for reasoning depth
             description=f"Check: {prefix}",
             prompt=f"""
 ## Checker Agent: {prefix} ({group_name})
@@ -1295,7 +1276,7 @@ for wave in waves:
 
         Task(
             subagent_type="general-purpose",
-            model=MODELS["investigation"],  # From profile config
+            model=MODELS["investigation"],  # sonnet for reasoning depth
             description=f"Investigate batch {batch_num}",
             prompt=f"""
 ## Investigation Agent
@@ -1573,9 +1554,8 @@ else:
 
 | Flag | Profile | Checks |
 |------|---------|--------|
-| `--sanity` | `agents/profiles/sanity.yaml` | 99 |
-| `--pr` | `agents/profiles/pr.yaml` | 614 |
-| `--profile <name>` | User or built-in profile | Varies |
+| `--sanity` | 99 core checks | Quick pre-commit |
+| `--pr` | 614 checks, 10 skills | Full PR review |
 
 ---
 
@@ -1585,9 +1565,9 @@ else:
 |-------|--------|-------|---------|
 | Extraction | 1 per 5 files | haiku | `ceil(files / 5)` |
 | Check Orchestrate | 1 | haiku | Fixed |
-| Checking | 1 per prefix group | `profile.models.checking` | `len(unique_prefixes)` |
+| Checking | 1 per prefix group | sonnet | `len(unique_prefixes)` |
 | Orchestrate | 1 | haiku | Fixed |
-| Investigation | 1 per 5 findings | `profile.models.investigation` | `ceil(findings / 5)` |
+| Investigation | 1 per 5 findings | sonnet | `ceil(findings / 5)` |
 
 **All dispatched by main agent** - single message with multiple Task calls = true parallelism.
 
@@ -1595,25 +1575,9 @@ else:
 
 **Prefix groups** - checks are grouped by ID prefix (e.g., `GC-`, `EH-`, `OP-`, `CT-`). Each prefix = 1 agent.
 
-### max_parallelism
+### Parallelism
 
-Control concurrent agents per phase via profile config:
-
-```yaml
-max_parallelism: 5  # Max concurrent agents (default: 3)
-```
-
-| Setting | Behavior |
-|---------|----------|
-| `0` | Unlimited - dispatch all agents at once |
-| `1` | Sequential - one agent at a time |
-| `N` | Dispatch in waves of N agents, wait between waves |
-
-**Example:** PR profile with ~30 prefix groups, `max_parallelism: 3`:
-- Wave 1: GC, GH, GS (wait)
-- Wave 2: EH, EC, SC (wait)
-- Wave 3: OP, CT, SS (wait)
-- ...
+Agents are dispatched in waves of 3 (default). Checking phase with ~30 prefix groups runs ~10 waves.
 
 ## SCALING ANALYSIS (100k Line PR)
 

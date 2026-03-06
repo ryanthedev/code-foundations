@@ -2,7 +2,7 @@
 
 **AI that codes like a senior engineer.** Checklists, quality gates, and verification built into every workflow.
 
-> **Experimental** - This plugin is under active development. Subagent orchestration for plan execution is being fine-tuned to ensure reliable skill loading and phase execution. GitHub releases will be added once the plugin reaches a stable state.
+> **Experimental** - This plugin is under active development. We are fine-tuning subagent orchestration to ensure reliable skill loading and phase execution. We will add GitHub releases once the plugin stabilizes.
 
 ---
 
@@ -10,7 +10,6 @@
 
 | Command | Purpose | When to Use |
 |---------|---------|-------------|
-| `/code-foundations:review` | Profile-driven code review | Pre-commit, PR review |
 | `/code-foundations:whiteboarding` | Create implementation-ready plans | Feature planning |
 | `/code-foundations:building` | Execute plans with quality gates | Implementing approved plans |
 | `/code-foundations:code` | Pseudocode-first development | Know what to build, want design collaboration |
@@ -21,61 +20,9 @@
 
 ---
 
-## Code Review System
-
-**Single command.** Profile-driven. Parallel subagents.
-
-```bash
-/code-foundations:review --sanity          # 99 checks, quick pre-commit
-/code-foundations:review --pr              # 614 checks, full PR review
-/code-foundations:review --profile <name>  # Custom profile
-```
-
-### Profiles
-
-| Profile | Checklists | Checks | Use Case |
-|---------|------------|--------|----------|
-| `--sanity` | 1 | 99 | Pre-commit sanity check |
-| `--pr` | 10 | 614 | Full PR review |
-| Custom | varies | varies | Your saved configuration |
-
-**Create custom profiles:** `/code-foundations:review-profile --setup`
-
-### Architecture: 5-Phase Pipeline
-
-```
-┌────────────┐   ┌──────────┐   ┌─────────────┐   ┌───────────────┐   ┌────────┐
-│ EXTRACTION │ → │ CHECKING │ → │ ORCHESTRATE │ → │ INVESTIGATION │ → │ REPORT │
-│  (haiku)   │   │ (haiku)  │   │   (haiku)   │   │    (haiku)    │   │(haiku) │
-└────────────┘   └──────────┘   └─────────────┘   └───────────────┘   └────────┘
-```
-
-| Phase | What Happens | Parallelism |
-|-------|--------------|-------------|
-| **Extraction** | Parse code into semantic units (functions, classes) | 1 agent per 5 files |
-| **Checking** | Run checklists against code, skills as agent personas | 1 agent per checklist |
-| **Orchestrate** | Batch findings, create investigation tasks | Single agent |
-| **Investigation** | Verify findings, capture code context and diff | 1 agent per 5 findings |
-| **Report** | Compile results into JSON, open dashboard | Single agent |
-
-### Skills as Personas
-
-Each checklist loads skills that become the checking agent's persona:
-
-```yaml
-# Profile example
-checklists:
-  - path: skills/cc-defensive-programming/checklists.md
-    skills: [cc-defensive-programming]  # Agent adopts this expertise
-```
-
-The PR profile covers: defensive programming, complexity reduction, module design, code layout, control flow, correctness verification, quality practices, performance, optimization, and documentation.
-
----
-
 ## Planning and Execution: Whiteboarding to Building
 
-Two commands that work together. Whiteboarding creates the plan. Building executes it.
+Two commands work together: Whiteboarding creates the plan, Building executes it.
 
 ```
 /code-foundations:whiteboarding "add notification system"
@@ -87,7 +34,7 @@ docs/plans/2026-01-30-notifications.md
 
 ### `/code-foundations:whiteboarding` - Create the Plan
 
-**Discovery-oriented brainstorming.** Researches your codebase before asking questions.
+**Researches your codebase first, then asks targeted questions.**
 
 ```
 User: "/code-foundations:whiteboarding add user notifications"
@@ -126,15 +73,12 @@ User: "/code-foundations:building docs/plans/2026-01-30-notifications.md"
 
   FOR EACH PHASE:
   ┌────────────────────────────────────────────────────────────┐
-  │  DISCOVERY     Explore subagent reads codebase             │
-  │       ⛔ Cannot proceed until discovery complete           │
-  ├────────────────────────────────────────────────────────────┤
-  │  PRE-GATE      Pseudocode subagent designs the solution    │
+  │  PRE-GATE      Pre-gate agent explores + writes pseudocode │
   │       ⛔ Cannot implement until pseudocode exists          │
   ├────────────────────────────────────────────────────────────┤
-  │  IMPLEMENT     Implementation subagent writes code         │
+  │  IMPLEMENT     Implementation agent writes code            │
   ├────────────────────────────────────────────────────────────┤
-  │  POST-GATE     Reviewer subagent checks quality            │
+  │  POST-GATE     Reviewer agent checks quality               │
   │       ⛔ Cannot commit until reviewer returns PASS         │
   ├────────────────────────────────────────────────────────────┤
   │  CHECKPOINT    Commit with phase summary                   │
@@ -145,12 +89,13 @@ User: "/code-foundations:building docs/plans/2026-01-30-notifications.md"
 
 | Gate | Skills Loaded | What Gets Enforced |
 |------|---------------|-------------------|
+| PRE-GATE | `cc-construction-prerequisites` | Verify plan assumptions match codebase reality |
 | PRE-GATE | `cc-pseudocode-programming` | Design before code, routine cohesion |
 | PRE-GATE | `aposd-designing-deep-modules` | Interface depth, information hiding |
 | POST-GATE | `aposd-verifying-correctness` | Requirements coverage, boundary conditions |
 | POST-GATE | `cc-defensive-programming` | Error handling, input validation |
 
-**Every artifact is saved** to `docs/building/` for review. Per-phase commits enable rollback.
+The system saves every artifact to `docs/building/`. Per-phase commits enable rollback.
 
 ---
 
@@ -158,7 +103,7 @@ User: "/code-foundations:building docs/plans/2026-01-30-notifications.md"
 
 ### `/code-foundations:code` - Pseudocode First
 
-**Design loop, then implementation loop.** You know what to build. You want to collaborate on the design before code exists.
+**Design loop, then implementation loop.** You know what to build and want to collaborate on design first.
 
 ```
 PHASE 1: DESIGN LOOP
@@ -177,7 +122,7 @@ PHASE 2: IMPLEMENTATION LOOP
 
 **Skills loaded:** `cc-pseudocode-programming`, `cc-defensive-programming`
 
-The design loop is where changes are cheap. Once you say "let's build," the contract is set.
+Change costs nothing in the design loop. Once you say "let's build," the contract holds.
 
 ### `/code-foundations:prototype` - Prove Feasibility
 
@@ -196,7 +141,7 @@ User: "/code-foundations:prototype can I use WebSockets with this auth?"
 
 **Skills loaded:** `cc-pseudocode-programming`, `aposd-reviewing-module-design`
 
-**Chains into planning:** Prototype success flows into `/code-foundations:whiteboarding` for full planning.
+**Chains into planning:** A successful prototype feeds directly into `/code-foundations:whiteboarding` for full planning.
 
 ### `/code-foundations:debug` - Scientific Debugging
 
@@ -226,7 +171,7 @@ User: "/code-foundations:prototype can I use WebSockets with this auth?"
 
 **Skill loaded:** `cc-debugging` (scientific debugging method)
 
-The task list prevents rabbit holes, forgotten verifications, and lost context.
+The task list prevents rabbit holes, missed verifications, and lost context.
 
 ### When to Use Each
 
@@ -252,6 +197,40 @@ The task list prevents rabbit holes, forgotten verifications, and lost context.
 # Update
 /plugin update code-foundations@rtd
 ```
+
+---
+
+## Experimental
+
+### Code Review System
+
+> LLM code review is non-deterministic — the same code can produce different feedback on each run. We ground every check in explicit checklists with pass/fail criteria so the agent evaluates against defined standards, not intuition.
+
+**Single command. Parallel subagents.** Runs checklists against your code with specialized checking agents.
+
+```bash
+/code-foundations:review --sanity   # 99 checks, quick pre-commit
+/code-foundations:review --pr       # 614 checks, full PR review
+```
+
+#### Architecture: 5-Phase Pipeline
+
+```
+┌────────────┐   ┌──────────┐   ┌─────────────┐   ┌───────────────┐   ┌────────┐
+│ EXTRACTION │ → │ CHECKING │ → │ ORCHESTRATE │ → │ INVESTIGATION │ → │ REPORT │
+│  (haiku)   │   │ (haiku)  │   │   (haiku)   │   │    (haiku)    │   │(haiku) │
+└────────────┘   └──────────┘   └─────────────┘   └───────────────┘   └────────┘
+```
+
+| Phase | What Happens | Parallelism |
+|-------|--------------|-------------|
+| **Extraction** | Parse code into semantic units (functions, classes) | 1 agent per 5 files |
+| **Checking** | Run checklists against code, skills as agent personas | 1 agent per checklist |
+| **Orchestrate** | Batch findings, create investigation tasks | Single agent |
+| **Investigation** | Verify findings, capture code context and diff | 1 agent per 5 findings |
+| **Report** | Compile results into JSON, open dashboard | Single agent |
+
+The PR preset checks defensive programming, complexity reduction, module design, code layout, control flow, correctness verification, quality practices, performance, optimization, and documentation.
 
 ---
 

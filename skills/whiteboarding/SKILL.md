@@ -372,6 +372,7 @@ docs/plans/YYYY-MM-DD-<topic-slug>.md
 ## Implementation Checklist
 
 ### Phase 1: [Name]
+**Model:** [optional - haiku/sonnet/opus, overrides auto-detection]
 - [ ] [Specific task with file path]
 - [ ] [Specific task with file path]
 
@@ -387,6 +388,10 @@ docs/plans/YYYY-MM-DD-<topic-slug>.md
 ...
 
 ---
+
+## Model Override (Optional)
+
+The `/code-foundations:building` command auto-detects the model per phase based on task count, file count, and keywords. Add `**Model:** opus` (or haiku/sonnet) below a phase heading to override. Omit for auto-detection.
 
 ## Test Coverage
 
