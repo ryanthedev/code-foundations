@@ -231,22 +231,15 @@ Additional skills:
 ### Plugin Structure
 
 - `.claude-plugin/plugin.json` - Plugin manifest with name, version, description
-- Version follows semver (e.g., 2.7.1)
+- Version follows semver (e.g., 3.8.1)
 
 ### Marketplace
 
-Published to `ryanthedev/rtd-claude-inn` marketplace:
+Published to `ryanthedev/rtd-claude-inn` marketplace. Marketplace tracks `ref: main`, so publishing is just pushing to origin.
 
-**Marketplace files:**
-- `~/repos/rtd-claude-inn/.claude-plugin/marketplace.json` - Plugin registry with versions
-- `~/repos/rtd-claude-inn/README.md` - Marketplace documentation with version table
-
-**To publish a new version:**
+**To publish:**
 1. Bump version in `.claude-plugin/plugin.json`
 2. Commit and push to `origin/main`
-3. Update `marketplace.json` in rtd-claude-inn with new version
-4. Update README.md version table
-5. Commit and push rtd-claude-inn
 
 **Install commands:**
 ```bash
