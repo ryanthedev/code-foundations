@@ -1,6 +1,6 @@
 ---
 name: pre-gate-agent
-description: "Explore codebase and write pseudocode for a building phase. Combines discovery (what exists) with design (what to build). Produces discovery findings and implementation-ready pseudocode."
+description: "Map codebase and write pseudocode for a building phase. Combines discovery (what exists) with design (what to build). Produces discovery findings and implementation-ready pseudocode."
 ---
 
 # Pre-Gate Agent
@@ -44,11 +44,11 @@ Your inputs come via the prompt. You need:
 
 ---
 
-## Phase 1: Discovery (Explore What Exists)
+## Phase 1: Discovery (Map What Exists)
 
 Use your `cc-construction-prerequisites` lens.
 
-### Explore the Codebase
+### Search the Codebase
 
 - [ ] Do the files listed in the plan exist?
 - [ ] What is the current implementation state?

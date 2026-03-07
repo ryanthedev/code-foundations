@@ -1,6 +1,6 @@
 ---
 name: building
-description: "Execute whiteboard plans through gated phases with subagent dispatch. Require feature branch. Each phase goes through DISCOVERY -> PRE-GATE (pseudocode) -> IMPLEMENT -> POST-GATE (reviewer) -> CHECKPOINT. Produce per-phase commits, execution log, and working code with tests. Use after /code-foundations:whiteboarding to implement saved plans. Triggers on: build it, execute plan, implement the whiteboard, run the plan."
+description: "Execute whiteboard plans through gated phases with subagent dispatch. Require feature branch. Each phase goes through PRE-GATE (discovery + pseudocode) -> IMPLEMENT -> POST-GATE (reviewer) -> CHECKPOINT. Produce per-phase commits, execution log, and working code with tests. Use after /code-foundations:whiteboarding to implement saved plans. Triggers on: build it, execute plan, implement the whiteboard, run the plan."
 ---
 
 # Skill: building
@@ -126,7 +126,7 @@ Create the 4 sub-phase tasks for EVERY phase in the plan NOW, before executing a
 
 For each phase N, run Model Auto-Detection (see below), then create:
 
-1. `TaskCreate(subject: "Phase N.1: PRE-GATE - [phase name]", description: "Explore codebase + write pseudocode. Model: [resolved_model].", activeForm: "Running pre-gate for Phase N")`
+1. `TaskCreate(subject: "Phase N.1: PRE-GATE - [phase name]", description: "Discovery + pseudocode via pre-gate-agent. Model: [resolved_model].", activeForm: "Running pre-gate for Phase N")`
 2. `TaskCreate(subject: "Phase N.2: IMPLEMENT - [phase name]", description: "Implement from pseudocode. Model: [resolved_model].", activeForm: "Implementing Phase N")`
 3. `TaskCreate(subject: "Phase N.3: POST-GATE - [phase name]", description: "Review implementation. Model: [resolved_model]. Must return PASS.", activeForm: "Running post-gate for Phase N")`
 4. `TaskCreate(subject: "Phase N.4: CHECKPOINT - [phase name]", description: "Commit after all gates pass.", activeForm: "Committing Phase N")`
@@ -376,8 +376,7 @@ git commit -m "Phase N: [name]
 Update plan file execution log:
 ```markdown
 ### Phase N: [Name]
-- [x] DISCOVERY: Codebase explored
-- [x] PRE-GATE: Pseudocode complete
+- [x] PRE-GATE: Discovery + pseudocode complete
 - [x] IMPLEMENT: Code written, tests pass
 - [x] POST-GATE: Verification passed, reviewer approved
 - [x] CHECKPOINT: Committed
@@ -575,9 +574,10 @@ When resuming blocked plan:
 | "I can implement faster than dispatching" | Direct implementation skips quality gates. Subagent ensures fresh context. |
 | "Pseudocode is overkill, I know what to do" | You know NOW. The subagent doesn't. Pseudocode is the contract. |
 | "The subagent will figure it out" | Subagent needs explicit pseudocode. No pseudocode = garbage implementation. |
-| "I'll just quickly read the files myself" | Direct exploration pollutes your context. Discovery subagent returns only what's relevant. |
-| "Discovery is overkill for a simple phase" | Plan assumptions often mismatch reality. Discovery catches this before wasted work. |
-| "I already know this codebase" | Your context is stale. Discovery subagent has fresh eyes and finds what changed. |
+| "I'll just quickly read the files myself" | Direct exploration pollutes your context. Pre-gate agent returns only what's relevant. |
+| "Discovery is overkill for a simple phase" | Plan assumptions often mismatch reality. Pre-gate agent catches this before wasted work. |
+| "I already know this codebase" | Your context is stale. Pre-gate agent has fresh eyes and finds what changed. |
+| "I'll dispatch an Explore agent for discovery" | Explore agents are read-only and can't write files. Use `code-foundations:pre-gate-agent` which handles discovery + pseudocode together. |
 | "I'll tell the subagent to invoke a skill" | Subagents can't invoke skills (fresh context). Use specialized agent types instead. |
 | "general-purpose is fine for review" | post-gate-agent has skills built-in. Use `code-foundations:post-gate-agent`. |
 | "I'll skip TaskCreate, it's overhead" | TaskCreate with blockedBy is the enforcement mechanism. Without it, gates are just suggestions. |
