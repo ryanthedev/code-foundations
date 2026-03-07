@@ -117,12 +117,30 @@ process_batches() {
         map(. + {_key: grouping_key}) |
         # Group by key
         group_by(._key) |
-        # Create batches with IDs
+        # Create file-based batches
+        [.[] | {key: .[0]._key, units: [.[] | del(._key)]}] |
+        # Split large groups into sub-batches of max 8 units
+        [.[] |
+            .key as $key | .units as $units |
+            if ($units | length) <= 8 then
+                {reason: "File: \($key)", units: $units}
+            else
+                [range(0; ($units | length); 8)] as $starts |
+                [$starts | to_entries[] |
+                    .key as $part | .value as $start |
+                    {
+                        reason: "File: \($key) (part \($part + 1))",
+                        units: $units[$start:$start + 8]
+                    }
+                ][]
+            end
+        ] |
+        # Assign batch IDs
         to_entries |
         map({
             batch_id: "batch-\(.key + 1)",
-            units: [.value[] | del(._key)],
-            reason: "File: \(.value[0]._key)"
+            units: .value.units,
+            reason: .value.reason
         }) |
         # Sort for determinism
         sort_by(.reason)

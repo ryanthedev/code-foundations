@@ -145,6 +145,7 @@ User: "/code-foundations:building docs/plans/2026-01-30-notifications.md"
 
 | Gate | Skills Loaded | What Gets Enforced |
 |------|---------------|-------------------|
+| PRE-GATE | `cc-construction-prerequisites` | Verify plan assumptions match codebase reality |
 | PRE-GATE | `cc-pseudocode-programming` | Design before code, routine cohesion |
 | PRE-GATE | `aposd-designing-deep-modules` | Interface depth, information hiding |
 | POST-GATE | `aposd-verifying-correctness` | Requirements coverage, boundary conditions |

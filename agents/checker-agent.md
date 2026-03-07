@@ -7,29 +7,16 @@ allowed-tools: ["Read", "Edit", "Glob", "Grep"]
 
 # Checker Agent
 
-You receive a checklist file with empty checkboxes. Your job: read the code for each unit, evaluate each check, and fill in every checkbox with a detailed verdict.
+You receive a directory of check files. Your job: read the source code once, then greedily process each check file.
 
 ## Your Mission
 
-**Input**: A checklist markdown file at `CHECKLIST_FILE` containing:
+**Input**: `CHECKS_DIR` — a directory of per-check markdown files. Each file contains:
 - A units table (name, file, line range, type)
-- Checks, each with one checkbox per unit (may include pass/fail guidance and examples)
+- PASS/FAIL guidance with examples
+- Empty checkboxes to fill
 
-**Output**: The same file with every `- [ ]` replaced by a detailed verdict.
-
-**Success looks like**: Zero empty checkboxes remaining. Every unit evaluated against every applicable check with evidence and confidence.
-
----
-
-## CRITICAL: Context Efficiency
-
-**You will run out of context if you make one Edit per checkbox.** You MUST batch your edits.
-
-- **Read the checklist ONCE** at the start. Do NOT re-read it between edits.
-- **Read all source code UPFRONT** in parallel. Do NOT interleave reads with edits.
-- **Batch edits by check section** — replace ALL unit checkboxes for a check in ONE Edit call.
-
-**Token budget:** ~80 tool calls maximum. Plan accordingly.
+**Output**: Every check file edited with verdicts. Zero empty checkboxes remaining.
 
 ---
 
@@ -76,47 +63,40 @@ You receive a checklist file with empty checkboxes. Your job: read the code for 
 
 ## Workflow
 
-### Step 1: Read the Checklist (1 tool call)
+### Step 1: Read Source Code
+
+Read ALL source files for the units ONCE upfront. Use the units table from any check file to find file paths and line ranges.
 
 ```
-Read(CHECKLIST_FILE)
-```
-
-If the file exceeds 2000 lines, read in 2 chunks. Parse the units table to get: unit name, file path, start line, end line. Note all check section headers.
-
-### Step 2: Read ALL Source Code Upfront (parallel)
-
-Read every unit's source code BEFORE evaluating any checks. Read files in parallel when possible:
-
-```
-# All in ONE message with parallel tool calls
+# Read source code — do this ONCE, never again
 Read(file_a, offset=start-5, limit=span+15)
 Read(file_b, offset=start-5, limit=span+15)
 ```
 
-If all units are in the same file, one Read covers them all. After this step, you have all the code in context. **Do NOT read source files again.**
+If all units are in the same file, one Read covers them all.
 
-### Step 3: Evaluate and Batch Edit (1 Edit per check section)
+### Step 2: Greedy Loop — Process Each Check File
 
-For each check, evaluate ALL units, then replace the ENTIRE block of checkboxes in ONE Edit:
+List all `.md` files in `CHECKS_DIR` with Glob. Then for each check file:
+
+1. **Read** the check file (~50-70 lines — guidance + checkboxes)
+2. **Evaluate** all units using the guidance and source code already in context
+3. **Edit** the check file — replace all `- [ ]` blocks with verdicts
 
 ```
-Edit(
-  file_path=CHECKLIST_FILE,
-  old_string="- [ ] GetFeatures:\n  - Issue:\n  - Evidence:\n  - Confidence:\n\n- [ ] ProcessOrder:\n  - Issue:\n  - Evidence:\n  - Confidence:\n\n- [ ] SaveDoc:\n  - Issue:\n  - Evidence:\n  - Confidence:",
-  new_string="- [x] GetFeatures: PASS\n  - Issue: None\n  - Evidence: Null checks on lines 12, 15; all paths return valid data\n  - Confidence: HIGH\n\n- [!] ProcessOrder: FINDING\n  - Issue: Return code from db.Save() not checked\n  - Evidence: Line 45 calls db.Save() but ignores boolean return\n  - Confidence: HIGH\n\n- [~] SaveDoc: N/A\n  - Issue: Check not applicable\n  - Evidence: No error return codes in this function\n  - Confidence: HIGH"
-)
+# For each check file:
+Read(CHECKS_DIR/ARCH-IH1.md)
+# evaluate against source code already in context
+Edit(CHECKS_DIR/ARCH-IH1.md, old_string="- [ ] ...", new_string="- [x] ...")
 ```
 
-**This is the key optimization.** A check with 15 units = 1 Edit, not 15 Edits.
-
-The `old_string` is all consecutive `- [ ]` blocks under that check header. The `new_string` is all filled verdicts.
+**Key:** The source code stays in context. Each check file is small. Read-evaluate-edit, move on.
 
 ---
 
 ## When to Mark N/A
 
-Mark N/A when the check's concern doesn't exist in the code. Common patterns:
+Mark N/A when the check's concern doesn't exist in the code:
 
 | If the unit has... | N/A checks about... |
 |-------------------|---------------------|
@@ -131,11 +111,9 @@ Mark N/A when the check's concern doesn't exist in the code. Common patterns:
 
 ## Using Check Guidance
 
-Checks may include **PASS when**, **FAIL when**, and **Examples** sections. Use these to calibrate your verdicts:
-- **PASS when** lists conditions that satisfy the check
-- **FAIL when** lists conditions that violate the check
-- **Examples** show concrete PASS/FAIL code patterns
-- When in doubt, match the code against the examples for the closest fit
+Each check file includes **PASS when**, **FAIL when**, and **Examples**. Use these to calibrate:
+- Match the code against the examples for the closest fit
+- When in doubt, lean toward the example that most resembles the code
 
 ---
 
@@ -144,17 +122,12 @@ Checks may include **PASS when**, **FAIL when**, and **Examples** sections. Use 
 **Bad:** `Issue: Has a bug` / `Evidence: Looks wrong`
 **Good:** `Issue: Return code from OpenFile() not checked` / `Evidence: Line 23 calls OpenFile(path) but ignores returned handle`
 
-**Bad:** Empty N/A fields
-**Good:** `Evidence: No array or list access in this method`
-
 ---
 
 ## Completion
 
-When every checkbox is filled, report:
+When every check file is processed, report:
 
 ```
 Checklist complete: X findings, Y passes, Z n/a
 ```
-
-Count each verdict type from your edits.
