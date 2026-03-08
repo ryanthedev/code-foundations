@@ -90,7 +90,9 @@ After pattern discovery, classify complexity:
 
 **State classification:** "This seems [simple/medium/complex]. Based on pattern discovery, I'll ask [N] questions."
 
-### Question Sequence (Ask ONE at a time)
+### Question Sequence (Ask ONE at a time via AskUserQuestion)
+
+**ENFORCEMENT:** Each question below MUST use `AskUserQuestion` tool. Do NOT output questions as text — the tool forces a stop and wait. No proceeding until the user answers.
 
 **Simple (2-3 questions):**
 1. What specific outcome do you want?
@@ -120,11 +122,19 @@ Which authentication approach fits best?
 - [ ] Other (describe)
 ```
 
-**IMPORTANT:** Wait for answer before next question. No question batching.
+### Questioning Gate
+
+**STOP. You CANNOT proceed to Phase 2 until ALL of the following are true:**
+- [ ] Complexity classified (simple/medium/complex)
+- [ ] Minimum questions asked: Simple=2, Medium=4, Complex=6
+- [ ] Each question asked via `AskUserQuestion` (not text output)
+- [ ] Each answer received and recorded
+
+**If you catch yourself about to skip to approaches — STOP. Count questions asked. If below minimum, ask the next one.**
 
 ### Output: Problem Statement
 
-After questions, summarize:
+After ALL questions answered, summarize:
 
 ```markdown
 ## Problem Statement
@@ -139,7 +149,7 @@ After questions, summarize:
 - [criterion 2]
 ```
 
-Get user confirmation: "Does this capture what you want?"
+Get user confirmation via `AskUserQuestion`: "Does this capture what you want?"
 
 ---
 
@@ -342,6 +352,26 @@ Ask: "Does this plan look complete? Any sections to add, remove, or modify?"
 docs/plans/YYYY-MM-DD-<topic-slug>.md
 ```
 
+### Model Recommendations (Apply Per Phase)
+
+When writing each phase, recommend a model based on the phase's content:
+
+```
+OPUS_KEYWORDS  = [refactor, architect, migrate, redesign, rewrite, overhaul]
+HAIKU_KEYWORDS = [config, rename, typo, bump, cleanup, delete, remove]
+
+If tasks <= 2 AND files <= 2 AND no OPUS_KEYWORDS:
+  → haiku (simple, mechanical work)
+
+If tasks >= 6 OR files >= 6 OR any OPUS_KEYWORD:
+  → opus (complex, architectural work)
+
+Otherwise:
+  → sonnet (default)
+```
+
+**Write `**Model:** [model]` into each phase heading.** This is not optional — the plan should make the model choice visible so the user can adjust before building begins.
+
 ### Plan File Schema
 
 ```markdown
@@ -372,7 +402,7 @@ docs/plans/YYYY-MM-DD-<topic-slug>.md
 ## Implementation Checklist
 
 ### Phase 1: [Name]
-**Model:** [optional - haiku/sonnet/opus, overrides auto-detection]
+**Model:** [recommended model]
 - [ ] [Specific task with file path]
 - [ ] [Specific task with file path]
 
@@ -385,13 +415,8 @@ docs/plans/YYYY-MM-DD-<topic-slug>.md
 ---
 
 ### Phase 2: [Name]
+**Model:** [recommended model]
 ...
-
----
-
-## Model Override (Optional)
-
-The `/code-foundations:building` command auto-detects the model per phase based on task count, file count, and keywords. Add `**Model:** opus` (or haiku/sonnet) below a phase heading to override. Omit for auto-detection.
 
 ## Test Coverage
 
@@ -467,6 +492,9 @@ Provide numbered steps the user can follow to implement the plan manually
 | "Searching takes too long" | 2 min search prevents 20 min wrong-approach rework. |
 | "I'll research during implementation" | Research informs approach CHOICE. After choosing, it's too late. |
 | "This codebase is new to me" | That's exactly why you search. Don't guess conventions - find them. |
+| "The search results tell me enough" | Search informs YOUR understanding. Questions reveal USER intent. Both required. |
+| "I can infer what they want from context" | Inference ≠ confirmation. Ask via `AskUserQuestion` or you'll plan the wrong thing. |
+| "Questions will slow us down" | Wrong plan is slower. 2 minutes of questions saves 20 minutes of rework. |
 
 ---
 

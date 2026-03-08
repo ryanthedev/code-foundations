@@ -441,16 +441,34 @@ npm test  # or equivalent
 
 # Integration tests (if specified)
 npm run test:integration
-
-# Manual verification (prompt user)
 ```
+
+### Build Verification
+
+Run a clean build and capture output:
+
+```bash
+# Build the project (detect build system)
+npm run build  # or equivalent: cargo build, go build, make, tsc, etc.
+```
+
+**Check for regressions:**
+1. **Build succeeds** — if build fails, fix before proceeding
+2. **No new warnings** — build output should be clean. Any warnings in output = fix them or verify they are pre-existing (`git stash && build && git stash pop` if uncertain)
+3. **No new lint errors** — run linter if configured (`npm run lint`, `cargo clippy`, etc.)
+
+If new warnings or errors are found:
+- Fix them before proceeding
+- Re-run build to confirm clean
+- Only proceed when build is clean
 
 ### Verification Gate
 
 | Condition | Action |
 |-----------|--------|
-| All tests pass, coverage met | Proceed to REPORT |
+| All tests pass, coverage met, build clean | Proceed to REPORT |
 | Tests fail | Debug, fix, re-verify |
+| Build warnings/errors introduced | Fix, rebuild, re-verify |
 | Tests missing (but required by coverage level) | Write tests, then re-verify |
 | Coverage = None | Warn "Skipping tests per plan. Technical debt noted." and proceed |
 
@@ -508,6 +526,21 @@ The summary is a **trust report**, not a status dashboard. Engineers need to ver
 ## Files Changed
 - `path/to/file` - [what changed]
 
+## Build & Test Summary
+- **Build:** PASS (no new warnings or errors)
+- **Unit tests:** X passed, Y failed, Z skipped
+- **Integration tests:** [results or N/A]
+- **Lint:** PASS (no new issues)
+
+## Manual Testing Steps
+[If the plan includes manual testing steps, or if the feature involves UI/UX,
+user-facing behavior, or interactions that automated tests cannot fully cover:]
+1. [Step-by-step instructions to manually verify the feature]
+2. [Expected behavior for each step]
+3. [Edge cases worth checking manually]
+
+[If no manual testing needed: "All behavior covered by automated tests."]
+
 ## Follow-up
 - [Issues flagged by reviewers for future work]
 - [Or: "None identified"]
@@ -518,6 +551,8 @@ The summary is a **trust report**, not a status dashboard. Engineers need to ver
 - **Retry count** - shows if gates caught issues (retries > 0 = the system worked)
 - **Artifact links** - engineer can read the discovery, pseudocode, and review files
 - **Model used** - shows which model was auto-detected per phase
+- **Build & test summary** - concrete proof the build is clean and tests pass
+- **Manual testing steps** - what the engineer should verify by hand (or confirmation that automated tests cover everything)
 - **Follow-up** - anything the reviewer flagged that wasn't a blocker
 
 ---
@@ -586,6 +621,9 @@ When resuming blocked plan:
 | "The subagent doesn't need those skills" | Skills provide checklists and mental models. Without them, the subagent improvises. Include the skill loading block VERBATIM. |
 | "I'll summarize the prompt instead" | Paraphrased prompts drop skill loading, output formats, and file paths. Use the templates AS WRITTEN. |
 | "quick-checklist is fine for POST-GATE" | Quick-checklist has no reviewer skills. Use `code-foundations:post-gate-agent`. |
+| "Those warnings are pre-existing, not mine" | Verify it. `git stash && build && git stash pop` — if warnings disappear, they're yours. |
+| "Lint is cosmetic, the build passed" | Lint warnings become bugs. Clean build = clean lint. Fix before proceeding. |
+| "Manual testing isn't needed, tests cover it" | If the feature has UI or user-facing behavior, automated tests can't catch what humans see. State it explicitly either way. |
 
 ---
 

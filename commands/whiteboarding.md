@@ -53,7 +53,7 @@ Skill(code-foundations:whiteboarding)
 
 ### 2. Discovery-Oriented Questioning (ONE AT A TIME)
 
-Ask questions sequentially. Wait for each answer. Use multiple-choice when possible.
+Ask questions sequentially using `AskUserQuestion` tool (NOT text output). Wait for each answer. Use multiple-choice when possible. Minimum questions: Simple=2, Medium=4, Complex=6. **Do NOT proceed to approaches until minimum questions asked and answered.**
 
 ### 3. Present 2-3 Approaches
 
