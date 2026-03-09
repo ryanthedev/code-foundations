@@ -19,7 +19,7 @@ Code-foundations is a Claude Code plugin providing software engineering skills b
 
 - `skills/` - Individual skill definitions (SKILL.md + checklists.md)
 - `commands/` - User-invocable commands (slash commands)
-- `agents/` - Agent templates (pre-gate-agent, implementation-agent, post-gate-agent, debug-agent)
+- `agents/` - Agent templates (pre-gate-agent, implementation-agent, post-gate-agent, debug-agent, code-agent)
 - `references/` - Shared reference materials
 - `docs/` - Case study examples
 

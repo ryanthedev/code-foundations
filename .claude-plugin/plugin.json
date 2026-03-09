@@ -1,7 +1,7 @@
 {
   "name": "code-foundations",
-  "version": "3.9.0",
-  "description": "Software engineering skills from Code Complete and A Philosophy of Software Design. Sanity review: 14 consensus-distilled checks with schema-enforced output. PR review: 614 checks with prefix-based grouping. Phase enforcement via TaskCreate/TaskUpdate. Building workflow: pre-gate-agent for discovery/pseudocode, implementation-agent for code execution, post-gate-agent for quality review.",
+  "version": "4.0.0",
+  "description": "Software engineering skills from Code Complete and A Philosophy of Software Design. 20 skills across 5 agents (pre-gate, implementation, post-gate, debug, code) with zero duplication. Building workflow with 4 gated phases (PRE-GATE, IMPLEMENT, POST-GATE, VERIFY). Design-first coding via code-agent. Scientific debugging via debug-agent. Phase enforcement via TaskCreate/TaskUpdate.",
   "author": {
     "name": "ryanthedev"
   },
