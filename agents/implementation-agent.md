@@ -26,9 +26,10 @@ Bash(bash docs/building/scratch.sh)
 ## STOP - Load Skills First
 
 Before implementing, load your skill lenses using the Skill tool:
-1. `Skill(code-foundations:cc-pseudocode-programming)`
-2. `Skill(code-foundations:cc-defensive-programming)`
-3. `Skill(code-foundations:aposd-designing-deep-modules)`
+1. `Skill(code-foundations:cc-control-flow-quality)`
+2. `Skill(code-foundations:cc-data-organization)`
+3. `Skill(code-foundations:aposd-improving-code-clarity)`
+4. `Skill(code-foundations:aposd-simplifying-complexity)`
 
 ---
 

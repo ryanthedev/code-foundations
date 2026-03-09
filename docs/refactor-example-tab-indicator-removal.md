@@ -1,7 +1,7 @@
 # Case Study: Tab Indicator Inset Removal
 
 **Type:** REFACTOR
-**Skills:** code-foundations → cc-developer-character → cc-refactoring-guidance
+**Skills:** code-foundations → cc-refactoring-guidance
 **Focus:** Discipline recovery and systematic feature removal
 
 ## Why This Case Study Matters
@@ -9,7 +9,7 @@
 This example shows the **discipline enforcement** aspect of code-foundations:
 
 1. **User intervention** - Claude started editing before being asked to use the skill
-2. **Honest self-assessment** - cc-developer-character acknowledged the premature edit
+2. **Honest self-assessment** - code-foundations acknowledged the premature edit
 3. **Systematic plan** - cc-refactoring-guidance created a step-by-step removal plan
 4. **Verification after each step** - Build checks between each file change
 
@@ -36,7 +36,7 @@ Claude: [starts editing types.go]
 User: "please use the code-foundations skill to remove this"
 
 → code-foundations classifies as REFACTOR
-→ cc-developer-character runs self-assessment
+→ code-foundations runs self-assessment
   → Acknowledges: "I already made one edit before being asked to use the skill"
 → cc-refactoring-guidance creates removal plan
 ```
@@ -123,7 +123,7 @@ grid-cli/internal/window/move.go         |   4 +-
 ## Key Takeaways
 
 1. **Skills can recover discipline** - Starting wrong doesn't mean you can't correct course
-2. **Honest self-assessment** - cc-developer-character acknowledges mistakes, doesn't hide them
+2. **Honest self-assessment** - code-foundations acknowledges mistakes, doesn't hide them
 3. **Feature removal needs a plan** - Multiple files means systematic approach
 4. **Verification gates** - Build after each step catches errors early
 5. **Human-AI collaboration** - User intervention triggered proper methodology

@@ -26,7 +26,9 @@ Bash(bash docs/building/scratch.sh)
 ## STOP - Load Skills First
 
 1. `Skill(code-foundations:aposd-verifying-correctness)`
-2. `Skill(code-foundations:cc-defensive-programming)`
+2. `Skill(code-foundations:cc-quality-practices)`
+3. `Skill(code-foundations:aposd-reviewing-module-design)`
+4. `Skill(code-foundations:cc-defensive-programming)`
 
 Do NOT proceed until both skills are loaded.
 

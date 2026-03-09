@@ -29,6 +29,7 @@ Before any work, load your skill lenses using the Skill tool:
 1. `Skill(code-foundations:cc-construction-prerequisites)`
 2. `Skill(code-foundations:cc-pseudocode-programming)`
 3. `Skill(code-foundations:aposd-designing-deep-modules)`
+4. `Skill(code-foundations:cc-routine-and-class-design)`
 
 ---
 

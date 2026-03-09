@@ -7,7 +7,7 @@ This document demonstrates how the `code-foundations` skill applied the Scientif
 ### What the Skill Did
 
 **1. Task Classification**
-The skill classified this as DEBUG and immediately invoked `cc-developer-character` for mindset discipline before touching any code.
+The skill classified this as DEBUG and applied systematic discipline before touching any code.
 
 **2. Understanding Before Acting**
 Read 369 lines of the picker implementation to understand the view hierarchy before forming any hypothesis.
@@ -52,7 +52,7 @@ Task Classification: DEBUG - The picker window opens but the input box
 
   Let me invoke the developer character skill first, then examine the code.
 
-Skill(cc-developer-character)
+Skill(code-foundations)
   Successfully loaded skill
 
 Good. DEBUG task - I need to understand the code before fixing.

@@ -30,15 +30,7 @@ description: "Classify code tasks and execute task-specific checklists with qual
 
 ---
 
-### Phase 2: Mindset Check (For WRITE, DEBUG, REFACTOR)
-
-- [ ] **2.1** INVOKE cc-developer-character
-- [ ] **2.2** Verify: Am I thinking strategically, not tactically?
-- [ ] **2.3** Check for rationalization red flags (see below)
-
----
-
-### Phase 2.5: Pattern Reuse Gate (For WRITE, DEBUG, REFACTOR, SECURE)
+### Phase 2: Pattern Reuse Gate (For WRITE, DEBUG, REFACTOR, SECURE)
 
 **MANDATORY: Before implementing, search the codebase.**
 
@@ -89,7 +81,6 @@ description: "Classify code tasks and execute task-specific checklists with qual
 **Goal:** Create new code with good design
 
 ### Prerequisites
-- [ ] INVOKE cc-developer-character (mindset)
 - [ ] INVOKE cc-construction-prerequisites (architecture ready?)
 
 ### Design Phase
@@ -124,7 +115,6 @@ See [references/checker-dispatch.md](../../references/checker-dispatch.md)
 **Goal:** Find and fix bug without making design worse
 
 ### Investigation Phase
-- [ ] INVOKE cc-developer-character (mindset)
 - [ ] INVOKE cc-quality-practices (Scientific Method)
 - [ ] Stabilize error: Can you reproduce reliably?
 - [ ] Locate error: Use binary search / divide-and-conquer
@@ -226,7 +216,6 @@ See [references/checker-dispatch.md](../../references/checker-dispatch.md)
 **Goal:** Improve structure without changing behavior
 
 ### Prerequisites
-- [ ] INVOKE cc-developer-character (mindset)
 - [ ] Code currently WORKS? (All tests pass?)
 - [ ] If NO → This is FIXING, not refactoring. Go to DEBUG checklist.
 
@@ -378,7 +367,6 @@ See [references/checker-dispatch.md](../../references/checker-dispatch.md)
 ### CC Skills (Process & Metrics)
 | Skill | Use For |
 |-------|---------|
-| cc-developer-character | Mindset check before WRITE/DEBUG/REFACTOR |
 | cc-construction-prerequisites | Architecture ready before coding |
 | cc-pseudocode-programming | Design-before-code |
 | cc-routine-and-class-design | Cohesion, coupling, inheritance |

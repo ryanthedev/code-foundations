@@ -173,9 +173,9 @@ Each sub-phase dispatches a specific agent type with specific skills. **Do NOT p
 
 | Sub-Phase | Agent Type | Skills (baked into agent template) |
 |-----------|-----------|-------------------------------|
-| N.1 PRE-GATE | `code-foundations:pre-gate-agent` | `cc-construction-prerequisites`, `cc-pseudocode-programming`, `aposd-designing-deep-modules` |
-| N.2 IMPLEMENT | `code-foundations:implementation-agent` | `cc-pseudocode-programming`, `cc-defensive-programming`, `aposd-designing-deep-modules` |
-| N.3 POST-GATE | `code-foundations:post-gate-agent` | `aposd-verifying-correctness`, `cc-defensive-programming` |
+| N.1 PRE-GATE | `code-foundations:pre-gate-agent` | `cc-construction-prerequisites`, `cc-pseudocode-programming`, `aposd-designing-deep-modules`, `cc-routine-and-class-design` |
+| N.2 IMPLEMENT | `code-foundations:implementation-agent` | `cc-control-flow-quality`, `cc-data-organization`, `aposd-improving-code-clarity`, `aposd-simplifying-complexity` |
+| N.3 POST-GATE | `code-foundations:post-gate-agent` | `aposd-verifying-correctness`, `cc-quality-practices`, `aposd-reviewing-module-design`, `cc-defensive-programming` |
 | N.4 CHECKPOINT | None (you do this) | N/A |
 
 **POST-GATE uses `code-foundations:post-gate-agent`.** Skills are baked into the agent template — no skill loading needed in the dispatch prompt.
@@ -408,6 +408,13 @@ If any gate fails:
 ---
 
 ## Phase 4: VERIFY (Full Test Suite)
+
+### Load Skill
+
+1. `Skill(code-foundations:cc-code-layout-and-style)` — formatting and layout consistency
+2. `Skill(code-foundations:cc-documentation-quality)` — comments, docs, and API documentation match the code
+3. `Skill(code-foundations:cc-performance-tuning)` — catch obvious performance regressions (O(n²), N+1 queries, unnecessary allocations)
+4. `Skill(code-foundations:aposd-optimizing-critical-paths)` — simpler code runs faster; flag unnecessary complexity in hot paths
 
 ### Test Coverage Check
 

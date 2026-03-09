@@ -22,7 +22,6 @@ Not all changes need equal analysis. Match effort to impact:
 | **Trivial** | Typo fixes, whitespace, comment corrections | None—just do it |
 | **Minor** | Bug fix <5 lines, config tweak, dependency bump | Quick check: does this fit cleanly? |
 | **Standard** | New feature, refactoring, multi-file change | Full workflow: STOP-ASK-DECIDE-VERIFY |
-| **Emergency** | Production down, security breach, data loss | Minimal fix + TODO + 24hr follow-up |
 
 ---
 

@@ -94,10 +94,9 @@ Code-foundations is a Claude Code plugin providing software engineering skills b
 
 The `code-foundations` skill (`skills/code-foundations/SKILL.md`) is the entry point:
 1. Classifies task type (WRITE, DEBUG, REVIEW, OPTIMIZE, REFACTOR, SIMPLIFY, SECURE)
-2. Runs mindset check via `cc-developer-character`
-3. Routes DEBUG tasks to `cc-debugging` (scientific method)
-4. Executes task-specific checklist
-5. Runs pre-commit gate via `aposd-verifying-correctness`
+2. Routes DEBUG tasks to `cc-debugging` (scientific method)
+3. Executes task-specific checklist
+4. Runs pre-commit gate via `aposd-verifying-correctness`
 
 ### Development Workflows
 
@@ -168,9 +167,10 @@ Three-stage pattern for feature development:
 
 **Quality Gates (per phase during /code-foundations:building):**
 ```
-PRE-GATE:  cc-construction-prerequisites + cc-pseudocode-programming + aposd-designing-deep-modules
-IMPLEMENT: Write code, run tests
-POST-GATE: aposd-verifying-correctness + cc-defensive-programming + reviewer agent
+PRE-GATE:  cc-construction-prerequisites + cc-pseudocode-programming + aposd-designing-deep-modules + cc-routine-and-class-design
+IMPLEMENT: cc-control-flow-quality + cc-data-organization + aposd-improving-code-clarity + aposd-simplifying-complexity
+POST-GATE: aposd-verifying-correctness + cc-quality-practices + aposd-reviewing-module-design + cc-defensive-programming + reviewer agent
+VERIFY:    cc-code-layout-and-style + cc-documentation-quality + cc-performance-tuning + aposd-optimizing-critical-paths + build + tests + lint
 CHECKPOINT: Commit only after all gates pass
 ```
 
