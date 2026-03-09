@@ -371,11 +371,13 @@ See [references/checker-dispatch.md](../../references/checker-dispatch.md)
 | cc-pseudocode-programming | Design-before-code |
 | cc-routine-and-class-design | Cohesion, coupling, inheritance |
 | cc-defensive-programming | Error handling, validation |
+| cc-debugging | Scientific debugging method |
 | cc-refactoring-guidance | Safe refactoring process |
 | cc-quality-practices | Testing, debugging, reviews |
 | cc-control-flow-quality | Nesting, complexity, loops |
 | cc-data-organization | Variables, types, data structures |
 | cc-code-layout-and-style | Formatting, visual structure |
+| cc-documentation-quality | Comments, docs, API documentation |
 | cc-performance-tuning | Optimization process |
 | cc-integration-practices | Build, integration |
 

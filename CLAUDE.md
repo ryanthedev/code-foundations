@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Code-foundations is a Claude Code plugin providing software engineering skills based on *Code Complete* (McConnell) and *A Philosophy of Software Design* (Ousterhout). It includes a building workflow with gated sub-phases (pre-gate, implement, post-gate, checkpoint) and an experimental code review system.
+Code-foundations is a Claude Code plugin providing software engineering skills based on *Code Complete* (McConnell) and *A Philosophy of Software Design* (Ousterhout). It includes a building workflow with gated sub-phases (pre-gate, implement, post-gate, verify, checkpoint) and an experimental code review system.
 
 ## Architecture
 
@@ -19,7 +19,7 @@ Code-foundations is a Claude Code plugin providing software engineering skills b
 
 - `skills/` - Individual skill definitions (SKILL.md + checklists.md)
 - `commands/` - User-invocable commands (slash commands)
-- `agents/` - Agent templates (pre-gate-agent, implementation-agent, post-gate-agent)
+- `agents/` - Agent templates (pre-gate-agent, implementation-agent, post-gate-agent, debug-agent)
 - `references/` - Shared reference materials
 - `docs/` - Case study examples
 
@@ -94,7 +94,7 @@ Code-foundations is a Claude Code plugin providing software engineering skills b
 
 The `code-foundations` skill (`skills/code-foundations/SKILL.md`) is the entry point:
 1. Classifies task type (WRITE, DEBUG, REVIEW, OPTIMIZE, REFACTOR, SIMPLIFY, SECURE)
-2. Routes DEBUG tasks to `cc-debugging` (scientific method)
+2. Routes DEBUG tasks to `debug-agent` (or `/code-foundations:debug` command)
 3. Executes task-specific checklist
 4. Runs pre-commit gate via `aposd-verifying-correctness`
 
@@ -104,22 +104,10 @@ The `code-foundations` skill (`skills/code-foundations/SKILL.md`) is the entry p
 
 | Situation | Command | Ceremony |
 |-----------|---------|----------|
-| Quick hack, TDD, pair programming | `/code-foundations:hack` | None |
+| Bug investigation | `/code-foundations:debug` | Minimal |
 | Technical uncertainty | `/code-foundations:prototype` | Minimal |
 | Feature needs planning | `/code-foundations:whiteboarding` | Medium |
 | Executing approved plan | `/code-foundations:building` | Full |
-
-### Hack Mode
-
-```
-/code-foundations:hack [what to build]
-→ RED: Write failing test
-→ GREEN: Minimum code to pass
-→ REFACTOR: Clean up
-→ REPEAT
-```
-
-No plans, no checkpoints, no subagents. Direct code slinging.
 
 ### Prototype → Whiteboarding → Building Workflow
 
@@ -219,7 +207,7 @@ Need more context.
 - Coupling (minimized dependencies)
 - Parameters ≤7, Inheritance depth < 3
 
-**CC Skills (15 total):**
+**CC Skills (13 total):**
 All CC skills reference `references/cc-foundations.md` for shared vocabulary (cohesion spectrum, coupling criteria, key metrics).
 
 Additional skills:

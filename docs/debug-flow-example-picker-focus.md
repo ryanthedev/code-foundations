@@ -50,7 +50,7 @@ Skill(code-foundations)
 Task Classification: DEBUG - The picker window opens but the input box
   doesn't have focus when it should.
 
-  Let me invoke the developer character skill first, then examine the code.
+  Let me invoke the debugging skill first, then examine the code.
 
 Skill(code-foundations)
   Successfully loaded skill

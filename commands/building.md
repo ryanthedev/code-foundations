@@ -153,13 +153,31 @@ Agent tool:
 
 **STOP. Cannot proceed until post-gate-agent returns PASS.**
 
-### 7. Final Verification
+### 7. VERIFY (Final Quality Gate)
 
-```bash
-npm test  # or equivalent
+Load skills for final verification:
+```
+Skill(code-foundations:cc-code-layout-and-style)
+Skill(code-foundations:cc-documentation-quality)
+Skill(code-foundations:cc-performance-tuning)
+Skill(code-foundations:aposd-optimizing-critical-paths)
 ```
 
-All tests must pass before completion.
+Run verification checks:
+```bash
+# Tests
+npm test  # or equivalent
+npm run test:integration  # if applicable
+
+# Build verification
+npm run build  # or equivalent
+# Must be clean — no new warnings or errors
+
+# Lint
+npm run lint  # if configured
+```
+
+All tests must pass, build must be clean before completion.
 
 ### 8. Report (Trust Report)
 

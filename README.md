@@ -89,11 +89,10 @@ User: "/code-foundations:building docs/plans/2026-01-30-notifications.md"
 
 | Gate | Skills Loaded | What Gets Enforced |
 |------|---------------|-------------------|
-| PRE-GATE | `cc-construction-prerequisites` | Verify plan assumptions match codebase reality |
-| PRE-GATE | `cc-pseudocode-programming` | Design before code, routine cohesion |
-| PRE-GATE | `aposd-designing-deep-modules` | Interface depth, information hiding |
-| POST-GATE | `aposd-verifying-correctness` | Requirements coverage, boundary conditions |
-| POST-GATE | `cc-defensive-programming` | Error handling, input validation |
+| PRE-GATE | `cc-construction-prerequisites`, `cc-pseudocode-programming`, `aposd-designing-deep-modules`, `cc-routine-and-class-design` | Plan assumptions, design-before-code, interface depth, cohesion/coupling |
+| IMPLEMENT | `cc-control-flow-quality`, `cc-data-organization`, `aposd-improving-code-clarity`, `aposd-simplifying-complexity` | Control flow, naming, comments-first, complexity reduction |
+| POST-GATE | `aposd-verifying-correctness`, `cc-quality-practices`, `aposd-reviewing-module-design`, `cc-defensive-programming` | Correctness, quality, module design, error handling |
+| VERIFY | `cc-code-layout-and-style`, `cc-documentation-quality`, `cc-performance-tuning`, `aposd-optimizing-critical-paths` | Layout, docs, performance regressions, build + tests + lint |
 
 The system saves every artifact to `docs/building/`. Per-phase commits enable rollback.
 
