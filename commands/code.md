@@ -4,258 +4,158 @@ argument-hint: "[what to build]"
 allowed-tools: ["Bash", "Glob", "Grep", "Read", "Edit", "Write", "Task", "Skill", "TaskCreate", "TaskUpdate", "TaskList", "AskUserQuestion"]
 ---
 
-# Code Mode
+# /code-foundations:code
 
-**Design Loop → Implementation Loop**
-
----
-
-## STOP - Load Skills First
-
-Before coding, load your skill lenses using the Skill tool:
-1. `Skill(code-foundations:cc-pseudocode-programming)` - design before code
-2. `Skill(code-foundations:cc-defensive-programming)` - contracts and error handling
+**Orchestrate design and implementation agents. You do NOT write code or pseudocode directly.**
 
 ---
 
-## Phase 1: DESIGN LOOP
+## STOP — Non-Negotiable Rules
 
-Collaborate on design until user confirms. Use subagents and tasklist throughout.
-
-### Start
-
-```
-User: /code-foundations:code [what to build]
-
-1. Create initial task: "Design [feature]"
-2. Draft pseudocode (flow + contracts)
-3. Present to user
-4. Iterate based on feedback
-5. When design feels complete → ask "Ready to build?"
-```
-
-### The Loop
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│  PSEUDOCODE    Draft flow and contracts                     │
-│       ↓                                                     │
-│  EXPLORE       Dispatch subagent if research needed         │
-│       ↓                                                     │
-│  TASKLIST      Track decisions + open questions             │
-│       ↓                                                     │
-│  USER INPUT    Wait for feedback                            │
-│       ↓                                                     │
-│  REFINE        Update pseudocode + tasklist                 │
-│       ↓                                                     │
-│  ↺ REPEAT      When complete → ask user                     │
-└─────────────────────────────────────────────────────────────┘
-```
-
-### Pseudocode Format
-
-```
-functionName(params) → ReturnType
-  1. [step] → [result]
-  2. [step] → [result]
-  3. return [value]
-
-Contract:
-  Input: [types and constraints]
-  Output: [types and guarantees]
-  Errors: [what can go wrong]
-
-Where: [file path]
-Used by: [callers]
-```
-
-### When to Dispatch Explore Subagent
-
-User asks about:
-- "What about X?" → Research patterns, packages, prior art
-- "How does Y work?" → Explore codebase
-- "Is there an existing Z?" → Search for similar implementations
-
-```
-Task tool:
-- subagent_type: "Explore"
-- description: "Research [topic]"
-- prompt: |
-    Research [specific question].
-
-    Search for:
-    1. Existing patterns in codebase
-    2. Related implementations
-    3. Packages/libraries if applicable
-
-    Return: Summary of findings + recommendation
-```
-
-Update tasklist with findings. Update pseudocode if needed.
-
-### Tasklist During Design
-
-Track everything:
-- `TaskCreate`: "Design [feature]" at start
-- `TaskUpdate`: When design evolves
-- `TaskCreate`: For research subtasks
-- `TaskUpdate`: Complete research tasks with findings
-
-### Transition to Build
-
-When design feels complete (no open questions, pseudocode covers all cases):
-
-```
-AskUserQuestion:
-  question: "Design looks complete. Ready to build?"
-  options:
-    - "Yes, let's build"
-    - "Need to add/change something"
-```
-
-Only proceed to Phase 2 on explicit confirmation.
+1. **You MUST dispatch `code-foundations:code-agent` for design** — do NOT draft pseudocode yourself
+2. **You MUST dispatch `code-foundations:implementation-agent` for implementation** — do NOT edit code yourself
+3. **You MUST use `AskUserQuestion` before transitioning from design to implementation** — no skipping the user confirmation gate
+4. **You MUST use `TaskCreate` to track progress** — no invisible work
 
 ---
 
-## Phase 2: IMPLEMENTATION LOOP
+## Step 1: Gather Context
 
-Execute confirmed design with subagents. Tasklist continues from design.
+Collect information from the user's request:
+- What to build
+- Target files (if mentioned)
+- Constraints (if mentioned)
 
-### Start
+If the request is vague, use `AskUserQuestion` to clarify before dispatching.
 
-```
-1. Convert pseudocode to implementation tasks
-2. Create tasks: Implement, Unit tests, Integration tests
-3. Execute tasks in order (or as user directs)
-```
+---
 
-### The Loop
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│  IMPLEMENT     Dispatch subagent with pseudocode            │
-│       ↓                                                     │
-│  TEST          Unit tests → integration tests               │
-│       ↓                                                     │
-│  COMMIT        Checkpoint with passing tests                │
-│       ↓                                                     │
-│  ↺ NEXT TASK   User picks priority                          │
-└─────────────────────────────────────────────────────────────┘
-```
-
-### Implementation Subagent
+## Step 2: Dispatch Code Agent (Design)
 
 ```
-Task tool:
-- subagent_type: "code-foundations:implementation-agent"
-- description: "Implement [task]"
-- prompt: |
-    Implement this design:
-
-    PSEUDOCODE:
-    [paste confirmed pseudocode]
-
-    CONTRACT:
-    [paste contract]
-
-    FILE: [target file path]
-
-    Follow the pseudocode exactly. Match the contract.
-    Run tests after implementation.
-
-    Return: DONE or BLOCKED with reason
+TaskCreate("Design: [feature]")
 ```
 
-### Test Subagent
+```python
+Task(
+    subagent_type="code-foundations:code-agent",
+    description="Design: [short description]",
+    prompt="""
+BUILD: [what to build]
+TARGET FILES: [file paths if known, or "Agent should discover"]
+CONSTRAINTS: [any constraints from user, or "None specified"]
 
-```
-Task tool:
-- subagent_type: "general-purpose"
-- model: "haiku"
-- description: "Unit tests for [feature]"
-- prompt: |
-    Write unit tests for:
-
-    CONTRACT:
-    [paste contract from design]
-
-    Test the CONTRACT, not implementation details.
-    Cover:
-    - Happy path
-    - Edge cases from pseudocode
-    - Error conditions
-
-    FILE: [test file path]
-
-    Return: DONE with test count
+Search the codebase, design pseudocode with contracts, return design spec.
+"""
+)
 ```
 
-### Commit Checkpoint
+---
 
-After tests pass:
+## Step 3: Present Design to User
+
+When the code-agent returns, present its design to the user.
+
+If the agent returned `NEEDS_INPUT`, relay the question via `AskUserQuestion`.
+
+If the agent returned `DONE`, present the pseudocode and contracts, then ask:
+
+```
+AskUserQuestion(
+  questions: [{
+    header: "Design Review",
+    question: "Here's the design. Ready to build?",
+    options: [
+      {label: "Yes, build it", description: "Dispatch implementation agent"},
+      {label: "Needs changes", description: "Tell me what to adjust"},
+      {label: "Start over", description: "Re-dispatch code agent with new direction"}
+    ]
+  }]
+)
+```
+
+**ENFORCEMENT:** Do NOT proceed to Step 4 without explicit user confirmation via `AskUserQuestion`. "Looks good" in chat is NOT enough — use the tool.
+
+### If User Wants Changes
+
+Re-dispatch code-agent with the feedback:
+
+```python
+Task(
+    subagent_type="code-foundations:code-agent",
+    description="Redesign: [short description]",
+    prompt="""
+ORIGINAL DESIGN: [paste previous design output]
+FEEDBACK: [user's requested changes]
+
+Update the design based on feedback. Return updated pseudocode + contracts.
+"""
+)
+```
+
+Then present again (loop until user confirms).
+
+---
+
+## Step 4: Dispatch Implementation Agent
+
+```
+TaskCreate("Implement: [feature]")
+```
+
+```python
+Task(
+    subagent_type="code-foundations:implementation-agent",
+    description="Implement: [short description]",
+    prompt="""
+PSEUDOCODE:
+[paste confirmed pseudocode from code-agent]
+
+CONTRACT:
+[paste contracts from code-agent]
+
+FILES:
+[paste file paths from code-agent's changes summary]
+
+Implement exactly as designed. Run tests after each file.
+Return: DONE or BLOCKED with reason.
+"""
+)
+```
+
+---
+
+## Step 5: Verify
+
+After implementation agent returns DONE:
 
 ```bash
-git add [files]
-git commit -m "[type]: [description]"
+# Run tests
+npm test  # or equivalent
+
+# Build check
+npm run build  # or equivalent
 ```
 
-Update tasklist: mark completed, show remaining.
-
-### User Drives Priority
-
-After each commit, show tasklist and ask:
-
-```
-Current tasks:
-✅ #1 Design [feature]
-✅ #2 Implement [function]
-✅ #3 Unit tests
-◻ #4 Integration tests
-◻ #5 [new task added mid-session]
-
-What's next?
-```
-
-User can:
-- Pick a task: "do #4"
-- Reorder: "do #5 first"
-- Add tasks: "also need to handle X"
-- Stop: "that's enough for now"
+If tests or build fail, re-dispatch implementation agent with the error.
 
 ---
 
-## Adding Tasks Mid-Session
+## Step 6: Report
 
-User can add requirements anytime:
-
-**During Design:**
 ```
-User: "also need to handle async validation"
-
-→ TaskCreate: "Add async validation to design"
-→ Update pseudocode
-→ Continue design loop
+AskUserQuestion(
+  questions: [{
+    header: "Implementation Complete",
+    question: "Code is implemented and tests pass. What next?",
+    options: [
+      {label: "Review the changes", description: "Show what was changed"},
+      {label: "Add more tasks", description: "Build something else"},
+      {label: "Done", description: "Wrap up"}
+    ]
+  }]
+)
 ```
-
-**During Implementation:**
-```
-User: "we should also add rate limiting"
-
-→ TaskCreate: "Implement rate limiting"
-→ Add to tasklist
-→ Continue current task or switch
-```
-
----
-
-## Escape Hatches
-
-| Situation | Action |
-|-----------|--------|
-| Design keeps changing | "Should we do `/code-foundations:whiteboarding` for this?" |
-| Technical uncertainty | "Should we `/code-foundations:prototype` first?" |
-| Scope exploding | "This is getting big. Want to `/code-foundations:whiteboarding`?" |
-| User wants to stop | Complete current task, commit, show summary |
 
 ---
 
@@ -263,26 +163,25 @@ User: "we should also add rate limiting"
 
 | Rationalization | Reality |
 |-----------------|---------|
-| "I'll just start coding" | Design loop exists for a reason. Pseudocode first. |
-| "User will confirm later" | Ask explicitly. "Ready to build?" is required. |
-| "This is simple, skip design" | Simple designs still need contracts validated |
-| "I'll figure out the contract during implementation" | Contract IS the design. Lock it first. |
-| "Tasklist is overhead" | Tasklist enables user to drive priority |
-| "I can implement without subagent" | Subagent has fresh context. Use it. |
-| "Tests can wait" | Tests validate the contract. Write them. |
-| "User is waiting, skip the question" | User drives priority. Always ask "what's next?" |
-| "Design is close enough" | "Close enough" means open questions. Resolve them. |
+| "This is simple, I'll just edit the file" | You are an ORCHESTRATOR. Dispatch agents. Never edit code directly. |
+| "I can draft the pseudocode faster" | Code-agent has design skills loaded. You don't. Dispatch it. |
+| "User said 'yeah' so I'll start building" | Use `AskUserQuestion`. Chat confirmation is not a gate. |
+| "The design is obvious, skip to implementation" | Design-first is the entire point of this command. No skipping. |
+| "I'll implement and test at the same time" | Implementation-agent handles both. One agent, one concern. |
+| "TaskCreate is overhead for small changes" | Tasks make work visible. Create them. |
 
 ---
 
 ## Quick Reference
 
 ```
-/code-foundations:code [goal]     → Start design loop
-"what about X?"                   → Triggers explore subagent
-"ready to build" / "let's build"  → Transition to implementation
-"do #N"                           → Execute specific task
-"also add X"                      → Add task mid-session
-"that's enough"                   → Stop, commit, summary
-/code-foundations:whiteboarding   → Escape if scope explodes
+/code-foundations:code [goal]
+
+  1. Gather context
+  2. Dispatch code-agent → returns design
+  3. Present design → AskUserQuestion("Ready to build?")
+     - Changes needed → re-dispatch code-agent (loop)
+  4. Dispatch implementation-agent → returns DONE/BLOCKED
+  5. Verify (tests + build)
+  6. Report to user
 ```
