@@ -224,7 +224,6 @@ All CC skills reference `references/cc-foundations.md` for shared vocabulary (co
 
 Additional skills:
 - `cc-debugging` - Scientific debugging (Chapter 23): STABILIZE → LOCATE → HYPOTHESIZE → EXPERIMENT → FIX → TEST → SEARCH
-- `cc-table-driven-methods` - Replace complex logic with tables (Chapter 18): direct access, indexed access, stair-step access
 
 ## Publishing
 
