@@ -1,6 +1,6 @@
 {
   "name": "code-foundations",
-  "version": "4.0.0",
+  "version": "4.0.1",
   "description": "Software engineering skills from Code Complete and A Philosophy of Software Design. 20 skills across 5 agents (pre-gate, implementation, post-gate, debug, code) with zero duplication. Building workflow with 4 gated phases (PRE-GATE, IMPLEMENT, POST-GATE, VERIFY). Design-first coding via code-agent. Scientific debugging via debug-agent. Phase enforcement via TaskCreate/TaskUpdate.",
   "author": {
     "name": "ryanthedev"
