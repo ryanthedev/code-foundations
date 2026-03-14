@@ -1,7 +1,5 @@
 ---
-description: "Design-first coding. Pseudocode → validate with user → implement with subagents. Use when you know what to build but want to collaborate on design before code exists."
-argument-hint: "[what to build]"
-allowed-tools: ["Bash", "Glob", "Grep", "Read", "Edit", "Write", "Task", "Skill", "TaskCreate", "TaskUpdate", "TaskList", "AskUserQuestion"]
+description: "Design-first coding"
 ---
 
 # /code-foundations:code

@@ -70,7 +70,7 @@ description: "Verify construction prerequisites using 66-item checklists across 
 - "what should our architecture include" → APPLIER
 - "fix these requirements" → out of scope (requirements engineering)
 
-**Checklist:** See [checklists.md](./checklists.md)
+**Checklist:** See [checklists.md](skills/cc-construction-prerequisites/checklists.md)
 
 **Output Format:**
 | Item | Status | Evidence | Location |

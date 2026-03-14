@@ -1,7 +1,6 @@
 ---
 description: "Code review with checklist-driven checks"
 argument-hint: "[--sanity | --pr] [--staged | files...]"
-allowed-tools: ["Bash", "Glob", "Grep", "Read", "Task", "Skill", "Write", "TaskCreate", "TaskUpdate", "TaskList", "AskUserQuestion"]
 ---
 
 # Code Review

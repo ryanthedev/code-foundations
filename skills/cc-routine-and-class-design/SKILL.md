@@ -59,7 +59,7 @@ Non-Triggers:
   - "how should I design this class" -> APPLIER
   - "should I use inheritance here" -> APPLIER
   - "refactor this routine" -> cc-refactoring-guidance
-Checklist: **See [checklists.md](./checklists.md)**
+Checklist: **See [checklists.md](skills/cc-routine-and-class-design/checklists.md)**
 Output Format:
   | Item | Status | Evidence | Location |
   |------|--------|----------|----------|

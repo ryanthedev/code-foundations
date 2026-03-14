@@ -32,8 +32,8 @@ Non-Triggers:
   - "what type should I use for X" -> APPLIER
   - "how should I name this variable" -> APPLIER
   - "fix these magic numbers" -> TRANSFORMER
-Checklist: **See [checklists.md](./checklists.md)**
-Metrics: **See [hard-data.md](./hard-data.md)** for Span/Live Time measures (goal: minimize both)
+Checklist: **See [checklists.md](skills/cc-data-organization/checklists.md)**
+Metrics: **See [hard-data.md](skills/cc-data-organization/hard-data.md)** for Span/Live Time measures (goal: minimize both)
 Output Format:
   | Item | Status | Evidence | Location |
   |------|--------|----------|----------|

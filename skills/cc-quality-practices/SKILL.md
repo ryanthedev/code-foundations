@@ -50,7 +50,7 @@ Triggers:
 Non-Triggers:
   - "how do I debug this" → APPLIER
   - "write tests for this" → APPLIER
-Checklist: **See [checklists.md](./checklists.md)**
+Checklist: **See [checklists.md](skills/cc-quality-practices/checklists.md)**
 Output Format:
   | Item | Status | Evidence | Location |
   |------|--------|----------|----------|
@@ -89,7 +89,7 @@ Produces: Test cases, debugging hypotheses, review procedures, quality plans
 
 **Critical clarification on EXPERIMENT:** EXPERIMENT means a test that validates or invalidates your hypothesis WITHOUT changing production code. Examples: add logging/print statements, use a debugger to inspect state, write a failing unit test that exposes the suspected bug, inspect code to verify your theory. If you change production code, you've skipped to FIX—which has a >50% failure rate when done without understanding [Yourdon]. The experiment confirms your understanding; the fix applies it.
 
-**Inspection Procedure (output: defect list) - see [Effective Inspections checklist](./checklists.md#effective-inspections-p485-492):**
+**Inspection Procedure (output: defect list) - see [Effective Inspections checklist](skills/cc-quality-practices/checklists.md#effective-inspections-p485-492):**
 1. PLANNING - Moderator distributes materials with line numbers + checklist
 2. PREPARATION - Each reviewer works alone using checklist (90% defects found here)
 3. MEETING - Reader paraphrases code; scribe records defects (≤2 hours)

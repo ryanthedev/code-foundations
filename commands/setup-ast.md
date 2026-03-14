@@ -1,6 +1,5 @@
 ---
 description: "Setup tree-sitter CLI and grammars for AST-powered code review"
-allowed-tools: ["Bash", "Read", "Glob", "Grep", "Write", "Edit", "TaskCreate", "TaskUpdate", "TaskList", "AskUserQuestion"]
 ---
 
 # Setup AST
