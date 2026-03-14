@@ -110,7 +110,7 @@ A damage-containment strategy. Interfaces designated as boundaries to "safe" are
 
 **If no pattern found:** You're establishing one. Document your decision. Consider if this should become the pattern.
 
-**See:** [pattern-reuse-gate.md](references/pattern-reuse-gate.md) for full gate protocol.
+**See:** [pattern-reuse-gate.md]($CLAUDE_PLUGIN_ROOT/references/pattern-reuse-gate.md) for full gate protocol.
 
 ---
 
@@ -128,7 +128,7 @@ Non-Triggers:
   - "design my error handling strategy" -> APPLIER
   - "review my control flow" -> cc-control-flow-quality
   - "review my class design" -> cc-routine-and-class-design
-Checklist: **See [checklists.md](skills/cc-defensive-programming/checklists.md)**
+Checklist: **See [checklists.md]($CLAUDE_PLUGIN_ROOT/skills/cc-defensive-programming/checklists.md)**
 Output Format:
   | Item | Status | Evidence | Location |
   |------|--------|----------|----------|

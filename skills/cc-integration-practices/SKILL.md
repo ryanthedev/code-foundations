@@ -95,7 +95,7 @@ Triggers:
 Non-Triggers:
   - "which integration strategy should we use" -> APPLIER
   - "set up daily builds" -> APPLIER
-Checklist: **See [checklists.md](skills/cc-integration-practices/checklists.md)**
+Checklist: **See [checklists.md]($CLAUDE_PLUGIN_ROOT/skills/cc-integration-practices/checklists.md)**
 Output Format:
   | Item | Status | Evidence | Location |
   |------|--------|----------|----------|

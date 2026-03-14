@@ -82,7 +82,7 @@ SEARCH FOR:
 
 **If no patterns found:** State "No existing patterns found for [topic]. This will establish a new pattern."
 
-**See:** [pattern-reuse-gate.md](references/pattern-reuse-gate.md)
+**See:** [pattern-reuse-gate.md]($CLAUDE_PLUGIN_ROOT/references/pattern-reuse-gate.md)
 
 ---
 

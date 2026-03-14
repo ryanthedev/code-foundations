@@ -206,7 +206,7 @@ Each step is a gate. Skipping steps = wasted effort or masked problems.
 
 ## CHECKER: Review for Anti-Patterns
 
-Checklist: **[checklists.md](skills/cc-performance-tuning/checklists.md)**
+Checklist: **[checklists.md]($CLAUDE_PLUGIN_ROOT/skills/cc-performance-tuning/checklists.md)**
 Output Format:
   | Item | Status | Evidence | Location |
   |------|--------|----------|----------|

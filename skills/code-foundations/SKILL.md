@@ -45,7 +45,7 @@ description: "Classify code tasks and execute task-specific checklists with qual
 | Pattern exists but bad | Document why diverging, consider fixing globally |
 | No pattern exists | You're establishing one - be deliberate |
 
-**See:** [pattern-reuse-gate.md](references/pattern-reuse-gate.md)
+**See:** [pattern-reuse-gate.md]($CLAUDE_PLUGIN_ROOT/references/pattern-reuse-gate.md)
 
 ---
 
@@ -103,7 +103,7 @@ description: "Classify code tasks and execute task-specific checklists with qual
 - [ ] CHECKER(cc-routine-and-class-design)
 - [ ] CHECKER(cc-defensive-programming)
 
-See [references/checker-dispatch.md](references/checker-dispatch.md)
+See [references/checker-dispatch.md]($CLAUDE_PLUGIN_ROOT/references/checker-dispatch.md)
 
 ### Pre-Commit
 - [ ] Run Phase 4 checklist
@@ -143,7 +143,7 @@ See [references/checker-dispatch.md](references/checker-dispatch.md)
 
 **Goal:** Detect design problems and complexity
 
-> **CHECKER pattern:** See [references/checker-dispatch.md](references/checker-dispatch.md)
+> **CHECKER pattern:** See [references/checker-dispatch.md]($CLAUDE_PLUGIN_ROOT/references/checker-dispatch.md)
 
 ### Quick Checks (Inline)
 
@@ -239,7 +239,7 @@ See [references/checker-dispatch.md](references/checker-dispatch.md)
 - [ ] CHECKER(cc-control-flow-quality)
 - [ ] CHECKER(cc-routine-and-class-design)
 
-See [references/checker-dispatch.md](references/checker-dispatch.md)
+See [references/checker-dispatch.md]($CLAUDE_PLUGIN_ROOT/references/checker-dispatch.md)
 
 **Quick Checks:**
 - [ ] Behavior preserved? (Same tests pass)
@@ -293,7 +293,7 @@ For each error condition:
 - [ ] CHECKER(cc-defensive-programming)
 - [ ] INVOKE aposd-simplifying-complexity (error reduction context)
 
-See [references/checker-dispatch.md](references/checker-dispatch.md)
+See [references/checker-dispatch.md]($CLAUDE_PLUGIN_ROOT/references/checker-dispatch.md)
 
 **Identify:**
 - [ ] All external input sources
@@ -396,4 +396,4 @@ See [references/checker-dispatch.md](references/checker-dispatch.md)
 
 ## Shared Reference
 
-- [aposd-foundations.md](references/aposd-foundations.md) - Complexity vocabulary
+- [aposd-foundations.md]($CLAUDE_PLUGIN_ROOT/references/aposd-foundations.md) - Complexity vocabulary

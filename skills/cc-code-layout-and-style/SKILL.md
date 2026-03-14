@@ -150,7 +150,7 @@ Triggers:
 Non-Triggers:
   - "how should I format this" -> APPLIER
   - "what commenting style should I use" -> APPLIER
-Checklist: **See [checklists.md](skills/cc-code-layout-and-style/checklists.md)**
+Checklist: **See [checklists.md]($CLAUDE_PLUGIN_ROOT/skills/cc-code-layout-and-style/checklists.md)**
 Output Format:
   | Item | Status | Evidence | Location |
   |------|--------|----------|----------|
