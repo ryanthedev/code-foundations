@@ -4,9 +4,41 @@ description: "Brainstrom and plan features"
 
 # Skill: whiteboarding
 
-**Discover -> Classify -> Plan -> Contract -> Validate -> Save -> Handoff**
+**Discover -> Classify -> Explore -> Detail -> Save -> Check -> Confirm -> Handoff**
 
-The plan is a contract between whiteboarding and building. It specifies WHAT and WHY at the strategic level, with explicit interfaces between phases. Subagents determine HOW through fresh codebase discovery and loaded design skills.
+The plan is a contract between whiteboarding and building. It specifies WHAT and WHY at the strategic level, with explicit interfaces between phases.
+
+---
+
+## STOP - Setup First
+
+### Load Skills
+
+Before any work, load your skill lenses using the Skill tool:
+1. `Skill(code-foundations:cc-construction-prerequisites)`
+2. `Skill(code-foundations:aposd-designing-deep-modules)`
+3. `Skill(code-foundations:aposd-reviewing-module-design)`
+
+### Create Progress Tasks
+
+Create all steps as tasks upfront so progress is visible. Use `TaskCreate` for each, then `TaskUpdate` with `blockedBy` to enforce ordering.
+
+```
+TaskCreate("DISCOVER: Codebase search",          "Search codebase for patterns, conventions, similar features")
+TaskCreate("DISCOVER: Skill audit",              "Audit all available skills, match to project tech stack")
+TaskCreate("DISCOVER: Questioning",              "Ask clarifying questions, produce problem statement")
+TaskCreate("CLASSIFY",                           "Determine complexity track: Simple / Medium / Complex")
+TaskCreate("EXPLORE",                            "Research technologies, compare 2-3 approaches (Medium/Complex)")
+TaskCreate("DETAIL",                             "Break into phases using track-specific template")
+TaskCreate("SAVE",                               "Write plan to docs/plans/")
+TaskCreate("CHECK",                              "Subagent reviews plan for structural issues")
+TaskCreate("CONFIRM",                           "User confirms plan, test coverage decision, corrections")
+TaskCreate("HANDOFF",                            "User chooses: build or manual execution")
+```
+
+Set `blockedBy` so each task depends on the previous one. Mark tasks `in_progress` when starting, `completed` when done.
+
+**Simple track:** Skip EXPLORE and CHECK tasks (mark as completed with note "skipped — simple track").
 
 ---
 
@@ -14,13 +46,13 @@ The plan is a contract between whiteboarding and building. It specifies WHAT and
 
 | Step | Goal | Output |
 |------|------|--------|
-| DISCOVER | **Search codebase** + clarify problem | Pattern summary + problem statement |
+| DISCOVER | **Search codebase** + **audit skills** + clarify problem | Pattern summary + skill inventory + problem statement |
 | CLASSIFY | Determine complexity track | Simple / Medium / Complex |
 | EXPLORE | **Research technologies** + compare approaches (Medium/Complex) | Chosen approach with rationale |
 | DETAIL | Break into phases using track-specific template | Phase specs |
-| SELF-CHECK | Verify plan completeness + coherence | Validated plan ready for user review |
-| VALIDATE | User confirms + test coverage decision | Approval |
-| SAVE | Write to docs/plans/ | Plan file ready for /code-foundations:building |
+| SAVE | Write to docs/plans/ | Plan file on disk |
+| CHECK | Subagent reviews plan for structural issues | Review findings |
+| CONFIRM | User confirms + corrections + test coverage decision | Approved plan |
 | HANDOFF | User chooses next step | Build or manual execution |
 
 ---
@@ -38,13 +70,13 @@ The plan is a contract between whiteboarding and building. It specifies WHAT and
 | **No implementation details in phases** | Pre-gate writes pseudocode after fresh discovery; plan-level design is pre-discovery guesswork |
 | **Plans must be pipeline-compatible** | The building pipeline dispatches subagents autonomously. Plans must not introduce interactive user prompts between sub-phases (e.g., "Fix now or proceed?"). Use deterministic rules instead (e.g., "max 2 retry iterations") |
 | **Include Approach notes for non-discoverable decisions** | User decisions (JWT not sessions, event-driven not polling) cannot be rediscovered by subagents |
-| **Self-check before user validation (Medium/Complex)** | Catches structural gaps before the user reviews |
-| **User confirms each section** | Unvalidated plans diverge from user intent |
-| **Save before executing** | Plan file enables context refresh + checklist tracking |
+| **Save before checking** | Subagent needs a file to review with fresh eyes |
+| **Subagent check before user validation (Medium/Complex)** | Fresh-context review catches structural gaps you're blind to |
+| **User confirms after check** | User sees both plan and review findings before approving |
 
 ---
 
-## Step 1: DISCOVER (Pattern Discovery + Questioning)
+## Step 1: DISCOVER (Pattern Discovery + Skill Audit + Questioning)
 
 ### Step 1a: Codebase Search (MANDATORY - Do First)
 
@@ -86,7 +118,49 @@ SEARCH FOR:
 
 ---
 
-### Step 1b: Adaptive Questioning
+### Step 1b: Skill Audit (MANDATORY)
+
+**After codebase search, audit ALL available skills in the environment.**
+
+Skills come from every installed plugin — not just code-foundations. The full list is visible in the system-reminder at conversation start.
+
+```
+AUDIT:
+1. Identify project tech stack (language, framework, platform) from codebase search
+2. Scan ALL available skills across all plugins in system context
+3. Match skills to project characteristics
+4. Note which skills apply to which type of work (design, coding, testing, review)
+```
+
+**Matching criteria:**
+
+| Project Signal | Skill Match |
+|---------------|-------------|
+| React Native project | `react-native-foundations:*` (coding, a11y-audit, layout-check, docs, diagnose) |
+| SvelteKit project | `svelte-foundations:*` (coding, svelte-docs, sveltekit-docs, a11y-audit, browser) |
+| Frontend/UI work | `design-for-ai:*` (design, color, fonts, a11y, flow, brand) |
+| Any web frontend | `*:a11y-audit` (accessibility auditing) |
+| .NET / Go / other stacks | Any domain-specific skills from installed plugins |
+| Performance-critical | `code-foundations:cc-performance-tuning`, `code-foundations:aposd-optimizing-critical-paths` |
+| Complex refactor | `code-foundations:cc-refactoring-guidance`, `code-foundations:aposd-maintaining-design-quality` |
+| Integration-heavy | `code-foundations:cc-integration-practices` |
+
+**Do NOT limit to code-foundations skills.** Any skill from any plugin is valid if it matches the work.
+
+**Output: Skill Inventory**
+```markdown
+## Available Skills for This Project
+- **Tech stack:** [language, framework, platform]
+- **Matched skills:** [full list with plugin prefix]
+  - [skill]: [why it matches, which phases it's useful for]
+  - [skill]: [why it matches, which phases it's useful for]
+```
+
+This inventory feeds into Step 4 (DETAIL) where skills are assigned per phase.
+
+---
+
+### Step 1c: Adaptive Questioning
 
 After pattern discovery, classify complexity using the signal table in Step 2 (CLASSIFY). State the classification, then ask questions accordingly.
 
@@ -300,13 +374,14 @@ The plan specifies WHAT and WHY. Subagents determine HOW. Each phase is a contra
 
 ### Simple Track Template (1-2 phases, 50-75 words each)
 
-**No approach comparison. No self-check. Present the full plan at once.**
+**No approach comparison. No subagent check. Present the full plan at once.**
 
 Each phase is a flat checklist. No contract structure, no risk analysis.
 
 ```markdown
 ### Phase N: [Name]
 **Model:** [recommended model]
+**Skills:** [skills from inventory that match this phase's work -- omit if only default agent skills apply]
 
 **Goal:** [One sentence: what this phase delivers]
 
@@ -330,6 +405,7 @@ Each phase is a flat checklist. No contract structure, no risk analysis.
 ```markdown
 ### Phase N: [Name]
 **Model:** [recommended model]
+**Skills:** [skills from inventory that match this phase's work -- omit if only default agent skills apply]
 
 **Goal:** [What this phase accomplishes and why -- 1-2 sentences]
 
@@ -356,35 +432,9 @@ Each phase is a flat checklist. No contract structure, no risk analysis.
 **Uncertainty:** [what could change -- or "None"]
 ```
 
-### What This Template Includes and Why
-
-| Field | Purpose | Who Consumes It |
-|-------|---------|----------------|
-| **Goal** | Strategic anchor -- WHAT and WHY | All readers |
-| **Scope (IN/OUT)** | Prevents scope creep and scope gaps | Pre-gate agent, user |
-| **Constraints** | Non-discoverable requirements the codebase cannot reveal | Pre-gate agent |
-| **Approach notes** | User design decisions that subagents cannot reconstruct | Pre-gate agent |
-| **File hints** | Focuses pre-gate discovery without mandating specific paths | Pre-gate agent |
-| **Depends on / Unlocks** | Explicit phase relationships for orchestrator | Building orchestrator |
-| **Done when** | Verifiable postconditions for post-gate and VERIFY | Post-gate agent, orchestrator |
-| **Difficulty** | Informs model auto-detection | Building orchestrator |
-| **Uncertainty** | Directs pre-gate to investigate critical unknowns first | Pre-gate agent |
-
-### What This Template Deliberately Excludes
-
-| Excluded | Why | Who Handles It Instead |
-|----------|-----|----------------------|
-| Pseudocode | Pre-gate writes this after fresh codebase discovery | Pre-gate agent + `cc-pseudocode-programming` |
-| Function signatures | Pre-gate designs these using actual codebase patterns | Pre-gate agent + `cc-routine-and-class-design` |
-| Class hierarchies | Pre-gate designs these using APOSD deep-module principles | Pre-gate agent + `aposd-designing-deep-modules` |
-| Error handling specifics | Implementation agent applies defensive programming | Implementation agent + `cc-defensive-programming` |
-| Edge case enumeration | Post-gate checks 6-dimension correctness | Post-gate agent + `aposd-verifying-correctness` |
-| Exact file paths as mandates | Pre-gate discovers actual file state; plan paths go stale | Pre-gate agent discovery phase |
-| Task lists (HOW) | Pre-gate decomposes the Goal into tasks after discovery | Pre-gate agent + loaded skills |
-
 ### Approach Notes: The Non-Discoverable Exception
 
-**Approach notes exist ONLY for decisions the user made during planning that subagents cannot rediscover from the codebase.** These are design choices, not implementation details.
+**Approach notes exist ONLY for decisions the user made during planning that cannot be rediscovered from the codebase.** These are design choices, not implementation details.
 
 Good approach notes:
 - "Use JWT not sessions -- user chose stateless for horizontal scaling"
@@ -397,7 +447,7 @@ Bad approach notes (these belong in pseudocode, not the plan):
 - "Add try-catch around the database call on line 47"
 - "Use PERT formula: E = (O + 4M + P) / 6" (the decision to use three-point estimation is non-discoverable; the formula itself is discoverable from any estimation reference)
 
-**Test:** If the pre-gate agent could arrive at this decision by searching the codebase, it does NOT belong in approach notes. If only the user knows why this choice was made, it belongs.
+**Test:** If the decision could be arrived at by searching the codebase, it does NOT belong in approach notes. If only the user knows why this choice was made, it belongs.
 
 ### YAGNI Gate
 
@@ -428,108 +478,7 @@ Use the simplest dependency chain that accurately models reality. If Phase 3 and
 
 ---
 
-## Step 5: SELF-CHECK (Plan Integrity Verification)
-
-### Simple Track: SKIP This Step
-
-Simple plans are short enough that structural issues are visible on inspection. Proceed to VALIDATE.
-
-### Medium/Complex Track: Full Self-Check
-
-**Before showing the plan to the user, verify it yourself.**
-
-### Structural Completeness Check
-
-Run through this checklist silently. Fix any failures before presenting to the user.
-
-| Check | What to Verify | Fix If Failing |
-|-------|---------------|----------------|
-| **Constraint coverage** | Every constraint from Step 1 maps to at least one phase's Constraints field | Add missing constraints to relevant phases |
-| **Success criteria chain** | Done-when criteria across all phases collectively satisfy the Problem Statement's success criteria | Add missing criteria or phases |
-| **Scope coherence** | No phase's IN scope overlaps with another phase's IN scope | Merge overlapping phases or clarify boundaries |
-| **Scope completeness** | The union of all phases' IN scopes covers the full feature | Add missing phases or expand scope |
-| **Dependency chain** | Every phase's Depends-on references an existing phase | Fix references |
-| **No orphan phases** | Every phase either Depends-on something or is Phase 1; every phase Unlocks something or is the final phase | Fix chains |
-| **Approach notes audit** | Approach notes contain ONLY non-discoverable user decisions, not implementation details | Move implementation details out; they belong in pre-gate |
-| **File hints present** | Every phase has at least one file hint to focus pre-gate discovery | Add directory-level hints |
-| **Done-when verifiable** | Every done-when criterion is externally observable (test command, behavior, output) | Rewrite vague criteria |
-| **YAGNI pass (global)** | No phase exists solely for hypothetical future needs | Remove or merge |
-
-### Cross-Phase Coherence Check
-
-| Check | What to Verify |
-|-------|---------------|
-| **No contradictions** | Phase N's constraints do not contradict Phase M's constraints |
-| **Interface alignment** | What Phase N produces (per Done-when) matches what Phase N+1 assumes (per Depends-on) |
-| **Progressive delivery** | At least one phase produces user-observable output (not just infrastructure) |
-| **Risk front-loading** | Highest-uncertainty phases appear early, not late |
-
-**If self-check reveals issues:** Fix them before proceeding to user validation. Do not present a plan you know has gaps.
-
----
-
-## Step 6: VALIDATE (Confirmation Loop)
-
-### Test Coverage Question (MANDATORY)
-
-Before finalizing the plan, ask about test coverage:
-
-```
-How much test coverage do you want for this implementation?
-
-1. 100% coverage (Recommended)
-   Unit tests for all new code + integration tests for critical paths
-
-2. Backend only
-   Tests for server-side/API changes only
-
-3. Backend + frontend
-   Tests for both server and client layers
-
-4. None
-   Skip tests (not recommended - technical debt)
-
-5. Ask at each phase
-   Decide test scope when building each phase
-```
-
-**Record the answer in the plan file** under `## Test Coverage`.
-
-**Inform building:** This choice affects POST-GATE behavior -- reviewers will check for tests matching the chosen coverage level.
-
----
-
-### Full Plan Review
-
-**Simple track:** Present full plan. Ask: "Does this plan look right? Anything to add or change?"
-
-**Medium/Complex track:** After all sections confirmed individually, present the full plan structure:
-
-```markdown
-# Plan: [Topic]
-
-## Phases
-1. [Phase 1 name] -- [1 sentence goal]
-2. [Phase 2 name] -- [1 sentence goal]
-3. ...
-
-## Constraint Coverage
-- [constraint] -> Phase [N]
-- [constraint] -> Phase [N]
-
-## Test Plan
-- [test 1]
-- [test 2]
-
-## Questions/Concerns
-- [any remaining uncertainties]
-```
-
-Ask: "Does this plan look complete? Any phases to add, remove, or modify?"
-
----
-
-## Step 7: SAVE (Write Plan File)
+## Step 5: SAVE (Write Plan File)
 
 ### File Location
 
@@ -583,6 +532,7 @@ Otherwise:
 
 ### Phase 1: [Name]
 **Model:** [recommended model]
+**Skills:** [additional skills for this phase -- omit if none]
 
 **Goal:** [One sentence]
 
@@ -599,6 +549,7 @@ Otherwise:
 
 ### Phase 2: [Name] (if needed)
 **Model:** [recommended model]
+**Skills:** [additional skills for this phase -- omit if none]
 
 **Goal:** [One sentence]
 
@@ -673,6 +624,7 @@ _To be filled during /code-foundations:building_
 
 ### Phase 1: [Name]
 **Model:** [recommended model]
+**Skills:** [additional skills for this phase -- omit if none]
 
 **Goal:** [1-2 sentences: what and why]
 
@@ -702,6 +654,7 @@ _To be filled during /code-foundations:building_
 
 ### Phase 2: [Name]
 **Model:** [recommended model]
+**Skills:** [additional skills for this phase -- omit if none]
 ...
 
 ---
@@ -754,11 +707,139 @@ mkdir -p docs/plans
 
 ---
 
+## Step 6: CHECK (Subagent Plan Review)
+
+### Simple Track: SKIP This Step
+
+Simple plans are short enough that structural issues are visible on inspection. Mark CHECK task as completed with "skipped — simple track". Proceed to CONFIRM.
+
+### Medium/Complex Track: Subagent Review
+
+**Dispatch a subagent to review the saved plan file with fresh eyes.**
+
+The subagent has no prior context — it reads the plan cold, which catches assumptions and gaps you're blind to.
+
+```
+Agent tool:
+- subagent_type: "general-purpose"
+- model: sonnet
+- description: "Review whiteboarding plan"
+- prompt: |
+    Review the plan at docs/plans/<plan-file>.md for structural issues.
+
+    ## Checklist
+
+    ### Structural Completeness
+    - [ ] Every constraint maps to at least one phase's Constraints field
+    - [ ] Done-when criteria across all phases collectively satisfy the Context/problem statement
+    - [ ] No phase's IN scope overlaps with another phase's IN scope
+    - [ ] The union of all phases' IN scopes covers the full feature
+    - [ ] Every Depends-on references an existing phase
+    - [ ] No orphan phases (every phase connects to the chain)
+    - [ ] Approach notes contain ONLY non-discoverable user decisions, not implementation details
+    - [ ] Every phase has at least one file hint (Medium/Complex)
+    - [ ] Every done-when criterion is externally observable and verifiable
+    - [ ] No phase exists solely for hypothetical future needs (YAGNI)
+
+    ### Cross-Phase Coherence
+    - [ ] No contradictions between phase constraints
+    - [ ] What Phase N produces (Done-when) matches what Phase N+1 assumes (Depends-on)
+    - [ ] At least one phase produces user-observable output (not just infrastructure)
+    - [ ] Highest-uncertainty phases appear early, not late
+
+    ### Skills Audit
+    - [ ] Skills field is present on phases where non-default skills are useful
+    - [ ] Skills match the phase's work type (e.g., design skills for design phases, not coding phases)
+    - [ ] No skills listed that aren't actually available in the environment
+
+    ## Output
+
+    Return a structured review:
+    - PASS: no issues found
+    - FINDINGS: list of issues with specific fix recommendations
+    - Each finding references the specific phase and field
+```
+
+**After subagent returns:**
+1. If PASS → mark CHECK task completed, proceed to CONFIRM
+2. If FINDINGS → fix each issue in the plan file, then mark CHECK task completed
+
+---
+
+## Step 7: CONFIRM (User Confirmation)
+
+### Present Plan + Review Results
+
+Show the user:
+1. The plan summary (phases, goals, skill assignments)
+2. Any findings from CHECK and how they were resolved
+
+**Simple track:** Present full plan. Ask: "Does this plan look right? Anything to add or change?"
+
+**Medium/Complex track:** Present the full plan structure:
+
+```markdown
+# Plan: [Topic]
+
+## Phases
+1. [Phase 1 name] -- [1 sentence goal] -- Skills: [if any]
+2. [Phase 2 name] -- [1 sentence goal] -- Skills: [if any]
+3. ...
+
+## Constraint Coverage
+- [constraint] -> Phase [N]
+- [constraint] -> Phase [N]
+
+## Review Results
+- [findings addressed, or "Clean — no issues found"]
+
+## Questions/Concerns
+- [any remaining uncertainties]
+```
+
+Ask: "Does this plan look complete? Any phases to add, remove, or modify?"
+
+### Test Coverage Question (MANDATORY)
+
+Before finalizing, ask about test coverage:
+
+```
+How much test coverage do you want for this implementation?
+
+1. 100% coverage (Recommended)
+   Unit tests for all new code + integration tests for critical paths
+
+2. Backend only
+   Tests for server-side/API changes only
+
+3. Backend + frontend
+   Tests for both server and client layers
+
+4. None
+   Skip tests (not recommended - technical debt)
+
+5. Ask at each phase
+   Decide test scope when building each phase
+```
+
+**Record the answer in the plan file** under `## Test Coverage`.
+
+**Inform building:** This choice affects POST-GATE behavior -- reviewers will check for tests matching the chosen coverage level.
+
+### Corrections
+
+If the user requests changes:
+1. Update the plan file
+2. If changes are structural (new phases, reordered dependencies), re-run CHECK (dispatch subagent again)
+3. If changes are minor (wording, constraints), update directly and re-present
+
+---
+
 ## Step 8: HANDOFF
 
 ### Ask User How to Proceed
 
-After saving the plan, use `AskUserQuestion` with these options:
+Use `AskUserQuestion` with these options:
 
 **Question:** "Plan saved to docs/plans/YYYY-MM-DD-<topic>.md. How would you like to proceed?"
 
@@ -774,11 +855,11 @@ Provide numbered steps the user can follow to implement the plan manually
 
 ---
 
-## What the Plan Specifies vs. What Subagents Discover
+## What the Plan Specifies vs. What Building Discovers
 
-The plan is a contract between whiteboarding and multiple independent subagents that start with fresh context. The pre-gate agent loads four design skills, searches the codebase, and writes implementation-ready pseudocode. The plan should give it the right problem, not prescribe the solution.
+The plan specifies WHAT and WHY. The building pipeline discovers HOW.
 
-| Plan Specifies (WHAT + WHY) | Subagents Discover (HOW) |
+| Plan Specifies (WHAT + WHY) | Building Discovers (HOW) |
 |----------------------------|--------------------------|
 | Goal per phase | Current codebase state |
 | Constraints and non-goals | Specific file paths and function signatures |
@@ -789,14 +870,15 @@ The plan is a contract between whiteboarding and multiple independent subagents 
 | Test coverage level | Specific test cases |
 | File hints (directional, not mandates) | Actual files to create/modify |
 | Difficulty + Uncertainty signals | Task decomposition within phases |
+| Skills per phase (from skill audit) | Which skills to load at runtime |
 
 **The plan does NOT contain:**
-- Pseudocode (pre-gate agent writes this after fresh discovery)
-- Function signatures (pre-gate designs these with `cc-routine-and-class-design`)
-- Error handling specifics (implementation agent applies `cc-defensive-programming`)
-- Detailed algorithms (pre-gate translates goals into pseudocode)
-- Edge case enumeration (post-gate checks these with `aposd-verifying-correctness`)
-- Task lists prescribing HOW (pre-gate decomposes the Goal after discovery)
+- Pseudocode
+- Function signatures
+- Error handling specifics
+- Detailed algorithms
+- Edge case enumeration
+- Task lists prescribing HOW
 
 ---
 
@@ -826,8 +908,8 @@ The plan is a contract between whiteboarding and multiple independent subagents 
 | "I should specify edge cases in the plan" | Post-gate checks 6-dimension correctness with `aposd-verifying-correctness`. Your edge case list will be incomplete; the skill's checklist will not. |
 | "File paths need to be exact" | File paths are hints for pre-gate discovery, not mandates. Use directory-level hints. Pre-gate finds the actual files. |
 | "Approach notes should explain how to implement" | Approach notes capture user DECISIONS (JWT not sessions). If the pre-gate agent could arrive at the decision by searching the codebase, it does not belong in approach notes. |
-| "The plan self-check is overkill" | Self-check catches constraint gaps, scope overlaps, and orphan phases. 2 minutes of checking prevents UPDATE_PLAN pauses during building. |
-| "I'll skip the self-check, the user will catch issues" | Users skim plans. They catch intent errors, not structural gaps. Self-check catches structural gaps. Both are needed. |
+| "The subagent check is overkill" | Fresh-eyes review catches constraint gaps, scope overlaps, and orphan phases you're blind to. Prevents UPDATE_PLAN pauses during building. |
+| "I'll skip the check, the user will catch issues" | Users skim plans. They catch intent errors, not structural gaps. The subagent catches structural gaps. Both are needed. |
 | "I should add a task list so the agent knows what to do" | Task lists prescribe HOW. The pre-gate agent decomposes the Goal into tasks after discovering the actual codebase state. Your task list is a guess made without that context and it constrains pre-gate from finding a better decomposition. |
 | "This Complex task only needs a Simple plan" | Under-planning costs more than slight over-planning. When uncertain, choose the higher track. |
 | "Every task needs the Complex track" | Over-planning wastes time and creates brittle, over-specified plans. Classify honestly using the signal table. |
@@ -874,17 +956,17 @@ What I CAN add to help:
 
 Which of these would help?"
 
-### Scenario 5: Self-Check Reveals Major Gap
+### Scenario 5: CHECK Reveals Major Gap
 
-**Situation:** During self-check, you discover a constraint from Step 1 that no phase addresses.
+**Situation:** During CHECK, the subagent finds a constraint from Step 1 that no phase addresses.
 
-**Response:** Add a phase or expand an existing phase's scope to cover the constraint. Then present the fix to the user: "During plan review, I noticed [constraint] wasn't covered by any phase. I added it to Phase N. Does that look right?"
+**Response:** Fix the issue in the plan file, then present the fix to the user during CONFIRM: "The plan review found [constraint] wasn't covered by any phase. I added it to Phase N. Does that look right?"
 
 ### Scenario 6: Complexity Classification Disagreement
 
 **Situation:** User says "this is simple" but signals indicate Complex.
 
-**Response:** "I see [signal 1] and [signal 2] that suggest this is more complex than it appears. The Complex track adds [specific value: approach notes, file hints, uncertainty signals, self-check]. Want to use Medium as a compromise, or go with Simple and accept the risk of missing something?"
+**Response:** "I see [signal 1] and [signal 2] that suggest this is more complex than it appears. The Complex track adds [specific value: approach notes, file hints, uncertainty signals, subagent review]. Want to use Medium as a compromise, or go with Simple and accept the risk of missing something?"
 
 ### Scenario 7: Plan Exceeds 7 Phases
 

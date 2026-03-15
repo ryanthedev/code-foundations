@@ -170,14 +170,28 @@ Phase 2.4: CHECKPOINT      → blockedBy: [2.3]
 
 Each sub-phase dispatches a specific agent type with specific skills. **Do NOT paraphrase the prompts below. Include the skill loading instructions VERBATIM.**
 
-| Sub-Phase | Agent Type | Skills (baked into agent template) |
+| Sub-Phase | Agent Type | Default Skills (baked into agent template) |
 |-----------|-----------|-------------------------------|
 | N.1 PRE-GATE | `code-foundations:pre-gate-agent` | `cc-construction-prerequisites`, `cc-pseudocode-programming`, `aposd-designing-deep-modules`, `cc-routine-and-class-design` |
 | N.2 IMPLEMENT | `code-foundations:implementation-agent` | `cc-control-flow-quality`, `cc-data-organization`, `aposd-improving-code-clarity`, `aposd-simplifying-complexity` |
 | N.3 POST-GATE | `code-foundations:post-gate-agent` | `aposd-verifying-correctness`, `cc-quality-practices`, `aposd-reviewing-module-design`, `cc-defensive-programming` |
 | N.4 CHECKPOINT | None (you do this) | N/A |
 
-**POST-GATE uses `code-foundations:post-gate-agent`.** Skills are baked into the agent template — no skill loading needed in the dispatch prompt.
+**POST-GATE uses `code-foundations:post-gate-agent`.** Default skills are baked into the agent template — no skill loading needed in the dispatch prompt.
+
+### Additional Skills from Plan
+
+If the plan's phase has a `**Skills:**` field, include those skills in the agent dispatch prompt as additional skill loading instructions. These come from whiteboarding's skill audit and may include skills from any installed plugin (e.g., `react-native-foundations:coding`, `design-for-ai:a11y`, `svelte-foundations:coding`).
+
+**Add this block to the dispatch prompt when `**Skills:**` is present:**
+```
+## Additional Skills
+Before starting work, load the following skills using the Skill tool:
+- Skill([skill-1])
+- Skill([skill-2])
+```
+
+These are loaded IN ADDITION to the agent's default skills, not as replacements.
 
 ---
 
@@ -260,6 +274,11 @@ Agent tool:
     ## Phase N: [name]
     [paste phase description and file list from plan]
 
+    [if plan phase has **Skills:** field, include:]
+    ## Additional Skills
+    Before starting work, load the following skills using the Skill tool:
+    - Skill([skill-from-plan])
+
     ## Inputs
     - Plan file: docs/plans/<plan-name>.md
     - Phase: N - [name]
@@ -292,6 +311,11 @@ Agent tool:
 - description: "Implement Phase N"
 - prompt: |
     Implement Phase N of the building plan.
+
+    [if plan phase has **Skills:** field, include:]
+    ## Additional Skills
+    Before starting work, load the following skills using the Skill tool:
+    - Skill([skill-from-plan])
 
     ## Input Files (READ THESE FIRST)
     - Discovery: docs/building/<plan-name>-phase-N-discovery.md
@@ -336,6 +360,11 @@ Agent tool:
 - description: "POST-GATE for Phase N"
 - prompt: |
     Review Phase N implementation.
+
+    [if plan phase has **Skills:** field, include:]
+    ## Additional Skills
+    Before starting work, load the following skills using the Skill tool:
+    - Skill([skill-from-plan])
 
     ## Inputs
     - Plan: docs/plans/<plan-name>.md (Phase N section)
@@ -619,7 +648,7 @@ When resuming blocked plan:
 | "Discovery is overkill for a simple phase" | Plan assumptions often mismatch reality. Pre-gate agent catches this before wasted work. |
 | "I already know this codebase" | Your context is stale. Pre-gate agent has fresh eyes and finds what changed. |
 | "I'll dispatch an Explore agent for discovery" | Explore agents are read-only and can't write files. Use `code-foundations:pre-gate-agent` which handles discovery + pseudocode together. |
-| "I'll tell the subagent to invoke a skill" | Subagents can't invoke skills (fresh context). Use specialized agent types instead. |
+| "I'll tell the subagent to invoke a random skill" | Use the plan's `**Skills:**` field to load relevant skills. Don't improvise — the whiteboarding skill audit already identified what's needed. |
 | "general-purpose is fine for review" | post-gate-agent has skills built-in. Use `code-foundations:post-gate-agent`. |
 | "I'll skip TaskCreate, it's overhead" | TaskCreate with blockedBy is the enforcement mechanism. Without it, gates are just suggestions. |
 | "I'll just mark the blocker completed manually" | Marking a gate completed without PASS is lying. The next sub-phase will inherit false confidence. |
