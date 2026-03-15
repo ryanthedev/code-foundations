@@ -90,14 +90,6 @@ Code-foundations is a Claude Code plugin providing software engineering skills b
 **Phase enforcement via TaskCreate/TaskUpdate** - agent cannot skip phases.
 **Schema enforcement via bash scripts** - `add-finding.sh` and `add-verdict.sh` validate all inputs.
 
-### Master Dispatcher Flow
-
-The `code-foundations` skill (`skills/code-foundations/SKILL.md`) is the entry point:
-1. Classifies task type (WRITE, DEBUG, REVIEW, OPTIMIZE, REFACTOR, SIMPLIFY, SECURE)
-2. Routes DEBUG tasks to `debug-agent` (or `/code-foundations:debug` command)
-3. Executes task-specific checklist
-4. Runs pre-commit gate via `aposd-verifying-correctness`
-
 ### Development Workflows
 
 **Choose based on scope:**
@@ -106,6 +98,7 @@ The `code-foundations` skill (`skills/code-foundations/SKILL.md`) is the entry p
 |-----------|---------|----------|
 | Bug investigation | `/code-foundations:debug` | Minimal |
 | Technical uncertainty | `/code-foundations:prototype` | Minimal |
+| Single feature, design-first | `/code-foundations:code` | Light |
 | Feature needs planning | `/code-foundations:whiteboarding` | Medium |
 | Executing approved plan | `/code-foundations:building` | Full |
 
@@ -130,10 +123,13 @@ Three-stage pattern for feature development:
         ↓ (if feasible)
 
 /code-foundations:whiteboarding "build notification system"
+  → Skill audit (scans all installed plugins for relevant skills)
   → Discovery questions (informed by prototype)
   → 2-3 approaches with trade-offs
-  → Implementation-ready plan
+  → Implementation-ready plan with Skills per phase
   → Save to docs/plans/YYYY-MM-DD-<topic>.md
+  → Subagent CHECK reviews plan with fresh eyes
+  → User confirms
 
         ↓ (after plan approval)
 
@@ -155,12 +151,14 @@ Three-stage pattern for feature development:
 
 **Quality Gates (per phase during /code-foundations:building):**
 ```
-PRE-GATE:  cc-construction-prerequisites + cc-pseudocode-programming + aposd-designing-deep-modules + cc-routine-and-class-design
-IMPLEMENT: cc-control-flow-quality + cc-data-organization + aposd-improving-code-clarity + aposd-simplifying-complexity
-POST-GATE: aposd-verifying-correctness + cc-quality-practices + aposd-reviewing-module-design + cc-defensive-programming + reviewer agent
+PRE-GATE:  cc-construction-prerequisites + cc-pseudocode-programming + aposd-designing-deep-modules + cc-routine-and-class-design + [plan Skills]
+IMPLEMENT: cc-control-flow-quality + cc-data-organization + aposd-improving-code-clarity + aposd-simplifying-complexity + [plan Skills]
+POST-GATE: aposd-verifying-correctness + cc-quality-practices + aposd-reviewing-module-design + cc-defensive-programming + [plan Skills]
 VERIFY:    cc-code-layout-and-style + cc-documentation-quality + cc-performance-tuning + aposd-optimizing-critical-paths + build + tests + lint
 CHECKPOINT: Commit only after all gates pass
 ```
+
+`[plan Skills]` = additional skills from the plan's per-phase `**Skills:**` field. These come from whiteboarding's skill audit and can include skills from any installed plugin (e.g., `react-native-foundations:coding`, `design-for-ai:a11y-audit`).
 
 Model auto-detected per phase: haiku (<=2 tasks/files), opus (>=6 tasks/files or OPUS keyword), sonnet (default).
 Plan `**Model:**` field overrides auto-detection.
@@ -218,7 +216,7 @@ Additional skills:
 ### Plugin Structure
 
 - `.claude-plugin/plugin.json` - Plugin manifest with name, version, description
-- Version follows semver (e.g., 3.8.1)
+- Version follows semver (e.g., 4.1.0)
 
 ### Marketplace
 

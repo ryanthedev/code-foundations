@@ -34,32 +34,34 @@ docs/plans/2026-01-30-notifications.md
 
 ### `/code-foundations:whiteboarding` - Create the Plan
 
-**Researches your codebase first, then asks targeted questions.**
+**Researches your codebase, audits available skills, then asks targeted questions.**
 
 ```
 User: "/code-foundations:whiteboarding add user notifications"
 
-  RESEARCH FIRST
+  DISCOVER
   ├─ Search codebase for existing patterns
-  ├─ Find similar implementations
-  └─ Note naming conventions, error handling
+  ├─ Audit ALL available skills (from every installed plugin)
+  │   → "React Native project detected → react-native-foundations:coding"
+  │   → "Frontend UI work → design-for-ai:a11y-audit"
+  ├─ Ask targeted questions (one at a time)
+  └─ Produce problem statement
 
-  QUESTIONS (one at a time)
-  ├─ "What notification types do you need?"
-  │   ☐ Email only
-  │   ☐ Push + Email
-  │   ☐ In-app + Email
-  └─ Wait for answer → ask next question
+  EXPLORE (Medium/Complex)
+  ├─ 2-3 structurally different approaches
+  └─ Pre-mortem (Complex)
 
-  2-3 STRUCTURALLY DIFFERENT APPROACHES
-  ├─ Option A: Queue-based (recommended)
-  ├─ Option B: Synchronous
-  └─ Option C: Event-sourced
-
-  → Saves to docs/plans/YYYY-MM-DD-<topic>.md
+  DETAIL → SAVE → CHECK → CONFIRM → HANDOFF
+  ├─ Phase specs with Skills field per phase
+  ├─ Save plan to docs/plans/
+  ├─ Subagent reviews plan with fresh eyes
+  ├─ User confirms + corrections
+  └─ Handoff to /code-foundations:building
 ```
 
-**Skills loaded:** `cc-construction-prerequisites`, `aposd-designing-deep-modules`
+**Skills loaded:** `cc-construction-prerequisites`, `aposd-designing-deep-modules`, `aposd-reviewing-module-design`
+
+**Task tracking:** Creates progress tasks at startup so you can see where whiteboarding is in its flow.
 
 ### `/code-foundations:building` - Execute the Plan
 
@@ -87,12 +89,14 @@ User: "/code-foundations:building docs/plans/2026-01-30-notifications.md"
 
 ### Quality Gates per Phase
 
-| Gate | Skills Loaded | What Gets Enforced |
+| Gate | Default Skills | What Gets Enforced |
 |------|---------------|-------------------|
 | PRE-GATE | `cc-construction-prerequisites`, `cc-pseudocode-programming`, `aposd-designing-deep-modules`, `cc-routine-and-class-design` | Plan assumptions, design-before-code, interface depth, cohesion/coupling |
 | IMPLEMENT | `cc-control-flow-quality`, `cc-data-organization`, `aposd-improving-code-clarity`, `aposd-simplifying-complexity` | Control flow, naming, comments-first, complexity reduction |
 | POST-GATE | `aposd-verifying-correctness`, `cc-quality-practices`, `aposd-reviewing-module-design`, `cc-defensive-programming` | Correctness, quality, module design, error handling |
 | VERIFY | `cc-code-layout-and-style`, `cc-documentation-quality`, `cc-performance-tuning`, `aposd-optimizing-critical-paths` | Layout, docs, performance regressions, build + tests + lint |
+
+**Additional skills from plan:** If whiteboarding's skill audit identified relevant skills from other plugins (e.g., `react-native-foundations:coding`, `design-for-ai:a11y-audit`), building loads them alongside the defaults.
 
 The system saves every artifact to `docs/building/`. Per-phase commits enable rollback.
 
