@@ -1,6 +1,6 @@
 ---
 name: cc-code-layout-and-style
-description: "Review code formatting and documentation using 74-item checklist from Code Complete. Two modes: CHECKER executes checklists with evidence tables, APPLIER guides layout decisions and commenting strategy. Use when code has inconsistent formatting, poor visual structure, unclear comments, or readability issues. Triggers on: review formatting, check layout, code style review, commenting style, make readable, multiple statements per line, endline layout, comments repeat code."
+description: "Use when code has inconsistent formatting, poor visual structure, unclear comments, or readability issues. Triggers on: review formatting, check layout, code style review, commenting style, make readable, multiple statements per line, endline layout, comments repeat code."
 ---
 
 # Skill: cc-code-layout-and-style

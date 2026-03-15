@@ -1,6 +1,6 @@
 ---
 name: cc-construction-prerequisites
-description: "Verify construction prerequisites using 66-item checklists across requirements, architecture, and coding conventions. Output status tables (VIOLATION/WARNING/PASS) in CHECKER mode or prerequisite allocation recommendations in APPLIER mode. Use when unsure if project is ready to code, requirements feel incomplete, architecture unclear, no coding conventions defined, or noticing urge to skip planning. Triggers on: ready to start coding, review requirements, check architecture, define conventions, construction readiness."
+description: "Use when unsure if project is ready to code, requirements feel incomplete, architecture unclear, or no coding conventions defined. Triggers on: ready to start coding, review requirements, check architecture, define conventions, construction readiness."
 ---
 
 # Construction Prerequisites
