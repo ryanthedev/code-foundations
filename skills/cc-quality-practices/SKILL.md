@@ -1,6 +1,6 @@
 ---
 name: cc-quality-practices
-description: "Execute quality checklists (112+ items) for code review, testing strategy, and debugging. CHECKER mode audits QA practices with evidence tables. APPLIER mode generates test cases (5:1 dirty ratio), runs Scientific Debugging Method (STABILIZE-HYPOTHESIZE-EXPERIMENT-FIX-VERIFY-SEARCH), or sets up inspection procedures. Use when planning QA, choosing review methods, designing tests, or debugging fails. Triggers on: defects found late, tests pass but production bugs, coverage disputes, review ineffective, spending excessive time debugging."
+description: "Use when planning QA, choosing review methods, designing tests, or debugging fails. Triggers on: defects found late, tests pass but production bugs, coverage disputes, review ineffective, spending excessive time debugging."
 ---
 
 # Skill: cc-quality-practices
