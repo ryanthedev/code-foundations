@@ -1,6 +1,6 @@
 ---
 name: aposd-designing-deep-modules
-description: "Enforce Design-It-Twice workflow: generate 2-3 radically different approaches, compare them, then implement. Use when designing modules, APIs, or classes before implementation. Triggers on: design, create class, add module, implement feature, new service, API design, before implementing. Produces structured design document with approaches, comparison table, choice rationale, and depth check."
+description: "Use when designing modules, APIs, or classes before implementation." 
 ---
 
 # Skill: aposd-designing-deep-modules

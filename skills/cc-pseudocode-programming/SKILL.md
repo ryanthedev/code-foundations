@@ -1,6 +1,6 @@
 ---
 name: cc-pseudocode-programming
-description: "Guide routine design using the Pseudocode Programming Process (PPP). Produce pseudocode design, header comments, and implementation plan. Use when designing routines, stuck on where to start coding, caught in compile-debug loops, or code works but you don't understand why. Triggers on: can't name the routine, Just One More Compile syndrome, staring at screen, coded into a corner, keep hacking but still broken, too many compiler warnings, overwhelmed by where to start."
+description: "Use when designing routines, stuck on where to start coding, caught in compile-debug loops, or code works but you don't understand why. Triggers on: starting a new coding task"
 ---
 
 # Skill: cc-pseudocode-programming

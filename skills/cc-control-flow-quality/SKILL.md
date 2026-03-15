@@ -1,6 +1,6 @@
 ---
 name: cc-control-flow-quality
-description: "Review control flow quality using 87-item checklist. Use when code has deep nesting (3+ levels), complex conditionals, loop design questions, high cyclomatic complexity (McCabe >10), or callback hell. Symptoms: arrow-shaped code, repeated conditions, confusing loop exits, lengthy if-else chains. Provide refactoring patterns (guard clauses, named booleans, table-driven methods) and modern guidance (async/await, pattern matching, functional pipelines). Produce verified code with pass/fail assessment."
+description: "Use when code has deep nesting (3+ levels), complex conditionals, loop design questions, high cyclomatic complexity (McCabe >10), or callback hell. Symptoms: arrow-shaped code, repeated conditions, confusing loop exits, lengthy if-else chains"
 ---
 
 # Skill: cc-control-flow-quality

@@ -1,6 +1,6 @@
 ---
 name: aposd-maintaining-design-quality
-description: "Enforce strategic programming discipline when modifying existing code. Guide through STOP-ASK-DECIDE-VERIFY workflow with urgency tier assessment (trivial/minor/standard/emergency). Include when NOT to refactor (Chesterton's Fence, performance-critical, no tests) and block tactical shortcuts via anti-rationalization tables. Use when fixing bugs, extending features, or tempted to make quick fixes. Triggers on: modify code, fix bug, extend feature, quick fix, tactical change."
+description: "Enforce strategic programming discipline when modifying existing code. Use when fixing bugs, extending features, or tempted to make quick fixes."
 ---
 
 # Skill: aposd-maintaining-design-quality

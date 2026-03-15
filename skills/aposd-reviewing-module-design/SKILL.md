@@ -1,6 +1,6 @@
 ---
 name: aposd-reviewing-module-design
-description: "Evaluate module design using APOSD principles with 40-item checklist. Detect complexity symptoms (change amplification, cognitive load, unknown unknowns), shallow modules, information leakage, pass-through methods, and structural anti-patterns. Produce categorized design review (Critical/Moderate/Observations/Positive). Use when reviewing code, assessing interfaces, during PR review, or evaluating 'is this too complex?' Triggers on: code review, design review, module complexity, interface assessment, PR review, structural analysis."
+description: "Use when reviewing code, assessing interfaces, during PR review, or evaluating 'is this too complex?' Triggers on: code review, design review, module complexity, interface assessment, PR review, structural analysis."
 ---
 
 # Skill: aposd-reviewing-module-design

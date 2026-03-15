@@ -1,6 +1,6 @@
 ---
 name: cc-performance-tuning
-description: "Enforce measure-first discipline for code optimization using a 7-step gated decision tree and 40-item checklist. Use when code is too slow, has performance issues, timeouts, OOM errors, high CPU/memory, or doesn't scale. Triggers on: profiler hot spots, latency complaints, unresponsive UI, memory allocation slow, needs optimization. Produce violation/warning/pass table with evidence."
+description: "Use when code is too slow, has performance issues, timeouts, OOM errors, high CPU/memory, or doesn't scale. Triggers on: profiler hot spots, latency complaints, unresponsive UI, memory allocation slow, needs optimization."
 ---
 
 # Skill: cc-performance-tuning

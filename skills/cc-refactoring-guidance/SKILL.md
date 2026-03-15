@@ -1,6 +1,6 @@
 ---
 name: cc-refactoring-guidance
-description: "Guide safe refactoring with research-backed discipline and small-change rigor. Produce refactoring approach, step sequence, and risk assessment. Use when modifying existing code, improving structure without changing behavior, or deciding between refactor, rewrite, or fix-first. Triggers on: code smells, technical debt, just cleaning while I fix, small change treated casually, regression from trivial change, one-line change errors, production down with cleanup urge."
+description: "Use when modifying existing code, improving structure without changing behavior, or deciding between refactor, rewrite, or fix-first."
 ---
 
 # Skill: cc-refactoring-guidance

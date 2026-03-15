@@ -1,6 +1,6 @@
 ---
 name: aposd-improving-code-clarity
-description: "Enforce comments-first workflow for new code and improve naming/documentation for existing code. Use when writing new classes, methods, or functions; when code is 'confusing' or 'hard to understand'; when naming precision is poor; or when variable documentation lacks units, bounds, or ownership. Triggers on: new code, comments-first, naming review, documentation review, not obvious, hard to understand. Produces well-documented code with precise naming, or identifies design problems when comments/names are hard to write."
+description: "Use when writing new classes, methods, or functions; when code is 'confusing' or 'hard to understand'; when naming precision is poor; or when variable documentation lacks units, bounds, or ownership"
 ---
 
 # Skill: aposd-improving-code-clarity
