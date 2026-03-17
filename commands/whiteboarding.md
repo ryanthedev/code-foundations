@@ -143,6 +143,7 @@ AUDIT:
 | .NET / Go / other stacks | Any domain-specific skills from installed plugins |
 | Performance-critical | `code-foundations:cc-performance-tuning`, `code-foundations:aposd-optimizing-critical-paths` |
 | Complex refactor | `code-foundations:cc-refactoring-guidance`, `code-foundations:aposd-maintaining-design-quality` |
+| OO design (new classes, interfaces, decoupling) | `code-foundations:gof-design-patterns` |
 | Integration-heavy | `code-foundations:cc-integration-practices` |
 
 **Do NOT limit to code-foundations skills.** Any skill from any plugin is valid if it matches the work.
@@ -705,6 +706,17 @@ mkdir -p docs/plans
 # Write plan file
 ```
 
+### Commit Plan File (MANDATORY)
+
+After writing the plan file, commit it to git. This is required because building creates a worktree from the git history — uncommitted files are invisible to worktrees.
+
+```bash
+git add docs/plans/YYYY-MM-DD-<topic-slug>.md
+git commit -m "plan: <topic-slug>"
+```
+
+**Do NOT skip this commit.** Without it, `/code-foundations:building` in worktree mode cannot see the plan file.
+
 ---
 
 ## Step 6: CHECK (Subagent Plan Review)
@@ -841,14 +853,16 @@ If the user requests changes:
 
 Use `AskUserQuestion` with these options:
 
-**Question:** "Plan saved to docs/plans/YYYY-MM-DD-<topic>.md. How would you like to proceed?"
+**Question:** "Plan saved and committed to docs/plans/YYYY-MM-DD-<topic>.md. How would you like to proceed?"
 
 **Options:**
-1. **Clear conversation and build** (Recommended) - Fresh context for better execution
+1. **Clear conversation and build** (Recommended) - Fresh context, worktree isolation
 2. **Tell me what to do** - Get step-by-step instructions to execute manually
 
 **If user selects option 1:**
 Execute `/clear` command, then immediately run `/code-foundations:building docs/plans/YYYY-MM-DD-<topic>.md`
+
+Building will create a worktree at `.claude/worktrees/<topic-slug>/` and run all phases there. The user's main checkout remains free for other work or parallel builds.
 
 **If user selects option 2:**
 Provide numbered steps the user can follow to implement the plan manually

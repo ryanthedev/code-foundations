@@ -8,12 +8,13 @@ Code-foundations is a Claude Code plugin providing software engineering skills b
 
 ## Architecture
 
-### Two Skill Families
+### Skill Families
 
 | Family | Prefix | Focus |
 |--------|--------|-------|
 | Code Complete | `cc-*` | Process rigor, metrics, checklists |
 | APOSD | `aposd-*` | Design philosophy, complexity reduction |
+| GoF Design Patterns | `gof-*` | 23 Gang of Four patterns, decision trees, structural recipes |
 
 ### Directory Structure
 

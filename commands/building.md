@@ -24,7 +24,7 @@ description: "Execute plans through gated phases with subagent dispatch."
 
 | Check | Why Non-Negotiable |
 |-------|-------------------|
-| **Feature branch required** | Multi-phase commits on main = no rollback, polluted history |
+| **Worktree isolation required** | Multi-phase commits on main = no rollback, polluted history. Worktrees enable parallel builds. |
 | **Load plan before coding** | No plan = no checklist = forgotten tasks |
 | **One section at a time** | Parallel sections = merge conflicts + lost context |
 | **PRE-GATE before implementation (full pipeline)** | No pseudocode = coding without design = rework. Exception: simplified pipeline phases skip PRE-GATE. |
@@ -38,34 +38,78 @@ description: "Execute plans through gated phases with subagent dispatch."
 
 ## Phase 1: LOAD (Read Plan File)
 
-### Branch Gate (MANDATORY - First Check)
+### Worktree Gate (MANDATORY - First Check)
 
-**Before anything else, verify branch status:**
+**Before anything else, determine workspace mode:**
 
 ```bash
 git branch --show-current
 git status
+git worktree list
 ```
 
-| Current Branch | Action |
-|----------------|--------|
-| `main` or `master` | **STOP.** Create feature branch first. |
-| Feature branch, clean | Proceed |
-| Feature branch, dirty | Ask: "Uncommitted changes. Stash, commit, or abort?" |
+| Situation | Action |
+|-----------|--------|
+| Already in a worktree (`.git` is a file, not a directory) | On a feature branch — proceed |
+| On `main`/`master`, clean | Create worktree (recommended) or feature branch |
+| On feature branch, clean | Proceed (single-build mode) |
+| Dirty working tree | Ask: "Uncommitted changes. Stash, commit, or abort?" |
 
-**If on main/master:**
+**Worktree mode (recommended for parallel builds):**
+
 ```
-You're on [main]. Building requires a feature branch for safe multi-phase commits.
+You're on [main]. Building requires an isolated workspace.
 
-Create branch now?
-- [ ] Yes, create: feature/<plan-topic>
-- [ ] Yes, create: <custom-name>
-- [ ] No, abort building
+How would you like to proceed?
+- [ ] Create worktree (recommended) — enables parallel builds
+- [ ] Create feature branch — single build, blocks this checkout
+- [ ] Abort building
 ```
 
+**If worktree:**
+```bash
+# Extract plan slug from plan filename (e.g., 2026-03-17-auth-system → auth-system)
+PLAN_SLUG="<extracted-slug>"
+
+# Create worktree with feature branch
+git worktree add .claude/worktrees/${PLAN_SLUG} -b feature/${PLAN_SLUG}
+```
+
+Then change working directory to the worktree:
+```bash
+cd .claude/worktrees/${PLAN_SLUG}
+```
+
+**If feature branch (legacy mode):**
 ```bash
 git checkout -b feature/<plan-topic>
 ```
+
+**Record workspace mode** for use in REPORT:
+- `worktree: .claude/worktrees/<slug>` + `branch: feature/<slug>`
+- OR `branch: feature/<topic>` (legacy)
+
+### Dependency Setup (Worktree Mode Only)
+
+After creating a worktree, gitignored files (node_modules, .env, build artifacts) are absent. Detect and install dependencies:
+
+```bash
+# Auto-detect package manager and install
+if [ -f pnpm-lock.yaml ]; then pnpm install --frozen-lockfile
+elif [ -f package-lock.json ]; then npm ci
+elif [ -f yarn.lock ]; then yarn install --frozen-lockfile
+elif [ -f go.mod ]; then go mod download
+elif [ -f Cargo.lock ]; then cargo fetch
+elif [ -f uv.lock ]; then uv sync
+fi
+```
+
+**For macOS (APFS):** If the main checkout has `node_modules`, copy-on-write is near-instant:
+```bash
+cp -Rc ../../../node_modules ./node_modules  # APFS CoW, no actual disk copy
+```
+
+**Skip dependency setup if:** the project has no lockfile or the plan does not involve building/testing code (e.g., documentation-only plans).
 
 **This gate is NON-NEGOTIABLE.** Do not proceed on main/master under any circumstances.
 
@@ -694,6 +738,22 @@ user-facing behavior, or interactions that automated tests cannot fully cover:]
 ## Follow-up
 - [Issues flagged by reviewers for future work]
 - [Or: "None identified"]
+
+## Merge Instructions
+[If worktree mode:]
+Worktree: .claude/worktrees/<slug>/
+Branch: feature/<slug>
+
+To merge:
+  cd /path/to/main/checkout
+  git merge --no-ff feature/<slug>
+  git worktree remove .claude/worktrees/<slug>
+  git branch -d feature/<slug>
+  git worktree prune
+
+[If legacy branch mode:]
+Branch: feature/<topic>
+To merge: git merge --no-ff feature/<topic>
 ```
 
 **Key elements:**
@@ -754,8 +814,10 @@ When resuming blocked plan:
 | "POST-GATE is slowing me down" | POST-GATE catches issues BEFORE they propagate. Fix now = faster than fix later. |
 | "Reviewer agent is redundant" | You implemented the code; reviewer agent has fresh perspective. Different context = different bugs caught. |
 | "Gates passed last phase, skip this one" | Each phase is independent. Past gates don't predict current quality. |
-| "I'll just commit to main, it's faster" | Multi-phase builds on main = no rollback. Feature branch is mandatory. |
-| "It's a small change, main is fine" | Small changes grow. Branch now or regret later. |
+| "I'll just commit to main, it's faster" | Multi-phase builds on main = no rollback. Worktree/feature branch is mandatory. |
+| "It's a small change, main is fine" | Small changes grow. Worktree now or regret later. |
+| "Worktree is overkill, just use a branch" | Branches block the checkout. Worktrees enable parallel builds. Use worktree mode unless you're certain no parallel work will happen. |
+| "I'll skip dependency setup, it takes too long" | Missing node_modules = broken tests = false POST-GATE failures. Install once, save debugging time. |
 | "I can implement faster than dispatching" | Direct implementation skips quality gates. Subagent ensures fresh context. |
 | "Pseudocode is overkill, I know what to do" | You know NOW. The subagent doesn't. Pseudocode is the contract. |
 | "The subagent will figure it out" | Subagent needs explicit pseudocode. No pseudocode = garbage implementation. |
@@ -812,7 +874,7 @@ When resuming blocked plan:
 
 ## Integration with /code-foundations:whiteboarding
 
-### Expected Flow
+### Expected Flow (Single Build)
 
 ```
 /code-foundations:whiteboarding "user story"
@@ -820,16 +882,37 @@ When resuming blocked plan:
 [Socratic questions]
 [2-3 approaches]
 [Detailed sections]
-[Save to docs/plans/YYYY-MM-DD-topic.md]
+[Save + commit to docs/plans/YYYY-MM-DD-topic.md]
   ↓
-[Optional: Refresh context window]
+[Refresh context window]
   ↓
 /code-foundations:building docs/plans/YYYY-MM-DD-topic.md
   ↓
-[Checklist execution]
+[Worktree Gate → creates .claude/worktrees/<slug>/]
+[Checklist execution in worktree]
 [Tests pass]
-[Summary report]
+[Summary report with merge instructions]
 ```
+
+### Expected Flow (Parallel Builds)
+
+```
+Claude Instance 1                        Claude Instance 2
+────────────────                        ────────────────
+/whiteboarding "auth system"            /whiteboarding "notifications"
+  → saves + commits plan                  → saves + commits plan
+  → clear + build                         → clear + build
+
+/building (worktree: auth-system)       /building (worktree: notifications)
+  → .claude/worktrees/auth-system/        → .claude/worktrees/notifications/
+  → feature/auth-system branch            → feature/notifications branch
+  → all phases run isolated               → all phases run isolated
+  → report: "merge when ready"            → report: "merge when ready"
+
+                    User merges both to main when ready
+```
+
+**Key constraint:** Each parallel build must target a different plan file. Never run two building instances against the same plan.
 
 ### Plan File Model Override Syntax
 
@@ -853,6 +936,7 @@ Starting fresh session before /code-foundations:building:
 - Full context window for implementation
 - No planning discussion cluttering context
 - Plan file contains all necessary information
+- Worktree provides filesystem isolation from other builds
 
 ---
 
