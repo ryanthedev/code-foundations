@@ -27,7 +27,7 @@ description: "Execute plans through gated phases with subagent dispatch."
 | **Feature branch required** | Multi-phase commits on main = no rollback, polluted history |
 | **Load plan before coding** | No plan = no checklist = forgotten tasks |
 | **One section at a time** | Parallel sections = merge conflicts + lost context |
-| **PRE-GATE before implementation** | No pseudocode = coding without design = rework |
+| **PRE-GATE before implementation (full pipeline)** | No pseudocode = coding without design = rework. Exception: simplified pipeline phases skip PRE-GATE. |
 | **POST-GATE before checkpoint** | No verification = bugs escape to next phase |
 | **Reviewer agent per phase** | Self-review is blind; fresh agent catches issues |
 | **Mark complete only when gates pass** | Premature completion = unverified work shipped |
@@ -88,12 +88,14 @@ Ask user: "Which plan should I execute?"
 ### Parse Plan Structure
 
 Extract from plan file:
-1. **Context** - What we're building
+1. **Context** - What we're building (used for goal anchoring in all subagent prompts)
 2. **Approach** - How we're building it
 3. **Phases** - Implementation sections
 4. **Test Coverage** - What level of tests required (100%, backend only, etc.)
 5. **Test Plan** - Specific verification criteria
 6. **Model overrides** - Optional `**Model:** <model>` per phase
+7. **Pipeline overrides** - Optional `**Pipeline:** direct` per phase
+8. **Assumptions** - Assumptions table with `Verify Before Phase` timing
 
 **If Test Coverage is missing:** Default to "100% coverage" and inform user.
 
@@ -121,27 +123,38 @@ Check plan status:
 
 **DO NOT create phase-level tasks like "Phase 1: [Name]". DO NOT use TodoWrite.**
 
-Create the 4 sub-phase tasks for EVERY phase in the plan NOW, before executing anything.
+Create sub-phase tasks for EVERY phase in the plan NOW, before executing anything.
 
-For each phase N, run Model Auto-Detection (see below), then create:
+For each phase N, run Model Auto-Detection and Pipeline Detection (see below), then create tasks.
+
+**Full pipeline (4 tasks):**
 
 1. `TaskCreate(subject: "Phase N.1: PRE-GATE - [phase name]", description: "Discovery + pseudocode via pre-gate-agent. Model: [resolved_model].", activeForm: "Running pre-gate for Phase N")`
 2. `TaskCreate(subject: "Phase N.2: IMPLEMENT - [phase name]", description: "Implement from pseudocode. Model: [resolved_model].", activeForm: "Implementing Phase N")`
 3. `TaskCreate(subject: "Phase N.3: POST-GATE - [phase name]", description: "Review implementation. Model: [resolved_model]. Must return PASS.", activeForm: "Running post-gate for Phase N")`
 4. `TaskCreate(subject: "Phase N.4: CHECKPOINT - [phase name]", description: "Commit after all gates pass.", activeForm: "Committing Phase N")`
 
+**Simplified pipeline (3 tasks — PRE-GATE skipped):**
+
+1. `TaskCreate(subject: "Phase N.1: PRE-GATE - [phase name]", description: "SKIPPED — simplified pipeline.", status: "completed")`
+2. `TaskCreate(subject: "Phase N.2: IMPLEMENT - [phase name]", description: "Implement from plan description (no pseudocode). Model: [resolved_model].", activeForm: "Implementing Phase N")`
+3. `TaskCreate(subject: "Phase N.3: POST-GATE - [phase name]", description: "Review implementation. Model: [resolved_model]. Must return PASS.", activeForm: "Running post-gate for Phase N")`
+4. `TaskCreate(subject: "Phase N.4: CHECKPOINT - [phase name]", description: "Commit after all gates pass.", activeForm: "Committing Phase N")`
+
+Note: simplified pipeline still creates the PRE-GATE task but marks it completed immediately. This keeps the N.1-N.4 numbering consistent and the blockedBy chain intact.
+
 **Then chain ALL dependencies:**
 - Within each phase: N.2 blockedBy N.1, N.3 blockedBy N.2, N.4 blockedBy N.3
 - **Between phases:** Phase (N+1).1 blockedBy Phase N.4
 
-Example for a 2-phase plan (8 tasks total):
+Example for a 2-phase plan (full + simplified):
 ```
-Phase 1.1: PRE-GATE        → no blockedBy
+Phase 1.1: PRE-GATE        → no blockedBy (full pipeline)
 Phase 1.2: IMPLEMENT       → blockedBy: [1.1]
 Phase 1.3: POST-GATE       → blockedBy: [1.2]
 Phase 1.4: CHECKPOINT      → blockedBy: [1.3]
-Phase 2.1: PRE-GATE        → blockedBy: [1.4]  ← chains to previous phase
-Phase 2.2: IMPLEMENT       → blockedBy: [2.1]
+Phase 2.1: PRE-GATE        → blockedBy: [1.4], pre-completed (simplified pipeline)
+Phase 2.2: IMPLEMENT       → blockedBy: [2.1] (reads plan directly, no pseudocode)
 Phase 2.3: POST-GATE       → blockedBy: [2.2]
 Phase 2.4: CHECKPOINT      → blockedBy: [2.3]
 ```
@@ -162,7 +175,7 @@ Phase 2.4: CHECKPOINT      → blockedBy: [2.3]
 - Mark a gate task completed when it returned FAIL
 - Create phase-level tasks (NO "Phase 1: [Name]" tasks)
 
-**The ONLY tasks you create are the 4 sub-phase tasks per phase (PRE-GATE, IMPLEMENT, POST-GATE, CHECKPOINT).**
+**The ONLY tasks you create are the sub-phase tasks per phase (PRE-GATE, IMPLEMENT, POST-GATE, CHECKPOINT). Full pipeline = 4 active tasks. Simplified pipeline = 3 active + 1 pre-completed.**
 
 ---
 
@@ -230,6 +243,35 @@ Otherwise:
 
 ---
 
+### Pipeline Detection
+
+After resolving the model, determine the pipeline type for each phase: **full** or **simplified**.
+
+**Resolution order** (first match wins):
+
+1. **Plan override:** If phase has `**Pipeline:** direct`, use simplified pipeline.
+2. **Plan override:** If phase has `**Pipeline:** full`, use full pipeline.
+3. **Force full** if ANY of these are true:
+   - Model resolves to opus
+   - Phase has a `**Skills:**` field
+   - Phase has assumptions to verify (from Assumptions table with `Verify Before Phase: N`)
+   - Phase has `**Uncertainty:**` that is NOT "None"
+4. **Auto-detect simplified** if ALL of these are true:
+   - Model resolves to haiku
+   - No Skills, no assumptions, no uncertainty
+   - Done-when items <= 2
+5. **Default:** full pipeline
+
+| Pipeline | Sub-Phases | When |
+|----------|-----------|------|
+| **Full** | PRE-GATE → IMPLEMENT → POST-GATE → CHECKPOINT | Default for sonnet/opus phases |
+| **Simplified** | IMPLEMENT → POST-GATE → CHECKPOINT | Haiku phases with trivial scope |
+
+**State the resolved pipeline when creating tasks:**
+"Phase N pipeline: [full/simplified] (reason: [auto/plan override])"
+
+---
+
 ### Execution Loop - Enforced via TaskCreate
 
 All sub-phase tasks were created in SETUP. Now execute them in order.
@@ -271,6 +313,14 @@ Agent tool:
 - prompt: |
     Run PRE-GATE for Phase N of the building plan.
 
+    ## Plan Context
+    [paste the Context section from the plan file — the 2-3 sentence problem statement]
+
+    ## Progress
+    [For Phase 1: "This is the first phase."]
+    [For Phase N>1: "Completed: Phase 1: [name] — [1 sentence summary from execution log]. Phase 2: ..."]
+    Current: Phase N of M
+
     ## Phase N: [name]
     [paste phase description and file list from plan]
 
@@ -278,6 +328,13 @@ Agent tool:
     ## Additional Skills
     Before starting work, load the following skills using the Skill tool:
     - Skill([skill-from-plan])
+
+    [if plan has Assumptions with "Verify Before Phase: N", include:]
+    ## Assumption Verification
+    Before proceeding with discovery, verify these assumptions from the plan:
+    - [assumption text] (Confidence: [level])
+    If any assumption is wrong, return UPDATE_PLAN with the invalidated assumption
+    and what you found instead.
 
     ## Inputs
     - Plan file: docs/plans/<plan-name>.md
@@ -304,6 +361,8 @@ Agent tool:
 
 **TaskGet → confirm blockedBy is empty. TaskUpdate → in_progress, then dispatch:**
 
+**Full pipeline dispatch:**
+
 ```
 Agent tool:
 - subagent_type: "code-foundations:implementation-agent"
@@ -311,6 +370,14 @@ Agent tool:
 - description: "Implement Phase N"
 - prompt: |
     Implement Phase N of the building plan.
+
+    ## Plan Context
+    [paste the Context section from the plan file]
+
+    ## Progress
+    [For Phase 1: "This is the first phase."]
+    [For Phase N>1: "Completed: Phase 1: [name] — [1 sentence summary]. Phase 2: ..."]
+    Current: Phase N of M
 
     [if plan phase has **Skills:** field, include:]
     ## Additional Skills
@@ -326,6 +393,41 @@ Agent tool:
     1. Read the discovery file - understand current state
     2. Read the pseudocode file - this is your implementation spec
     3. Implement exactly what the pseudocode specifies
+    4. Run tests after each file change
+
+    Return: DONE with files changed, or BLOCKED with issue.
+```
+
+**Simplified pipeline dispatch (no PRE-GATE, no pseudocode):**
+
+```
+Agent tool:
+- subagent_type: "code-foundations:implementation-agent"
+- model: [resolved_model]
+- description: "Implement Phase N (simplified)"
+- prompt: |
+    Implement Phase N of the building plan. This is a simplified pipeline
+    phase — no pseudocode file exists. Work directly from the plan description.
+
+    ## Plan Context
+    [paste the Context section from the plan file]
+
+    ## Progress
+    [For Phase N>1: "Completed: Phase 1: [name] — [1 sentence summary]. Phase 2: ..."]
+    Current: Phase N of M
+
+    [if plan phase has **Skills:** field, include:]
+    ## Additional Skills
+    Before starting work, load the following skills using the Skill tool:
+    - Skill([skill-from-plan])
+
+    ## Phase N: [name]
+    [paste the full phase description from the plan]
+
+    ## Your Tasks
+    1. Read the plan phase description above - this is your implementation spec
+    2. Read the plan file for full context: docs/plans/<plan-name>.md
+    3. Implement what the phase describes
     4. Run tests after each file change
 
     Return: DONE with files changed, or BLOCKED with issue.
@@ -361,6 +463,13 @@ Agent tool:
 - prompt: |
     Review Phase N implementation.
 
+    ## Plan Context
+    [paste the Context section from the plan file]
+
+    ## Progress
+    [For Phase N>1: "Completed: Phase 1: [name] — [1 sentence summary]. Phase 2: ..."]
+    Current: Phase N of M
+
     [if plan phase has **Skills:** field, include:]
     ## Additional Skills
     Before starting work, load the following skills using the Skill tool:
@@ -368,8 +477,10 @@ Agent tool:
 
     ## Inputs
     - Plan: docs/plans/<plan-name>.md (Phase N section)
+    [full pipeline only:]
     - Discovery: docs/building/<plan-name>-phase-N-discovery.md
     - Pseudocode: docs/building/<plan-name>-phase-N-pseudocode.md
+    [simplified pipeline: no discovery/pseudocode files exist]
 
     ## Files Changed
     [list files from implementation subagent]
@@ -404,13 +515,17 @@ git commit -m "Phase N: [name]
 Update plan file execution log:
 ```markdown
 ### Phase N: [Name]
-- [x] PRE-GATE: Discovery + pseudocode complete
+- [x] PRE-GATE: Discovery + pseudocode complete [or "SKIPPED — simplified pipeline"]
 - [x] IMPLEMENT: Code written, tests pass
 - [x] POST-GATE: Verification passed, reviewer approved
 - [x] CHECKPOINT: Committed
+Pipeline: [full/simplified]
 Model: [resolved_model] ([reason])
 Commit: [hash]
+Summary: [1 sentence — what this phase delivered and what state it left the codebase in]
 ```
+
+**The Summary line is critical for goal anchoring.** It feeds into the `## Progress` block of subsequent subagent dispatch prompts, giving later phases context about what earlier phases accomplished.
 
 **TaskUpdate → completed.**
 
@@ -541,8 +656,8 @@ The summary is a **trust report**, not a status dashboard. Engineers need to ver
 
 ## Pipeline: N/N phases, M/M sub-phases
 
-### Phase 1: [name] ([resolved_model])
-- PRE-GATE: Pseudocode covered N tasks, M files
+### Phase 1: [name] ([resolved_model], [full/simplified])
+- PRE-GATE: Pseudocode covered N tasks, M files [or "SKIPPED — simplified pipeline"]
 - POST-GATE: [PASS|FAIL] (attempt N)
   - [What reviewer found or verified]
   - [Any notes or observations]
@@ -553,10 +668,10 @@ The summary is a **trust report**, not a status dashboard. Engineers need to ver
 ...
 
 ## Gate Summary
-| Phase | PRE-GATE | POST-GATE | Retries |
-|-------|----------|-----------|---------|
-| 1     | PASS     | PASS      | 0       |
-| 2     | PASS     | FAIL→PASS | 1       |
+| Phase | Pipeline | PRE-GATE | POST-GATE | Retries |
+|-------|----------|----------|-----------|---------|
+| 1     | full     | PASS     | PASS      | 0       |
+| 2     | simplified | SKIPPED | PASS    | 0       |
 
 ## Files Changed
 - `path/to/file` - [what changed]
@@ -634,7 +749,7 @@ When resuming blocked plan:
 | "User said ship it, skip verification" | Broken code shipped = worse than delay |
 | "I remember what the plan said" | Read the plan file. Memory is unreliable. |
 | "This extra feature fits naturally" | Not in plan = not in this build. Add to backlog. |
-| "PRE-GATE is overkill for simple code" | Simple code has highest error rates. PRE-GATE catches design issues before they're coded. |
+| "PRE-GATE is overkill for simple code" | If Pipeline Detection resolved to simplified, PRE-GATE is already skipped. If it resolved to full, the signals say discovery is needed — trust the detection. |
 | "I can review my own code" | Self-review is blind to your own assumptions. Dispatch reviewer agent. |
 | "POST-GATE is slowing me down" | POST-GATE catches issues BEFORE they propagate. Fix now = faster than fix later. |
 | "Reviewer agent is redundant" | You implemented the code; reviewer agent has fresh perspective. Different context = different bugs caught. |
@@ -645,7 +760,7 @@ When resuming blocked plan:
 | "Pseudocode is overkill, I know what to do" | You know NOW. The subagent doesn't. Pseudocode is the contract. |
 | "The subagent will figure it out" | Subagent needs explicit pseudocode. No pseudocode = garbage implementation. |
 | "I'll just quickly read the files myself" | Direct exploration pollutes your context. Pre-gate agent returns only what's relevant. |
-| "Discovery is overkill for a simple phase" | Plan assumptions often mismatch reality. Pre-gate agent catches this before wasted work. |
+| "Discovery is overkill for a simple phase" | If Pipeline Detection kept it full, the phase has skills, assumptions, or uncertainty that need discovery. Trust the detection. |
 | "I already know this codebase" | Your context is stale. Pre-gate agent has fresh eyes and finds what changed. |
 | "I'll dispatch an Explore agent for discovery" | Explore agents are read-only and can't write files. Use `code-foundations:pre-gate-agent` which handles discovery + pseudocode together. |
 | "I'll tell the subagent to invoke a random skill" | Use the plan's `**Skills:**` field to load relevant skills. Don't improvise — the whiteboarding skill audit already identified what's needed. |
