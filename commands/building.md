@@ -135,11 +135,12 @@ Extract from plan file:
 1. **Context** - What we're building (used for goal anchoring in all subagent prompts)
 2. **Approach** - How we're building it
 3. **Phases** - Implementation sections
-4. **Test Coverage** - What level of tests required (100%, backend only, etc.)
-5. **Test Plan** - Specific verification criteria
-6. **Model overrides** - Optional `**Model:** <model>` per phase
-7. **Pipeline overrides** - Optional `**Pipeline:** direct` per phase
-8. **Assumptions** - Assumptions table with `Verify Before Phase` timing
+4. **Done-when items per phase** - Every `- [ ]` under each phase's `**Done when:**` (passed verbatim to pre-gate and post-gate agents)
+5. **Test Coverage** - What level of tests required (100%, backend only, etc.)
+6. **Test Plan** - Specific verification criteria
+7. **Model overrides** - Optional `**Model:** <model>` per phase
+8. **Pipeline overrides** - Optional `**Pipeline:** direct` per phase
+9. **Assumptions** - Assumptions table with `Verify Before Phase` timing
 
 **If Test Coverage is missing:** Default to "100% coverage" and inform user.
 
@@ -368,6 +369,14 @@ Agent tool:
     ## Phase N: [name]
     [paste phase description and file list from plan]
 
+    ## Done-When Items
+    These are the acceptance criteria from the plan. Your pseudocode must cover all of them.
+    If any item cannot be met, return UPDATE_PLAN.
+    [paste ALL done-when items from the plan phase, one per line:]
+    - [ ] [done-when item 1]
+    - [ ] [done-when item 2]
+    - [ ] [done-when item N...]
+
     [if plan phase has **Skills:** field, include:]
     ## Additional Skills
     Before starting work, load the following skills using the Skill tool:
@@ -513,6 +522,15 @@ Agent tool:
     ## Progress
     [For Phase N>1: "Completed: Phase 1: [name] — [1 sentence summary]. Phase 2: ..."]
     Current: Phase N of M
+
+    ## Done-When Items
+    These are the acceptance criteria from the plan. Verify each one against the
+    implementation with concrete evidence (file:line, test, observable behavior).
+    Any item not satisfied → FAIL.
+    [paste ALL done-when items from the plan phase, one per line:]
+    - [ ] [done-when item 1]
+    - [ ] [done-when item 2]
+    - [ ] [done-when item N...]
 
     [if plan phase has **Skills:** field, include:]
     ## Additional Skills
@@ -831,6 +849,7 @@ When resuming blocked plan:
 | "I'll just mark the blocker completed manually" | Marking a gate completed without PASS is lying. The next sub-phase will inherit false confidence. |
 | "Haiku is fine for this complex phase" | Auto-detection chose opus for a reason. Override down only with explicit `**Model:**` in the plan. |
 | "The subagent doesn't need those skills" | Skills provide checklists and mental models. Without them, the subagent improvises. Include the skill loading block VERBATIM. |
+| "Done-when items are in the plan file, agents can find them" | Agents deprioritize requirements as context grows (43% skip rate). Extract done-when items and pass them explicitly in the dispatch prompt. |
 | "I'll summarize the prompt instead" | Paraphrased prompts drop skill loading, output formats, and file paths. Use the templates AS WRITTEN. |
 | "quick-checklist is fine for POST-GATE" | Quick-checklist has no reviewer skills. Use `code-foundations:post-gate-agent`. |
 | "Those warnings are pre-existing, not mine" | Verify it. `git stash && build && git stash pop` — if warnings disappear, they're yours. |

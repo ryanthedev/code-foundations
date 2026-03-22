@@ -87,7 +87,54 @@ Write to: `docs/building/<plan-name>-phase-N-discovery.md`
 
 ---
 
-## Phase 2: Pseudocode (Design What to Build)
+## Phase 2: Done-When Verification
+
+**Before writing pseudocode, enumerate every done-when item from the plan and verify coverage.**
+
+This step prevents silent descoping — the most common cause of missed requirements in multi-agent builds.
+
+### Extract Done-When Items
+
+Read the plan phase section and extract every `- [ ]` item under `**Done when:**`.
+
+### Verify Each Item
+
+For each done-when item, determine:
+- **COVERED** — your pseudocode will address this. State HOW.
+- **CANNOT_MEET** — this cannot be satisfied. State WHY.
+
+If any item is CANNOT_MEET, return UPDATE_PLAN. Do not call it "additive" or "optional" — surface it so the orchestrator can decide.
+
+### Write Verification Table
+
+Include this table in the pseudocode file (see Phase 3 below):
+
+```markdown
+## Done-When Verification
+
+| # | Done-When Item | Status | Evidence |
+|---|---------------|--------|----------|
+| 1 | [exact text from plan] | COVERED | [which pseudocode section addresses this] |
+| 2 | [exact text from plan] | COVERED | [which pseudocode section addresses this] |
+| 3 | [exact text from plan] | CANNOT_MEET | [why, and what changed] |
+
+**All items COVERED:** YES / NO
+**If NO → returning UPDATE_PLAN**
+```
+
+### Self-Check Before Proceeding
+
+STOP. Before writing pseudocode, verify:
+- [ ] Every done-when item from the plan is listed in the table
+- [ ] No done-when items were silently omitted
+- [ ] Items marked COVERED have a concrete pseudocode section that addresses them
+- [ ] Items marked CANNOT_MEET have a clear reason
+
+**If you cannot fill this table completely, you are not ready to write pseudocode.**
+
+---
+
+## Phase 3: Pseudocode (Design What to Build)
 
 Use your `cc-pseudocode-programming` and `aposd-designing-deep-modules` lenses.
 
@@ -99,6 +146,14 @@ Write to: `docs/building/<plan-name>-phase-N-pseudocode.md`
 
 ```markdown
 # Pseudocode: Phase N - [name]
+
+## Done-When Verification
+
+| # | Done-When Item | Status | Evidence |
+|---|---------------|--------|----------|
+| 1 | [exact text] | COVERED | [pseudocode section] |
+
+**All items COVERED:** YES
 
 ## Files to Create/Modify
 - [list from discovery + plan]
@@ -116,6 +171,8 @@ Write to: `docs/building/<plan-name>-phase-N-pseudocode.md`
 
 ## PRE-GATE Status
 - [x] Discovery complete
+- [x] Done-when verification complete
+- [x] All done-when items COVERED (or UPDATE_PLAN returned)
 - [x] Pseudocode complete
 - [x] Design reviewed (if applicable)
 - [ ] Ready for implementation
@@ -133,6 +190,11 @@ Write to: `docs/building/<plan-name>-phase-N-pseudocode.md`
 - Files found: [count]
 - Gaps identified: [count]
 
+### Done-When Verification
+- Items in plan: [count]
+- Items COVERED: [count]
+- Items CANNOT_MEET: [count] — [if >0, must return UPDATE_PLAN]
+
 ### Pseudocode
 - Files to modify: [list]
 - Design notes: [any key decisions]
@@ -144,6 +206,8 @@ Write to: `docs/building/<plan-name>-phase-N-pseudocode.md`
 ### Status: DONE | SKIP | UPDATE_PLAN
 ```
 
+**Status DONE requires ALL done-when items COVERED. No exceptions.**
+
 ## Anti-Patterns to Avoid
 
 | Temptation | Why It's Wrong |
@@ -153,3 +217,7 @@ Write to: `docs/building/<plan-name>-phase-N-pseudocode.md`
 | "I'll include implementation details" | Pseudocode is design, not code. Stay at the right level. |
 | "I don't need to check if files exist" | Missing files = blocked implementation agent. Check now. |
 | "The design is obvious, skip the review" | Obvious designs hide assumptions. Use aposd-designing-deep-modules. |
+| "This done-when item is additive, I'll skip it" | Not your call. If you can't meet it, return UPDATE_PLAN. Silent descoping is the #1 cause of missed requirements. |
+| "The done-when item is implied by my pseudocode" | Implied is not verified. Fill the verification table with explicit evidence. |
+| "I'll handle that done-when item in a later phase" | Each phase owns its own done-when items. If it's in this phase's plan, it must be COVERED here. |
+| "Close enough counts for done-when" | COVERED means the pseudocode directly addresses the item. Partial coverage = CANNOT_MEET. |

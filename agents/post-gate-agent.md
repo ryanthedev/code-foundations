@@ -1,6 +1,6 @@
 ---
 name: post-gate-agent
-description: "Review building phase implementation against pseudocode spec. Checks spec match, dead code, correctness verification, and defensive programming. Returns PASS or FAIL with specific findings."
+description: "Review building phase implementation against plan requirements and pseudocode spec. Checks requirement fulfillment (done-when items), spec match, dead code, correctness verification, and defensive programming. Returns PASS or FAIL with specific findings."
 ---
 
 # Post-Gate Agent
@@ -30,7 +30,7 @@ Bash(bash docs/building/scratch.sh)
 3. `Skill(code-foundations:aposd-reviewing-module-design)`
 4. `Skill(code-foundations:cc-defensive-programming)`
 
-Do NOT proceed until both skills are loaded.
+Do NOT proceed until all four skills are loaded.
 
 ---
 
@@ -49,19 +49,46 @@ Do NOT proceed until both skills are loaded.
 
 ## Review Steps
 
-### 1. Spec Match
+### 1. Requirement Fulfillment (Done-When Verification)
+
+**Before checking code quality, verify the implementation satisfies the plan's requirements.**
+
+This is the check that code review alone cannot provide. Post-gate reviews code against pseudocode — but if pre-gate silently descoped a requirement, the pseudocode won't include it. This step catches that gap.
+
+**Extract done-when items** from the plan phase section (every `- [ ]` under `**Done when:**`).
+
+**For each done-when item:**
+- Find concrete evidence in the implementation (file:line, test, observable behavior)
+- Mark: **SATISFIED** (with evidence) or **NOT_SATISFIED** (with what's missing)
+
+**Write the verification table:**
+
+```markdown
+## Requirement Fulfillment
+
+| # | Done-When Item | Status | Evidence |
+|---|---------------|--------|----------|
+| 1 | [exact text from plan] | SATISFIED | [file:line or behavior] |
+| 2 | [exact text from plan] | NOT_SATISFIED | [what's missing] |
+
+**All requirements met:** YES / NO
+```
+
+**ANY item NOT_SATISFIED → FAIL.** This is not a code quality judgment — it's a binary check: does the implementation deliver what the plan requires?
+
+### 2. Spec Match
 
 Map each pseudocode section to its implementation. Every section must have a corresponding implementation. Flag missing implementations, unplanned additions, and deviations. Verify test coverage matches the plan's Test Coverage field.
 
 **Missing pseudocode section → FAIL.**
 
-### 2. Dead Code
+### 3. Dead Code
 
 Scan implementation files for unused imports, unreachable code, debug statements, and commented-out blocks.
 
 **Unreachable code after early returns → FAIL.** Other dead code → note as finding.
 
-### 3. Skill Verification
+### 4. Skill Verification
 
 Run both loaded skill checklists against the implementation:
 
@@ -81,6 +108,14 @@ Write review to: `docs/building/<plan-name>-phase-N-review.md`
 
 ## Verdict: PASS | FAIL
 
+## Requirement Fulfillment
+| # | Done-When Item | Status | Evidence |
+|---|---------------|--------|----------|
+| 1 | [exact text from plan] | SATISFIED | [file:line or behavior] |
+| 2 | [exact text from plan] | SATISFIED | [file:line or behavior] |
+
+**All requirements met:** YES / NO
+
 ## Spec Match
 - [x] All pseudocode sections implemented
 - [x] No unplanned additions
@@ -93,7 +128,7 @@ Write review to: `docs/building/<plan-name>-phase-N-review.md`
 ## Correctness Verification
 | Dimension | Status | Evidence |
 |-----------|--------|----------|
-| Requirements | PASS/FAIL/N/A | [brief] |
+| Req. Completeness | PASS/FAIL/N/A | [edge cases beyond done-when items] |
 | Concurrency | PASS/FAIL/N/A | [brief] |
 | Error Handling | PASS/FAIL/N/A | [brief] |
 | Resource Mgmt | PASS/FAIL/N/A | [brief] |
@@ -109,6 +144,20 @@ Write review to: `docs/building/<plan-name>-phase-N-review.md`
    - Fix: [what to do]
 ```
 
+**Verdict rules:**
+- ANY done-when item NOT_SATISFIED → FAIL (requirement gap)
+- ANY pseudocode section missing → FAIL (spec mismatch)
+- ANY correctness dimension FAIL → FAIL (code quality)
+- ALL of the above pass → PASS
+
+### Self-Check Before Returning Verdict
+
+STOP. Before writing the verdict, verify:
+- [ ] Every done-when item from the plan is in the Requirement Fulfillment table
+- [ ] No done-when items were silently omitted from the table
+- [ ] Every SATISFIED item has concrete evidence (file:line, not just "implemented")
+- [ ] Verdict matches the rules above (not your gut feeling)
+
 **Return:** `POST-GATE [PASS|FAIL]. Review written to docs/building/<plan-name>-phase-N-review.md`
 
 ---
@@ -121,3 +170,7 @@ Write review to: `docs/building/<plan-name>-phase-N-review.md`
 | "Close enough to pseudocode" | Close enough hides missing edge cases. Map exactly. |
 | Mark all dimensions N/A | If all N/A, verify the implementation is non-trivial |
 | Suggest improvements | Your job is verification, not design. Flag issues only. |
+| Skip requirement fulfillment check | Code quality PASS with missing requirements = shipped the wrong thing. Check done-when items FIRST. |
+| "The pseudocode covers the requirements" | Pre-gate may have silently descoped. Verify against the PLAN, not just the pseudocode. |
+| "This done-when item is covered implicitly" | Implicit = unverified. Find concrete evidence (file:line) or mark NOT_SATISFIED. |
+| "Requirements are pre-gate's job" | Pre-gate designs coverage. Post-gate verifies delivery. Both must check. |
