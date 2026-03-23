@@ -178,36 +178,6 @@ For each variable, answer these questions in the comment:
 
 ---
 
-## Anti-Rationalization Table
-
-### Classic Rationalizations
-
-| Tempting Shortcut | Why It Feels Right | Why It's Wrong |
-|-------------------|-------------------|----------------|
-| "I'll add comments after" | Code isn't stable yet | Delay compounds; documentation never gets written |
-| "The code is self-documenting" | Good names exist | Code cannot capture abstractions; comments are the only way |
-| "This is obvious" | Obvious to you now | You wrote it; first-time readers didn't |
-| "Comments get out of date" | Maintenance burden | Comments-first keeps them synchronized |
-| "I know what good names are" | Naming feels intuitive | Intuition fails; use the evaluation test |
-
-### Pressure-Based Rationalizations
-
-| Tempting Shortcut | Why It Feels Right | Why It's Wrong |
-|-------------------|-------------------|----------------|
-| "Demo in 30 minutes" | Time pressure is real | 5 minutes for comments saves 30 minutes of explanation later |
-| "Team is blocked waiting" | Social pressure | They'll be MORE blocked debugging undocumented code |
-| "Senior dev said add docs later" | Authority told me | Authority doesn't override discipline; push back |
-
-### Technical Rationalizations
-
-| Tempting Shortcut | Why It Feels Right | Why It's Wrong |
-|-------------------|-------------------|----------------|
-| "The type system documents it" | Types are precise | Types show WHAT, not WHY; comments explain intent |
-| "My PR description covers it" | I'll explain there | PR descriptions aren't in the code; readers won't see them |
-| "Design doc covers this" | Documentation exists | Design docs drift from code; interface comments stay with code |
-
----
-
 ## Types vs Comments
 
 Strong type systems are valuable but don't replace comments:

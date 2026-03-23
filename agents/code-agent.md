@@ -152,15 +152,3 @@ If NEEDS_INPUT:
 - Question: [what needs answering before implementation can proceed]
 ```
 
----
-
-## Anti-Patterns
-
-| Temptation | Reality |
-|------------|---------|
-| "I'll just write the code, it's simple" | You are a DESIGN agent. Return pseudocode. Implementation-agent writes code. |
-| "Contracts are overkill for this" | Contracts ARE the design. No contract = no design. |
-| "I know what the codebase looks like" | Search it. Your assumptions may be wrong. |
-| "The caller doesn't matter" | Callers define the interface. Find them. |
-| "One big function is fine" | Check cohesion. If it does 2 things, split it. |
-| "Error handling can be added later" | Errors go in the contract NOW. Implementation-agent needs them. |

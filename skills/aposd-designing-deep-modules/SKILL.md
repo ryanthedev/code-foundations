@@ -99,21 +99,6 @@ When embedding functionality in a module:
 
 ---
 
-## Anti-Rationalization Table
-
-| Tempting Shortcut | Why It Feels Right | Why It's Wrong |
-|-------------------|-------------------|----------------|
-| "I'm confident in my first idea" | Experience says it works | Complex problems defeat intuition; alternatives reveal hidden weaknesses |
-| "I don't have time for multiple designs" | Deadline pressure | Design time << debugging time for wrong abstraction |
-| "The alternatives would be worse" | Quick mental dismissal | Without sketching, you can't actually compare |
-| "This is just a simple module" | Scope seems small | Small modules become core dependencies; getting them wrong cascades |
-| "I'll refactor later if needed" | Deferred pain | Changing interfaces is expensive; callers multiply |
-| "The user already knows what they want" | Seems respectful | They know the PROBLEM, not necessarily the best SOLUTION |
-| "This is a standard pattern" | Feels like best practice | "Standard" often means "first thing I saw"; make it explicit |
-| "I already know which is best" | Saves time | Then the comparison should be EASY, not skippable |
-
----
-
 ## Process Integrity Checks
 
 Before finalizing your design choice, verify:

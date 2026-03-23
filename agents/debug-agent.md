@@ -155,15 +155,3 @@ If BLOCKED:
 - Need: [what's required to continue]
 ```
 
----
-
-## Anti-Patterns
-
-| Temptation | Reality |
-|------------|---------|
-| "I'll just try this fix" | Locate the root cause first. Guessing wastes time. |
-| "I see the bug, no need to reproduce" | Reproduction confirms the bug and verifies the fix. Always reproduce. |
-| "I'll clean up this code while I'm here" | Fix the bug. Note cleanup for follow-up. Don't mix. |
-| "The fix is obvious" | Obvious fixes often mask deeper issues. Trace the full path. |
-| "Tests pass, we're done" | Add a regression test. The bug happened once, it can happen again. |
-| "I'll fix these other issues too" | One bug, one fix. Other issues go in Unrelated Issues. |

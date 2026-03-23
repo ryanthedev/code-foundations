@@ -96,15 +96,4 @@ Source: A Philosophy of Software Design (Ousterhout) + verification practices
 
 ---
 
-## Anti-Rationalization
-
-- [ ] AR-1: "Am I thinking 'Design is good, so it works'?" → Design ≠ correctness. Check anyway.
-- [ ] AR-2: "Am I thinking 'It's simple code'?" → Simple code has bugs too. Check anyway.
-- [ ] AR-3: "Am I thinking 'I'll add error handling later'?" → Later = never. Check now.
-- [ ] AR-4: "Am I thinking 'Edge cases are rare'?" → Edge cases cause production incidents.
-- [ ] AR-5: "Am I thinking 'It's not user-facing'?" → Internal code gets exposed. Check anyway.
-- [ ] AR-6: "Am I thinking 'Tests will catch it'?" → Tests check what you wrote, not what you missed.
-
----
-
-Total items: 40
+Total items: 34

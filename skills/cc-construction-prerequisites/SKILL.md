@@ -135,23 +135,6 @@ Timeline < 1 week?
    - If no escalation path exists: Document your recommendation in writing, proceed as directed, flag for retrospective
 5. **DECLINE (if you have authority):** "I cannot responsibly proceed. My recommendation is [alternative]."
 
-## Red Flags - STOP If You Notice:
-
-- Urge to start coding without verified problem definition
-- "We're agile" used to justify skipping prerequisites
-- "We've always done it that way" as architecture justification
-- Problem definition that sounds like a solution
-- "We'll add conventions later"
-- Implementing architecture you don't understand
-- Different naming/formatting styles in same codebase
-- No defined coding standards at project start
-- **WISCA/WIMP Syndrome:** Manager pressure to start coding before prerequisites complete ("Why Isn't Sam Coding Anything?")
-- **Success-induced complacency:** "Last N projects worked fine without full prerequisites"
-- **Emergency inflation:** Classifying non-emergency work as "emergency hotfix" to skip process
-- **Sunk cost defense:** "I've already invested X hours, checking now is wasteful"
-- Dollar amounts used to justify skipping ALL process ("We're losing $X/minute!")
-- "This case is different because..." - almost always rationalization
-
 ## Common Mistakes
 
 | Mistake | Why It's Wrong | Fix |
@@ -162,66 +145,6 @@ Timeline < 1 week?
 | Gold-plating architecture | Overdesign wastes effort, increases complexity | Address requirements, no more |
 | Treating requirements as immutable | Customers can't describe needs before seeing code | Plan for change; use change control, not prevention |
 | Skipping conventions under deadline | "We'll add them later" - nearly impossible to retrofit | Define BEFORE construction; time "saved" is paid back 10x |
-
-## Rationalization Counters
-
-| Excuse | Reality |
-|--------|---------|
-| "We'd better start coding - lots of debugging ahead" | Self-fulfilling prophecy. Poor preparation guarantees the debugging you predict. |
-| "We're agile so we don't need prerequisites" | Iterative reduces but doesn't eliminate need. Still identify critical elements per iteration. |
-| "We'll add conventions later" | Nearly impossible to retrofit. Must define before construction begins (p.66). |
-| "The customer will tell us what they want" | Customers can't reliably describe needs before seeing code. Plan for change, don't avoid planning. |
-| "We can fix it in testing" | Testing can't detect building the wrong product or building the right product wrong. |
-| "Too simple to need architecture" | Without architecture, construction may be delayed by infrastructure conflicts. |
-| "Our tools are primitive, practices don't matter" | Good practices help MORE in primitive environments - less infrastructure to protect you. |
-| "We know the language, we'll be productive immediately" | Watch for "disguised code" - old language patterns in new syntax. |
-| "It's just a demo/prototype" | Demos become production. The code you write under pressure is the code you'll maintain. |
-| "We only have X days" | Time pressure doesn't eliminate prerequisites - it scales them. Use the 5% hard floor. |
-| "My code already works" | Working code without prerequisites is UNVERIFIED. You may have built the wrong thing correctly. Apply CHECKER mode now. |
-| "Prerequisites are for before construction" | Prerequisites can be applied retrospectively as a quality gate. Gaps found now are risks you're carrying. |
-| "I've already invested N hours" | Sunk cost fallacy. Time invested doesn't change whether prerequisites are met. Check now while context is fresh. |
-| "Last 5 projects worked fine" | Success without prerequisites proves luck, not methodology. Each project's risk is independent (survivor bias). |
-| "4% is close enough to 5%" | The floor exists for a reason. "Close enough" is rationalized skipping. Get stakeholder sign-off if deviating. |
-| "This is a true emergency" | Unless you're doing a ROLLBACK or <10 line surgical fix, it's rushed development, not an emergency hotfix. |
-
-## Required Responses to Stakeholder Pressure
-
-When facing pressure to skip prerequisites, use these responses:
-
-| Stakeholder Says | Your REQUIRED Response |
-|------------------|------------------------|
-| "We're agile, just start coding" | "Agile still requires identifying critical requirements per iteration. I need [X hours] minimum." |
-| "Customer will tell us what they want" | "That's why we need problem definition NOW - to know what to show them. 2-4 hours prevents building the wrong thing." |
-| "We don't have time" | "The minimum is 5% of schedule. For [timeline], that's [X hours]. Skipping this costs more time in debugging." |
-| "It's just a demo" | "Demos become production code. The prerequisites I skip now become technical debt we pay forever." |
-| WISCA/WIMP pressure | "I understand the urgency. The fastest path includes [minimum prerequisites]. Here's the specific list..." |
-
-**Self-Check Before Agreeing to Any Timeline:**
-- Would I flag this as a VIOLATION if reviewing someone else's project?
-- Am I accepting less than the 5% hard floor?
-- Am I rationalizing "this case is different"?
-
-If yes to any: STOP. You cannot accept for yourself what you would reject for others.
-
-## Success Streak Warning
-
-**After multiple successful projects, you face HIGHER risk of skipping prerequisites.**
-
-Your mind generates these rationalizations:
-- "I've done this before, I know what I need"
-- "Last 5 projects worked fine without full prerequisites"
-- "My experience lets me skip the checklist"
-
-**Reality check:**
-- Success without prerequisites proves luck, not methodology
-- You're accumulating invisible debt you can't see
-- Projects that "worked" may have hidden quality issues never discovered
-- Each project's risk is independent of past outcomes (survivor bias)
-
-**Counter-measures:**
-1. Experience makes you FASTER at prerequisites, not exempt from them
-2. The defect cost multiplier doesn't know about your past successes
-3. **Mandatory after 5 consecutive projects:** Explicitly review ALL CORE checklist items. Your calibration is drifting.
 
 ## Retrospective Application (Existing Code)
 

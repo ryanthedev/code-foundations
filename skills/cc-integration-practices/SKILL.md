@@ -176,23 +176,6 @@ If you've built all components in isolation and are about to combine them: **STO
 
 Building separately is fine. Combining all at once means ALL interface bugs surface simultaneously - that's Big Bang. Your components aren't wasted, but add them one at a time to isolate issues to each addition.
 
-## Rationalization Counters
-| Excuse | Reality |
-|--------|---------|
-| "Our project is too large for daily builds" | Windows 2000 (50M LOC, 19-hour builds) used daily builds successfully |
-| "Daily builds slow our progress" | Daily builds reveal true progress rate - you just don't like what you see |
-| "We don't have time under schedule pressure" | Under stress, discipline matters more, not less |
-| "Continuous integration is better than daily" | Daily is a MINIMUM. Modern CI/CD with automated testing is fine; the principle is frequent integration, not a specific ceiling |
-| "We can build weekly instead of daily" | One broken week = lose virtually all benefit of frequent integration |
-| "Our code changes too slowly" | More than 2 days without check-in = accumulated integration risk |
-| "The build is broken but we'll fix it tomorrow" | Fix immediately; stop all other work until build works |
-| "We can skip the smoke test just this once" | Smoke test is the sentry; without it, daily build is just a compile exercise |
-| "Our smoke test doesn't need updating" | Stale smoke test = self-deception about system health |
-| "We'll integrate when all pieces are done" | Big Bang = panicky debugging; all problems interact and mask each other |
-| "It worked fine without this before" | Survivorship bias: you don't remember defects you didn't catch early |
-| "I already built everything, too late for incremental" | Your components are built - good. But combine one at a time to isolate interface bugs |
-| "5 projects succeeded without daily builds" | Each success without discipline accumulates invisible integration debt |
-
 ## Benefits of Careful Integration
 - Easier defect diagnosis (isolated to recent addition)
 - Fewer defects slip through

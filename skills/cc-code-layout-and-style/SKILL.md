@@ -219,26 +219,6 @@ Before writing any comment, ask IN ORDER (stop at first YES):
 Produces: Formatted code, commenting guidelines, layout standards
 Constraints: Consistency trumps any specific choice (p.735), avoid comment density >1:10 (Jones 2000)
 
-## Rationalization Counters
-| Excuse | Reality |
-|--------|---------|
-| "Our team has our own style" | Fine - but only within acceptable bounds (see Consistency Boundary). Consistently violating thresholds is consistently wrong. |
-| "Multiple statements per line saves space" | Screen space is cheap; debugging/reading time is expensive. One statement per line always (p.758) |
-| "Endline comments keep code compact" | They're hard to maintain and drift from code; use comment blocks above (p.767) |
-| "The code is obvious, no comments needed" | Good comments explain intent, not mechanics. "Why" is rarely obvious (p.797) |
-| "I'll add lots of comments to explain this tricky code" | "Don't document bad code - rewrite it." [Kernighan and Plauger] (p.798) |
-| "Commenting takes too much time" | If hard to comment, you don't understand it well enough - that's valuable information (KEY POINT) |
-| "I prefer 6-8 space indentation for visibility" | Studies show comprehension decreases above 4 spaces [Miaria 1983]. Subjects FELT 6-space was easier despite scoring lower. |
-| "The formatter handles this" | Formatters handle syntax (spacing, braces). Humans handle semantics (logical groupings, comment quality, paragraph breaks). Use both. |
-| "Line breaks don't matter to the compiler" | Code is for humans first. Formatting affects comprehension 10-20% [Miaria et al 1983] |
-| "The code works, why change it?" | Working ≠ maintainable. Layout quality compounds over every future read. The 4 hours you spent are sunk; the next 40 hours of maintenance are not. |
-| "Reformatting risks breaking working code" | Automated formatters and tests mitigate risk. Poor layout introduces maintenance bugs from misread structure. |
-| "I've done this successfully many times" | Past success doesn't exempt current code. The 74-item checklist catches what expertise blindness misses. Execute all steps regardless of track record. |
-| "Production is down, no time for formatting" | See Crisis Protocol. Absolute Minimums take <30 seconds and prevent the NEXT outage. |
-| "We'll clean it up later" | "Later" never comes. 70% of "temporary" code is never cleaned up. Create the cleanup ticket NOW before deploying. |
-| "These studies are 35 years old" | Cognitive principles persist; specific numbers are heuristics. See Evidence Limitations. |
-
-
 ---
 
 ## Chain

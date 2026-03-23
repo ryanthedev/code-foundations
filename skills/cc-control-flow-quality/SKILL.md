@@ -299,26 +299,6 @@ A routine may legitimately exceed 10 ONLY when ALL of:
 
 **NOT a valid exception:** "It's just a big if-else chain" or "The complexity is inherent."
 
-## Rationalization Counters
-| Excuse | Reality |
-|--------|---------|
-| "Deep nesting is unavoidable" | Multiple techniques exist: guard clauses, extract routines, table-driven (p.449) |
-| "It's just one level deeper" | Comprehension drops significantly after 3 levels [Chomsky, Weinberg] |
-| "The order of statements is obvious" | If it requires domain knowledge, make dependencies explicit in code (p.98) |
-| "I'll tweak the for loop index to exit early" | Sign of amateur; use while loop for complex exit conditions (p.377) |
-| "OOP inheritance is always better than tables" | Inheritance isn't automatically better; table lookup can be simpler (p.423) |
-| "Recursion is elegant for factorials" | Factorial is a *poor* example of recursion—iteration is faster with predictable memory. Save recursion for recursive data structures (trees, graphs) where it adds clarity (p.393) |
-| "The else case will never happen" | 50-80% of if statements should have else clauses [Elshoff 1976]. Document why it's safe to omit. |
-| "The test is only used once, not worth extracting" | Putting a test into a well-named function improves readability—that's sufficient reason [KEY POINT p.433] |
-| "0 and 1 work fine for booleans" | Nothing tells reader if 1 means true or false; easy to write 0 when you mean 1 (p.431) |
-| "Parentheses are unnecessary clutter" | Parentheses are free and reduce demand on reader's precedence knowledge (p.443) |
-| "I can use the loop index after the loop" | Terminal value varies by language/compiler; assign to variable inside loop (p.378) |
-| "One loop doing two things is more efficient" | Write two loops; comment they could combine; wait for benchmarks to prove need (p.385) |
-| **"But it already works"** | Working code can still have latent bugs. Control flow violations correlate with defects regardless of test status [McCabe 1976]. Time invested doesn't change bug potential. |
-| **"It worked last time without this"** | Past success doesn't guarantee future correctness. Silent complexity accumulates until it causes failures. Apply these checks *every time*, not just when problems appear. |
-| **"No time—production is down"** | See Emergency Minimum below. Even in crisis, skip nothing from the NEVER Skip list. Rushed fixes that add complexity cause the *next* outage. |
-| **"Senior engineer says it's fine"** | Complexity thresholds are backed by research [McCabe 1976, Chomsky, Weinberg]. Challenge authority with evidence, not deference. |
-
 ## Emergency Minimum (Crisis Mode)
 
 When production is down and you must fix immediately, you still MUST:

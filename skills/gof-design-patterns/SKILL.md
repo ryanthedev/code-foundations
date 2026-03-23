@@ -211,23 +211,6 @@ Need to define object interaction?
 
 ---
 
-## Anti-Rationalization Table
-
-| Excuse | Reality |
-|--------|---------|
-| "Too complex for this project" | Patterns REDUCE complexity when applied correctly. Start with the problem, not the pattern. |
-| "We don't have time for patterns" | You don't have time NOT to use them. Technical debt from ad-hoc solutions costs more. |
-| "Only one implementation needed now" | Factory Method/Strategy prep for change costs almost nothing. YAGNI doesn't mean "never prepare." |
-| "Just use inheritance" | Inheritance creates tight coupling. Composition (Decorator, Strategy, Bridge) is usually better. |
-| "Patterns are overkill for small apps" | Even small apps benefit from Facade, Factory Method, and Observer. Scale isn't the criterion. |
-| "Everyone already knows our codebase" | People leave, memory fades. Patterns provide shared vocabulary and predictable structure. |
-| "We can refactor later" | Refactoring to patterns is harder than starting with them. Technical debt compounds. |
-| "Patterns make code harder to follow" | Initially unfamiliar, but patterns are well-documented. Ad-hoc solutions have no documentation. |
-| "Our language doesn't need patterns" | Even functional languages use pattern concepts. The problems patterns solve are universal. |
-| "We need maximum performance" | Most patterns add negligible overhead. Profile first, optimize second. |
-
----
-
 ## Pattern Relationships
 
 ```

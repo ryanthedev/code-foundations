@@ -157,19 +157,6 @@ AskUserQuestion(
 
 ---
 
-## Anti-Rationalization Table
-
-| Rationalization | Reality |
-|-----------------|---------|
-| "This is simple, I'll just edit the file" | You are an ORCHESTRATOR. Dispatch agents. Never edit code directly. |
-| "I can draft the pseudocode faster" | Code-agent has design skills loaded. You don't. Dispatch it. |
-| "User said 'yeah' so I'll start building" | Use `AskUserQuestion`. Chat confirmation is not a gate. |
-| "The design is obvious, skip to implementation" | Design-first is the entire point of this command. No skipping. |
-| "I'll implement and test at the same time" | Implementation-agent handles both. One agent, one concern. |
-| "TaskCreate is overhead for small changes" | Tasks make work visible. Create them. |
-
----
-
 ## Quick Reference
 
 ```

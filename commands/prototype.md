@@ -281,20 +281,6 @@ git commit -m "prototype: [scope] - [YES/NO/PARTIAL]"
 
 ---
 
-## Anti-Rationalization Table
-
-| Rationalization | Reality |
-|-----------------|---------|
-| "I already know what to build" | Then pseudocode takes 30 seconds. Do it. |
-| "Pseudocode is overkill for POC" | Pseudocode PREVENTS scope creep. Do it. |
-| "I'll document after" | You won't. Write the log now. |
-| "This is throwaway, skip the branch" | Prototypes on main = pollution. Branch. |
-| "Let me add error handling quick" | That's production work. Happy path only. |
-| "It mostly works" | PARTIAL is not YES. Be precise. |
-| "I'll remember what I learned" | You won't. Write it down. |
-
----
-
 ## Skill Dependencies
 
 This skill REQUIRES invoking:

@@ -217,28 +217,6 @@ Severity:
   - WARNING: Potential issue (needs measurement)
   - PASS: No obvious performance issues
 
-## Rationalization Counters
-
-| Excuse | Reality |
-|--------|---------|
-| "Fewer lines of code is faster" | No predictable relationship; unrolled loops often 60-74% faster [p.603] |
-| "I know this operation is slow" | You must measure; rules change with every environment change |
-| "I'll optimize as I go" | You'll spend 96% of time on code that doesn't matter [Pareto] |
-| "Experience tells me where bottlenecks are" | No programmer has ever predicted bottlenecks without data [Newcomer] |
-| "This clever trick will be faster" | Compilers optimize straightforward code better than tricky code [p.596] |
-| "We need to rewrite in assembler now" | Usually <4% of code causes >50% of runtime; find it first [Knuth 1971] |
-| "Fast code is as important as correct code" | Correct first, fast second. Always. |
-| "I already optimized this; it will stay optimized" | Re-profile after any compiler/library/environment change |
-| "This optimization always works" | Results vary wildly by language; Python -27% for loop unrolling [p.623] |
-| "The theory says this should be faster" | Theory doesn't always hold; Visual Basic -94% on polynomial strength reduction [p.636] |
-| "I don't need to profile small changes" | If not worth profiling, not worth degrading readability for [p.609] |
-| **Crisis:** "We're losing $X/minute!" | Guessing wrong = paying that $X until you find real cause. 60-sec profile saves hours. |
-| **Crisis:** "No time to profile!" | Wrong guess costs more time than profiling. Panic causes cascading errors. |
-| **Sunk cost:** "I already spent 4 hours optimizing" | Time invested doesn't validate method. Revert all, apply with measurement. |
-| **Sunk cost:** "It seems faster now" | "Seems faster" is not data. You may have made some faster, others slower. |
-| **Success streak:** "I've been right 5 times" | Past success doesn't change physics. Calibration illusion: 5 wins don't predict win 6. |
-
-
 ---
 
 ## Chain

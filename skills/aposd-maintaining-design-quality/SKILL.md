@@ -163,37 +163,6 @@ Skip the normal workflow ONLY when ALL of these conditions are true:
 
 ---
 
-## Anti-Rationalization Table
-
-### Classic Rationalizations
-
-| Tempting Shortcut | Why It Feels Right | Why It's Wrong |
-|-------------------|-------------------|----------------|
-| "Just make it work" | Faster now | Creates technical debt forever; 20%+ productivity loss |
-| "Don't touch working code" | Risk averse | Prevents improvement; design decays anyway |
-| "We'll refactor later" | Deferred pain | Later never comes; there's always another crunch |
-| "This is just a quick fix" | Scope limiting | Quick fixes accumulate; complexity is incremental |
-| "I don't have time" | Deadline pressure | 10-20% investment now saves more later |
-| "It's not that bad" | Normalizing decay | Each small compromise adds up to major complexity |
-
-### Responsibility-Avoidance Rationalizations
-
-| Tempting Shortcut | Why It Feels Right | Why It's Wrong |
-|-------------------|-------------------|----------------|
-| "I'm not the owner of this module" | Not my responsibility | If you're touching it, you're responsible for it |
-| "The original author did it this way" | Appeal to authority | Original author might have been wrong, or context changed |
-| "This matches the existing pattern" | Consistency | Consistently following a bad pattern spreads the problem |
-
-### "It Doesn't Count" Rationalizations
-
-| Tempting Shortcut | Why It Feels Right | Why It's Wrong |
-|-------------------|-------------------|----------------|
-| "This is temporary/experimental code" | It's throwaway | Nothing is as permanent as temporary code |
-| "The tests pass" | Correctness verified | Passing tests ≠ good design |
-| "I'll document the tech debt" | I'm being responsible | Documentation is not remediation |
-
----
-
 ## Comment Maintenance
 
 When modifying code, keep comments synchronized:

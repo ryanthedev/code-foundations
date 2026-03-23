@@ -85,39 +85,6 @@ Input -> Output:
 Preserves: Behavior, unrelated code
 Verification: Re-run CHECKER; VIOLATION count = 0
 
-## Rationalization Counters
-| Excuse | Reality |
-|--------|---------|
-| "Everyone knows what 12 means" | Named constants aid maintenance [Glass 1991] |
-| "Floats are close enough for ==" | 0.1 added 10 times rarely equals 1.0 |
-| "Magic numbers are faster to type" | Debugging hard-coded literals takes far longer |
-| "I don't need custom types" | One typedef change vs hundreds of declarations |
-| "Short names are faster to type" | Code read far more than written; favor read-time convenience |
-| "Global variables are more convenient" | Convenience writing trades against difficulty reading, debugging, modifying |
-
-### Sunk Cost Counters
-**For resisting changes to "working" code:**
-
-| Excuse | Reality |
-|--------|---------|
-| "It works, why change it?" | Violations are latent defects; "works" means "hasn't failed yet" |
-| "I already invested time in this" | Time invested in bad code is lost regardless; fix now or pay more later |
-| "Refactoring will break things" | Violations already broken; you just haven't discovered how yet |
-| "Currency has always used floats here" | Every penny calculation is a potential lawsuit |
-| "We've had no bugs from these magic numbers" | You've had bugs—you attributed them to other causes |
-| "The code passed review before" | Past reviews missed issues; evidence now shows violations |
-
-### Success-Bias Warning
-**Past success does NOT predict future safety.**
-
-Violations that "worked for years" fail when:
-- Edge cases finally occur (currency rounding in new scenarios)
-- Scale changes (global variable contention under load)
-- Maintenance happens (magic numbers misunderstood by new developers)
-- Requirements shift (hard-coded values need changing)
-
-**Every checklist item applies regardless of past success.** "Worked until it didn't" examples fill bug databases.
-
 ## Modern Data Types Coverage
 
 *Beyond Code Complete's C-era focus:*

@@ -208,16 +208,3 @@ Write to: `docs/building/<plan-name>-phase-N-pseudocode.md`
 
 **Status DONE requires ALL done-when items COVERED. No exceptions.**
 
-## Anti-Patterns to Avoid
-
-| Temptation | Why It's Wrong |
-|------------|----------------|
-| "I'll skip discovery, the plan is clear" | Plan assumptions often mismatch reality. Discovery catches this. |
-| "I'll write vague pseudocode" | Vague pseudocode = vague implementation. Be specific. |
-| "I'll include implementation details" | Pseudocode is design, not code. Stay at the right level. |
-| "I don't need to check if files exist" | Missing files = blocked implementation agent. Check now. |
-| "The design is obvious, skip the review" | Obvious designs hide assumptions. Use aposd-designing-deep-modules. |
-| "This done-when item is additive, I'll skip it" | Not your call. If you can't meet it, return UPDATE_PLAN. Silent descoping is the #1 cause of missed requirements. |
-| "The done-when item is implied by my pseudocode" | Implied is not verified. Fill the verification table with explicit evidence. |
-| "I'll handle that done-when item in a later phase" | Each phase owns its own done-when items. If it's in this phase's plan, it must be COVERED here. |
-| "Close enough counts for done-when" | COVERED means the pseudocode directly addresses the item. Partial coverage = CANNOT_MEET. |

@@ -172,21 +172,6 @@ This prevents claiming hierarchy application without evidence.
 
 ---
 
-## Anti-Rationalization Table
-
-| Rationalization | Counter |
-|-----------------|---------|
-| "This is obvious, I don't need the hierarchy" | **Stop.** The hierarchy exists because intuition fails. Walk through each level explicitly. |
-| "Define-out is over-engineering" | **Stop.** Define-out is the MOST valuable technique. Justify in writing why semantics cannot change. |
-| "Python/language already handles this" | **Stop.** This IS masking (level 2). Document it explicitly as technique application, not skip. |
-| "Creating a custom exception is overkill" | **Stop.** Count handlers before/after. If count drops, aggregation is worth it. |
-| "I've seen this pattern before" | **Stop.** Pattern recognition ≠ systematic analysis. Walk hierarchy anyway. |
-| "Callers might need to distinguish these errors" | **Stop.** Verify with evidence. Default is aggregate; distinguish only when proven necessary. |
-| "The baseline was good enough" | **Stop.** "Good enough" is not the goal. The goal is minimal complexity. Check each level. |
-| "The code is shorter, so it's simpler" | **Stop.** Complexity ≠ length. Verify: interfaces simpler? Callers do less? Errors consolidated? |
-
----
-
 ## Principle Conflict Resolution
 
 | Conflict | Resolution Heuristic |

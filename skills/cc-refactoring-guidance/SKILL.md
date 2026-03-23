@@ -196,18 +196,6 @@ Input -> Output:
 Preserves: All observable behavior
 Verification: Same tests pass before and after
 
-## Red Flags - STOP If You Think:
-- "This is too simple to test"
-- "I've already verified this mentally"
-- "One commit is cleaner than two"
-- "This change is isolated, can't affect anything"
-- "The tests pass, so I'm done"
-- "This is an emergency, I can skip steps"
-- "My last N changes all worked perfectly"
-- "I already did it differently but it works"
-
-**All of these mean:** You're rationalizing. Follow the full rigor anyway.
-
 ## Already Violated? Here's What To Do
 
 If you mixed fix and refactor in one commit:
@@ -220,27 +208,6 @@ If you skipped review on a small change:
 - **After merge:** Note it, move on, don't skip next time.
 
 **"It's too late" is almost never true.** The discomfort of fixing violations is smaller than the debugging cost of bugs they cause.
-
-## Rationalization Counters
-| Excuse | Reality |
-|--------|---------|
-| "I'm just cleaning while I fix" | Fix first, then refactor. Separate commits. |
-| "It's basically the same thing" | Refactoring = behavior-preserving. Fixing = behavior-changing. Different activities. |
-| "It's just one line" | One-line changes have HIGHEST error rate. Apply full rigor. |
-| "I don't need to test this" | >50% chance of error on first attempt at ANY change. |
-| "Review would be overkill" | Reviews dropped 1-line change errors from 55% to 2%. |
-| "I'll refactor it later" | Refactoring requires working code. Complete feature first, THEN refactor immediately. |
-| "I can salvage this with refactoring" | Some code needs rewrite. Big refactoring is recipe for disaster. |
-| "It'll save time to add this for later" | Speculative code usually wrong; slows current project. |
-| "I already verified this manually" | Manual verification doesn't prevent >50% first-attempt error rate. Run automated tests. |
-| "The tests pass, that's enough" | Tests verify behavior; review verifies the change itself. Both required. |
-| "This change is isolated" | Even isolated 1-line changes have highest error rate. Isolation doesn't reduce rigor. |
-| "It's an emergency" | Emergencies make errors MORE likely (stress). Fix only, deploy, refactor later. |
-| "My last 5 changes worked" | Each change has INDEPENDENT >50% error rate. Past success doesn't reduce current odds. |
-| "I already did it wrong but it works" | Working code doesn't validate process. Retroactively fix: soft-reset, separate, re-commit. |
-| "No one's available to review" | Use 24h self-delay, rubber duck, or AI review. Something > nothing. |
-| "We don't have tests" | Write characterization tests first, or document manual verification. Can't verify "behavior-preserving" blind. |
-
 
 ---
 

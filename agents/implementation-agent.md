@@ -120,16 +120,6 @@ If BLOCKED:
 - Need: [what's needed to unblock]
 ```
 
-## Anti-Patterns to Avoid
-
-| Temptation | Why It's Wrong |
-|------------|----------------|
-| "I'll add this small improvement" | Not in pseudocode = not in scope |
-| "This error handling is obviously needed" | If not in pseudocode, flag it as deviation |
-| "I'll refactor this while I'm here" | Scope creep. Pseudocode is the contract. |
-| "The tests can wait" | Tests verify you implemented correctly. Do them now. |
-| "I know a better way" | Implement the pseudocode. Suggest improvements separately. |
-
 ## Severity Guide
 
 | Issue | Action |

@@ -144,19 +144,6 @@ Before "done", answer YES to all that apply:
 
 ---
 
-## Anti-Rationalization Table
-
-| Thought | Reality |
-|---------|---------|
-| "Design is good, so it works" | Design ≠ correctness. Check anyway. |
-| "It's simple code" | Simple code has bugs too. Check anyway. |
-| "I'll add error handling later" | Later = never. Check now. |
-| "Edge cases are rare" | Edge cases cause production incidents. |
-| "It's not user-facing" | Internal code gets exposed. Check anyway. |
-| "Tests will catch it" | Tests check what you wrote, not what you missed. |
-
----
-
 ## Output Format
 
 When verifying, output:

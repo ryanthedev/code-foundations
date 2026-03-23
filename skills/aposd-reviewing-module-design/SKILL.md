@@ -194,21 +194,6 @@ Ask before concluding:
 
 ---
 
-## Anti-Rationalization Table
-
-| Rationalization | Counter |
-|-----------------|---------|
-| "I can see this is fine without the checklist" | **Stop.** The checklist exists because intuition misses structural problems. Run it anyway. |
-| "This is too small to review systematically" | **Stop.** Small modules become core dependencies. Small doesn't mean safe. |
-| "I know this codebase well" | **Stop.** Familiarity breeds blindness. Fresh eyes (the checklist) catch what you've normalized. |
-| "The author is senior/experienced" | **Stop.** Experience doesn't prevent complexity. Apply same rigor regardless of author. |
-| "It passes all the tests" | **Stop.** Tests check behavior, not design. Passing tests ≠ good architecture. |
-| "I don't want to be nitpicky" | **Stop.** Red flags aren't nits. Complexity symptoms are real problems. Flag them. |
-| "They'll push back on this feedback" | **Stop.** Your job is accurate evaluation, not social comfort. Present evidence. |
-| "This matches what we already have" | **Stop.** Consistency with bad patterns spreads problems. Evaluate independently. |
-
----
-
 ## Quick Reference
 
 ```

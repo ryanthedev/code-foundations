@@ -136,22 +136,6 @@ ONLY when no fundamental fix is available:
 
 ---
 
-## Anti-Rationalization Table
-
-| Rationalization | Counter |
-|-----------------|---------|
-| "User said it's slow, that's my measurement" | User perception ≠ bottleneck location. Measure to find WHERE. |
-| "Looking at the table, this is obviously expensive" | Pattern-matching isn't profiling. Measure actual time. |
-| "I'll make the change then measure to verify" | Confirmation bias. Measure FIRST to find the real bottleneck. |
-| "Setting up profiling is too complex" | If you can't measure, you can't verify improvement. Do the work. |
-| "This scope is too small to measure" | Micro-optimizations without measurement add complexity for nothing. |
-| "I checked the fundamental fix checklist" | Checklist is for ideas AFTER measurement shows the bottleneck. |
-| "The code is simpler now, so it's faster" | Simpler doesn't automatically mean faster. Verify with measurement. |
-| "I found a red flag pattern" | Red flags are descriptive, not prescriptive. Measure if it's actually slow. |
-| "I already profiled extensively" | Share the data. Without data, it's still intuition. |
-
----
-
 ## Red Flags
 
 | Red Flag | Symptom | Performance Impact |

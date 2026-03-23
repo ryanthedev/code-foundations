@@ -566,13 +566,25 @@ Agent tool:
 
 ```bash
 git add .
-git commit -m "Phase N: [name]
+git commit -m "[prefix]([scope]): [description]
 
-- [summary of what was implemented]
-- Model: [resolved_model] ([reason])
-- PRE-GATE: pseudocode reviewed
-- POST-GATE: verification passed, reviewer approved"
+[WHY this phase exists — goal, key decisions, constraints that shaped implementation]
+
+Phase: N/M \"[phase name]\"
+Plan: docs/plans/[plan-file].md
+AI-Model: [resolved_model]
+AI-Epistemic-Status: [tested|assumed|provisional]
+Pre-Gate: [pass|fail->pass (N attempts)|skipped]
+Post-Gate: [pass|fail->pass (N attempts)]
+Reviewed-by: post-gate-agent"
 ```
+
+**Commit message rules (from ADR):**
+- **Subject**: Conventional Commits prefix (`feat`, `fix`, `refactor`, `chore`, etc.) + scope + description
+- **Body**: WHY — goal, key decisions, constraints. Not operational telemetry.
+- **Trailers**: Machine-parseable metadata via git trailer format
+- **AI-Epistemic-Status**: `tested` (verified by tests), `assumed` (believed correct, not proven), `provisional` (expected to change)
+- **AI-Temporal-Validity**: Add only when a decision has a known expiry (e.g., `until-v2-migration`)
 
 Update plan file execution log:
 ```markdown
@@ -581,8 +593,6 @@ Update plan file execution log:
 - [x] IMPLEMENT: Code written, tests pass
 - [x] POST-GATE: Verification passed, reviewer approved
 - [x] CHECKPOINT: Committed
-Pipeline: [full/simplified]
-Model: [resolved_model] ([reason])
 Commit: [hash]
 Summary: [1 sentence — what this phase delivered and what state it left the codebase in]
 ```
@@ -713,30 +723,23 @@ Notes: [any issues encountered]
 
 The summary is a **trust report**, not a status dashboard. Engineers need to verify what the AI built.
 
+Gate metadata (model, pre-gate/post-gate results, epistemic status) now lives in commit trailers. The trust report is derived from `git log`:
+
+```bash
+# Full trailer dump for the build
+git log --format="%(trailers)" first-commit..HEAD
+
+# Find all provisional decisions
+git log --format="%(trailers:key=AI-Epistemic-Status)" first-commit..HEAD
+
+# One-line summary
+git log --oneline first-commit..HEAD
+```
+
+The trust report text output focuses on what commit trailers can't capture:
+
 ```markdown
 # Build Complete: [plan name]
-
-## Pipeline: N/N phases, M/M sub-phases
-
-### Phase 1: [name] ([resolved_model], [full/simplified])
-- PRE-GATE: Pseudocode covered N tasks, M files [or "SKIPPED — simplified pipeline"]
-- POST-GATE: [PASS|FAIL] (attempt N)
-  - [What reviewer found or verified]
-  - [Any notes or observations]
-- Commit: [hash]
-- Artifacts: docs/building/<plan>-phase-1-*.md
-
-### Phase 2: [name] ([resolved_model])
-...
-
-## Gate Summary
-| Phase | Pipeline | PRE-GATE | POST-GATE | Retries |
-|-------|----------|----------|-----------|---------|
-| 1     | full     | PASS     | PASS      | 0       |
-| 2     | simplified | SKIPPED | PASS    | 0       |
-
-## Files Changed
-- `path/to/file` - [what changed]
 
 ## Build & Test Summary
 - **Build:** PASS (no new warnings or errors)
@@ -774,15 +777,6 @@ Branch: feature/<topic>
 To merge: git merge --no-ff feature/<topic>
 ```
 
-**Key elements:**
-- **Per-phase reviewer findings** - not just PASS/FAIL, but what was verified and any notes
-- **Retry count** - shows if gates caught issues (retries > 0 = the system worked)
-- **Artifact links** - engineer can read the discovery, pseudocode, and review files
-- **Model used** - shows which model was auto-detected per phase
-- **Build & test summary** - concrete proof the build is clean and tests pass
-- **Manual testing steps** - what the engineer should verify by hand (or confirmation that automated tests cover everything)
-- **Follow-up** - anything the reviewer flagged that wasn't a blocker
-
 ---
 
 ## Error Handling
@@ -812,82 +806,6 @@ When resuming blocked plan:
 2. Find last successful checkpoint
 3. Show: "Resuming from Phase N, Task M. Last failure: [description]"
 4. Ask: "Ready to retry, or should we discuss the blocker first?"
-
----
-
-## Anti-Rationalization Table
-
-| Rationalization | Reality |
-|-----------------|---------|
-| "I'll mark it complete and fix later" | Incomplete = incomplete. Fix now or don't mark done. |
-| "Tests are slow, skip for now" | Untested code = unknown bugs shipped |
-| "This task is done enough" | Either done or not done. No partial credit. |
-| "I'll commit all phases at once" | Per-phase commits enable rollback |
-| "The plan is outdated, I'll improvise" | Update the plan, don't abandon it |
-| "User said ship it, skip verification" | Broken code shipped = worse than delay |
-| "I remember what the plan said" | Read the plan file. Memory is unreliable. |
-| "This extra feature fits naturally" | Not in plan = not in this build. Add to backlog. |
-| "PRE-GATE is overkill for simple code" | If Pipeline Detection resolved to simplified, PRE-GATE is already skipped. If it resolved to full, the signals say discovery is needed — trust the detection. |
-| "I can review my own code" | Self-review is blind to your own assumptions. Dispatch reviewer agent. |
-| "POST-GATE is slowing me down" | POST-GATE catches issues BEFORE they propagate. Fix now = faster than fix later. |
-| "Reviewer agent is redundant" | You implemented the code; reviewer agent has fresh perspective. Different context = different bugs caught. |
-| "Gates passed last phase, skip this one" | Each phase is independent. Past gates don't predict current quality. |
-| "I'll just commit to main, it's faster" | Multi-phase builds on main = no rollback. Worktree/feature branch is mandatory. |
-| "It's a small change, main is fine" | Small changes grow. Worktree now or regret later. |
-| "Worktree is overkill, just use a branch" | Branches block the checkout. Worktrees enable parallel builds. Use worktree mode unless you're certain no parallel work will happen. |
-| "I'll skip dependency setup, it takes too long" | Missing node_modules = broken tests = false POST-GATE failures. Install once, save debugging time. |
-| "I can implement faster than dispatching" | Direct implementation skips quality gates. Subagent ensures fresh context. |
-| "Pseudocode is overkill, I know what to do" | You know NOW. The subagent doesn't. Pseudocode is the contract. |
-| "The subagent will figure it out" | Subagent needs explicit pseudocode. No pseudocode = garbage implementation. |
-| "I'll just quickly read the files myself" | Direct exploration pollutes your context. Pre-gate agent returns only what's relevant. |
-| "Discovery is overkill for a simple phase" | If Pipeline Detection kept it full, the phase has skills, assumptions, or uncertainty that need discovery. Trust the detection. |
-| "I already know this codebase" | Your context is stale. Pre-gate agent has fresh eyes and finds what changed. |
-| "I'll dispatch an Explore agent for discovery" | Explore agents are read-only and can't write files. Use `code-foundations:pre-gate-agent` which handles discovery + pseudocode together. |
-| "I'll tell the subagent to invoke a random skill" | Use the plan's `**Skills:**` field to load relevant skills. Don't improvise — the whiteboarding skill audit already identified what's needed. |
-| "general-purpose is fine for review" | post-gate-agent has skills built-in. Use `code-foundations:post-gate-agent`. |
-| "I'll skip TaskCreate, it's overhead" | TaskCreate with blockedBy is the enforcement mechanism. Without it, gates are just suggestions. |
-| "I'll just mark the blocker completed manually" | Marking a gate completed without PASS is lying. The next sub-phase will inherit false confidence. |
-| "Haiku is fine for this complex phase" | Auto-detection chose opus for a reason. Override down only with explicit `**Model:**` in the plan. |
-| "The subagent doesn't need those skills" | Skills provide checklists and mental models. Without them, the subagent improvises. Include the skill loading block VERBATIM. |
-| "Done-when items are in the plan file, agents can find them" | Agents deprioritize requirements as context grows (43% skip rate). Extract done-when items and pass them explicitly in the dispatch prompt. |
-| "I'll summarize the prompt instead" | Paraphrased prompts drop skill loading, output formats, and file paths. Use the templates AS WRITTEN. |
-| "quick-checklist is fine for POST-GATE" | Quick-checklist has no reviewer skills. Use `code-foundations:post-gate-agent`. |
-| "Those warnings are pre-existing, not mine" | Verify it. `git stash && build && git stash pop` — if warnings disappear, they're yours. |
-| "Lint is cosmetic, the build passed" | Lint warnings become bugs. Clean build = clean lint. Fix before proceeding. |
-| "Manual testing isn't needed, tests cover it" | If the feature has UI or user-facing behavior, automated tests can't catch what humans see. State it explicitly either way. |
-
----
-
-## Pressure Testing Scenarios
-
-### Scenario 1: Plan and Reality Diverge
-
-**Situation:** During implementation, you discover the plan is wrong or incomplete.
-
-**Response:**
-1. Stop current task
-2. Update plan file with discovery
-3. Ask user: "Plan says X, but I found Y. Should I: (A) Update plan and continue, (B) Continue with current plan, (C) Pause for re-planning?"
-
-### Scenario 2: Tests Fail After Implementation
-
-**Situation:** Code is written, but tests fail.
-
-**Response:**
-1. Do NOT mark phase complete
-2. Debug test failure
-3. Fix code (not tests, unless tests are wrong)
-4. Re-run tests
-5. Only proceed when tests pass
-
-### Scenario 3: Scope Creep
-
-**Situation:** You see an opportunity to add a "quick improvement" not in the plan.
-
-**Response:** "I noticed [opportunity]. This isn't in the current plan. Should I:
-- Add to this plan (extends timeline)
-- Add to backlog (future work)
-- Skip entirely"
 
 ---
 

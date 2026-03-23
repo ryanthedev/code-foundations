@@ -162,15 +162,3 @@ STOP. Before writing the verdict, verify:
 
 ---
 
-## Anti-Patterns
-
-| Temptation | Why It's Wrong |
-|------------|----------------|
-| Skip skill loading | Skills provide structured checklists you will miss ad-hoc |
-| "Close enough to pseudocode" | Close enough hides missing edge cases. Map exactly. |
-| Mark all dimensions N/A | If all N/A, verify the implementation is non-trivial |
-| Suggest improvements | Your job is verification, not design. Flag issues only. |
-| Skip requirement fulfillment check | Code quality PASS with missing requirements = shipped the wrong thing. Check done-when items FIRST. |
-| "The pseudocode covers the requirements" | Pre-gate may have silently descoped. Verify against the PLAN, not just the pseudocode. |
-| "This done-when item is covered implicitly" | Implicit = unverified. Find concrete evidence (file:line) or mark NOT_SATISFIED. |
-| "Requirements are pre-gate's job" | Pre-gate designs coverage. Post-gate verifies delivery. Both must check. |

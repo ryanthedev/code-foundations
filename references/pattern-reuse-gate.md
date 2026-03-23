@@ -68,38 +68,6 @@
 
 ---
 
-## Red Flags - STOP If You Notice
-
-- Urge to "just implement it my way"
-- Skipping search because "I already know how to do this"
-- Assuming no patterns exist without searching
-- Dismissing existing patterns as "not quite right"
-- Creating a new utility when one exists
-- Using different naming conventions than surrounding code
-
----
-
-## Anti-Rationalization Table
-
-| Excuse | Reality |
-|--------|---------|
-| "I know how to do this better" | Consistency beats local optimization. Follow the pattern. |
-| "The existing pattern is slightly different" | Adapt to it. Small differences compound into chaos. |
-| "There's no time to search" | 2 minutes searching saves 20 minutes debugging inconsistency. |
-| "I'll establish a better pattern" | New patterns need team buy-in. Follow existing unless truly broken. |
-| "My way is more modern/idiomatic" | Codebase consistency > language idioms. Match the codebase. |
-| "I already searched (in my head)" | Actually search. Memory is unreliable. |
-| "This is a special case" | Special cases should still follow patterns where possible. |
-| "The pattern doesn't cover this exact scenario" | Extend the pattern, don't invent a parallel one. |
-| "I searched but didn't find anything" | Search harder with different keywords. Use broader terms. |
-| "This is greenfield code" | Even new projects have patterns emerging. Match early conventions. |
-| "I'll search after I get it working" | That's backwards. Search BEFORE implementation, not after. |
-| "I found multiple patterns, picked best" | Document which and why. "Best" without justification is cherry-picking. |
-| "The pattern has tech debt" | Debt isn't license for MORE inconsistency. Follow or fix globally. |
-| "I'm the only one on this module" | Future you is different. Consistency helps your future self. |
-
----
-
 ## Examples
 
 ### Example 1: Adding Error Handling
