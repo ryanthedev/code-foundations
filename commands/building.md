@@ -369,13 +369,15 @@ Agent tool:
     ## Phase N: [name]
     [paste phase description and file list from plan]
 
-    ## Done-When Items
-    These are the acceptance criteria from the plan. Your pseudocode must cover all of them.
+    ## Done-When Items (DW-IDs)
+    These are the acceptance criteria from the plan. Your pseudocode must
+    reference which DW items each section addresses (e.g., "## Setup [DW-1.1, DW-1.3]").
+    Any DW item not referenced in any section is a visible gap.
     If any item cannot be met, return UPDATE_PLAN.
-    [paste ALL done-when items from the plan phase, one per line:]
-    - [ ] [done-when item 1]
-    - [ ] [done-when item 2]
-    - [ ] [done-when item N...]
+    [paste ALL DW items from the plan phase, verbatim:]
+    - [ ] DW-N.1: [done-when item 1]
+    - [ ] DW-N.2: [done-when item 2]
+    - [ ] DW-N.X: [done-when item N...]
 
     [if plan phase has **Skills:** field, include:]
     ## Additional Skills
@@ -523,14 +525,15 @@ Agent tool:
     [For Phase N>1: "Completed: Phase 1: [name] — [1 sentence summary]. Phase 2: ..."]
     Current: Phase N of M
 
-    ## Done-When Items
-    These are the acceptance criteria from the plan. Verify each one against the
-    implementation with concrete evidence (file:line, test, observable behavior).
-    Any item not satisfied → FAIL.
-    [paste ALL done-when items from the plan phase, one per line:]
-    - [ ] [done-when item 1]
-    - [ ] [done-when item 2]
-    - [ ] [done-when item N...]
+    ## Done-When Items (DW-IDs) — Requirement Verification
+    For EACH item below, mark SATISFIED or NOT_SATISFIED with evidence
+    (file:line, test name, or observable behavior). Any NOT_SATISFIED → FAIL.
+    Do NOT skip items. Do NOT check against pseudocode only — these come
+    from the original plan and may include items the pre-gate agent missed.
+    [paste ALL DW items from the plan phase, verbatim:]
+    - DW-N.1: [done-when item 1] → Status: ___ Evidence: ___
+    - DW-N.2: [done-when item 2] → Status: ___ Evidence: ___
+    - DW-N.X: [done-when item N...] → Status: ___ Evidence: ___
 
     [if plan phase has **Skills:** field, include:]
     ## Additional Skills

@@ -90,30 +90,30 @@ Write to: `docs/building/<plan-name>-phase-N-discovery.md`
 
 This step prevents silent descoping — the most common cause of missed requirements in multi-agent builds.
 
-### Extract Done-When Items
+### Extract DW Items
 
-Read the plan phase section and extract every `- [ ]` item under `**Done when:**`.
+Read the dispatch prompt's `## Done-When Items (DW-IDs)` section. These come from the original plan — use them verbatim, do not paraphrase or renumber.
 
-### Verify Each Item
+### Verify Each DW Item
 
-For each done-when item, determine:
-- **COVERED** — your pseudocode will address this. State HOW.
+For each DW item, determine:
+- **COVERED** — your pseudocode will address this. State which section.
 - **CANNOT_MEET** — this cannot be satisfied. State WHY.
 
 If any item is CANNOT_MEET, return UPDATE_PLAN. Do not call it "additive" or "optional" — surface it so the orchestrator can decide.
 
-### Write Verification Table
+### Write DW Verification Table
 
 Include this table in the pseudocode file (see Phase 3 below):
 
 ```markdown
-## Done-When Verification
+## DW Verification
 
-| # | Done-When Item | Status | Evidence |
-|---|---------------|--------|----------|
-| 1 | [exact text from plan] | COVERED | [which pseudocode section addresses this] |
-| 2 | [exact text from plan] | COVERED | [which pseudocode section addresses this] |
-| 3 | [exact text from plan] | CANNOT_MEET | [why, and what changed] |
+| DW-ID | Done-When Item | Status | Pseudocode Section |
+|-------|---------------|--------|-------------------|
+| DW-N.1 | [exact text from plan] | COVERED | [section heading] |
+| DW-N.2 | [exact text from plan] | COVERED | [section heading] |
+| DW-N.3 | [exact text from plan] | CANNOT_MEET | [why] |
 
 **All items COVERED:** YES / NO
 **If NO → returning UPDATE_PLAN**
@@ -122,9 +122,9 @@ Include this table in the pseudocode file (see Phase 3 below):
 ### Self-Check Before Proceeding
 
 STOP. Before writing pseudocode, verify:
-- [ ] Every done-when item from the plan is listed in the table
-- [ ] No done-when items were silently omitted
-- [ ] Items marked COVERED have a concrete pseudocode section that addresses them
+- [ ] Every DW item from the dispatch prompt is in the table (compare counts)
+- [ ] No DW items were silently omitted
+- [ ] Items marked COVERED name a specific pseudocode section
 - [ ] Items marked CANNOT_MEET have a clear reason
 
 **If you cannot fill this table completely, you are not ready to write pseudocode.**
@@ -133,22 +133,20 @@ STOP. Before writing pseudocode, verify:
 
 ## Phase 3: Pseudocode (Design What to Build)
 
-Use your `cc-pseudocode-programming` and `aposd-designing-deep-modules` lenses.
-
 ### Write Pseudocode
 
-Based on discovery findings + plan requirements, write implementation-ready pseudocode.
+Based on discovery findings + plan requirements, write implementation-ready pseudocode. Tag each section heading with the DW items it addresses.
 
 Write to: `docs/building/<plan-name>-phase-N-pseudocode.md`
 
 ```markdown
 # Pseudocode: Phase N - [name]
 
-## Done-When Verification
+## DW Verification
 
-| # | Done-When Item | Status | Evidence |
-|---|---------------|--------|----------|
-| 1 | [exact text] | COVERED | [pseudocode section] |
+| DW-ID | Done-When Item | Status | Pseudocode Section |
+|-------|---------------|--------|-------------------|
+| DW-N.1 | [exact text] | COVERED | [section heading] |
 
 **All items COVERED:** YES
 
@@ -157,10 +155,10 @@ Write to: `docs/building/<plan-name>-phase-N-pseudocode.md`
 
 ## Pseudocode
 
-### [file1.ext]
+### [file1.ext] [DW-N.1, DW-N.3]
 [pseudocode for file 1]
 
-### [file2.ext]
+### [file2.ext] [DW-N.2]
 [pseudocode for file 2]
 
 ## Design Notes

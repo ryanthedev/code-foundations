@@ -51,23 +51,24 @@ Do NOT proceed until standards are loaded.
 
 **Before checking code quality, verify the implementation satisfies the plan's requirements.**
 
-This is the check that code review alone cannot provide. Post-gate reviews code against pseudocode — but if pre-gate silently descoped a requirement, the pseudocode won't include it. This step catches that gap.
+This is the check that code review alone cannot provide. Post-gate reviews code against pseudocode — but if pre-gate silently descoped a requirement, the pseudocode won't include it. This step catches that gap because DW items come from the **original plan via the orchestrator**, not from the pseudocode.
 
-**Extract done-when items** from the plan phase section (every `- [ ]` under `**Done when:**`).
+**Use the DW items from the dispatch prompt's `## Done-When Items (DW-IDs)` section.** Do NOT extract from the plan file yourself — the orchestrator already did this.
 
-**For each done-when item:**
+**For each DW item:**
 - Find concrete evidence in the implementation (file:line, test, observable behavior)
 - Mark: **SATISFIED** (with evidence) or **NOT_SATISFIED** (with what's missing)
+- Do NOT skip any item. A blank or missing item is a FAIL.
 
 **Write the verification table:**
 
 ```markdown
 ## Requirement Fulfillment
 
-| # | Done-When Item | Status | Evidence |
-|---|---------------|--------|----------|
-| 1 | [exact text from plan] | SATISFIED | [file:line or behavior] |
-| 2 | [exact text from plan] | NOT_SATISFIED | [what's missing] |
+| DW-ID | Done-When Item | Status | Evidence |
+|-------|---------------|--------|----------|
+| DW-N.1 | [exact text from dispatch] | SATISFIED | [file:line or behavior] |
+| DW-N.2 | [exact text from dispatch] | NOT_SATISFIED | [what's missing] |
 
 **All requirements met:** YES / NO
 ```
@@ -86,12 +87,13 @@ Scan implementation files for unused imports, unreachable code, debug statements
 
 **Unreachable code after early returns → FAIL.** Other dead code → note as finding.
 
-### 4. Skill Verification
+### 4. Standards Verification
 
-Run both loaded skill checklists against the implementation:
+Apply the post-gate standards (loaded from `references/post-gate-standards.md`):
 
-- **aposd-verifying-correctness**: 6-dimension check (requirements, concurrency, errors, resources, boundaries, security). Output PASS/FAIL/N/A per dimension.
-- **cc-defensive-programming**: Focus on silent failures — empty catch blocks, swallowed exceptions, unvalidated external input, broad exception types.
+- **Correctness dimensions**: 5-dimension check (concurrency, errors, resources, boundaries, security). Output PASS/FAIL/N/A per dimension.
+- **Defensive programming**: Focus on silent failures — empty catch blocks, swallowed exceptions, unvalidated external input, broad exception types.
+- **Design quality**: Depth > length, unknown unknowns, pass-through methods, together/apart.
 
 **Any correctness dimension FAIL or critical defensive violation → FAIL.**
 

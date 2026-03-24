@@ -390,9 +390,11 @@ Each phase is a flat checklist. No contract structure, no risk analysis.
 **Constraints:** [non-discoverable requirements -- omit if none]
 
 **Done when:**
-- [ ] [Verifiable criterion]
-- [ ] [Verifiable criterion]
+- [ ] DW-N.1: [Verifiable criterion]
+- [ ] DW-N.2: [Verifiable criterion]
 ```
+
+**DW-ID format:** `DW-{phase}.{item}` — every done-when item gets a stable ID. The building orchestrator extracts these and injects them into PRE-GATE and POST-GATE dispatch prompts to prevent silent requirement descoping.
 
 ---
 
@@ -423,8 +425,8 @@ Each phase is a flat checklist. No contract structure, no risk analysis.
 **Depends on:** [Phase X] | **Unlocks:** [Phase Y]
 
 **Done when:**
-- [ ] [Observable, verifiable condition]
-- [ ] [Observable, verifiable condition]
+- [ ] DW-N.1: [Observable, verifiable condition]
+- [ ] DW-N.2: [Observable, verifiable condition]
 
 **Difficulty:** LOW / MEDIUM / HIGH
 **Uncertainty:** [what could change -- or "None"]
@@ -642,8 +644,8 @@ _To be filled during /code-foundations:building_
 **Depends on:** None | **Unlocks:** Phase 2
 
 **Done when:**
-- [ ] [verifiable criterion]
-- [ ] [verifiable criterion]
+- [ ] DW-1.1: [verifiable criterion]
+- [ ] DW-1.2: [verifiable criterion]
 
 **Difficulty:** [LOW/MEDIUM/HIGH]
 **Uncertainty:** [what we don't know, or "None"]
@@ -748,6 +750,7 @@ Agent tool:
     - [ ] Approach notes contain ONLY non-discoverable user decisions, not implementation details
     - [ ] Every phase has at least one file hint (Medium/Complex)
     - [ ] Every done-when criterion is externally observable and verifiable
+    - [ ] Every done-when item has a DW-ID (`DW-{phase}.{item}`)
     - [ ] No phase exists solely for hypothetical future needs (YAGNI)
 
     ### Cross-Phase Coherence

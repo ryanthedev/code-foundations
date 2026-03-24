@@ -8,12 +8,12 @@ Combined constraints from aposd-verifying-correctness, cc-quality-practices, apo
 
 Before checking code quality, verify the implementation satisfies requirements.
 
-- [ ] List each requirement explicitly (from plan done-when items)
-- [ ] For each: cite file:line that implements it
-- [ ] Any requirement without code → NOT DONE
-- [ ] Any code without requirement → scope creep
+- [ ] Use DW items from the dispatch prompt (orchestrator extracted these from the plan)
+- [ ] For each DW item: cite file:line that implements it
+- [ ] Any DW item without code → NOT SATISFIED → FAIL
+- [ ] Any code without a DW item → scope creep, flag it
 
-**"I think I covered everything" without explicit mapping = FAIL.**
+**"I think I covered everything" without explicit DW-by-DW mapping = FAIL.**
 
 ---
 
@@ -111,8 +111,8 @@ For non-emergency review, use the full 21-item checklist: `Skill(code-foundation
 ## Post-Gate Review
 
 ### Requirements: [X/Y satisfied]
-- R1: [requirement] → [file:line] SATISFIED
-- R2: [requirement] → NOT SATISFIED — [why]
+- DW-N.1: [requirement] → [file:line] SATISFIED
+- DW-N.2: [requirement] → NOT SATISFIED — [why]
 
 ### Correctness Dimensions
 - Concurrency: [PASS/FAIL/N/A] — [evidence]
