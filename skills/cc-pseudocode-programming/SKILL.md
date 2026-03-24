@@ -71,7 +71,7 @@ Triggers:
   - "overwhelmed by where to start coding"
 Non-Triggers:
   - "review my existing code" → cc-routine-and-class-design
-  - "is this architecture right" → cc-construction-prerequisites
+  - "is this architecture right" → aposd-designing-deep-modules
 Produces: Pseudocode design, header comments, implementation plan
 
 #### PPP Process Steps

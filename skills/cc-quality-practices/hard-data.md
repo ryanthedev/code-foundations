@@ -498,10 +498,8 @@ Relying on any single defect-detection technique.
 | Skill | Connection |
 |-------|------------|
 | cc-defensive-programming | Error prevention techniques complement detection |
-| cc-code-layout-and-style | Good formatting helps anomalies stand out during debugging |
-| cc-documentation-quality | Documentation reviewed during inspections |
+| code-clarity-and-docs | Good formatting and documentation helps anomalies stand out during debugging and reviews |
 | cc-routine-and-class-design | Error clustering relates to design quality |
-| cc-construction-prerequisites | Upstream QA more cost-effective than downstream |
 
 ### Related APOSD Skills
 

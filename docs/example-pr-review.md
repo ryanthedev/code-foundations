@@ -169,13 +169,11 @@ What would you like to do with these findings?
 | cc-defensive-programming | 31 | Error handling, validation |
 | aposd-simplifying-complexity | 44 | Complexity reduction |
 | aposd-reviewing-module-design | 36 | Module depth, information hiding |
-| cc-code-layout-and-style | 85 | Formatting, readability |
+| code-clarity-and-docs | 134 | Formatting, readability, comments, docs |
 | cc-control-flow-quality | 124 | Loops, conditionals, nesting |
 | aposd-verifying-correctness | 40 | Requirements coverage, edge cases |
 | cc-quality-practices | 115 | Testing, debugging |
-| cc-performance-tuning | 50 | Performance issues |
-| aposd-optimizing-critical-paths | 40 | Hot paths, optimization |
-| cc-documentation-quality | 49 | Comments, API docs |
+| performance-optimization | 90 | Performance issues, hot paths, optimization |
 | **Total** | **614** | |
 
 ## Token Usage

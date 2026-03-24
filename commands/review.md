@@ -9,7 +9,7 @@ Checklist-driven review workflow.
 
 ```
 /code-foundations:review --sanity          # 99 checks, quick pre-commit
-/code-foundations:review --pr              # 614 checks, full PR review
+/code-foundations:review --pr              # 546 checks, full PR review
 ```
 
 ---
@@ -46,7 +46,7 @@ Checklist-driven review workflow.
                    (GC-, EH-...)    + skills
 ```
 
-- **614 checks** across 10 skill checklists
+- **546 checks** across 8 skill checklists
 - **Prefix-based grouping** (GC-, EH-, OP-, etc.)
 - **Skill loading** per check group
 
@@ -104,7 +104,7 @@ AskUserQuestion(
       question: "Which review profile do you want to use?",
       options: [
         {label: "Sanity (Recommended)", description: "99 critical checks. Quick pre-commit sanity."},
-        {label: "PR", description: "614 checks across 10 skills. Full PR review."}
+        {label: "PR", description: "546 checks across 8 skills. Full PR review."}
       ]
     }
   ]
@@ -794,7 +794,7 @@ TaskUpdate(taskId=phase6_id, status="completed")
 
 ---
 
-# PR FLOW (614 checks, prefix-based grouping)
+# PR FLOW (546 checks, prefix-based grouping)
 
 ---
 
@@ -900,15 +900,13 @@ Mark all extraction tasks completed.
 
 **Available checker skills** (orchestrator picks per group):
 - `cc-defensive-programming` - input validation, assertions, error handling
-- `cc-performance-tuning` - optimization, profiling, bottlenecks
-- `cc-code-layout-and-style` - formatting, readability, visual structure
+- `performance-optimization` - optimization, profiling, bottlenecks, critical paths
+- `code-clarity-and-docs` - formatting, readability, comments, docs, naming
 - `cc-control-flow-quality` - conditionals, loops, nesting, complexity
 - `cc-quality-practices` - testing, debugging, code review
-- `cc-documentation-quality` - comments, docs, naming
 - `aposd-reviewing-module-design` - abstraction, interfaces, dependencies
 - `aposd-simplifying-complexity` - complexity symptoms, deep modules
 - `aposd-verifying-correctness` - correctness, edge cases, invariants
-- `aposd-optimizing-critical-paths` - performance design, critical paths
 
 **Dispatch orchestrator:**
 ```python
@@ -938,7 +936,7 @@ Write to `{BASE_DIR}/checks.json`:
 
 ```json
 {{
-  "total_checks": 614,
+  "total_checks": 546,
   "groups": {{
     "GC": {{
       "name": "General Critical",
@@ -962,7 +960,7 @@ Write to `{BASE_DIR}/checks.json`:
     "OP": {{
       "name": "Overall Program Performance",
       "prompt": "Look for optimization anti-patterns. Red flags: micro-optimizing before measuring, I/O in tight loops, ignoring algorithmic improvements in favor of code tuning.",
-      "skills": ["cc-performance-tuning", "aposd-optimizing-critical-paths"],
+      "skills": ["performance-optimization"],
       "checks": [...]
     }}
   }}
@@ -978,15 +976,13 @@ Write to `{BASE_DIR}/checks.json`:
 
 2. **`skills`**: Pick 1-3 most relevant skills from this list:
    - `cc-defensive-programming` - input validation, assertions, error handling
-   - `cc-performance-tuning` - optimization, profiling, bottlenecks
-   - `cc-code-layout-and-style` - formatting, readability, visual structure
+   - `performance-optimization` - optimization, profiling, bottlenecks, critical paths
+   - `code-clarity-and-docs` - formatting, readability, comments, docs, naming
    - `cc-control-flow-quality` - conditionals, loops, nesting, complexity
    - `cc-quality-practices` - testing, debugging, code review
-   - `cc-documentation-quality` - comments, docs, naming
    - `aposd-reviewing-module-design` - abstraction, interfaces, dependencies
    - `aposd-simplifying-complexity` - complexity symptoms, deep modules
    - `aposd-verifying-correctness` - correctness, edge cases, invariants
-   - `aposd-optimizing-critical-paths` - performance design, critical paths
 
    Pick based on what the checks are actually examining. Don't load unrelated skills.
 
@@ -1140,7 +1136,7 @@ Return: `{BASE_DIR}/checking/{prefix}.json`
 - `cc-control-flow-quality` - conditionals, loops, complexity
 - `aposd-designing-deep-modules` - interface design, abstraction
 - `aposd-simplifying-complexity` - reducing cognitive load
-- `aposd-improving-code-clarity` - naming, comments, readability
+- `code-clarity-and-docs` - naming, comments, readability
 
 ```python
 Task(
@@ -1209,7 +1205,7 @@ for batch_num, batch in enumerate(batches):
 - Validation/security issues → `cc-defensive-programming`
 - Complexity/nesting issues → `aposd-simplifying-complexity`, `cc-control-flow-quality`
 - Interface/abstraction issues → `aposd-designing-deep-modules`
-- Naming/clarity issues → `aposd-improving-code-clarity`
+- Naming/clarity issues → `code-clarity-and-docs`
 - Structure issues → `cc-routine-and-class-design`
 - Always include `cc-refactoring-guidance` for safe changes
 
@@ -1554,7 +1550,7 @@ else:
 | Flag | Profile | Checks |
 |------|---------|--------|
 | `--sanity` | 99 core checks | Quick pre-commit |
-| `--pr` | 614 checks, 10 skills | Full PR review |
+| `--pr` | 546 checks, 8 skills | Full PR review |
 
 ---
 

@@ -1,12 +1,12 @@
 # Case Study: Critical Path Review
 
 **Type:** OPTIMIZE
-**Skills:** cc-performance-tuning
+**Skills:** performance-optimization
 **Focus:** Measure-first principle - knowing when NOT to optimize
 
 ## Why This Case Study Matters
 
-This example shows cc-performance-tuning **correctly deciding NOT to optimize**. The skill identified redundant loops but concluded they weren't worth fixing because the code isn't in the critical path.
+This example shows performance-optimization **correctly deciding NOT to optimize**. The skill identified redundant loops but concluded they weren't worth fixing because the code isn't in the critical path.
 
 ---
 

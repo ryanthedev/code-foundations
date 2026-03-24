@@ -59,7 +59,7 @@ User: "/code-foundations:whiteboarding add user notifications"
   └─ Handoff to /code-foundations:building
 ```
 
-**Skills loaded:** `cc-construction-prerequisites`, `aposd-designing-deep-modules`, `aposd-reviewing-module-design`
+**Skills loaded:** `aposd-designing-deep-modules`, `aposd-reviewing-module-design`
 
 **Task tracking:** Creates progress tasks at startup so you can see where whiteboarding is in its flow.
 
@@ -91,10 +91,10 @@ User: "/code-foundations:building docs/plans/2026-01-30-notifications.md"
 
 | Gate | Default Skills | What Gets Enforced |
 |------|---------------|-------------------|
-| PRE-GATE | `cc-construction-prerequisites`, `cc-pseudocode-programming`, `aposd-designing-deep-modules`, `cc-routine-and-class-design` | Plan assumptions, design-before-code, interface depth, cohesion/coupling |
-| IMPLEMENT | `cc-control-flow-quality`, `cc-data-organization`, `aposd-improving-code-clarity`, `aposd-simplifying-complexity` | Control flow, naming, comments-first, complexity reduction |
+| PRE-GATE | `cc-pseudocode-programming`, `aposd-designing-deep-modules`, `cc-routine-and-class-design` | Design-before-code, interface depth, cohesion/coupling |
+| IMPLEMENT | `cc-control-flow-quality`, `aposd-simplifying-complexity`, `code-clarity-and-docs` | Control flow, naming, comments-first, complexity reduction |
 | POST-GATE | `aposd-verifying-correctness`, `cc-quality-practices`, `aposd-reviewing-module-design`, `cc-defensive-programming` | Correctness, quality, module design, error handling |
-| VERIFY | `cc-code-layout-and-style`, `cc-documentation-quality`, `cc-performance-tuning`, `aposd-optimizing-critical-paths` | Layout, docs, performance regressions, build + tests + lint |
+| VERIFY | `performance-optimization`, `cc-refactoring-guidance` | Performance regressions, refactoring opportunities, build + tests + lint |
 
 **Additional skills from plan:** If whiteboarding's skill audit identified relevant skills from other plugins (e.g., `react-native-foundations:coding`, `design-for-ai:a11y-audit`), building loads them alongside the defaults.
 

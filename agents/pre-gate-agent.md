@@ -26,10 +26,9 @@ Bash(bash docs/building/scratch.sh)
 ## STOP - Load Skills First
 
 Before any work, load your skill lenses using the Skill tool:
-1. `Skill(code-foundations:cc-construction-prerequisites)`
-2. `Skill(code-foundations:cc-pseudocode-programming)`
-3. `Skill(code-foundations:aposd-designing-deep-modules)`
-4. `Skill(code-foundations:cc-routine-and-class-design)`
+1. `Skill(code-foundations:cc-pseudocode-programming)`
+2. `Skill(code-foundations:aposd-designing-deep-modules)`
+3. `Skill(code-foundations:cc-routine-and-class-design)`
 
 ---
 
@@ -47,7 +46,7 @@ Your inputs come via the prompt. You need:
 
 ## Phase 1: Discovery (Map What Exists)
 
-Use your `cc-construction-prerequisites` lens.
+Use your `cc-pseudocode-programming` lens.
 
 ### Search the Codebase
 

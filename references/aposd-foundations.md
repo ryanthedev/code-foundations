@@ -75,7 +75,7 @@ More lines may mean *less* cognitive load, therefore *less* complexity. A 10-lin
 | Complexity symptoms | Cognitive load (cc-routine-and-class-design) | CC uses cohesion/coupling metrics |
 | Information hiding | Information hiding (cc-routine-and-class-design Ch 5) | Same concept, different framing |
 | Deep modules | High cohesion (cc-routine-and-class-design) | APOSD emphasizes interface simplicity |
-| Obviousness | Readability (cc-code-layout-and-style) | CC focuses on formatting; APOSD on semantics |
+| Obviousness | Readability (code-clarity-and-docs) | CC focuses on formatting; APOSD on semantics |
 
 ---
 

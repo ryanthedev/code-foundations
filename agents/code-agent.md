@@ -29,7 +29,6 @@ Before any work, load your skill lenses using the Skill tool:
 1. `Skill(code-foundations:cc-pseudocode-programming)`
 2. `Skill(code-foundations:aposd-designing-deep-modules)`
 3. `Skill(code-foundations:cc-routine-and-class-design)`
-4. `Skill(code-foundations:cc-construction-prerequisites)`
 
 ---
 
@@ -91,7 +90,6 @@ Used by: [callers]
 - `cc-pseudocode-programming` — is each step clear and implementable?
 - `aposd-designing-deep-modules` — is the interface simpler than the implementation?
 - `cc-routine-and-class-design` — cohesion, coupling, parameter count
-- `cc-construction-prerequisites` — are all dependencies available?
 
 **DO NOT:**
 - Write actual code — pseudocode only

@@ -1,0 +1,303 @@
+---
+name: performance-optimization
+description: Use when code is too slow, has performance issues, timeouts, OOM errors, high CPU/memory, or doesn't scale. Triggers on: profiler hot spots, latency complaints, needs optimization, critical path analysis.
+---
+
+# Skill: performance-optimization
+
+## STOP - Measure First (MANDATORY GATE)
+
+**Do not optimize based on intuition -- profile first.**
+
+- **Correctness before speed** -- make it work, then make it fast
+- **<4% of code causes >50% of runtime** (Knuth 1971) -- find the hot spot before touching anything
+- **>50% of optimizations produce negligible or negative results** -- measurement prevents wasted effort
+
+No measurement = no optimization. This gate is non-negotiable.
+
+---
+
+## Scope Limitations
+
+This skill covers single-threaded, single-process code tuning for general-purpose computing.
+
+**Not covered (need specialized guidance):**
+- **Concurrency:** Lock contention often dominates; profile thread states, not just CPU
+- **Distributed systems:** Network latency ~10,000x memory; optimize RPC/serialization first
+- **Real-time systems:** Need worst-case latency, not average; caching adds variance
+- **Embedded/constrained:** Memory/power budgets require different tradeoffs
+
+---
+
+## The Simplicity-Performance Relationship
+
+| Myth | Reality |
+|------|---------|
+| "Performance requires complexity" | Simpler code usually runs faster |
+| "Clean design sacrifices speed" | Clean design and high performance are compatible |
+| "Optimization means adding code" | Optimization often means removing code |
+
+Why: fewer special cases = less code to check, deep classes = more work per call with fewer layer crossings, complicated code does extraneous or redundant work.
+
+---
+
+## Expensive Operations Reference
+
+| Operation | Cost | Context |
+|-----------|------|---------|
+| Network (datacenter) | 10-50 us | Tens of thousands of instructions |
+| Network (wide-area) | 10-100 ms | Millions of instructions |
+| Disk I/O | 5-10 ms | Millions of instructions |
+| Flash storage | 10-100 us | Thousands of instructions |
+| Dynamic memory allocation | Significant | malloc/new, freeing, GC overhead |
+| Cache miss | Few hundred cycles | Often determines overall performance |
+| I/O vs memory | ~1000x difference | Batch I/O, avoid I/O in tight loops |
+| Interpreted vs compiled | >100x slower | PHP/Python vs C++ |
+
+---
+
+## Primary Workflow: 7-Step Decision Tree
+
+Each step is a gate. Do NOT skip steps.
+
+```
+1. Is the program correct and complete?
+   NO  -> Make it correct first. STOP optimization.
+   YES -> Continue
+
+2. Have you measured to find the actual bottleneck?
+   NO  -> Profile/measure first. Do NOT guess.
+   YES -> Continue
+
+3. Can requirements be relaxed?
+   YES -> Relax requirements. Done.
+   NO  -> Continue
+
+4. Can design/architecture solve it? (Stage 2: Fundamental Fixes)
+   YES -> Fix design. Done.
+   NO  -> Continue
+
+5. Can algorithm/data structure solve it?
+   YES -> Change algorithm. Done.
+   NO  -> Continue
+
+6. Can compiler flags help? (40-59% improvement possible)
+   YES -> Enable optimizations. Measure.
+   NO  -> Continue
+
+7. Is it in the <4% that causes >50% of runtime?
+   NO  -> Do NOT optimize this code. Find actual hot spot.
+   YES -> PROCEED with code tuning (see below)
+```
+
+### Step 2 Detail: Measurement
+
+**What counts as valid measurement:**
+- Actual profiling data (timing, call counts, memory usage)
+- Multiple runs to account for variance
+- Specific hotspot identification, not just "it's slow"
+
+**Identify WHICH dimension:** throughput, latency, memory, or CPU. Different problems need different solutions.
+
+### Step 4 Detail: Fundamental Fixes (APOSD Stage 2)
+
+Before code-level changes, check for architectural fixes:
+
+- **Add a cache?** Eliminate repeated expensive computation
+- **Better algorithm?** e.g., balanced tree vs. list, hash map vs. linear search
+- **Bypass layers?** e.g., kernel bypass for networking, direct buffer access
+
+If a fundamental fix exists, implement it with standard design techniques. If not, continue down the tree.
+
+### Step 4 Extended: Critical Path Redesign (APOSD Stage 3)
+
+When no fundamental fix is available, redesign the critical path:
+
+1. **Ask:** What is the smallest amount of code for the common case?
+2. **Disregard** existing code structure entirely
+3. **Ignore** special cases in current code -- consider only data needed for critical path
+4. **Define "the ideal"** -- simplest and fastest code assuming complete redesign freedom
+5. **Design** the rest of the class around these critical paths
+
+**Consolidation techniques:**
+
+| Technique | Example |
+|-----------|---------|
+| Encode multiple conditions in single value | Variable that is 0 when any special case applies |
+| Single test for multiple cases | Replace 6 individual checks with 1 combined check |
+| Combine layers into single method | Critical path handled in one method, not three |
+| Merge variables | Combine multiple values into single structure |
+
+---
+
+## Code Tuning Procedure (STRICT ORDER)
+
+Only reached after completing the 7-step decision tree.
+
+```
+1. Save working version (cannot revert without backup)
+2. Make ONE change (multiple changes = unmeasurable)
+3. Measure improvement (same workload, before/after)
+4. Keep if faster, revert if not (no "close enough")
+5. Repeat
+```
+
+### Technique Priority by Category
+
+**Logic:**
+1. Stop testing when answer known (break, short-circuit)
+2. Order tests by frequency (most common first)
+3. Substitute table lookups for complex logic
+4. Use lazy evaluation
+
+**Loops:**
+1. Unswitch (move invariant tests outside)
+2. Jam/fuse loops operating on same range
+3. Put busiest loop on inside
+4. Minimize work inside loops
+5. Use sentinel values for search loops
+6. Unroll ONLY if measured (can be -27% in Python!)
+
+**Data:**
+1. Use integers instead of floating-point when possible
+2. Use fewest array dimensions
+3. Cache frequently computed values
+4. Precompute results where practical
+
+**Expressions:**
+1. Initialize at compile time
+2. Exploit algebraic identities
+3. Use strength reduction (multiplication -> addition)
+4. Eliminate common subexpressions
+
+---
+
+## Core Patterns (with empirical data)
+
+**PREREQUISITE:** Only apply after profiling confirms the code is in the <4% hot path.
+
+### Sentinel Value in Search Loop (23-65% faster)
+```java
+// BEFORE: Compound test every iteration
+found = false; i = 0;
+while (!found && i < count) {
+    if (item[i] == target) found = true;
+    i++;
+}
+
+// AFTER: Single test per iteration
+item[count] = target;  // sentinel
+i = 0;
+while (item[i] != target) { i++; }
+if (i < count) { /* found at position i */ }
+```
+
+### Loop Unswitching (19-28% faster)
+```java
+// BEFORE: Testing invariant condition every iteration
+for (i = 0; i < count; i++) {
+    if (type == TYPE_A) { processTypeA(item[i]); }
+    else { processTypeB(item[i]); }
+}
+
+// AFTER: Test once outside loop
+if (type == TYPE_A) {
+    for (i = 0; i < count; i++) { processTypeA(item[i]); }
+} else {
+    for (i = 0; i < count; i++) { processTypeB(item[i]); }
+}
+```
+
+### Strength Reduction (90-99.9% faster)
+```java
+// BEFORE: Expensive operation
+if (Math.sqrt(x) < Math.sqrt(y)) { ... }
+
+// AFTER: Algebraically equivalent (when x,y >= 0)
+if (x < y) { ... }
+```
+
+### Page Fault Loop Ordering (up to 1000x faster)
+```java
+// BEFORE: Column-major access causes page faults
+for (column = 0; column < MAX_COLUMNS; column++)
+    for (row = 0; row < MAX_ROWS; row++)
+        table[row][column] = BlankTableElement();
+
+// AFTER: Row-major access, sequential memory
+for (row = 0; row < MAX_ROWS; row++)
+    for (column = 0; column < MAX_COLUMNS; column++)
+        table[row][column] = BlankTableElement();
+```
+
+---
+
+## After Making Changes
+
+```
+1. RE-MEASURE to verify measurable performance difference
+2. EVALUATE the tradeoff:
+   - Significant speedup (with data)? -> Keep
+   - Simpler AND at least as fast? -> Keep
+   - Neither? -> BACK THEM OUT
+```
+
+---
+
+## Red Flags
+
+| Red Flag | Symptom |
+|----------|---------|
+| Premature Optimization | Optimizing without measurement |
+| Death by Thousand Cuts | Many small inefficiencies, no single fix helps (5-10x slower) |
+| Pass-Through Methods | Identical signature to caller, unnecessary layer crossing |
+| Shallow Layers | Multiple layers providing same abstraction |
+| Repeated Special Cases | Same conditions checked multiple times |
+| Trading maintainability for <10% gain | Complex optimization for minor speedup |
+
+---
+
+## Quick Reference
+
+| Threshold/Rule | Value | Source |
+|----------------|-------|--------|
+| Hot spot concentration | <4% causes >50% runtime | Knuth 1971 |
+| Failed optimization rate | >50% negligible or negative | CC p.607 |
+| Compiler optimization gains | 40-59% improvement possible | CC p.596 |
+| I/O vs memory | ~1000x difference | CC p.591 |
+
+```
+PRIORITY ORDER:
+1. Correct first
+2. Measure (MANDATORY GATE)
+3. Relax requirements
+4. Design/architecture fix (cache, algorithm, bypass layers)
+5. Critical path redesign (minimum code for common case)
+6. Compiler flags
+7. Code tuning (save -> one change -> measure -> keep/revert)
+
+Never skip steps. Never assume.
+```
+
+---
+
+## Checker
+
+Checklist: **[checklists.md]($CLAUDE_PLUGIN_ROOT/skills/performance-optimization/checklists.md)**
+
+Output Format:
+  | Item | Status | Evidence | Location |
+  |------|--------|----------|----------|
+  | Measured before tuning? | VIOLATION | No profiler/measurement found | N/A |
+  | Loop unswitching opportunity | WARNING | Invariant `if (debug)` inside loop | app.py:142 |
+
+Severity: VIOLATION (clear anti-pattern), WARNING (needs measurement), PASS (no issues)
+
+---
+
+## Chain
+
+| After | Next |
+|-------|------|
+| Optimization complete | Verify design not degraded |
+| Structure degraded | cc-refactoring-guidance |

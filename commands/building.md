@@ -230,8 +230,8 @@ Each sub-phase dispatches a specific agent type with specific skills. **Do NOT p
 
 | Sub-Phase | Agent Type | Default Skills (baked into agent template) |
 |-----------|-----------|-------------------------------|
-| N.1 PRE-GATE | `code-foundations:pre-gate-agent` | `cc-construction-prerequisites`, `cc-pseudocode-programming`, `aposd-designing-deep-modules`, `cc-routine-and-class-design` |
-| N.2 IMPLEMENT | `code-foundations:implementation-agent` | `cc-control-flow-quality`, `cc-data-organization`, `aposd-improving-code-clarity`, `aposd-simplifying-complexity` |
+| N.1 PRE-GATE | `code-foundations:pre-gate-agent` | `cc-pseudocode-programming`, `aposd-designing-deep-modules`, `cc-routine-and-class-design` |
+| N.2 IMPLEMENT | `code-foundations:implementation-agent` | `cc-control-flow-quality`, `aposd-simplifying-complexity`, `code-clarity-and-docs` |
 | N.3 POST-GATE | `code-foundations:post-gate-agent` | `aposd-verifying-correctness`, `cc-quality-practices`, `aposd-reviewing-module-design`, `cc-defensive-programming` |
 | N.4 CHECKPOINT | None (you do this) | N/A |
 
@@ -626,10 +626,8 @@ If any gate fails:
 
 ### Load Skill
 
-1. `Skill(code-foundations:cc-code-layout-and-style)` — formatting and layout consistency
-2. `Skill(code-foundations:cc-documentation-quality)` — comments, docs, and API documentation match the code
-3. `Skill(code-foundations:cc-performance-tuning)` — catch obvious performance regressions (O(n²), N+1 queries, unnecessary allocations)
-4. `Skill(code-foundations:aposd-optimizing-critical-paths)` — simpler code runs faster; flag unnecessary complexity in hot paths
+1. `Skill(code-foundations:performance-optimization)` — catch obvious performance regressions (O(n²), N+1 queries, unnecessary allocations) and flag unnecessary complexity in hot paths
+2. `Skill(code-foundations:cc-refactoring-guidance)` — identify refactoring opportunities introduced during implementation
 
 ### Test Coverage Check
 

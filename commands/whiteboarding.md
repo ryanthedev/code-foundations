@@ -15,9 +15,8 @@ The plan is a contract between whiteboarding and building. It specifies WHAT and
 ### Load Skills
 
 Before any work, load your skill lenses using the Skill tool:
-1. `Skill(code-foundations:cc-construction-prerequisites)`
-2. `Skill(code-foundations:aposd-designing-deep-modules)`
-3. `Skill(code-foundations:aposd-reviewing-module-design)`
+1. `Skill(code-foundations:aposd-designing-deep-modules)`
+2. `Skill(code-foundations:aposd-reviewing-module-design)`
 
 ### Create Progress Tasks
 
@@ -141,10 +140,8 @@ AUDIT:
 | Frontend/UI work | `design-for-ai:*` (design, color, fonts, a11y, flow, brand) |
 | Any web frontend | `*:a11y-audit` (accessibility auditing) |
 | .NET / Go / other stacks | Any domain-specific skills from installed plugins |
-| Performance-critical | `code-foundations:cc-performance-tuning`, `code-foundations:aposd-optimizing-critical-paths` |
-| Complex refactor | `code-foundations:cc-refactoring-guidance`, `code-foundations:aposd-maintaining-design-quality` |
-| OO design (new classes, interfaces, decoupling) | `code-foundations:gof-design-patterns` |
-| Integration-heavy | `code-foundations:cc-integration-practices` |
+| Performance-critical | `code-foundations:performance-optimization` |
+| Complex refactor | `code-foundations:cc-refactoring-guidance` |
 
 **Do NOT limit to code-foundations skills.** Any skill from any plugin is valid if it matches the work.
 
@@ -900,4 +897,4 @@ The plan specifies WHAT and WHY. The building pipeline discovers HOW.
 
 - **RECEIVES FROM:** User request, feature description, user story
 - **CHAINS TO:** building (via saved plan file)
-- **RELATED:** oberplan, aposd-designing-deep-modules, cc-construction-prerequisites
+- **RELATED:** oberplan, aposd-designing-deep-modules

@@ -363,5 +363,5 @@ Prefer over explicit loops when: operations are independent, no early exit neede
 
 | After | Next |
 |-------|------|
-| Control flow verified | cc-code-layout-and-style (CHECKER) |
+| Control flow verified | code-clarity-and-docs (CHECKER) |
 

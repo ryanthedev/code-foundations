@@ -28,9 +28,7 @@ Bash(bash docs/debug/scratch.sh)
 Before investigating, load your skill lenses using the Skill tool:
 1. `Skill(code-foundations:cc-debugging)`
 2. `Skill(code-foundations:cc-refactoring-guidance)`
-3. `Skill(code-foundations:aposd-maintaining-design-quality)`
-4. `Skill(code-foundations:cc-integration-practices)`
-5. `Skill(code-foundations:cc-quality-practices)`
+3. `Skill(code-foundations:cc-quality-practices)`
 
 ---
 
@@ -91,7 +89,7 @@ Once root cause is confirmed:
 
 - [ ] Fix addresses root cause, not symptoms
 - [ ] Fix is minimal — no refactoring mixed in
-- [ ] Fix doesn't degrade design quality (use `aposd-maintaining-design-quality` lens)
+- [ ] Fix doesn't degrade design quality
 - [ ] If fix requires restructuring, apply `cc-refactoring-guidance` — refactor first, then fix
 
 **DO NOT:**

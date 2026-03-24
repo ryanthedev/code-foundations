@@ -42,7 +42,7 @@ Code-foundations is a Claude Code plugin providing software engineering skills b
   + diffs                           14 core checks   provides fixes
 ```
 
-**PR Flow (--pr):** 614 checks, prefix-based grouping
+**PR Flow (--pr):** 546 checks, prefix-based grouping
 ```
 ┌────────────┐   ┌─────────────┐   ┌───────────┐   ┌─────────────┐   ┌───────────────┐
 │ EXTRACTION │ → │ CHECK ORCH  │ → │ CHECKING  │ → │ ORCHESTRATE │ → │ INVESTIGATION │
@@ -57,23 +57,21 @@ Code-foundations is a Claude Code plugin providing software engineering skills b
 | Preset | Checks | Use Case |
 |--------|--------|----------|
 | `--sanity` | 14 core (consensus-distilled) | Pre-commit sanity |
-| `--pr` | 614 (10 checklists) | Full PR review |
+| `--pr` | 546 (8 checklists) | Full PR review |
 
 ### Skill Checklist Counts
 
 | Skill | Checks |
 |-------|--------|
-| cc-defensive-programming | 31 |
+| cc-defensive-programming | 41 |
 | aposd-simplifying-complexity | 44 |
-| aposd-reviewing-module-design | 36 |
-| cc-code-layout-and-style | 85 |
-| cc-control-flow-quality | 124 |
-| aposd-verifying-correctness | 40 |
-| cc-quality-practices | 115 |
-| cc-performance-tuning | 50 |
-| aposd-optimizing-critical-paths | 40 |
-| cc-documentation-quality | 49 |
-| **Total (PR preset)** | **614** |
+| aposd-reviewing-module-design | 42 |
+| code-clarity-and-docs | 87 |
+| cc-control-flow-quality | 104 |
+| aposd-verifying-correctness | 33 |
+| cc-quality-practices | 125 |
+| performance-optimization | 70 |
+| **Total (PR preset)** | **546** |
 
 ### Review Execution Flow
 
@@ -152,10 +150,10 @@ Three-stage pattern for feature development:
 
 **Quality Gates (per phase during /code-foundations:building):**
 ```
-PRE-GATE:  cc-construction-prerequisites + cc-pseudocode-programming + aposd-designing-deep-modules + cc-routine-and-class-design + [plan Skills]
-IMPLEMENT: cc-control-flow-quality + cc-data-organization + aposd-improving-code-clarity + aposd-simplifying-complexity + [plan Skills]
+PRE-GATE:  cc-pseudocode-programming + aposd-designing-deep-modules + cc-routine-and-class-design + [plan Skills]
+IMPLEMENT: cc-control-flow-quality + aposd-simplifying-complexity + code-clarity-and-docs + [plan Skills]
 POST-GATE: aposd-verifying-correctness + cc-quality-practices + aposd-reviewing-module-design + cc-defensive-programming + [plan Skills]
-VERIFY:    cc-code-layout-and-style + cc-documentation-quality + cc-performance-tuning + aposd-optimizing-critical-paths + build + tests + lint
+VERIFY:    performance-optimization + cc-refactoring-guidance + build + tests + lint
 CHECKPOINT: Commit only after all gates pass
 ```
 

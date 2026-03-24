@@ -87,7 +87,7 @@ Triggers:
 Non-Triggers:
   - "review my class" -> CHECKER
   - "check this routine" -> CHECKER
-  - "optimize this code" -> cc-performance-tuning
+  - "optimize this code" -> performance-optimization
 Produces: Class interface designs, inheritance/containment decisions, routine signatures, cohesion classifications
 Constraints:
   - [p.133] Default to containment; only inherit if "is-a" is literally true (LSP)

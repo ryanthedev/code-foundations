@@ -185,7 +185,7 @@
 
 ### To CC Skills
 - [XREF] cc-defensive-programming - Error handling and input validation
-- [XREF] cc-code-layout-and-style - Formatting and naming conventions
+- [XREF] code-clarity-and-docs - Formatting and naming conventions
 - [XREF] cc-quality-practices - Testing and review strategies
 - [XREF] cc-pseudocode-programming - Routine design process
 

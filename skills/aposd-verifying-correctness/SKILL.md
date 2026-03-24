@@ -185,7 +185,6 @@ When verifying, output:
 | Skill | Focus | When |
 |-------|-------|------|
 | **aposd-designing-deep-modules** | Design quality | FIRST—during design |
-| **aposd-maintaining-design-quality** | Design philosophy | During modification |
 | **aposd-verifying-correctness** | Actual correctness | BEFORE "done" |
 | **cc-quality-practices** | Testing/debugging | Throughout |
 

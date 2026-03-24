@@ -27,9 +27,8 @@ Bash(bash docs/building/scratch.sh)
 
 Before implementing, load your skill lenses using the Skill tool:
 1. `Skill(code-foundations:cc-control-flow-quality)`
-2. `Skill(code-foundations:cc-data-organization)`
-3. `Skill(code-foundations:aposd-improving-code-clarity)`
-4. `Skill(code-foundations:aposd-simplifying-complexity)`
+2. `Skill(code-foundations:aposd-simplifying-complexity)`
+3. `Skill(code-foundations:code-clarity-and-docs)`
 
 ---
 

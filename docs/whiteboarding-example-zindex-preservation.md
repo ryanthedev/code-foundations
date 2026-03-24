@@ -1,7 +1,7 @@
 # Whiteboarding Example: Z-Index Preservation During Layout Refresh
 
 **Type:** WHITEBOARDING
-**Skills:** `cc-construction-prerequisites`, `aposd-designing-deep-modules`
+**Skills:** `aposd-designing-deep-modules`
 **Context:** Grid window manager - preserving window stacking order when applying default layout
 
 ## Why This Case Study Matters
