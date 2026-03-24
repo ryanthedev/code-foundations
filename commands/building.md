@@ -228,14 +228,14 @@ Phase 2.4: CHECKPOINT      → blockedBy: [2.3]
 
 Each sub-phase dispatches a specific agent type with specific skills. **Do NOT paraphrase the prompts below. Include the skill loading instructions VERBATIM.**
 
-| Sub-Phase | Agent Type | Default Skills (baked into agent template) |
+| Sub-Phase | Agent Type | Standards Loaded (baked into agent template) |
 |-----------|-----------|-------------------------------|
-| N.1 PRE-GATE | `code-foundations:pre-gate-agent` | `cc-pseudocode-programming`, `aposd-designing-deep-modules`, `cc-routine-and-class-design` |
-| N.2 IMPLEMENT | `code-foundations:implementation-agent` | `cc-control-flow-quality`, `aposd-simplifying-complexity`, `code-clarity-and-docs` |
-| N.3 POST-GATE | `code-foundations:post-gate-agent` | `aposd-verifying-correctness`, `cc-quality-practices`, `aposd-reviewing-module-design`, `cc-defensive-programming` |
+| N.1 PRE-GATE | `code-foundations:pre-gate-agent` | `references/pre-gate-standards.md` |
+| N.2 IMPLEMENT | `code-foundations:implementation-agent` | `references/implement-standards.md` |
+| N.3 POST-GATE | `code-foundations:post-gate-agent` | `references/post-gate-standards.md` |
 | N.4 CHECKPOINT | None (you do this) | N/A |
 
-**POST-GATE uses `code-foundations:post-gate-agent`.** Default skills are baked into the agent template — no skill loading needed in the dispatch prompt.
+**Standards files are combined references** distilled from individual skills. Agents Read() one file instead of loading 3-4 separate Skill() calls. Individual skills remain available for standalone invocation and code review.
 
 ### Additional Skills from Plan
 

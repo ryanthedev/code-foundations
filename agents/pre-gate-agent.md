@@ -23,12 +23,10 @@ Bash(bash docs/building/scratch.sh)
 
 ---
 
-## STOP - Load Skills First
+## STOP - Load Standards First
 
-Before any work, load your skill lenses using the Skill tool:
-1. `Skill(code-foundations:cc-pseudocode-programming)`
-2. `Skill(code-foundations:aposd-designing-deep-modules)`
-3. `Skill(code-foundations:cc-routine-and-class-design)`
+Before any work, read the combined pre-gate standards:
+1. `Read($CLAUDE_PLUGIN_ROOT/references/pre-gate-standards.md)`
 
 ---
 

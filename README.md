@@ -89,12 +89,14 @@ User: "/code-foundations:building docs/plans/2026-01-30-notifications.md"
 
 ### Quality Gates per Phase
 
-| Gate | Default Skills | What Gets Enforced |
-|------|---------------|-------------------|
-| PRE-GATE | `cc-pseudocode-programming`, `aposd-designing-deep-modules`, `cc-routine-and-class-design` | Design-before-code, interface depth, cohesion/coupling |
-| IMPLEMENT | `cc-control-flow-quality`, `aposd-simplifying-complexity`, `code-clarity-and-docs` | Control flow, naming, comments-first, complexity reduction |
-| POST-GATE | `aposd-verifying-correctness`, `cc-quality-practices`, `aposd-reviewing-module-design`, `cc-defensive-programming` | Correctness, quality, module design, error handling |
+| Gate | Standards Loaded | What Gets Enforced |
+|------|-----------------|-------------------|
+| PRE-GATE | `references/pre-gate-standards.md` | Design-before-code, interface depth, cohesion/coupling |
+| IMPLEMENT | `references/implement-standards.md` | Control flow, naming, comments-first, complexity reduction |
+| POST-GATE | `references/post-gate-standards.md` | Correctness, quality, module design, error handling |
 | VERIFY | `performance-optimization`, `cc-refactoring-guidance` | Performance regressions, refactoring opportunities, build + tests + lint |
+
+Individual skills (`cc-pseudocode-programming`, `aposd-designing-deep-modules`, etc.) remain available for standalone invocation and code review checklists.
 
 **Additional skills from plan:** If whiteboarding's skill audit identified relevant skills from other plugins (e.g., `react-native-foundations:coding`, `design-for-ai:a11y-audit`), building loads them alongside the defaults.
 

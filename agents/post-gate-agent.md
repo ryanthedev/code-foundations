@@ -23,14 +23,12 @@ Bash(bash docs/building/scratch.sh)
 
 ---
 
-## STOP - Load Skills First
+## STOP - Load Standards First
 
-1. `Skill(code-foundations:aposd-verifying-correctness)`
-2. `Skill(code-foundations:cc-quality-practices)`
-3. `Skill(code-foundations:aposd-reviewing-module-design)`
-4. `Skill(code-foundations:cc-defensive-programming)`
+Read the combined post-gate review standards:
+1. `Read($CLAUDE_PLUGIN_ROOT/references/post-gate-standards.md)`
 
-Do NOT proceed until all four skills are loaded.
+Do NOT proceed until standards are loaded.
 
 ---
 

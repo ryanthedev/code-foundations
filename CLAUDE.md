@@ -15,6 +15,7 @@ Code-foundations is a Claude Code plugin providing software engineering skills b
 | Code Complete | `cc-*` | Process rigor, metrics, checklists |
 | APOSD | `aposd-*` | Design philosophy, complexity reduction |
 | GoF Design Patterns | `gof-*` | 23 Gang of Four patterns, decision trees, structural recipes |
+| Legacy Code | `welc-*` | Safely modifying untested code (conditional, invoked from cc-refactoring-guidance) |
 
 ### Directory Structure
 
@@ -150,9 +151,9 @@ Three-stage pattern for feature development:
 
 **Quality Gates (per phase during /code-foundations:building):**
 ```
-PRE-GATE:  cc-pseudocode-programming + aposd-designing-deep-modules + cc-routine-and-class-design + [plan Skills]
-IMPLEMENT: cc-control-flow-quality + aposd-simplifying-complexity + code-clarity-and-docs + [plan Skills]
-POST-GATE: aposd-verifying-correctness + cc-quality-practices + aposd-reviewing-module-design + cc-defensive-programming + [plan Skills]
+PRE-GATE:  references/pre-gate-standards.md (distilled from cc-pseudocode-programming, aposd-designing-deep-modules, cc-routine-and-class-design) + [plan Skills]
+IMPLEMENT: references/implement-standards.md (distilled from cc-control-flow-quality, aposd-simplifying-complexity, code-clarity-and-docs) + [plan Skills]
+POST-GATE: references/post-gate-standards.md (distilled from aposd-verifying-correctness, cc-quality-practices, aposd-reviewing-module-design, cc-defensive-programming) + [plan Skills]
 VERIFY:    performance-optimization + cc-refactoring-guidance + build + tests + lint
 CHECKPOINT: Commit only after all gates pass
 ```
