@@ -214,28 +214,29 @@ The task list prevents rabbit holes, missed verifications, and lost context.
 **Single command. Parallel subagents.** Runs checklists against your code with specialized checking agents.
 
 ```bash
-/code-foundations:review --sanity   # 99 checks, quick pre-commit
-/code-foundations:review --pr       # 614 checks, full PR review
+/code-foundations:review --sanity   # 14 core checks, quick pre-commit
+/code-foundations:review --pr       # 546 checks, full PR review
 ```
 
-#### Architecture: 5-Phase Pipeline
+#### Architecture
 
+**Sanity (4-phase):**
 ```
-┌────────────┐   ┌──────────┐   ┌─────────────┐   ┌───────────────┐   ┌────────┐
-│ EXTRACTION │ → │ CHECKING │ → │ ORCHESTRATE │ → │ INVESTIGATION │ → │ REPORT │
-│  (haiku)   │   │ (haiku)  │   │   (haiku)   │   │    (haiku)    │   │(haiku) │
-└────────────┘   └──────────┘   └─────────────┘   └───────────────┘   └────────┘
+EXTRACTION (haiku) → ORCHESTRATE (sonnet) → CHECKING (sonnet) → INVESTIGATION (sonnet)
+```
+
+**PR (5-phase):**
+```
+EXTRACTION (haiku) → CHECK ORCH (haiku) → CHECKING (sonnet) → ORCHESTRATE (haiku) → INVESTIGATION (sonnet)
 ```
 
 | Phase | What Happens | Parallelism |
 |-------|--------------|-------------|
 | **Extraction** | Parse code into semantic units (functions, classes) | 1 agent per 5 files |
-| **Checking** | Run checklists against code, skills as agent personas | 1 agent per checklist |
-| **Orchestrate** | Batch findings, create investigation tasks | Single agent |
+| **Check Orch** | Group checks by ID prefix (PR only) | Single agent |
+| **Checking** | Run checklists against code | 1 agent per prefix group |
+| **Orchestrate** | Dedupe, batch findings, create investigation tasks | Single agent |
 | **Investigation** | Verify findings, capture code context and diff | 1 agent per 5 findings |
-| **Report** | Compile results into JSON, open dashboard | Single agent |
-
-The PR preset checks defensive programming, complexity reduction, module design, code layout, control flow, correctness verification, quality practices, performance, optimization, and documentation.
 
 ---
 

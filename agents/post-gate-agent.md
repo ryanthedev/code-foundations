@@ -106,13 +106,12 @@ Write review to: `docs/building/<plan-name>-phase-N-review.md`
 ```markdown
 # Review: Phase N - [name]
 
-## Verdict: PASS | FAIL
-
 ## Requirement Fulfillment
-| # | Done-When Item | Status | Evidence |
-|---|---------------|--------|----------|
-| 1 | [exact text from plan] | SATISFIED | [file:line or behavior] |
-| 2 | [exact text from plan] | SATISFIED | [file:line or behavior] |
+
+| DW-ID | Done-When Item | Status | Evidence |
+|-------|---------------|--------|----------|
+| DW-N.1 | [exact text from dispatch] | SATISFIED | [file:line or behavior] |
+| DW-N.2 | [exact text from dispatch] | NOT_SATISFIED | [what's missing] |
 
 **All requirements met:** YES / NO
 
@@ -125,36 +124,44 @@ Write review to: `docs/building/<plan-name>-phase-N-review.md`
 ## Dead Code
 [findings or "None found"]
 
-## Correctness Verification
+## Correctness Dimensions
 | Dimension | Status | Evidence |
 |-----------|--------|----------|
-| Req. Completeness | PASS/FAIL/N/A | [edge cases beyond done-when items] |
 | Concurrency | PASS/FAIL/N/A | [brief] |
 | Error Handling | PASS/FAIL/N/A | [brief] |
-| Resource Mgmt | PASS/FAIL/N/A | [brief] |
+| Resources | PASS/FAIL/N/A | [brief] |
 | Boundaries | PASS/FAIL/N/A | [brief] |
 | Security | PASS/FAIL/N/A | [brief] |
 
-## Defensive Programming
-[critical items checked, any violations]
+## Defensive Programming: [PASS/FAIL]
+[crisis triage results, any violations]
+
+## Design Quality: [findings with severity]
+[depth, unknown unknowns, pass-through methods]
+
+## Testing: [PASS/FAIL]
+[dirty:clean ratio, coverage gaps]
 
 ## Issues (if FAIL)
 1. [issue description]
    - File: [path:line]
    - Fix: [what to do]
+
+**Verdict: [PASS / FAIL — list blockers]**
 ```
 
 **Verdict rules:**
-- ANY done-when item NOT_SATISFIED → FAIL (requirement gap)
-- ANY pseudocode section missing → FAIL (spec mismatch)
-- ANY correctness dimension FAIL → FAIL (code quality)
+- ANY DW item NOT_SATISFIED → FAIL
+- ANY pseudocode section missing → FAIL
+- ANY correctness dimension FAIL → FAIL
+- ANY HIGH severity design finding → FAIL
 - ALL of the above pass → PASS
 
 ### Self-Check Before Returning Verdict
 
 STOP. Before writing the verdict, verify:
-- [ ] Every done-when item from the plan is in the Requirement Fulfillment table
-- [ ] No done-when items were silently omitted from the table
+- [ ] Every DW item from the dispatch prompt is in the Requirement Fulfillment table (compare counts)
+- [ ] No DW items were silently omitted
 - [ ] Every SATISFIED item has concrete evidence (file:line, not just "implemented")
 - [ ] Verdict matches the rules above (not your gut feeling)
 

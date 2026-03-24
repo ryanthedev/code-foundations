@@ -918,4 +918,4 @@ Starting fresh session before /code-foundations:building:
 
 - **RECEIVES FROM:** whiteboarding (via plan file), user with plan path
 - **CHAINS TO:** code-foundations skills during execution
-- **RELATED:** oberexec, aposd-verifying-correctness, cc-quality-practices
+- **RELATED:** aposd-verifying-correctness, cc-quality-practices

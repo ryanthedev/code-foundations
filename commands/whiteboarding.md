@@ -1,5 +1,5 @@
 ---
-description: "Brainstrom and plan features"
+description: "Brainstorm and plan features"
 ---
 
 # Skill: whiteboarding

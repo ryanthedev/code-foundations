@@ -8,7 +8,7 @@ argument-hint: "[--sanity | --pr] [--staged | files...]"
 Checklist-driven review workflow.
 
 ```
-/code-foundations:review --sanity          # 99 checks, quick pre-commit
+/code-foundations:review --sanity          # 14 core checks (distilled from 99), quick pre-commit
 /code-foundations:review --pr              # 546 checks, full PR review
 ```
 
@@ -103,7 +103,7 @@ AskUserQuestion(
       header: "Profile",
       question: "Which review profile do you want to use?",
       options: [
-        {label: "Sanity (Recommended)", description: "99 critical checks. Quick pre-commit sanity."},
+        {label: "Sanity (Recommended)", description: "14 core checks (distilled from 99). Quick pre-commit sanity."},
         {label: "PR", description: "546 checks across 8 skills. Full PR review."}
       ]
     }
@@ -1549,7 +1549,7 @@ else:
 
 | Flag | Profile | Checks |
 |------|---------|--------|
-| `--sanity` | 99 core checks | Quick pre-commit |
+| `--sanity` | 14 core checks (from 99) | Quick pre-commit |
 | `--pr` | 546 checks, 8 skills | Full PR review |
 
 ---

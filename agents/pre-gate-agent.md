@@ -44,7 +44,7 @@ Your inputs come via the prompt. You need:
 
 ## Phase 1: Discovery (Map What Exists)
 
-Use your `cc-pseudocode-programming` lens.
+Apply the pre-gate standards (pseudocode detail level, skip criteria).
 
 ### Search the Codebase
 
