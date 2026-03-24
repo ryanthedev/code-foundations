@@ -121,12 +121,6 @@ Skip the normal workflow ONLY when ALL of these conditions are true:
 3. The fix is minimal (rollback or single-line change)
 4. You commit to returning for proper implementation within 24 hours
 
-**Emergency does NOT mean:**
-- "Demo in 30 minutes" — That's planning failure
-- "CEO is asking" — Authority pressure ≠ emergency
-- "Team is blocked" — They can wait for you to think
-- "We need this fast" — Speed pressure is when discipline matters MOST
-
 ---
 
 ## Mandatory Output Format

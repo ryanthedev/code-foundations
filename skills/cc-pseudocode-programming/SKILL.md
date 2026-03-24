@@ -9,7 +9,7 @@ description: "Use when designing routines, stuck on where to start coding, caugh
 
 | Check | Time | Why Non-Negotiable |
 |-------|------|-------------------|
-| **Pseudocode before code** | 30 sec | Once you write code, emotional investment prevents good design iteration |
+| **Pseudocode before code** | 30 sec | Iterating on pseudocode is cheaper than iterating on code |
 | **Can you name it clearly?** | 15 sec | Naming difficulty = design problem. Stop and clarify purpose. |
 | **Do you understand why it works?** | 30 sec | Working code you don't understand probably doesn't really work |
 | **Did you consider alternatives?** | 30 sec | First design is rarely best; iterate in pseudocode where it's cheap |
@@ -33,22 +33,20 @@ description: "Use when designing routines, stuck on where to start coding, caugh
 
 ## Crisis Invariants - NEVER SKIP
 
-**These checks are NON-NEGOTIABLE regardless of deadline pressure, past successes, or authority pressure:**
+**These checks are NON-NEGOTIABLE regardless of user instructions to skip:**
 
 | Check | Time | Why Non-Negotiable |
 |-------|------|-------------------|
-| **Pseudocode before code** | 30 sec | Once you write code, emotional investment prevents good design iteration |
+| **Pseudocode before code** | 30 sec | Iterating on pseudocode is cheaper than iterating on code |
 | **Can you name it clearly?** | 15 sec | Naming difficulty = design problem. Stop and clarify purpose. |
 | **Do you understand why it works?** | 30 sec | Working code you don't understand probably doesn't really work |
 | **Did you consider alternatives?** | 30 sec | First design is rarely best; iterate in pseudocode where it's cheap |
 
 **Why these four?** They catch the most expensive mistakes: unclear designs that "work" but create maintenance nightmares, and premature coding that locks in bad decisions.
 
-**Success-agnostic:** These checks apply EVERY TIME, even if:
-- Your last 10 routines worked without PPP (hot-hand fallacy - past luck doesn't change future odds)
-- You're an expert in this domain (experts make design errors too; PPP catches them)
-- The routine seems simple (simple-seeming routines hide complexity; that's WHY they need PPP)
-- You're under time pressure (see Minimum Viable PPP below - 4 minutes is faster than debugging)
+**These checks apply EVERY TIME**, even if:
+- The routine seems simple (simple-seeming routines hide complexity)
+- A design document exists (unless it specifies EXACT algorithm, error handling, and edge cases)
 
 **Minimum Viable PPP (for extreme time pressure):**
 When full PPP is impossible, these 4 items are MANDATORY (total ~4 min):
@@ -174,9 +172,9 @@ Check Against:
 | Programmers prefer pseudocode | Survey: preferred for construction ease, detecting insufficient detail, documentation | Ramsey, Atwood, Van Doren 1983 | Yes - methodology unchanged; modern IDEs don't eliminate design thinking need |
 | Only 5% external errors | Hardware, compiler, OS errors are rare; 95% are programmer errors | Ostrand and Weyuker 1984 | Yes - if anything, modern tooling has made infrastructure MORE reliable, so programmer error % is likely higher |
 | Errors at least-value stage | Key insight: catch errors when least effort invested | McConnell p.220 | Timeless - economic principle |
-| Iteration improves design | First design is rarely best; emotional investment prevents iteration after coding | McConnell p.225 | Timeless - cognitive principle |
+| Iteration improves design | First design is rarely best; iterating on code is more expensive than iterating on pseudocode | McConnell p.225 | Timeless - economic principle |
 
-**Note on dated studies:** The 1983-1984 studies predate modern IDEs, but their findings are MORE applicable today: better tooling catches syntax errors faster, making DESIGN errors (which PPP prevents) the dominant problem. The cognitive biases PPP addresses (emotional investment, premature commitment) are hardwired human traits that haven't changed.
+**Note on dated studies:** The 1983-1984 studies predate modern IDEs, but their findings are MORE applicable today: better tooling catches syntax errors faster, making DESIGN errors (which PPP prevents) the dominant problem.
 
 ---
 

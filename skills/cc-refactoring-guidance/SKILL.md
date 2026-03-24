@@ -28,7 +28,7 @@ description: "Use when modifying existing code, improving structure without chan
 - Small changes need MORE rigor, not less
 - Sometimes rewrite is better than big refactoring
 
-**Critical:** Error rates are PER CHANGE, not per person. Your 10-change success streak does not reduce probability on change 11. Each change is an independent event with >50% first-attempt error rate.
+**Critical:** Each change has >50% first-attempt error rate regardless of prior results. Error rates are per change, not cumulative.
 
 **Definitions:**
 - **small** = ONE structural change (one rename, one extract, one inline). If you describe it with "and", it's not small.
@@ -127,7 +127,7 @@ When production is down:
 2. **Deploy the fix** - Get production up.
 3. **THEN refactor** - As separate activity when stable.
 
-Emergency pressure doesn't change error statistics—it makes them WORSE due to stress. "Fix AND clean up" requests during outages: split them. Fix first, deploy, clean up later.
+Combining fix and refactor in one change increases complexity and error likelihood. Split them.
 
 #### When Prerequisites Are Missing
 
@@ -142,10 +142,8 @@ Emergency pressure doesn't change error statistics—it makes them WORSE due to 
 2. STRONGLY recommend: set up VCS first. This is almost always the right choice.
 
 **No reviewer available:**
-1. Self-review with 24h delay (review your own changes after sleeping on it)
-2. Rubber duck review (explain changes out loud, document the "conversation")
-3. AI-assisted review (note: not equivalent to human review, but better than nothing)
-4. Accept higher risk: smaller changes, more commits, more testing
+1. Perform systematic checklist-based self-review
+2. Smaller changes, more commits, more testing to compensate
 
 #### Refactoring vs Rewriting Decision
 ```
@@ -220,7 +218,7 @@ If you skipped review on a small change:
 - **Before merge:** Get the review now. It's not too late.
 - **After merge:** Note it, move on, don't skip next time.
 
-**"It's too late" is almost never true.** The discomfort of fixing violations is smaller than the debugging cost of bugs they cause.
+**Fixing violations post-commit is still worthwhile** — the cost of fixing now is less than the debugging cost of bugs they cause.
 
 ---
 

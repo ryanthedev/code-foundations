@@ -1,6 +1,6 @@
 ---
 name: cc-routine-and-class-design
-description: "Use when designing routines or classes, reviewing class interfaces, choosing between inheritance and containment, or evaluating routine cohesion. Also trigger when tempted to use inheritance as a quick fix under deadline pressure, or when rationalizing 'but it works' for code with deep inheritance or many parameters"
+description: "Use when designing routines or classes, reviewing class interfaces, choosing between inheritance and containment, or evaluating routine cohesion. Also trigger when inheritance is used without LSP verification, or when design issues are present despite passing tests"
 ---
 
 # Skill: cc-routine-and-class-design
@@ -44,7 +44,7 @@ For functional programming, prototype-based inheritance, or heavily concurrent c
 
 **Why these three?** Violations create problems that CANNOT be easily fixed post-crisis. They require architectural changes, not patches.
 
-**If you're rationalizing "I'll fix the design after the crisis":** Post-crisis "cleanup" rarely happens. Technical debt from wrong inheritance is architectural, not patchable.
+**Design fixes deferred are rarely completed.** Technical debt from wrong inheritance is architectural, not patchable.
 
 ## Modes
 
@@ -347,7 +347,7 @@ When full checklist review is impractical, these 7 items are MANDATORY:
 | High coupling = more errors | 7x errors, 20x fix cost [Selby 1991] | Coupling-to-cohesion ratio |
 | Cognitive limit ~7 items | Miller 1956 | Original study was about memory chunks, application to parameters is heuristic |
 
-**Critical insight:** This is MAINTENANCE data, not shipping data. All code "works" on day 1. The 50% vs 18% gap appears during modifications, extensions, and bug fixes. Your success streak measures day-1 shipping; these rules protect day-180 maintenance.
+**Critical insight:** This is MAINTENANCE data, not shipping data. All code "works" on day 1. The 50% vs 18% gap appears during modifications, extensions, and bug fixes. Code passing tests on first commit does not predict maintenance quality.
 
 
 ---

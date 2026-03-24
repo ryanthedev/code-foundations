@@ -6,7 +6,7 @@ Combined constraints from cc-pseudocode-programming, aposd-designing-deep-module
 
 ## Pseudocode First
 
-Write pseudocode before code. Once code exists, emotional investment prevents design iteration.
+Write pseudocode before code. Iterating on pseudocode is cheaper than iterating on code.
 
 **Detail level:** Pseudocode is ready when generating code is "nearly automatic" — every design decision is already made. If you pause to think HOW, the pseudocode needs more detail.
 
@@ -108,4 +108,4 @@ The pre-gate agent produces TWO files:
 
 ## Emergency Bypass
 
-Skip ONLY when ALL true: production down NOW, users actively impacted or data loss occurring, fix is minimal (rollback or single-line), you return for proper design within 24 hours. "Demo in 30 minutes," "CEO is asking," "team is blocked" are NOT emergencies.
+Skip ONLY when ALL true: production down NOW, users actively impacted or data loss occurring, fix is minimal (rollback or single-line), you return for proper design within 24 hours.

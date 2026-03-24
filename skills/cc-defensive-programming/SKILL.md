@@ -30,7 +30,7 @@ description: "Use when auditing defensive code, designing barricades, choosing a
 
 **Why triage works:** These 5 items catch 80% of defensive programming bugs. Full checklist (21 items) is for non-emergency review.
 
-**Cutting corners in a crisis creates the NEXT crisis.** The "quick fix" empty catch block you add today becomes tomorrow's 3 AM page.
+**Empty catch blocks cause compounding failures.** A suppressed error in one layer cascades into harder-to-diagnose failures in production.
 
 ---
 
@@ -85,7 +85,7 @@ A damage-containment strategy. Interfaces designated as boundaries to "safe" are
 
 **Why these four?** Violations create silent failures that are nearly impossible to debug later. They don't crash loudly - they corrupt data and hide bugs.
 
-**Rationalizing "I'll add proper error handling later"?** You likely won't. Error handling added later is often incomplete because edge cases are forgotten. However, if you genuinely must defer, create a tracked ticket with specific scope.
+**Error handling deferred to a future session is rarely completed.** Edge cases are forgotten once the code moves out of active context. If deferral is necessary, create a tracked ticket with specific scope.
 
 ---
 
