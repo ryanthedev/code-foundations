@@ -132,9 +132,10 @@ Emergency pressure doesn't change error statistics—it makes them WORSE due to 
 #### When Prerequisites Are Missing
 
 **No automated tests:**
-1. Write characterization tests first (capture current behavior)
-2. If impossible: document expected behavior, manual test script, increase review rigor
-3. Minimum: at least one verification path must exist
+1. Invoke `Skill(code-foundations:welc-legacy-code)` — follow the Legacy Code Change Algorithm
+2. Write characterization tests first (capture current behavior, not intended behavior)
+3. If impossible: document expected behavior, manual test script, increase review rigor
+4. Minimum: at least one verification path must exist
 
 **No version control:**
 1. Create physical backup copy of files before starting
@@ -171,6 +172,18 @@ Emergency pressure doesn't change error statistics—it makes them WORSE due to 
 7. **Retest after each change** - Run tests, report results (not just "tests pass")
 8. **Review changes** - Required even for 1-line changes
 9. **Adjust for risk** - Extra caution for high-risk changes
+
+**Refactoring Sequencing (Fowler):**
+- Move Field BEFORE Move Method (data first)
+- Extract Method BEFORE Replace Temp with Query
+- Self Encapsulate Field BEFORE Replace Data Value with Object
+- Replace Constructor with Factory Method BEFORE Replace Type Code with Subclasses
+
+**Recovery if Tests Fail After Refactoring:**
+1. Don't debug extensively
+2. Back out the change
+3. Take a smaller step
+4. Consider if you understood the code correctly
 
 Produces: Refactoring approach, step sequence, risk assessment
 Constraints:
