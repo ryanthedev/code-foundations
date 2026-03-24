@@ -12,11 +12,10 @@ The plan is a contract between whiteboarding and building. It specifies WHAT and
 
 ## STOP - Setup First
 
-### Load Skills
+### Load Design Standards
 
-Before any work, load your skill lenses using the Skill tool:
-1. `Skill(code-foundations:aposd-designing-deep-modules)`
-2. `Skill(code-foundations:aposd-reviewing-module-design)`
+Before any work, read the pre-gate design standards:
+1. `Read($CLAUDE_PLUGIN_ROOT/references/pre-gate-standards.md)`
 
 ### Create Progress Tasks
 
@@ -117,44 +116,39 @@ SEARCH FOR:
 
 ---
 
-### Step 1b: Skill Audit (MANDATORY)
+### Step 1b: Skill Discovery (MANDATORY)
 
-**After codebase search, audit ALL available skills in the environment.**
+**After codebase search, discover ALL available skills by scanning the system-reminder.**
 
-Skills come from every installed plugin — not just code-foundations. The full list is visible in the system-reminder at conversation start.
+The system-reminder at conversation start lists every installed skill with its description and trigger conditions. Scan it — do not rely on a hardcoded list.
 
 ```
-AUDIT:
+DISCOVER:
 1. Identify project tech stack (language, framework, platform) from codebase search
-2. Scan ALL available skills across all plugins in system context
-3. Match skills to project characteristics
-4. Note which skills apply to which type of work (design, coding, testing, review)
+2. Read the system-reminder's skill list — every line with "plugin:skill-name" is a candidate
+3. For each skill, read its description and trigger conditions
+4. Match: does the skill's trigger overlap with this project's tech stack, task type, or domain?
+5. Classify each matched skill by phase: design, coding, testing, review, or deployment
 ```
 
-**Matching criteria:**
-
-| Project Signal | Skill Match |
-|---------------|-------------|
-| React Native project | `react-native-foundations:*` (coding, a11y-audit, layout-check, docs, diagnose) |
-| SvelteKit project | `svelte-foundations:*` (coding, svelte-docs, sveltekit-docs, a11y-audit, browser) |
-| Frontend/UI work | `design-for-ai:*` (design, color, fonts, a11y, flow, brand) |
-| Any web frontend | `*:a11y-audit` (accessibility auditing) |
-| .NET / Go / other stacks | Any domain-specific skills from installed plugins |
-| Performance-critical | `code-foundations:performance-optimization` |
-| Complex refactor | `code-foundations:cc-refactoring-guidance` |
-
-**Do NOT limit to code-foundations skills.** Any skill from any plugin is valid if it matches the work.
+**Matching rules:**
+- Match on description keywords (e.g., "React Native" in description → RN project match)
+- Match on trigger conditions (e.g., "Use when designing modules" → design phase)
+- Include skills from ANY installed plugin, not just code-foundations
+- When uncertain, include the skill — the building agent can skip it if irrelevant
+- Exclude skills that are workflows (`whiteboarding`, `building`, `review`, `debug`) — those are commands, not loadable skills
 
 **Output: Skill Inventory**
 ```markdown
-## Available Skills for This Project
+## Discovered Skills for This Project
 - **Tech stack:** [language, framework, platform]
-- **Matched skills:** [full list with plugin prefix]
-  - [skill]: [why it matches, which phases it's useful for]
-  - [skill]: [why it matches, which phases it's useful for]
+- **Matched skills:**
+  - `plugin:skill-name`: [why it matches] → Phase: [design/coding/testing/review]
+  - `plugin:skill-name`: [why it matches] → Phase: [design/coding/testing/review]
+- **Unmatched (excluded):** [skills scanned but not relevant, with 1-word reason]
 ```
 
-This inventory feeds into Step 4 (DETAIL) where skills are assigned per phase.
+This inventory feeds into Step 4 (DETAIL) where skills are assigned to each plan phase's `**Skills:**` field.
 
 ---
 
