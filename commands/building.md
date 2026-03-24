@@ -259,7 +259,7 @@ Before creating sub-phase tasks for a phase, determine the model for PRE-GATE, I
 
 **Resolution order** (first match wins):
 
-1. **Plan override:** If phase has a `**Model:** <model>` line below the heading, use that model for all three agents.
+1. **Plan override:** If phase has a `**Model:** <model>` line below the heading, use that model for PRE-GATE and IMPLEMENT. POST-GATE still downgrades (see below).
 2. **Auto-detect** from phase signals:
 
 ```
@@ -283,8 +283,20 @@ Otherwise:
   → sonnet
 ```
 
-**State the resolved model when creating tasks:**
-"Phase N model: [model] (reason: [auto: N tasks, M files] or [plan override])"
+### POST-GATE Model Downgrade (Prover-Verifier)
+
+POST-GATE uses a **less capable model** than PRE-GATE/IMPLEMENT. The verifier should be less capable than the prover — if a simpler model can't verify the work is correct, the work isn't clear enough.
+
+| PRE-GATE / IMPLEMENT model | POST-GATE model |
+|---------------------------|-----------------|
+| opus | sonnet |
+| sonnet | haiku |
+| haiku | haiku (floor) |
+
+Research basis: prover-verifier gap (2407.13692). The asymmetry is intentional.
+
+**State the resolved models when creating tasks:**
+"Phase N: PRE-GATE/IMPLEMENT=[model], POST-GATE=[downgraded model] (reason: [auto/override])"
 
 ---
 
@@ -622,6 +634,30 @@ If any gate fails:
 **The failed task stays `in_progress` until it passes. You CANNOT mark it completed on FAIL.**
 **You CANNOT proceed to next sub-phase until the current task is completed.**
 **blockedBy enforcement prevents skipping - the next task's blockedBy list is not empty until the predecessor is completed.**
+
+### Retry Cap (max 3 failures per gate)
+
+Track the number of times each gate has returned FAIL for the current phase.
+
+| Attempt | Action |
+|---------|--------|
+| 1st FAIL | Fix issues, re-dispatch |
+| 2nd FAIL | Fix issues, re-dispatch. Note: if the same issues recur, the fix approach is wrong. |
+| 3rd FAIL | **STOP.** Do not re-dispatch. Present findings to user: |
+
+```
+Phase N POST-GATE has failed 3 times.
+
+Recurring issues:
+- [list findings that appeared in multiple reviews]
+
+Options:
+1. I fix the remaining issues and retry (explain what you'd do differently)
+2. You provide guidance on the recurring issues
+3. We revisit the plan for this phase (UPDATE_PLAN)
+```
+
+**Do NOT silently retry a 4th time.** Three failures indicate a structural problem — either the plan is wrong, the pseudocode is wrong, or the fix approach isn't addressing root causes. Escalate to the user.
 
 ---
 

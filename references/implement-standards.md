@@ -97,3 +97,9 @@ Code is obvious when a reader can understand it quickly without much thought. Th
 1. Reduce nesting and complexity (guard clauses, extract to routine, table-driven)
 2. Use precise, consistent names
 3. Write comments that explain WHY, not WHAT
+
+---
+
+## Test Anchoring
+
+Once tests pass, they are **anchored** — the passing set only grows, never shrinks. If a subsequent change breaks a previously passing test, fix the regression before continuing. Do not skip, disable, or delete a passing test to make progress.

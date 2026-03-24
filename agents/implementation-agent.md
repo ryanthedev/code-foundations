@@ -84,7 +84,7 @@ Apply ONLY where pseudocode indicates error handling:
 - [ ] Information hiding - internals not exposed
 - [ ] Deep module - simple interface, complex internals
 
-### 5. Test After Each File
+### 5. Test After Each File (Test Anchoring)
 
 ```bash
 # Run tests after each file change
@@ -93,6 +93,10 @@ npm test
 ```
 
 If tests fail, fix before proceeding to next file.
+
+**Test anchoring:** Once tests pass, they are **anchored**. If a subsequent change breaks a previously passing test, you MUST fix the regression before continuing. Do not skip, disable, or delete a passing test to make progress. The anchored test set only grows — it never shrinks during a phase.
+
+This prevents regression during fix cycles: change A passes tests, change B breaks change A's test, you fix B but break A again, and so on. Anchoring forces each change to maintain all prior progress.
 
 ## Output Format
 
