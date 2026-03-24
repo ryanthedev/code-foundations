@@ -15,6 +15,7 @@ Code-foundations is a Claude Code plugin providing software engineering skills b
 | Code Complete | `cc-*` | Process rigor, metrics, checklists |
 | APOSD | `aposd-*` | Design philosophy, complexity reduction |
 | GoF Design Patterns | `gof-*` | 23 Gang of Four patterns, decision trees, structural recipes |
+| Clean Architecture | `ca-*` | System-level boundaries, SRP-by-actor, dependency direction |
 | Legacy Code | `welc-*` | Safely modifying untested code (conditional, invoked from cc-refactoring-guidance) |
 
 ### Directory Structure
