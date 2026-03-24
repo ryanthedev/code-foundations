@@ -76,17 +76,24 @@ Set `blockedBy` so each task depends on the previous one. Mark tasks `in_progres
 
 ## Step 1: DISCOVER (Pattern Discovery + Skill Audit + Questioning)
 
-### Step 1a: Codebase Search (MANDATORY - Do First)
+### Step 1a: Codebase Search + Code Patterns (MANDATORY - Do First)
 
-**Before asking ANY questions, search the codebase:**
+**Before asking ANY questions, check for an existing code patterns doc:**
 
 ```
-SEARCH FOR:
-1. Similar features/functionality (grep for keywords)
-2. Same directory/module patterns (read nearby files)
-3. Related components (how do similar things work?)
-4. Naming conventions (what patterns exist?)
+1. Look for docs/code-patterns.md in the project root
+2. IF EXISTS:
+   a. Read it
+   b. Check staleness: git rev-list <commit-ref>..HEAD --count
+      - 0 commits since → trust it, skip full search
+      - 1-20 commits since → spot-check: read recent diffs, update doc if patterns changed
+      - 20+ commits since → full re-scan, regenerate doc
+3. IF MISSING:
+   a. Run full codebase search (below)
+   b. Generate docs/code-patterns.md with findings
 ```
+
+**Full codebase search (when needed):**
 
 | Search | Action |
 |--------|--------|
@@ -95,22 +102,39 @@ SEARCH FOR:
 | Related components | Find how similar problems were solved |
 | Conventions | Note naming, structure, error handling patterns |
 
-**Output: Pattern Summary**
+**Output: `docs/code-patterns.md`**
 ```markdown
-## Existing Patterns Found
-- [pattern 1]: [where found, how it works]
-- [pattern 2]: [where found, how it works]
+<!-- base-commit: [current HEAD hash] -->
+<!-- generated: [YYYY-MM-DD] -->
 
-## Conventions to Follow
-- Naming: [observed pattern]
-- Structure: [observed pattern]
-- Error handling: [observed pattern]
+# Code Patterns
+
+## Architecture
+- [pattern]: [where used, how it works]
+
+## Naming Conventions
+- [convention]: [examples]
+
+## Error Handling Strategy
+- [approach]: [where enforced]
+
+## File Organization
+- [rule]: [examples]
+
+## Testing Conventions
+- [what gets tested, naming, location]
+
+## Technology Decisions
+- [decision]: [rationale]
+
+## Forbidden Patterns
+- [pattern]: [why forbidden]
 
 ## Similar Implementations
-- [file]: [what it does, relevance]
+- [file]: [what it does, relevance to current task]
 ```
 
-**If no patterns found:** State "No existing patterns found for [topic]. This will establish a new pattern."
+**If new project with no code:** Write a minimal doc with the technology decisions from the user's request and skip the search.
 
 **See:** [pattern-reuse-gate.md]($CLAUDE_PLUGIN_ROOT/references/pattern-reuse-gate.md)
 
