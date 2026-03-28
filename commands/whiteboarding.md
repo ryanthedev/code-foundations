@@ -4,15 +4,49 @@ description: "Brainstorm and plan features"
 
 # Skill: whiteboarding
 
-**Discover -> Classify -> Explore -> Detail -> Save -> Check -> Confirm -> Handoff**
-
 The plan is a contract between whiteboarding and building. It specifies WHAT and WHY at the strategic level, with explicit interfaces between phases.
-
-**Thinking effort:** Planning benefits from max effort. If not already at max, suggest the user increase it before proceeding.
 
 ---
 
-## STOP - Setup First
+## STOP - Quick Classification First
+
+Before anything else, read the user's request and make an instant complexity call:
+
+| Signal in user's request | Track |
+|---|---|
+| "add a flag", "rename", "fix the bug where", "update config", single clear task | **Quick** |
+| Feature request, multiple concerns, "how should we", needs approach comparison | **Standard** (Medium) |
+| "redesign", "migrate", cross-cutting, high uncertainty, multi-system | **Full** (Complex) |
+
+**Default to Quick.** Only upgrade if the signals clearly demand it. Under-planning a simple task is cheap to fix. Over-planning it wastes everyone's time.
+
+---
+
+## Quick Track (default for simple tasks)
+
+**One pass. No task pipeline. No subagent check. Scan → plan → present → go.**
+
+1. **Scan codebase** — check for `docs/code-standards.md` (read if exists, generate if not — see Code Standards below). Grep for similar patterns. 30 seconds, not 5 minutes.
+
+2. **Ask 1-2 questions max** via `AskUserQuestion` — only if the request is genuinely ambiguous. If the task is clear ("add --verbose flag to the CLI"), skip questions entirely.
+
+3. **Write the plan inline** — Simple Track template (1-2 phases, 50-75 words each). Don't save to a file unless there are 2+ phases.
+
+4. **Present and ask:** "Here's the plan. Build it, adjust it, or tell me what to do?"
+
+5. **If building:** save to `docs/plans/`, commit, suggest default thinking effort, run `/code-foundations:building`.
+
+That's it. No EXPLORE, no CHECK, no 10-task pipeline. Quick track should take under 2 minutes from invocation to handoff.
+
+---
+
+## Standard / Full Track
+
+For Medium and Complex tasks, run the full pipeline:
+
+**Discover -> Classify -> Explore -> Detail -> Save -> Check -> Confirm -> Handoff**
+
+**Thinking effort:** Planning benefits from max effort. If not already at max, suggest the user increase it before proceeding.
 
 ### Load Design Standards
 
@@ -27,8 +61,8 @@ Create all steps as tasks upfront so progress is visible. Use `TaskCreate` for e
 TaskCreate("DISCOVER: Codebase search",          "Search codebase for patterns, conventions, similar features")
 TaskCreate("DISCOVER: Skill audit",              "Audit all available skills, match to project tech stack")
 TaskCreate("DISCOVER: Questioning",              "Ask clarifying questions, produce problem statement")
-TaskCreate("CLASSIFY",                           "Determine complexity track: Simple / Medium / Complex")
-TaskCreate("EXPLORE",                            "Research technologies, compare 2-3 approaches (Medium/Complex)")
+TaskCreate("CLASSIFY",                           "Determine complexity track: Medium / Complex")
+TaskCreate("EXPLORE",                            "Research technologies, compare 2-3 approaches")
 TaskCreate("DETAIL",                             "Break into phases using track-specific template")
 TaskCreate("SAVE",                               "Write plan to docs/plans/")
 TaskCreate("CHECK",                              "Subagent reviews plan for structural issues")
@@ -38,7 +72,7 @@ TaskCreate("HANDOFF",                            "User chooses: build or manual 
 
 Set `blockedBy` so each task depends on the previous one. Mark tasks `in_progress` when starting, `completed` when done.
 
-**Simple track:** Skip EXPLORE and CHECK tasks (mark as completed with note "skipped — simple track").
+**Medium track:** Skip CHECK task (mark as completed with note "skipped — medium track").
 
 ---
 
@@ -83,7 +117,7 @@ Set `blockedBy` so each task depends on the previous one. Mark tasks `in_progres
 **Before asking ANY questions, check for an existing code patterns doc:**
 
 ```
-1. Look for docs/code-patterns.md in the project root
+1. Look for docs/code-standards.md (or legacy docs/code-patterns.md) in the project root
 2. IF EXISTS:
    a. Read it
    b. Check staleness: git rev-list <commit-ref>..HEAD --count
@@ -92,7 +126,7 @@ Set `blockedBy` so each task depends on the previous one. Mark tasks `in_progres
       - 20+ commits since → full re-scan, regenerate doc
 3. IF MISSING:
    a. Run full codebase search (below)
-   b. Generate docs/code-patterns.md with findings
+   b. Generate docs/code-standards.md with findings
 ```
 
 **Full codebase search (when needed):**
@@ -104,39 +138,57 @@ Set `blockedBy` so each task depends on the previous one. Mark tasks `in_progres
 | Related components | Find how similar problems were solved |
 | Conventions | Note naming, structure, error handling patterns |
 
-**Output: `docs/code-patterns.md`**
+**Output: `docs/code-standards.md`**
+
+This is the project's living coding standards document. It captures how the codebase actually works — not aspirational rules but observed conventions. Building subagents read this to match the project's style.
+
 ```markdown
 <!-- base-commit: [current HEAD hash] -->
 <!-- generated: [YYYY-MM-DD] -->
 
-# Code Patterns
+# Code Standards
 
 ## Architecture
 - [pattern]: [where used, how it works]
+- [data flow]: [how data moves through the system]
 
 ## Naming Conventions
-- [convention]: [examples]
+- Files: [convention + examples]
+- Functions/methods: [convention + examples]
+- Variables: [convention + examples]
+- Types/interfaces: [convention + examples]
 
-## Error Handling Strategy
-- [approach]: [where enforced]
+## Import Conventions
+- [ordering]: [stdlib, external, internal, relative — with examples]
+- [style]: [named vs default, barrel files, path aliases]
+
+## Error Handling
+- [strategy]: [throw vs return, error types, where handled]
+- [logging]: [what gets logged, format, levels]
 
 ## File Organization
-- [rule]: [examples]
+- [structure]: [where new files go, grouping rules]
+- [colocation]: [tests next to code? separate directory?]
 
 ## Testing Conventions
-- [what gets tested, naming, location]
+- [framework]: [test runner, assertion library]
+- [naming]: [describe/it pattern, file naming]
+- [what gets tested]: [unit, integration, e2e boundaries]
+- [fixtures/mocks]: [patterns used, location]
 
 ## Technology Decisions
-- [decision]: [rationale]
+- [decision]: [rationale, date if known]
 
 ## Forbidden Patterns
-- [pattern]: [why forbidden]
+- [pattern]: [why forbidden, what to use instead]
 
 ## Similar Implementations
 - [file]: [what it does, relevance to current task]
 ```
 
 **If new project with no code:** Write a minimal doc with the technology decisions from the user's request and skip the search.
+
+**Migration:** If a `docs/code-patterns.md` exists from an earlier version, read it and migrate to `docs/code-standards.md` with the expanded schema. Delete the old file.
 
 **See:** [pattern-reuse-gate.md]($CLAUDE_PLUGIN_ROOT/references/pattern-reuse-gate.md)
 
