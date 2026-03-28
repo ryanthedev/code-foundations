@@ -27,9 +27,9 @@ description: "Execute plans through gated phases with subagent dispatch."
 | **Worktree isolation required** | Multi-phase commits on main = no rollback, polluted history. Worktrees enable parallel builds. |
 | **Load plan before coding** | No plan = no checklist = forgotten tasks |
 | **One section at a time** | Parallel sections = merge conflicts + lost context |
-| **PRE-GATE before implementation (full pipeline)** | No pseudocode = coding without design = rework. Exception: simplified pipeline phases skip PRE-GATE. |
-| **POST-GATE before checkpoint** | No verification = bugs escape to next phase |
-| **Reviewer agent per phase** | Self-review is blind; fresh agent catches issues |
+| **PRE-GATE before implementation (Full/Standard gate)** | No pseudocode = coding without design = rework. Exception: Minimal gate phases skip PRE-GATE. |
+| **Verification before checkpoint (per gate policy)** | Full phases: POST-GATE required. Standard/Minimal: tests are the gate. Catch-up review before next Full phase if 2+ phases ran ungated. |
+| **Independent verification on complex work** | Self-review is blind; fresh agent catches issues. But over-verification on trivial work injects noise (CR-Bench: SNR drops 69% on small models under reflexion). |
 | **Mark complete only when gates pass** | Premature completion = unverified work shipped |
 | **Update execution log** | Log enables debugging failed builds |
 | **TaskCreate sub-phases** | Prompt-only enforcement gets skipped. blockedBy chains cannot be skipped. |
@@ -170,38 +170,51 @@ Check plan status:
 
 Create sub-phase tasks for EVERY phase in the plan NOW, before executing anything.
 
-For each phase N, run Model Auto-Detection and Pipeline Detection (see below), then create tasks.
+For each phase N, run Model Auto-Detection and Gate Policy Detection (see below), then create tasks.
 
-**Full pipeline (4 tasks):**
+**Full gate (4 tasks):**
 
-1. `TaskCreate(subject: "Phase N.1: PRE-GATE - [phase name]", description: "Discovery + pseudocode via pre-gate-agent. Model: [resolved_model].", activeForm: "Running pre-gate for Phase N")`
+1. `TaskCreate(subject: "Phase N.1: PRE-GATE - [phase name]", description: "Discovery + pseudocode. Model: [resolved_model].", activeForm: "Running pre-gate for Phase N")`
 2. `TaskCreate(subject: "Phase N.2: IMPLEMENT - [phase name]", description: "Implement from pseudocode. Model: [resolved_model].", activeForm: "Implementing Phase N")`
 3. `TaskCreate(subject: "Phase N.3: POST-GATE - [phase name]", description: "Review implementation. Model: [resolved_model]. Must return PASS.", activeForm: "Running post-gate for Phase N")`
-4. `TaskCreate(subject: "Phase N.4: CHECKPOINT - [phase name]", description: "Commit after all gates pass.", activeForm: "Committing Phase N")`
+4. `TaskCreate(subject: "Phase N.4: CHECKPOINT - [phase name]", description: "Commit after gate passes.", activeForm: "Committing Phase N")`
 
-**Simplified pipeline (3 tasks — PRE-GATE skipped):**
+**Standard gate (3 tasks — POST-GATE skipped, tests are the gate):**
 
-1. `TaskCreate(subject: "Phase N.1: PRE-GATE - [phase name]", description: "SKIPPED — simplified pipeline.", status: "completed")`
-2. `TaskCreate(subject: "Phase N.2: IMPLEMENT - [phase name]", description: "Implement from plan description (no pseudocode). Model: [resolved_model].", activeForm: "Implementing Phase N")`
-3. `TaskCreate(subject: "Phase N.3: POST-GATE - [phase name]", description: "Review implementation. Model: [resolved_model]. Must return PASS.", activeForm: "Running post-gate for Phase N")`
-4. `TaskCreate(subject: "Phase N.4: CHECKPOINT - [phase name]", description: "Commit after all gates pass.", activeForm: "Committing Phase N")`
+1. `TaskCreate(subject: "Phase N.1: PRE-GATE - [phase name]", description: "Discovery + pseudocode. Model: [resolved_model].", activeForm: "Running pre-gate for Phase N")`
+2. `TaskCreate(subject: "Phase N.2: IMPLEMENT - [phase name]", description: "Implement from pseudocode. Model: [resolved_model].", activeForm: "Implementing Phase N")`
+3. `TaskCreate(subject: "Phase N.3: POST-GATE - [phase name]", description: "SKIPPED — standard gate. Tests are verification.", status: "completed")`
+4. `TaskCreate(subject: "Phase N.4: CHECKPOINT - [phase name]", description: "Commit after tests pass.", activeForm: "Committing Phase N")`
 
-Note: simplified pipeline still creates the PRE-GATE task but marks it completed immediately. This keeps the N.1-N.4 numbering consistent and the blockedBy chain intact.
+**Minimal gate (2 tasks — PRE-GATE and POST-GATE skipped):**
+
+1. `TaskCreate(subject: "Phase N.1: PRE-GATE - [phase name]", description: "SKIPPED — minimal gate.", status: "completed")`
+2. `TaskCreate(subject: "Phase N.2: IMPLEMENT - [phase name]", description: "Implement from plan description. Model: [resolved_model].", activeForm: "Implementing Phase N")`
+3. `TaskCreate(subject: "Phase N.3: POST-GATE - [phase name]", description: "SKIPPED — minimal gate. Tests are verification.", status: "completed")`
+4. `TaskCreate(subject: "Phase N.4: CHECKPOINT - [phase name]", description: "Commit after tests pass.", activeForm: "Committing Phase N")`
+
+All gate levels create 4 task slots (N.1-N.4) to keep numbering consistent and the blockedBy chain intact. Skipped tasks are pre-completed.
 
 **Then chain ALL dependencies:**
 - Within each phase: N.2 blockedBy N.1, N.3 blockedBy N.2, N.4 blockedBy N.3
 - **Between phases:** Phase (N+1).1 blockedBy Phase N.4
 
-Example for a 2-phase plan (full + simplified):
+**Catch-up review tasks** are NOT created upfront. They are inserted dynamically during execution when the catch-up rule triggers (2+ phases since last POST-GATE, before a Full phase).
+
+Example for a 3-phase plan (Full + Minimal + Full):
 ```
-Phase 1.1: PRE-GATE        → no blockedBy (full pipeline)
+Phase 1.1: PRE-GATE        → no blockedBy (Full gate)
 Phase 1.2: IMPLEMENT       → blockedBy: [1.1]
 Phase 1.3: POST-GATE       → blockedBy: [1.2]
 Phase 1.4: CHECKPOINT      → blockedBy: [1.3]
-Phase 2.1: PRE-GATE        → blockedBy: [1.4], pre-completed (simplified pipeline)
-Phase 2.2: IMPLEMENT       → blockedBy: [2.1] (reads plan directly, no pseudocode)
-Phase 2.3: POST-GATE       → blockedBy: [2.2]
+Phase 2.1: PRE-GATE        → blockedBy: [1.4], pre-completed (Minimal gate)
+Phase 2.2: IMPLEMENT       → blockedBy: [2.1]
+Phase 2.3: POST-GATE       → blockedBy: [2.2], pre-completed (Minimal gate)
 Phase 2.4: CHECKPOINT      → blockedBy: [2.3]
+Phase 3.1: PRE-GATE        → blockedBy: [2.4] (Full gate — catch-up check happens here)
+Phase 3.2: IMPLEMENT       → blockedBy: [3.1]
+Phase 3.3: POST-GATE       → blockedBy: [3.2]
+Phase 3.4: CHECKPOINT      → blockedBy: [3.3]
 ```
 
 **The user sees the full pipeline immediately.**
@@ -220,7 +233,7 @@ Phase 2.4: CHECKPOINT      → blockedBy: [2.3]
 - Mark a gate task completed when it returned FAIL
 - Create phase-level tasks (NO "Phase 1: [Name]" tasks)
 
-**The ONLY tasks you create are the sub-phase tasks per phase (PRE-GATE, IMPLEMENT, POST-GATE, CHECKPOINT). Full pipeline = 4 active tasks. Simplified pipeline = 3 active + 1 pre-completed.**
+**The ONLY tasks you create are the sub-phase tasks per phase (PRE-GATE, IMPLEMENT, POST-GATE, CHECKPOINT). Full gate = 4 active tasks. Standard = 3 active + 1 pre-completed. Minimal = 2 active + 2 pre-completed.**
 
 ---
 
@@ -300,32 +313,41 @@ Research basis: prover-verifier gap (2407.13692). The asymmetry is intentional.
 
 ---
 
-### Pipeline Detection
+### Gate Policy Detection
 
-After resolving the model, determine the pipeline type for each phase: **full** or **simplified**.
+After resolving the model, determine the gate level for each phase. This controls which sub-phases run.
+
+**Research basis:** Non-uniform verification is strictly better than uniform (Plan and Budget: 193.8% efficiency gain). Over-verification on easy tasks injects noise and wastes budget (Thinkless: 86.7% of easy queries harmed by deep reasoning; CR-Bench: reflexion on small models collapses SNR 69%). Simpler pipelines with fewer verification loops produce better results at lower cost (Agentless: $0.70/32% vs SWE-agent $2.53/18%).
+
+**Gate levels:**
+
+| Level | Sub-Phases | When |
+|---|---|---|
+| **Full** | PRE-GATE → IMPLEMENT → POST-GATE → CHECKPOINT | High-risk work where errors cascade |
+| **Standard** | PRE-GATE → IMPLEMENT → CHECKPOINT | Medium work; tests are the verification gate |
+| **Minimal** | IMPLEMENT → CHECKPOINT | Trivial work; tests are the gate, no design phase needed |
+| **Catch-up** | Batch POST-GATE inserted before next Full phase | Prevents drift across accumulated ungated phases |
 
 **Resolution order** (first match wins):
 
-1. **Plan override:** If phase has `**Pipeline:** direct`, use simplified pipeline.
-2. **Plan override:** If phase has `**Pipeline:** full`, use full pipeline.
-3. **Force full** if ANY of these are true:
+1. **Plan override:** `**Pipeline:** full` forces Full. `**Pipeline:** direct` forces Minimal.
+2. **Always Full** if ANY of these are true:
+   - First phase in the plan (errors here cascade to everything)
+   - Final phase in the plan (last chance before merge)
    - Model resolves to opus
-   - Phase has a `**Skills:**` field
-   - Phase has assumptions to verify (from Assumptions table with `Verify Before Phase: N`)
    - Phase has `**Uncertainty:**` that is NOT "None"
-4. **Auto-detect simplified** if ALL of these are true:
+   - Phase has assumptions to verify (from Assumptions table)
+   - Phase has a `**Skills:**` field
+3. **Minimal** if ALL of these are true:
    - Model resolves to haiku
    - No Skills, no assumptions, no uncertainty
    - Done-when items <= 2
-5. **Default:** full pipeline
+4. **Standard** — everything else (sonnet phases, low difficulty, no uncertainty)
 
-| Pipeline | Sub-Phases | When |
-|----------|-----------|------|
-| **Full** | PRE-GATE → IMPLEMENT → POST-GATE → CHECKPOINT | Default for sonnet/opus phases |
-| **Simplified** | IMPLEMENT → POST-GATE → CHECKPOINT | Haiku phases with trivial scope |
+**Catch-up rule:** Before executing any Full phase, check: have 2 or more phases run since the last POST-GATE? If yes, insert a catch-up POST-GATE covering the accumulated phases before proceeding. This prevents drift without per-phase overhead.
 
-**State the resolved pipeline when creating tasks:**
-"Phase N pipeline: [full/simplified] (reason: [auto/plan override])"
+**State the resolved gate level when creating tasks:**
+"Phase N gate: [Full/Standard/Minimal] (reason: [auto/plan override])"
 
 ---
 
@@ -471,10 +493,10 @@ Agent tool:
 Agent tool:
 - subagent_type: "code-foundations:implementation-agent"
 - model: [resolved_model]
-- description: "Implement Phase N (simplified)"
+- description: "Implement Phase N (minimal gate)"
 - prompt: |
-    Implement Phase N of the building plan. This is a simplified pipeline
-    phase — no pseudocode file exists. Work directly from the plan description.
+    Implement Phase N of the building plan. This phase uses minimal gate
+    policy — no pseudocode file exists. Work directly from the plan description.
 
     ## Plan Context
     [paste the Context section from the plan file]
@@ -554,10 +576,10 @@ Agent tool:
 
     ## Inputs
     - Plan: docs/plans/<plan-name>.md (Phase N section)
-    [full pipeline only:]
+    [Full/Standard gate only:]
     - Discovery: docs/building/<plan-name>-phase-N-discovery.md
     - Pseudocode: docs/building/<plan-name>-phase-N-pseudocode.md
-    [simplified pipeline: no discovery/pseudocode files exist]
+    [Minimal gate: no discovery/pseudocode files exist]
 
     ## Files Changed
     [list files from implementation subagent]
@@ -573,9 +595,58 @@ Agent tool:
 
 ---
 
+### Catch-Up POST-GATE (inserted dynamically)
+
+**Trigger:** Before executing any Full gate phase, check: have 2+ phases completed since the last POST-GATE ran? If yes, insert a catch-up review before proceeding to the Full phase's PRE-GATE.
+
+This prevents drift across accumulated Standard/Minimal phases without per-phase overhead.
+
+```
+Agent tool:
+- subagent_type: "code-foundations:post-gate-agent"
+- model: [POST-GATE model for the upcoming Full phase]
+- description: "Catch-up POST-GATE for Phases X-Y"
+- prompt: |
+    Batch review of Phases X through Y. These phases ran with Standard
+    or Minimal gate policy (tests-only verification). Review them now
+    before proceeding to Phase Z (Full gate).
+
+    ## Plan Context
+    [paste the Context section from the plan file]
+
+    ## Phases to Review
+    [For each accumulated phase:]
+    ### Phase X: [name]
+    Done-When Items:
+    - DW-X.1: [item] → Status: ___ Evidence: ___
+    Files changed: [list]
+
+    ### Phase Y: [name]
+    Done-When Items:
+    - DW-Y.1: [item] → Status: ___ Evidence: ___
+    Files changed: [list]
+
+    ## Cross-Phase Coherence
+    Check that the accumulated phases work together:
+    - No contradictions between phase outputs
+    - No regressions introduced by later phases
+    - Tests still pass for earlier phases' functionality
+
+    ## Output
+    Write review to: docs/building/<plan-name>-catchup-phases-X-Y-review.md
+```
+
+**After catch-up POST-GATE:**
+- If PASS → proceed to the Full phase's PRE-GATE
+- If FAIL → fix issues before proceeding. Same Gate Failure Protocol applies.
+
+**Do NOT create catch-up tasks upfront.** Insert them dynamically when the trigger fires. This keeps the initial task list clean.
+
+---
+
 ### Sub-Phase N.4: CHECKPOINT
 
-## STOP. Verify POST-GATE task is completed before proceeding.
+## STOP. Verify POST-GATE task is completed (or skipped per gate policy) before proceeding.
 
 **TaskGet → confirm blockedBy is empty. TaskUpdate → in_progress, then:**
 
@@ -589,8 +660,9 @@ Phase: N/M \"[phase name]\"
 Plan: docs/plans/[plan-file].md
 AI-Model: [resolved_model]
 AI-Epistemic-Status: [tested|assumed|provisional]
+Gate-Policy: [Full|Standard|Minimal]
 Pre-Gate: [pass|fail->pass (N attempts)|skipped]
-Post-Gate: [pass|fail->pass (N attempts)]
+Post-Gate: [pass|fail->pass (N attempts)|skipped (Standard/Minimal)|catch-up (batch)]
 Reviewed-by: post-gate-agent"
 ```
 
@@ -603,10 +675,10 @@ Reviewed-by: post-gate-agent"
 
 Update plan file execution log:
 ```markdown
-### Phase N: [Name]
-- [x] PRE-GATE: Discovery + pseudocode complete [or "SKIPPED — simplified pipeline"]
+### Phase N: [Name] (Gate: [Full/Standard/Minimal])
+- [x] PRE-GATE: Discovery + pseudocode complete [or "SKIPPED — Standard/Minimal gate"]
 - [x] IMPLEMENT: Code written, tests pass
-- [x] POST-GATE: Verification passed, reviewer approved
+- [x] POST-GATE: Verification passed [or "SKIPPED — tests are gate" or "Covered by catch-up review"]
 - [x] CHECKPOINT: Committed
 Commit: [hash]
 Summary: [1 sentence — what this phase delivered and what state it left the codebase in]
@@ -858,7 +930,7 @@ When resuming blocked plan:
 [Detailed sections]
 [Save + commit to docs/plans/YYYY-MM-DD-topic.md]
   ↓
-[Refresh context window]
+[Set thinking effort to default — plan has the reasoning, orchestration doesn't need max effort]
   ↓
 /code-foundations:building docs/plans/YYYY-MM-DD-topic.md
   ↓
@@ -904,13 +976,13 @@ Plans can optionally specify model per phase:
 
 If `**Model:**` is omitted, auto-detection applies.
 
-### Context Refresh Benefits
+### Thinking Effort for Building
 
-Starting fresh session before /code-foundations:building:
-- Full context window for implementation
-- No planning discussion cluttering context
-- Plan file contains all necessary information
-- Worktree provides filesystem isolation from other builds
+Set thinking effort to default before building. The plan already contains the strategic reasoning — max effort during orchestration is wasted overhead. The subagents do the heavy thinking in their own contexts. Default effort on the orchestrator saves tokens without losing quality.
+
+For whiteboarding/planning, use max effort. For building/execution, use default.
+
+Worktree provides filesystem isolation from other builds.
 
 ---
 

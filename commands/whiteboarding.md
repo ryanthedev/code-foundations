@@ -8,6 +8,8 @@ description: "Brainstorm and plan features"
 
 The plan is a contract between whiteboarding and building. It specifies WHAT and WHY at the strategic level, with explicit interfaces between phases.
 
+**Thinking effort:** Planning benefits from max effort. If not already at max, suggest the user increase it before proceeding.
+
 ---
 
 ## STOP - Setup First
@@ -874,11 +876,11 @@ Use `AskUserQuestion` with these options:
 **Question:** "Plan saved and committed to docs/plans/YYYY-MM-DD-<topic>.md. How would you like to proceed?"
 
 **Options:**
-1. **Clear conversation and build** (Recommended) - Fresh context, worktree isolation
+1. **Build now** (Recommended) - Drop thinking effort and start building
 2. **Tell me what to do** - Get step-by-step instructions to execute manually
 
 **If user selects option 1:**
-Execute `/clear` command, then immediately run `/code-foundations:building docs/plans/YYYY-MM-DD-<topic>.md`
+Suggest setting thinking effort to default — the plan already contains the strategic reasoning, so max effort during building orchestration is wasted. The subagents do the heavy thinking in their own contexts. Then run `/code-foundations:building docs/plans/YYYY-MM-DD-<topic>.md`
 
 Building will create a worktree at `.claude/worktrees/<topic-slug>/` and run all phases there. The user's main checkout remains free for other work or parallel builds.
 
