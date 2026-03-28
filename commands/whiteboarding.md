@@ -14,7 +14,7 @@ Before anything else, read the user's request and make an instant complexity cal
 
 | Signal in user's request | Track |
 |---|---|
-| "add a flag", "rename", "fix the bug where", "update config", single clear task | **Quick** |
+| Small, focused ask. One thing to change. User knows what they want even if they don't know the implementation. | **Quick** |
 | Feature request, multiple concerns, "how should we", needs approach comparison | **Standard** (Medium) |
 | "redesign", "migrate", cross-cutting, high uncertainty, multi-system | **Full** (Complex) |
 
@@ -28,7 +28,7 @@ Before anything else, read the user's request and make an instant complexity cal
 
 1. **Scan codebase** — check for `docs/code-standards.md` (read if exists, generate if not — see Code Standards below). Grep for similar patterns. 30 seconds, not 5 minutes.
 
-2. **Ask 1-2 questions max** via `AskUserQuestion` — only if the request is genuinely ambiguous. If the task is clear ("add --verbose flag to the CLI"), skip questions entirely.
+2. **Ask 1-2 questions max** via `AskUserQuestion` — only if the request is genuinely ambiguous. Users describe what they want in their own words, not in implementation terms. Your job is to translate their intent into a plan, not to expect them to specify flags and function names.
 
 3. **Write the plan inline** — Simple Track template (1-2 phases, 50-75 words each). Don't save to a file unless there are 2+ phases.
 
