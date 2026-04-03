@@ -1,6 +1,7 @@
 ---
 name: aposd-designing-deep-modules
-description: "Use when designing modules, APIs, or classes before implementation." 
+description: >-
+  Guide deep module design using A Philosophy of Software Design principles - generate multiple design alternatives, evaluate information hiding and interface simplicity, and select the approach that minimizes complexity. Use when designing modules, APIs, or classes before implementation, reducing interface complexity, evaluating abstraction depth, or when the user says "design this module", "simplify this API", "APOSD review". 
 ---
 
 # Skill: aposd-designing-deep-modules
