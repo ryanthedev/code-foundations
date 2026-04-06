@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Code-foundations is a Claude Code plugin providing software engineering skills based on *Code Complete* (McConnell) and *A Philosophy of Software Design* (Ousterhout). It includes a building workflow with gated sub-phases (pre-gate, implement, post-gate, verify, checkpoint) and an experimental code review system.
+Code-foundations is a Claude Code plugin providing software engineering skills based on *Code Complete* (McConnell) and *A Philosophy of Software Design* (Ousterhout). It includes a building workflow with gated phases (BUILD, REVIEW, orchestrator commit) and an experimental code review system.
 
 ## Architecture
 
@@ -22,7 +22,7 @@ Code-foundations is a Claude Code plugin providing software engineering skills b
 
 - `skills/` - Individual skill definitions (SKILL.md + checklists.md)
 - `commands/` - User-invocable commands (slash commands)
-- `agents/` - Agent templates (pre-gate-agent, implementation-agent, post-gate-agent, debug-agent, code-agent)
+- `agents/` - Agent templates (build-agent, post-gate-agent, debug-agent, code-agent)
 - `references/` - Shared reference materials
 - `docs/` - Case study examples
 
@@ -138,7 +138,7 @@ Three-stage pattern for feature development:
   → Feature branch required
   → Execute phases with quality gates
   → Model auto-detected per phase (haiku/sonnet/opus)
-  → Per-phase commits only after POST-GATE passes
+  → Per-phase commits after REVIEW passes (or BUILD completes for standard/minimal gate)
   → Final verification + report
 ```
 
@@ -152,18 +152,17 @@ Three-stage pattern for feature development:
 
 **Quality Gates (per phase during /code-foundations:building):**
 ```
-PRE-GATE:  references/pre-gate-standards.md (distilled from cc-pseudocode-programming, aposd-designing-deep-modules, cc-routine-and-class-design) + [plan Skills]
-IMPLEMENT: references/implement-standards.md (distilled from cc-control-flow-quality, aposd-simplifying-complexity, code-clarity-and-docs) + [plan Skills]
-POST-GATE: references/post-gate-standards.md (distilled from aposd-verifying-correctness, cc-quality-practices, aposd-reviewing-module-design, cc-defensive-programming) + [plan Skills]
-VERIFY:    performance-optimization + cc-refactoring-guidance + build + tests + lint
-CHECKPOINT: Commit only after all gates pass
+BUILD:   references/pre-gate-standards.md + references/implement-standards.md + [plan Skills]
+         (discovery → pseudocode → implementation in one agent)
+REVIEW:  references/post-gate-standards.md + [plan Skills]
+         (Full gate only — standard/minimal use tests as gate)
+VERIFY:  performance-optimization + cc-refactoring-guidance + build + tests + lint
+COMMIT:  Orchestrator commits directly after gates pass
 ```
 
-`[plan Skills]` = additional skills from the plan's per-phase `**Skills:**` field. These come from whiteboarding's skill audit and can include skills from any installed plugin (e.g., `react-native-foundations:coding`, `design-for-ai:a11y-audit`).
+`[plan Skills]` = skills assigned per phase during whiteboarding's SAVE step. If no skills in plan, build-agent discovers from prompt context.
 
-Model auto-detected per phase: haiku (<=2 tasks/files), opus (>=6 tasks/files or OPUS keyword), sonnet (default).
-Plan `**Model:**` field overrides auto-detection.
-Cannot proceed to next phase until current phase passes all gates including reviewer agent PASS.
+Model and skills are assigned during whiteboarding's SAVE step. Building uses what's in the plan — if no model specified, uses default (no override). Cannot proceed to next phase until current phase passes all gates including REVIEW PASS (Full gate).
 
 ## Skill File Structure
 

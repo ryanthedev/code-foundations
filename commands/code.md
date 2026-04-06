@@ -1,154 +1,228 @@
 ---
-description: "Design-first coding"
+description: "Write, build, implement, or add code. Use when asked to code something — from a one-line fix to a multi-file feature. Classifies complexity, designs when needed, implements with TDD, reviews before done. Triggers on 'write', 'build', 'implement', 'add', 'create', 'code this'."
 ---
 
 # /code-foundations:code
 
-**Orchestrate design and implementation agents. You do NOT write code or pseudocode directly.**
+**Orchestrate design and implementation. You do NOT write code directly — you dispatch agents.**
 
 ---
 
-## STOP — Non-Negotiable Rules
+## STOP — Classify First
 
-1. **You MUST dispatch `code-foundations:code-agent` for design** — do NOT draft pseudocode yourself
-2. **You MUST dispatch `code-foundations:implementation-agent` for implementation** — do NOT edit code yourself
-3. **You MUST use `AskUserQuestion` before transitioning from design to implementation** — no skipping the user confirmation gate
-4. **You MUST use `TaskCreate` to track progress** — no invisible work
+Read the user's request and classify immediately:
 
----
+| Signal | Track | What happens |
+|--------|-------|-------------|
+| 1-2 files, clear ask, no design decisions | **Quick** | Straight to implement (TDD) |
+| 3+ files, needs interface decisions, new patterns | **Standard** | Design first, then implement |
+| Architectural, cross-cutting, multi-system | **Redirect** | → `/code-foundations:whiteboarding` |
 
-## Step 1: Gather Context
+**Default to Quick.** Only upgrade if design decisions genuinely need upfront resolution.
 
-Collect information from the user's request:
-- What to build
-- Target files (if mentioned)
-- Constraints (if mentioned)
-
-If the request is vague, use `AskUserQuestion` to clarify before dispatching.
+State your classification:
+> "This is a **[Quick/Standard]** task — [1-sentence why]."
 
 ---
 
-## Step 2: Dispatch Code Agent (Design)
+## Quick Track
 
 ```
-TaskCreate("Design: [feature]")
+IMPLEMENT → REVIEW → REPORT
+```
+
+Skip design. Dispatch build-agent directly with TDD emphasis.
+
+### 1. Dispatch Implementation
+
+```
+TaskCreate("Implement: [feature]", activeForm="Implementing [feature]")
 ```
 
 ```python
-Task(
-    subagent_type="code-foundations:code-agent",
-    description="Design: [short description]",
+Agent(
+    subagent_type="code-foundations:build-agent",
+    description="Implement: [short description]",
     prompt="""
-BUILD: [what to build]
-TARGET FILES: [file paths if known, or "Agent should discover"]
-CONSTRAINTS: [any constraints from user, or "None specified"]
+This is a minimal gate build — no prior pseudocode exists.
 
-Search the codebase, design pseudocode with contracts, return design spec.
+BUILD: [what to build — from user's request]
+TARGET FILES: [file paths if known, or "Discover from codebase"]
+CONSTRAINTS: [any constraints, or "None"]
+
+## TDD Required
+
+For EVERY change:
+1. Write a failing test first (RED)
+2. Implement minimal code to make it pass (GREEN)
+3. Run tests to confirm
+4. Commit
+
+Do NOT write implementation code before its test exists.
+If no test framework is set up, set one up first.
+
+## When Done
+
+Run the full test suite. All tests must pass.
+Return: DONE | BLOCKED with reason.
 """
 )
 ```
 
----
+### 2. Review
 
-## Step 3: Present Design to User
+After build-agent returns DONE:
 
-When the code-agent returns, present its design to the user.
+```bash
+# Run full test suite
+[test command for this project]
 
-If the agent returned `NEEDS_INPUT`, relay the question via `AskUserQuestion`.
+# Type check / lint if available
+[typecheck/lint command]
+```
 
-If the agent returned `DONE`, present the pseudocode and contracts, then ask:
+If anything fails, re-dispatch build-agent with the errors.
+
+If everything passes, do a quick eyeball:
+- Read the diff (`git diff HEAD~1` or similar)
+- Check: does the change match what was asked? Any obvious issues?
+
+### 3. Report
 
 ```
 AskUserQuestion(
   questions: [{
-    header: "Design Review",
-    question: "Here's the design. Ready to build?",
+    header: "Done",
+    question: "Implementation complete, tests pass. What next?",
     options: [
-      {label: "Yes, build it", description: "Dispatch implementation agent"},
-      {label: "Needs changes", description: "Tell me what to adjust"},
-      {label: "Start over", description: "Re-dispatch code agent with new direction"}
+      {label: "Show the changes", description: "Display what was modified"},
+      {label: "Done", description: "Wrap up"}
     ]
   }]
 )
 ```
 
-**ENFORCEMENT:** Do NOT proceed to Step 4 without explicit user confirmation via `AskUserQuestion`. "Looks good" in chat is NOT enough — use the tool.
+---
 
-### If User Wants Changes
+## Standard Track
 
-Re-dispatch code-agent with the feedback:
+```
+DESIGN → USER GATE → IMPLEMENT → REVIEW → REPORT
+```
+
+### 1. Dispatch Design Agent
+
+```
+TaskCreate("Design: [feature]", activeForm="Designing [feature]")
+```
 
 ```python
-Task(
+Agent(
     subagent_type="code-foundations:code-agent",
-    description="Redesign: [short description]",
+    description="Design: [short description]",
     prompt="""
-ORIGINAL DESIGN: [paste previous design output]
-FEEDBACK: [user's requested changes]
+BUILD: [what to build]
+TARGET FILES: [file paths if known, or "Discover from codebase"]
+CONSTRAINTS: [any constraints, or "None"]
 
-Update the design based on feedback. Return updated pseudocode + contracts.
+Search the codebase, design pseudocode with contracts,
+persist design to docs/code/<topic>-design.md, return summary.
 """
 )
 ```
 
-Then present again (loop until user confirms).
+### 2. Present Design + User Gate
 
----
+When code-agent returns, present its design summary.
 
-## Step 4: Dispatch Implementation Agent
+If `NEEDS_INPUT`: relay the question via `AskUserQuestion`.
 
-```
-TaskCreate("Implement: [feature]")
-```
-
-```python
-Task(
-    subagent_type="code-foundations:implementation-agent",
-    description="Implement: [short description]",
-    prompt="""
-PSEUDOCODE:
-[paste confirmed pseudocode from code-agent]
-
-CONTRACT:
-[paste contracts from code-agent]
-
-FILES:
-[paste file paths from code-agent's changes summary]
-
-Implement exactly as designed. Run tests after each file.
-Return: DONE or BLOCKED with reason.
-"""
-)
-```
-
----
-
-## Step 5: Verify
-
-After implementation agent returns DONE:
-
-```bash
-# Run tests
-npm test  # or equivalent
-
-# Build check
-npm run build  # or equivalent
-```
-
-If tests or build fail, re-dispatch implementation agent with the error.
-
----
-
-## Step 6: Report
+If `DONE`:
 
 ```
 AskUserQuestion(
   questions: [{
-    header: "Implementation Complete",
-    question: "Code is implemented and tests pass. What next?",
+    header: "Design",
+    question: "Design saved to [path]. Ready to build?",
     options: [
-      {label: "Review the changes", description: "Show what was changed"},
-      {label: "Add more tasks", description: "Build something else"},
+      {label: "Yes, build it", description: "Dispatch implementation with TDD"},
+      {label: "Needs changes", description: "Tell me what to adjust"},
+      {label: "Start over", description: "Re-dispatch with new direction"}
+    ]
+  }]
+)
+```
+
+**ENFORCEMENT:** Do NOT proceed without explicit user confirmation via `AskUserQuestion`.
+
+If changes needed: re-dispatch code-agent with feedback + path to existing design file.
+
+### 3. Dispatch Implementation
+
+```
+TaskCreate("Implement: [feature]", activeForm="Implementing [feature]")
+```
+
+```python
+Agent(
+    subagent_type="code-foundations:build-agent",
+    description="Implement: [short description]",
+    prompt="""
+This is a minimal gate build — pseudocode already exists.
+
+DESIGN FILE: docs/code/<topic>-design.md
+Read the design file for pseudocode and contracts.
+
+## TDD Required
+
+For EVERY change:
+1. Write a failing test first (RED)
+2. Implement minimal code to make it pass (GREEN)
+3. Run tests to confirm
+4. Commit
+
+Do NOT write implementation code before its test exists.
+
+## Spec Compliance
+
+Implement exactly as designed. If the design is wrong or unclear:
+- Return BLOCKED with what's ambiguous
+- Do NOT deviate silently
+
+Return: DONE | BLOCKED with reason.
+"""
+)
+```
+
+### 4. Review
+
+After build-agent returns DONE:
+
+```bash
+# Run full test suite
+[test command]
+
+# Type check / lint
+[typecheck/lint command]
+```
+
+Then **spec compliance check** — read the design file and the diff side by side:
+- Does the implementation match the pseudocode?
+- Are all contracts satisfied?
+- Any additions not in the design? (YAGNI violation)
+- Any design items missing from the implementation?
+
+If issues found: re-dispatch build-agent with specific fixes.
+
+### 5. Report
+
+```
+AskUserQuestion(
+  questions: [{
+    header: "Done",
+    question: "Implemented and reviewed against design. Tests pass. What next?",
+    options: [
+      {label: "Show the changes", description: "Display diff + design compliance"},
       {label: "Done", description: "Wrap up"}
     ]
   }]
@@ -160,13 +234,14 @@ AskUserQuestion(
 ## Quick Reference
 
 ```
-/code-foundations:code [goal]
+/code [goal]
 
-  1. Gather context
-  2. Dispatch code-agent → returns design
-  3. Present design → AskUserQuestion("Ready to build?")
-     - Changes needed → re-dispatch code-agent (loop)
-  4. Dispatch implementation-agent → returns DONE/BLOCKED
-  5. Verify (tests + build)
-  6. Report to user
+  1. Classify → Quick or Standard
+
+  Quick:
+    → build-agent (TDD) → review → report
+
+  Standard:
+    → code-agent (design, persisted) → user gate
+    → build-agent (TDD, from design) → spec review → report
 ```
