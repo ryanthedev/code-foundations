@@ -184,7 +184,7 @@ For each phase N, run Model Auto-Detection and Gate Policy Detection (see below)
 - Full gate: N.2 blockedBy N.1. Next phase blockedBy N.2.
 - Standard/Minimal: Next phase blockedBy N.1.
 
-**Orchestrator handles commits** directly after each phase completes (REVIEW passes for Full, BUILD completes for Standard/Minimal). No CHECKPOINT task needed.
+**Orchestrator handles commits** directly after each phase completes (after REVIEW passes for Full gate, or after BUILD completes for Standard/Minimal gate).
 
 **Catch-up review tasks** are NOT created upfront. They are inserted dynamically when the catch-up rule triggers (2+ phases since last REVIEW, before a Full phase).
 

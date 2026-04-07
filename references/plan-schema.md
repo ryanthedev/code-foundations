@@ -94,7 +94,7 @@ docs/plans/YYYY-MM-DD-<topic-slug>.md
 
 **Level:** 100% | Backend only | Backend + frontend | None | Per-phase
 
-_Chosen during whiteboarding. Affects POST-GATE reviewer and final verification._
+_Chosen during whiteboarding. Affects REVIEW gate and final verification._
 
 ---
 
