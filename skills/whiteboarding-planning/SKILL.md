@@ -23,7 +23,7 @@ Before any work: `Read($CLAUDE_PLUGIN_ROOT/references/pre-gate-standards.md)`
 DISCOVER: Codebase search | DISCOVER: Questioning | CLASSIFY | EXPLORE | DETAIL | SAVE | CHECK | CONFIRM | HANDOFF
 ```
 
-**Medium track:** Skip CHECK (mark completed with "skipped -- medium track").
+**CHECK runs on all tracks** — never skip independent review.
 
 ---
 
@@ -192,7 +192,7 @@ Otherwise -> omit (building uses default)
 **Skill assignment (EVERY phase MUST have `**Skills:**` field):**
 1. Scan system-reminder for all available skills (`plugin:skill-name` lines)
 2. Match to phase goal, scope, and work type (tech stack, task type, domain)
-3. Exclude workflow commands (whiteboarding, building, review, debug)
+3. Exclude workflow commands (whiteboarding, building, code, review, debug, prototype, setup-ast)
 4. Write `**Skills:**` on every phase -- `none -- [reason]` valid, omission NOT valid
 
 ### Plan File Schema
@@ -248,9 +248,7 @@ _To be filled during /code-foundations:building_
 
 ## Step 6: CHECK
 
-**Simple track:** Skip (mark completed with "skipped -- simple track").
-
-**Medium/Complex:** Dispatch subagent to review saved plan with fresh eyes.
+**ALL tracks:** Dispatch subagent to review saved plan with fresh eyes. Never skip — independent review catches blind spots regardless of task size.
 
 ```
 Agent: sonnet, "Review whiteboarding plan"

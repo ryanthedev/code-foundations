@@ -24,7 +24,7 @@ Before anything else, read the user's request and make an instant complexity cal
 
 ## Quick Track (default for simple tasks)
 
-**One pass. No task pipeline. No subagent check. Scan -> plan -> present -> go.**
+**One pass. No task pipeline. Scan -> plan -> check -> present -> go.**
 
 1. **Scan codebase** -- check for `docs/code-standards.md` (or legacy `docs/code-patterns.md`).
    - **If exists:** Read it, check staleness via `git rev-list <commit-ref>..HEAD --count`. 0 commits -> trust it. 1-20 -> spot-check recent diffs, update if changed. 20+ -> regenerate.
@@ -49,9 +49,7 @@ Before anything else, read the user's request and make an instant complexity cal
    - [ ] DW-N.1: [Verifiable criterion]
    ```
 
-4. **Present and ask** via `AskUserQuestion`: "Here's the plan. Build it, adjust it, or tell me what to do?"
-
-5. **If building:** Save to `docs/plans/YYYY-MM-DD-<topic>.md` wrapped in plan file format:
+4. **Save** to `docs/plans/YYYY-MM-DD-<topic>.md` wrapped in plan file format:
 
    ```markdown
    # Plan: [Topic]
@@ -76,9 +74,30 @@ Before anything else, read the user's request and make an instant complexity cal
    _To be filled during /code-foundations:building_
    ```
 
-   Then suggest default thinking effort, run `/code-foundations:building docs/plans/<plan>.md`. Do NOT commit the plan file.
+   Do NOT commit the plan file.
 
-That's it. No EXPLORE, no CHECK, no 10-task pipeline. Quick track should take under 2 minutes from invocation to handoff.
+5. **Check** — dispatch a sonnet subagent to review the saved plan with fresh eyes:
+
+   ```
+   Agent: sonnet, "Review whiteboarding plan"
+   Prompt: Review docs/plans/<plan>.md for structural issues.
+
+   Checklist:
+   - Structural: done-when items cover problem statement,
+     no scope overlap, union covers full feature, done-when observable + has DW-ID, YAGNI
+   - Coherence: no contradictions, Phase N output matches N+1 input
+   - Skills: every phase has Skills field, skills match work type, skills actually available
+
+   Output: PASS or FINDINGS with specific fix recommendations.
+   ```
+
+   PASS -> proceed. FINDINGS -> fix issues, then proceed.
+
+6. **Present and ask** via `AskUserQuestion`: "Here's the plan. Build it, adjust it, or tell me what to do?"
+
+7. **If building:** Suggest default thinking effort, run `/code-foundations:building docs/plans/<plan>.md`.
+
+That's it. No EXPLORE, no 10-task pipeline. Quick track should take under 3 minutes from invocation to handoff.
 
 ---
 
