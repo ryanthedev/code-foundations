@@ -240,9 +240,9 @@ Otherwise -> omit (building uses default)
 _To be filled during /code-foundations:building_
 ```
 
-### Save + Commit (MANDATORY)
+### Save (MANDATORY)
 
-`mkdir -p docs/plans`, write plan, `git add` + `git commit -m "plan: <topic-slug>"`. **Do NOT skip commit** -- worktree mode cannot see uncommitted files.
+`mkdir -p docs/plans`, write plan file. **Do NOT commit** -- the plan is a working document, not a deliverable. Building handles worktree visibility by copying the plan file after worktree creation.
 
 ---
 
@@ -291,7 +291,7 @@ If changes requested: update plan. Structural changes -> re-run CHECK. Minor cha
 
 ## Step 8: HANDOFF
 
-`AskUserQuestion`: "Plan saved and committed. How would you like to proceed?"
+`AskUserQuestion`: "Plan saved. How would you like to proceed?"
 
 1. **Build now** (Recommended) -- Suggest default thinking effort, run `/code-foundations:building docs/plans/<plan>.md`
 2. **Tell me what to do** -- Numbered manual steps

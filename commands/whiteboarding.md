@@ -76,7 +76,7 @@ Before anything else, read the user's request and make an instant complexity cal
    _To be filled during /code-foundations:building_
    ```
 
-   Then: `git add` + `git commit -m "plan: <topic>"`, suggest default thinking effort, run `/code-foundations:building docs/plans/<plan>.md`.
+   Then suggest default thinking effort, run `/code-foundations:building docs/plans/<plan>.md`. Do NOT commit the plan file.
 
 That's it. No EXPLORE, no CHECK, no 10-task pipeline. Quick track should take under 2 minutes from invocation to handoff.
 

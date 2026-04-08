@@ -74,8 +74,10 @@ PLAN_SLUG="<extracted-slug>"
 git worktree add .claude/worktrees/${PLAN_SLUG} -b feature/${PLAN_SLUG}
 ```
 
-Then change working directory to the worktree:
+Then copy the plan file into the worktree and change working directory:
 ```bash
+mkdir -p .claude/worktrees/${PLAN_SLUG}/docs/plans
+cp docs/plans/<plan-file>.md .claude/worktrees/${PLAN_SLUG}/docs/plans/
 cd .claude/worktrees/${PLAN_SLUG}
 ```
 
@@ -826,7 +828,7 @@ When resuming blocked plan:
 [Socratic questions]
 [2-3 approaches]
 [Detailed sections]
-[Save + commit to docs/plans/YYYY-MM-DD-topic.md]
+[Save to docs/plans/YYYY-MM-DD-topic.md]
   ↓
 [Set thinking effort to default — plan has the reasoning, orchestration doesn't need max effort]
   ↓
@@ -844,7 +846,7 @@ When resuming blocked plan:
 Claude Instance 1                        Claude Instance 2
 ────────────────                        ────────────────
 /whiteboarding "auth system"            /whiteboarding "notifications"
-  → saves + commits plan                  → saves + commits plan
+  → saves plan                              → saves plan
   → clear + build                         → clear + build
 
 /building (worktree: auth-system)       /building (worktree: notifications)
