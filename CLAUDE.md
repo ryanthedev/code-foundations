@@ -22,7 +22,7 @@ Code-foundations is a Claude Code plugin providing software engineering skills b
 
 - `skills/` - Individual skill definitions (SKILL.md + checklists.md)
 - `commands/` - User-invocable commands (slash commands)
-- `agents/` - Agent templates (build-agent, post-gate-agent, debug-agent, code-agent)
+- `agents/` - Agent templates (build-agent, post-gate-agent, debug-agent)
 - `references/` - Shared reference materials
 - `docs/` - Case study examples
 
@@ -99,7 +99,6 @@ Code-foundations is a Claude Code plugin providing software engineering skills b
 |-----------|---------|----------|
 | Bug investigation | `/code-foundations:debug` | Minimal |
 | Technical uncertainty | `/code-foundations:prototype` | Minimal |
-| Single feature, design-first | `/code-foundations:code` | Light |
 | Feature needs planning | `/code-foundations:whiteboarding` | Medium |
 | Executing approved plan | `/code-foundations:building` | Full |
 

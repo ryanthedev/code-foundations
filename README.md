@@ -12,7 +12,6 @@
 |---------|---------|-------------|
 | `/code-foundations:whiteboarding` | Create implementation-ready plans | Feature planning |
 | `/code-foundations:building` | Execute plans with quality gates | Implementing approved plans |
-| `/code-foundations:code` | Pseudocode-first development | Know what to build, want design collaboration |
 | `/code-foundations:prototype` | Quick feasibility proof | Technical uncertainty |
 | `/code-foundations:debug` | Scientific debugging with task tracking | Bug hunting |
 
@@ -99,30 +98,7 @@ The system saves every artifact to `docs/building/`. Per-phase commits enable ro
 
 ---
 
-## Getting Stuff Done: Code, Prototype, Debug
-
-### `/code-foundations:code` - Pseudocode First
-
-**Design loop, then implementation loop.** You know what to build and want to collaborate on design first.
-
-```
-PHASE 1: DESIGN LOOP
-├─ Draft pseudocode (flow + contracts)
-├─ Explore subagent researches if needed
-├─ Tasklist tracks decisions
-├─ User feedback → refine
-└─ "Ready to build?" → explicit confirmation
-
-PHASE 2: IMPLEMENTATION LOOP
-├─ Subagent implements from pseudocode
-├─ Unit tests → integration tests
-├─ Commit checkpoint
-└─ User picks next task
-```
-
-**Skills loaded:** `cc-pseudocode-programming`, `cc-defensive-programming`
-
-Change costs nothing in the design loop. Once you say "let's build," the contract holds.
+## Getting Stuff Done: Prototype, Debug
 
 ### `/code-foundations:prototype` - Prove Feasibility
 
@@ -177,7 +153,6 @@ The task list prevents rabbit holes, missed verifications, and lost context.
 
 | Situation | Command |
 |-----------|---------|
-| Know what to build, want design collaboration | `/code-foundations:code` |
 | Technical uncertainty, prove it works | `/code-foundations:prototype` |
 | Need full feature planning | `/code-foundations:whiteboarding` |
 | Have approved plan, ready to implement | `/code-foundations:building` |
