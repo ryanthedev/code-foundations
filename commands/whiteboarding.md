@@ -22,18 +22,40 @@ Before anything else, read the user's request and make an instant complexity cal
 
 ---
 
+## Before Planning (All Tracks)
+
+These steps run regardless of track. They produce the confirmed problem statement that anchors all downstream work.
+
+### 1. Codebase Scan
+
+Check for `docs/code-standards.md` (or legacy `docs/code-patterns.md`).
+- **If exists:** Read it, check staleness via `git rev-list <commit-ref>..HEAD --count`. 0 commits -> trust it. 1-20 -> spot-check recent diffs, update if changed. 20+ -> regenerate.
+- **If missing:** Full codebase search, generate `docs/code-standards.md` with sections: Architecture, Naming, Imports, Error Handling, File Organization, Testing, Technology Decisions, Forbidden Patterns, Similar Implementations. Include `<!-- base-commit: [HEAD] -->` and `<!-- generated: [date] -->`.
+- Grep for similar patterns. 30 seconds, not 5 minutes.
+
+### 2. Clarify Intent
+
+Ask 1-2 questions max via `AskUserQuestion` -- only if genuinely ambiguous. Load `Skill(code-foundations:clarify)` to classify what's unclear (fault type + ambiguity direction) and generate targeted questions. If the request is already clear, skip to step 3.
+
+### 3. Problem Statement
+
+After scanning and clarifying, write:
+
+- **Problem:** 1-2 sentences — what's wrong or missing
+- **Constraints:** non-negotiable boundaries
+- **Success criteria:** how we know it's done
+
+Confirm via `AskUserQuestion`: "Does this capture what you want?"
+
+Corrections → update and re-confirm. This becomes the plan's `## Context` section. **No plan writing begins until the problem statement is confirmed.**
+
+---
+
 ## Quick Track (default for simple tasks)
 
-**One pass. No task pipeline. Scan -> plan -> check -> present -> go.**
+**Problem statement confirmed → plan → check → present → go.**
 
-1. **Scan codebase** -- check for `docs/code-standards.md` (or legacy `docs/code-patterns.md`).
-   - **If exists:** Read it, check staleness via `git rev-list <commit-ref>..HEAD --count`. 0 commits -> trust it. 1-20 -> spot-check recent diffs, update if changed. 20+ -> regenerate.
-   - **If missing:** Full codebase search, generate `docs/code-standards.md` with sections: Architecture, Naming, Imports, Error Handling, File Organization, Testing, Technology Decisions, Forbidden Patterns, Similar Implementations. Include `<!-- base-commit: [HEAD] -->` and `<!-- generated: [date] -->`.
-   - Grep for similar patterns. 30 seconds, not 5 minutes.
-
-2. **Ask 1-2 questions max** via `AskUserQuestion` -- only if genuinely ambiguous. Load `Skill(code-foundations:clarify)` to classify what's unclear (fault type + ambiguity direction) and generate targeted questions. If the request is already clear, skip to step 3.
-
-3. **Write the plan inline** -- 1-2 phases, 50-75 words each. Use this template per phase:
+1. **Write the plan inline** -- 1-2 phases, 50-75 words each. Use this template per phase:
 
    ```markdown
    ### Phase N: [Name]
@@ -49,7 +71,7 @@ Before anything else, read the user's request and make an instant complexity cal
    - [ ] DW-N.1: [Verifiable criterion]
    ```
 
-4. **Save** to `docs/plans/YYYY-MM-DD-<topic>.md` wrapped in plan file format:
+2. **Save** to `docs/plans/YYYY-MM-DD-<topic>.md` wrapped in plan file format:
 
    ```markdown
    # Plan: [Topic]
@@ -58,9 +80,9 @@ Before anything else, read the user's request and make an instant complexity cal
    **Complexity:** simple
    ---
    ## Context
-   [Problem statement -- 2-3 sentences]
+   [Problem statement from shared step 3]
    ## Constraints
-   - [constraints]
+   - [constraints from shared step 3]
    ---
    ## Implementation Phases
    [phases from step 3]
@@ -76,7 +98,7 @@ Before anything else, read the user's request and make an instant complexity cal
 
    Do NOT commit the plan file.
 
-5. **Check** — dispatch a sonnet subagent to review the saved plan with fresh eyes:
+3. **Check** — dispatch a sonnet subagent to review the saved plan with fresh eyes:
 
    ```
    Agent: sonnet, "Review whiteboarding plan"
@@ -93,9 +115,9 @@ Before anything else, read the user's request and make an instant complexity cal
 
    PASS -> proceed. FINDINGS -> fix issues, then proceed.
 
-6. **Present and ask** via `AskUserQuestion`: "Here's the plan. Build it, adjust it, or tell me what to do?"
+4. **Present and ask** via `AskUserQuestion`: "Here's the plan. Build it, adjust it, or tell me what to do?"
 
-7. **If building:** Suggest default thinking effort, run `/code-foundations:building docs/plans/<plan>.md`.
+5. **If building:** Suggest default thinking effort, run `/code-foundations:building docs/plans/<plan>.md`.
 
 That's it. No EXPLORE, no 10-task pipeline. Quick track should take under 3 minutes from invocation to handoff.
 
@@ -107,7 +129,7 @@ For Medium and Complex tasks, load the planning pipeline:
 
 `Skill(code-foundations:whiteboarding-planning)`
 
-The skill runs the full pipeline: **Discover -> Classify -> Explore -> Detail -> Save -> Check -> Confirm -> Handoff.**
+**Pass the confirmed problem statement** from shared step 3. The planning pipeline's DISCOVER step deepens codebase research and may refine the problem statement, but does not redo clarification from scratch.
 
 ---
 

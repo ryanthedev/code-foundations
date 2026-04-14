@@ -123,12 +123,12 @@ Three-stage pattern for feature development:
         ↓ (if feasible)
 
 /code-foundations:whiteboarding "build notification system"
-  → Skill audit (scans all installed plugins for relevant skills)
-  → Discovery questions (informed by prototype)
-  → 2-3 approaches with trade-offs
-  → Implementation-ready plan with Skills per phase
+  → Codebase scan (shared step, all tracks)
+  → Clarify intent (shared step, all tracks)
+  → Problem statement confirmed (shared step, all tracks)
+  → [Quick: plan → check → present]
+  → [Standard/Full: classify → explore → detail → save → check → confirm]
   → Save to docs/plans/YYYY-MM-DD-<topic>.md
-  → Subagent CHECK reviews plan with fresh eyes
   → User confirms
 
         ↓ (after plan approval)
@@ -152,16 +152,16 @@ Three-stage pattern for feature development:
 **Quality Gates (per phase during /code-foundations:building):**
 ```
 BUILD:   references/pre-gate-standards.md + references/implement-standards.md + [plan Skills]
-         (discovery → pseudocode → implementation in one agent)
+         (discovery + design → TDD implementation in one agent)
 REVIEW:  references/post-gate-standards.md + [plan Skills]
          (Full gate only — standard/minimal use tests as gate)
 VERIFY:  performance-optimization + cc-refactoring-guidance + build + tests + lint
 COMMIT:  Orchestrator commits directly after gates pass
 ```
 
-`[plan Skills]` = skills assigned per phase during whiteboarding's SAVE step. If no skills in plan, build-agent discovers from prompt context.
+`[plan Skills]` = skills assigned per phase during whiteboarding's SAVE step, then validated/resolved during building's SETUP skill resolution task.
 
-Model and skills are assigned during whiteboarding's SAVE step. Building uses what's in the plan — if no model specified, uses default (no override). Cannot proceed to next phase until current phase passes all gates including REVIEW PASS (Full gate).
+Model and skills are assigned during whiteboarding's SAVE step. Building's SETUP runs a one-time skill resolution task that validates assignments, fills gaps, and updates the plan before creating phase tasks (skills affect gate policy). Cannot proceed to next phase until current phase passes all gates including REVIEW PASS (Full gate).
 
 ## Skill File Structure
 

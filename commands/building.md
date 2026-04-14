@@ -27,7 +27,7 @@ description: "Execute plans through gated phases with subagent dispatch."
 | **Worktree isolation required** | Multi-phase commits on main = no rollback, polluted history. Worktrees enable parallel builds. |
 | **Load plan before coding** | No plan = no checklist = forgotten tasks |
 | **One section at a time** | Parallel sections = merge conflicts + lost context |
-| **BUILD before review (Full/Standard gate)** | No design = coding without discovery = rework. Exception: Minimal gate phases skip discovery/pseudocode. |
+| **BUILD before review (Full/Standard gate)** | No design = coding without discovery = rework. Exception: Minimal gate phases skip discovery. |
 | **Verification before commit (per gate policy)** | Full phases: REVIEW required. Standard/Minimal: tests are the gate. Catch-up review before next Full phase if 2+ phases ran ungated. |
 | **Independent verification on complex work** | Self-review is blind; fresh agent catches issues. But over-verification on trivial work injects noise (CR-Bench: SNR drops 69% on small models under reflexion). |
 | **Mark complete only when gates pass** | Premature completion = unverified work shipped |
@@ -165,18 +165,33 @@ Check plan status:
 **Current Phase:** 1
 ```
 
+### Skill Resolution (One-Time Task)
+
+Before creating phase tasks, resolve skills for all phases. Skills affect gate policy (phases with Skills get Full gate), so this must run first.
+
+1. `TaskCreate(subject: "SETUP: Skill Resolution", description: "Validate and resolve skill assignments for all phases.")`
+2. Scan system-reminder for all available skills (exclude workflow commands: whiteboarding, building, review, debug, prototype, setup-ast)
+3. For each phase, check the plan's `**Skills:**` field:
+   - **Specific skills listed** → validate each exists in available skills. Warn on any missing.
+   - **`none -- [reason]`** → evaluate phase goal and scope against available skills. If a strong match exists, suggest adding it. Log why `none` was kept or what was added.
+   - **Field missing** → flag as plan defect (whiteboarding CHECK should have caught this). Add skills based on phase goal/scope.
+4. Update the plan file's `**Skills:**` fields with resolved assignments
+5. `TaskUpdate(status: "completed")`
+
+**Output:** Resolved skill map logged in the task. Phase task creation uses these resolved skills for gate policy detection.
+
 ### Create Phase Tasks Upfront
 
 For each phase N, run Model Auto-Detection and Gate Policy Detection (see below), then create tasks.
 
 **Full gate (2 tasks):**
 
-1. `TaskCreate(subject: "Phase N.1: BUILD - [phase name]", description: "Discovery + pseudocode + implement. Model: [from plan or default].", activeForm: "Building Phase N")`
+1. `TaskCreate(subject: "Phase N.1: BUILD - [phase name]", description: "Discovery + design + TDD. Model: [from plan or default].", activeForm: "Building Phase N")`
 2. `TaskCreate(subject: "Phase N.2: REVIEW - [phase name]", description: "Post-gate review. Model: [from plan or default]. Must return PASS.", activeForm: "Reviewing Phase N")`
 
 **Standard gate (1 task — REVIEW skipped, tests are the gate):**
 
-1. `TaskCreate(subject: "Phase N.1: BUILD - [phase name]", description: "Discovery + pseudocode + implement. Model: [from plan or default].", activeForm: "Building Phase N")`
+1. `TaskCreate(subject: "Phase N.1: BUILD - [phase name]", description: "Discovery + design + TDD. Model: [from plan or default].", activeForm: "Building Phase N")`
 
 **Minimal gate (1 task — no discovery/pseudocode):**
 
@@ -321,13 +336,13 @@ For each task:
 
 ---
 
-### Sub-Phase N.1: BUILD (Discovery + Design + Implementation)
+### Sub-Phase N.1: BUILD (Discovery + Design + TDD)
 
-## STOP. YOU CANNOT EXPLORE CODE, WRITE PSEUDOCODE, OR IMPLEMENT DIRECTLY.
+## STOP. YOU CANNOT EXPLORE CODE, WRITE TESTS, OR IMPLEMENT DIRECTLY.
 
 **TaskUpdate → in_progress, then dispatch the build agent.**
 
-The build agent combines discovery, pseudocode, and implementation in one pass. It writes discovery and pseudocode files (for post-gate review), then implements.
+The build agent combines discovery, design, and TDD implementation in one pass. It writes a discovery file (for post-gate review), then implements via red-green cycle.
 
 **Full/Standard gate dispatch:**
 
@@ -337,12 +352,11 @@ Agent tool:
 - model: [from plan's **Model:** field, or omit if not set]
 - description: "BUILD Phase N"
 - prompt: |
-    Build Phase N of the building plan. This is a three-part task:
-    1. Discovery — explore codebase, map what exists, identify gaps
-    2. Design — write pseudocode referencing DW items, verify coverage
-    3. Implementation — translate pseudocode to code, run tests
+    Build Phase N of the building plan. This is a two-part task:
+    1. Discovery + Design — scope the phase work, identify gaps vs plan, make design decisions, map DW items to test cases
+    2. TDD Implementation — write failing tests from DW items, then implement to make them pass (red-green cycle)
 
-    Write discovery and pseudocode files before implementing.
+    Write discovery file before implementing.
 
     ## Plan Context
     [paste the Context section from the plan file — the 2-3 sentence problem statement]
@@ -356,9 +370,9 @@ Agent tool:
     [paste phase description and file list from plan]
 
     ## Done-When Items (DW-IDs)
-    These are the acceptance criteria from the plan. Your pseudocode must
-    reference which DW items each section addresses (e.g., "## Setup [DW-1.1, DW-1.3]").
-    Any DW item not referenced in any section is a visible gap.
+    These are the acceptance criteria from the plan. Each DW item must
+    have corresponding test(s) (e.g., `test_DW_1_1_creates_user`).
+    Any DW item without a test is a visible gap.
     If any item cannot be met, return UPDATE_PLAN.
     [paste ALL DW items from the plan phase, verbatim:]
     - [ ] DW-N.1: [done-when item 1]
@@ -382,8 +396,7 @@ Agent tool:
     - Phase: N - [name]
 
     ## Output Files
-    - Discovery: docs/building/<plan-name>-phase-N-discovery.md
-    - Pseudocode: docs/building/<plan-name>-phase-N-pseudocode.md
+    - Discovery + Design: docs/building/<plan-name>-phase-N-discovery.md
 ```
 
 **Minimal gate dispatch:**
@@ -395,8 +408,8 @@ Agent tool:
 - description: "BUILD Phase N (minimal)"
 - prompt: |
     Build Phase N of the building plan. This phase uses minimal gate
-    policy — skip discovery and pseudocode, implement directly from
-    the plan description.
+    policy — skip discovery, implement directly from the plan
+    description using TDD (write tests from DW items, then implement).
 
     ## Plan Context
     [paste the Context section from the plan file]
@@ -455,8 +468,8 @@ Agent tool:
     ## Done-When Items (DW-IDs) — Requirement Verification
     For EACH item below, mark SATISFIED or NOT_SATISFIED with evidence
     (file:line, test name, or observable behavior). Any NOT_SATISFIED → FAIL.
-    Do NOT skip items. Do NOT check against pseudocode only — these come
-    from the original plan and may include items the build agent missed.
+    Do NOT skip items. These come from the original plan and may
+    include items the build agent missed.
     [paste ALL DW items from the plan phase, verbatim:]
     - DW-N.1: [done-when item 1] → Status: ___ Evidence: ___
     - DW-N.2: [done-when item 2] → Status: ___ Evidence: ___
@@ -470,9 +483,8 @@ Agent tool:
     ## Inputs
     - Plan: docs/plans/<plan-name>.md (Phase N section)
     [Full/Standard gate only:]
-    - Discovery: docs/building/<plan-name>-phase-N-discovery.md
-    - Pseudocode: docs/building/<plan-name>-phase-N-pseudocode.md
-    [Minimal gate: no discovery/pseudocode files exist]
+    - Discovery + Design: docs/building/<plan-name>-phase-N-discovery.md
+    [Minimal gate: no discovery file exists]
 
     ## Files Changed
     [list files from BUILD subagent]
@@ -565,7 +577,7 @@ Review: [pass|fail->pass (N attempts)|skipped (Standard/Minimal)|catch-up (batch
 Update plan file execution log:
 ```markdown
 ### Phase N: [Name] (Gate: [Full/Standard/Minimal])
-- [x] BUILD: Discovery + pseudocode + implementation complete
+- [x] BUILD: Discovery + design + TDD implementation complete
 - [x] REVIEW: Verification passed [or "SKIPPED — tests are gate" or "Covered by catch-up review"]
 - [x] Committed
 Commit: [hash]

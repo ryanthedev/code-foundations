@@ -64,7 +64,9 @@ Use its framework to classify what's unclear (fault type + ambiguity direction) 
 
 ### Output: Problem Statement
 
-Summarize: Problem Statement (1-2 sentences) + Constraints + Success Criteria. Confirm via `AskUserQuestion`: "Does this capture what you want?"
+A confirmed problem statement arrives from the shared steps in the whiteboarding command. DISCOVER refines it with deeper codebase context — don't redo clarification from scratch.
+
+Review the existing problem statement against what deeper discovery found. If it holds, proceed. If discovery reveals the problem is different or broader than stated, update and re-confirm via `AskUserQuestion`: "Discovery found [X]. Updated problem statement: [Y]. Does this still capture what you want?"
 
 ---
 
@@ -110,9 +112,18 @@ Approaches must be **structurally different** (different technology, pattern, or
 |-------------|-------------|--------|-------------------------|
 | [failure] | LOW/MED/HIGH | LOW/MED/HIGH | [approach] |
 
-### Decision
+### Recommendation + Decision Gate
 
-Ask: "Which approach, or should I elaborate?" Record chosen approach, rationale, and fallback.
+After presenting the approach table, **name a recommendation with 1-sentence rationale** — not neutral presentation. The user wants an opinion, then picks.
+
+**MUST use `AskUserQuestion`** with options:
+- Each approach from the table (A, B, C...) as a selectable option
+- "Elaborate on one" — expand trade-offs before choosing
+- "Different direction" — none of the above fits
+
+**Hard gate: Cannot proceed to DETAIL until the user picks an approach via `AskUserQuestion`.** Writing "Going with X" and moving on is a violation — the user must answer. No silent defaults, no "I'll flag it at confirm."
+
+Record chosen approach, rationale, and fallback.
 
 ---
 

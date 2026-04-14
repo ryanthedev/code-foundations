@@ -74,7 +74,7 @@ User: "/code-foundations:building docs/plans/2026-01-30-notifications.md"
 
   FOR EACH PHASE:
   ┌────────────────────────────────────────────────────────────┐
-  │  BUILD        Build-agent: discovery + pseudocode + code   │
+  │  BUILD        Build-agent: discovery + design + TDD       │
   │       ⛔ Loads pre-gate + implement standards              │
   ├────────────────────────────────────────────────────────────┤
   │  REVIEW       Post-gate-agent checks quality (Full gate)   │

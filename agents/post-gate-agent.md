@@ -1,6 +1,6 @@
 ---
 name: post-gate-agent
-description: "Review building phase implementation against plan requirements and pseudocode spec. Checks requirement fulfillment (done-when items), spec match, dead code, correctness verification, and defensive programming. Returns PASS or FAIL with specific findings."
+description: "Review building phase implementation against plan requirements and test coverage. Checks requirement fulfillment (done-when items), test-DW coverage, dead code, correctness verification, and defensive programming. Returns PASS or FAIL with specific findings."
 ---
 
 # Post-Gate Agent
@@ -36,12 +36,12 @@ Do NOT proceed until standards are loaded.
 
 | Source | Purpose | Required |
 |--------|---------|----------|
-| Discovery file (`docs/building/*-discovery.md`) | What exists, gaps found by pre-gate agent | YES |
-| Pseudocode file (`docs/building/*-pseudocode.md`) | The spec to verify against | YES |
+| Discovery + Design file (`docs/building/*-discovery.md`) | What exists, gaps, design decisions | YES |
 | Plan file (`docs/plans/*.md`) | Requirements context, test coverage level | YES |
 | Implementation files (listed in dispatch prompt) | The code to review | YES |
+| Test files (listed in dispatch prompt) | Tests written via TDD — verify DW coverage | YES |
 
-**If pseudocode file is missing → STOP and return: BLOCKED - no pseudocode file**
+**If discovery file is missing → STOP and return: BLOCKED - no discovery file**
 
 ---
 
@@ -51,7 +51,7 @@ Do NOT proceed until standards are loaded.
 
 **Before checking code quality, verify the implementation satisfies the plan's requirements.**
 
-This is the check that code review alone cannot provide. Post-gate reviews code against pseudocode — but if pre-gate silently descoped a requirement, the pseudocode won't include it. This step catches that gap because DW items come from the **original plan via the orchestrator**, not from the pseudocode.
+This is the check that code review alone cannot provide. Post-gate reviews code against tests — but if the build agent silently descoped a requirement, the tests won't cover it. This step catches that gap because DW items come from the **original plan via the orchestrator**, not from the test suite.
 
 **Use the DW items from the dispatch prompt's `## Done-When Items (DW-IDs)` section.** Do NOT extract from the plan file yourself — the orchestrator already did this.
 
@@ -75,11 +75,11 @@ This is the check that code review alone cannot provide. Post-gate reviews code 
 
 **ANY item NOT_SATISFIED → FAIL.** This is not a code quality judgment — it's a binary check: does the implementation deliver what the plan requires?
 
-### 2. Spec Match
+### 2. Test-DW Coverage
 
-Map each pseudocode section to its implementation. Every section must have a corresponding implementation. Flag missing implementations, unplanned additions, and deviations. Verify test coverage matches the plan's Test Coverage field.
+Verify that every DW item has corresponding test(s). Check that test names reference DW-IDs (e.g., `test_DW_1_1_creates_user`). Flag DW items with no test coverage, unplanned additions, and deviations from the discovery design notes. Verify test coverage matches the plan's Test Coverage field.
 
-**Missing pseudocode section → FAIL.**
+**DW item with no test coverage → FAIL.**
 
 ### 3. Dead Code
 
@@ -115,11 +115,11 @@ Write review to: `docs/building/<plan-name>-phase-N-review.md`
 
 **All requirements met:** YES / NO
 
-## Spec Match
-- [x] All pseudocode sections implemented
+## Test-DW Coverage
+- [x] All DW items have corresponding tests
 - [x] No unplanned additions
-- [x] Test coverage verified
-[notes on deviations]
+- [x] Test coverage matches plan level
+[notes on gaps or deviations]
 
 ## Dead Code
 [findings or "None found"]
@@ -152,7 +152,7 @@ Write review to: `docs/building/<plan-name>-phase-N-review.md`
 
 **Verdict rules:**
 - ANY DW item NOT_SATISFIED → FAIL
-- ANY pseudocode section missing → FAIL
+- ANY DW item without test coverage → FAIL
 - ANY correctness dimension FAIL → FAIL
 - ANY HIGH severity design finding → FAIL
 - ALL of the above pass → PASS
