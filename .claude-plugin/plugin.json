@@ -1,6 +1,6 @@
 {
   "name": "code-foundations",
-  "version": "4.6.0",
+  "version": "4.7.0",
   "description": "Software engineering skills from Code Complete and A Philosophy of Software Design. 20 skills across 3 agents (build, post-gate, debug). Building workflow with adaptive gates (BUILD, REVIEW, commit). Scientific debugging via debug-agent.",
   "author": {
     "name": "ryanthedev"

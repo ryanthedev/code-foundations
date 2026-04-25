@@ -28,10 +28,7 @@ These steps run regardless of track. They produce the confirmed problem statemen
 
 ### 1. Codebase Scan
 
-Check for `docs/code-standards.md` (or legacy `docs/code-patterns.md`).
-- **If exists:** Read it, check staleness via `git rev-list <commit-ref>..HEAD --count`. 0 commits -> trust it. 1-20 -> spot-check recent diffs, update if changed. 20+ -> regenerate.
-- **If missing:** Full codebase search, generate `docs/code-standards.md` with sections: Architecture, Naming, Imports, Error Handling, File Organization, Testing, Technology Decisions, Forbidden Patterns, Similar Implementations. Include `<!-- base-commit: [HEAD] -->` and `<!-- generated: [date] -->`.
-- Grep for similar patterns. 30 seconds, not 5 minutes.
+Load `Skill(code-foundations:code-standards)` to generate or update `docs/code-standards.md`. The skill handles staleness detection, scanning, and writing.
 
 ### 2. Clarify Intent
 

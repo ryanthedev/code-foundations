@@ -31,20 +31,9 @@ DISCOVER: Codebase search | DISCOVER: Questioning | CLASSIFY | EXPLORE | DETAIL 
 
 ### 1a: Codebase Search (MANDATORY -- Do First)
 
-**Before asking ANY questions**, check for existing code patterns:
+**Before asking ANY questions**, load `Skill(code-foundations:code-standards)` to generate or update `docs/code-standards.md`. The skill handles staleness detection, codebase scanning, legacy migration, and writing.
 
-1. Look for `docs/code-standards.md` (or legacy `docs/code-patterns.md`)
-2. **If exists:** Read it, check staleness via `git rev-list <commit-ref>..HEAD --count`
-   - 0 commits since -> trust it, skip search
-   - 1-20 -> spot-check recent diffs, update if changed
-   - 20+ -> full re-scan, regenerate
-3. **If missing:** Run full codebase search, generate `docs/code-standards.md`
-
-**Full search:** Similar features, module patterns, related components, conventions.
-
-**`docs/code-standards.md` sections:** Architecture, Naming, Imports, Error Handling, File Organization, Testing, Technology Decisions, Forbidden Patterns, Similar Implementations. Each: observed pattern + where used + examples. Include `<!-- base-commit: [HEAD] -->` and `<!-- generated: [date] -->` at top.
-
-Legacy: migrate `docs/code-patterns.md` -> `docs/code-standards.md` if found. **See:** [pattern-reuse-gate.md]($CLAUDE_PLUGIN_ROOT/references/pattern-reuse-gate.md)
+**See also:** [pattern-reuse-gate.md]($CLAUDE_PLUGIN_ROOT/references/pattern-reuse-gate.md)
 
 ### 1b: Clarify Intent
 
@@ -122,6 +111,8 @@ After presenting the approach table, **name a recommendation with 1-sentence rat
 - "Different direction" — none of the above fits
 
 **Hard gate: Cannot proceed to DETAIL until the user picks an approach via `AskUserQuestion`.** Writing "Going with X" and moving on is a violation — the user must answer. No silent defaults, no "I'll flag it at confirm."
+
+**Question style:** See [adaptive-questioning.md]($CLAUDE_PLUGIN_ROOT/references/adaptive-questioning.md). Encode the recommendation in the option labels (e.g., "Use JWT (recommended)") so confirmatory mode works inside the structured tool.
 
 Record chosen approach, rationale, and fallback.
 
@@ -288,6 +279,8 @@ After return: PASS -> proceed. FINDINGS -> fix issues, then proceed.
 
 **Medium/Complex:** Structured summary with phases, constraint -> phase mapping, review results, remaining questions.
 
+**Question style:** See [adaptive-questioning.md]($CLAUDE_PLUGIN_ROOT/references/adaptive-questioning.md). If the user has been terse during planning, present the plan with assumptions stated rather than asking open-ended "thoughts?"
+
 ### Test Coverage (MANDATORY)
 
 Ask: "How much test coverage?" Options: 100% (recommended), Backend only, Backend + frontend, None, Per-phase. Record in plan file under `## Test Coverage`.
@@ -304,6 +297,8 @@ If changes requested: update plan. Structural changes -> re-run CHECK. Minor cha
 
 1. **Build now** (Recommended) -- Suggest default thinking effort, run `/code-foundations:building docs/plans/<plan>.md`
 2. **Tell me what to do** -- Numbered manual steps
+
+**Question style:** See [adaptive-questioning.md]($CLAUDE_PLUGIN_ROOT/references/adaptive-questioning.md). The "Recommended" tag on Build now is the confirmatory cue — keep it there.
 
 ---
 

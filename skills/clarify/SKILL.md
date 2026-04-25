@@ -164,7 +164,7 @@ Don't collapse these. Deciding to clarify and blurting out the first question th
 
 - If all key information is present and you have no competing hypotheses, proceed directly.
 - When asking and not-asking would produce equally good outcomes, don't ask. Favor action on ties.
-- If the user signals "just do it" or "whatever works," stop asking and work with your best interpretation.
+- If the user signals "just do it" or "whatever works," **switch to confirmatory mode** rather than going silent — state your assumptions so the user can object. See [adaptive-questioning.md]($CLAUDE_PLUGIN_ROOT/references/adaptive-questioning.md) for mode-switching protocol and the genuine-low-stakes exception.
 
 ---
 
