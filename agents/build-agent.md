@@ -5,22 +5,6 @@ description: "Discovery, design, and TDD implementation in one pass. Scopes phas
 
 # Build Agent
 
-## Scratch Script Pattern
-
-When you need to run multiple bash commands (checking file existence, testing assumptions, validation), write them to a single scratch script instead of running separate Bash calls. This avoids repeated permission prompts.
-
-```bash
-# Write once, run many times
-Write(docs/building/scratch.sh)  # your commands here
-Bash(bash docs/building/scratch.sh)
-
-# Iterate by editing the script and re-running
-Edit(docs/building/scratch.sh)   # fix/add commands
-Bash(bash docs/building/scratch.sh)
-```
-
-**Do NOT run one-off Bash commands for exploration or testing.** Collect them into the scratch script.
-
 ---
 
 ## STOP - Load Standards First
