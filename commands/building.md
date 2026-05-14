@@ -99,7 +99,7 @@ Check plan status:
 Before creating phase tasks, resolve skills for all phases. Skills affect gate policy (phases with Skills get Full gate), so this must run first.
 
 1. `TaskCreate(subject: "SETUP: Skill Resolution", description: "Validate and resolve skill assignments for all phases.")`
-2. Scan system-reminder for all available skills (exclude workflow commands: whiteboard, building, review, debug, prototype, setup-ast)
+2. Scan system-reminder for all available skills (exclude workflow commands: whiteboard, building, debug, prototype, research)
 3. For each phase, check the plan's `**Skills:**` field:
    - **Specific skills listed** → validate each exists in available skills. Warn on any missing.
    - **`none -- [reason]`** → evaluate phase goal and scope against available skills. If a strong match exists, suggest adding it. Log why `none` was kept or what was added.

@@ -172,41 +172,6 @@ The task list prevents rabbit holes, missed verifications, and lost context.
 
 ---
 
-## Experimental
-
-### Code Review System
-
-> LLM code review is non-deterministic — the same code can produce different feedback on each run. We ground every check in explicit checklists with pass/fail criteria so the agent evaluates against defined standards, not intuition.
-
-**Single command. Parallel subagents.** Runs checklists against your code with specialized checking agents.
-
-```bash
-/code-foundations:review --sanity   # 14 core checks, quick pre-commit
-/code-foundations:review --pr       # 546 checks, full PR review
-```
-
-#### Architecture
-
-**Sanity (4-phase):**
-```
-EXTRACTION (haiku) → ORCHESTRATE (sonnet) → CHECKING (sonnet) → INVESTIGATION (sonnet)
-```
-
-**PR (5-phase):**
-```
-EXTRACTION (haiku) → CHECK ORCH (haiku) → CHECKING (sonnet) → ORCHESTRATE (haiku) → INVESTIGATION (sonnet)
-```
-
-| Phase | What Happens | Parallelism |
-|-------|--------------|-------------|
-| **Extraction** | Parse code into semantic units (functions, classes) | 1 agent per 5 files |
-| **Check Orch** | Group checks by ID prefix (PR only) | Single agent |
-| **Checking** | Run checklists against code | 1 agent per prefix group |
-| **Orchestrate** | Dedupe, batch findings, create investigation tasks | Single agent |
-| **Investigation** | Verify findings, capture code context and diff | 1 agent per 5 findings |
-
----
-
 ## Credits
 
 Based on *Code Complete, 2nd Edition* by Steve McConnell and *A Philosophy of Software Design* by John Ousterhout.

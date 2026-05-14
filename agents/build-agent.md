@@ -51,7 +51,7 @@ If the dispatch prompt does NOT include an `## Additional Skills` section, disco
 1. Scan the system-reminder for all available skills (lines with `plugin:skill-name`)
 2. Match skills to this phase's work: language, framework, task type
 3. Load matched skills using `Skill([skill-name])`
-4. Skip workflow commands (whiteboard, building, code, review, debug, prototype, setup-ast)
+4. Skip workflow commands (whiteboard, building, debug, prototype, research)
 5. Note which skills you loaded in your output
 
 If skills WERE passed in the dispatch prompt, load those and skip discovery.

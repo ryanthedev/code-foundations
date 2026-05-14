@@ -199,7 +199,7 @@ Otherwise                                                       -> sonnet
 **Skill assignment (EVERY phase MUST have `**Skills:**` field):**
 1. Scan system-reminder for all available skills (`plugin:skill-name` lines)
 2. Match to phase goal, scope, and work type (tech stack, task type, domain)
-3. Exclude workflow commands (whiteboard, building, code, review, debug, prototype, setup-ast)
+3. Exclude workflow commands (whiteboard, building, debug, prototype, research)
 4. Write `**Skills:**` on every phase -- `none -- [reason]` valid, omission NOT valid
 
 ### Plan File Schema
