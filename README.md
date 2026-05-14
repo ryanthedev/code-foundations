@@ -10,33 +10,49 @@
 
 | Command | Purpose | When to Use |
 |---------|---------|-------------|
-| `/code-foundations:whiteboarding` | Create implementation-ready plans | Feature planning |
+| `/code-foundations:research` | Clarify what you want through facilitated conversation | Exploring ideas |
+| `/code-foundations:whiteboard` | Create implementation-ready plans | Feature planning |
 | `/code-foundations:building` | Execute plans with quality gates | Implementing approved plans |
-| `/code-foundations:prototype` | Quick feasibility proof | Technical uncertainty |
 | `/code-foundations:debug` | Scientific debugging with task tracking | Bug hunting |
 
 **Why this exists:** LLMs write code fast. Fast code without engineering discipline creates debt. This plugin loads proven checklists and mental models so Claude applies them automatically.
 
 ---
 
-## Planning and Execution: Whiteboarding to Building
+## Planning and Execution: Research to Building
 
-Two commands work together: Whiteboarding creates the plan, Building executes it.
+Three commands work together: Research clarifies intent, Whiteboard creates the plan, Building executes it.
 
 ```
-/code-foundations:whiteboarding "add notification system"
+/code-foundations:research "add notification system"
      ↓
-docs/plans/2026-01-30-notifications.md
+.claude/code-foundations/research/2026-01-30-notifications.md
      ↓
-/code-foundations:building docs/plans/2026-01-30-notifications.md
+/code-foundations:whiteboard .claude/code-foundations/research/2026-01-30-notifications.md
+     ↓
+.claude/code-foundations/plans/2026-01-30-notifications.md
+     ↓
+/code-foundations:building .claude/code-foundations/plans/2026-01-30-notifications.md
 ```
 
-### `/code-foundations:whiteboarding` - Create the Plan
+### `/code-foundations:research` - Clarify What You Want
+
+**Facilitated conversation to extract and document requirements.**
+
+```
+User: "/code-foundations:research add user notifications"
+
+  → Facilitated conversation
+  → Progressive narrowing: purpose, actors, context, boundaries, needs, risks
+  → Save confirmed requirements to .claude/code-foundations/research/
+```
+
+### `/code-foundations:whiteboard` - Create the Plan
 
 **Researches your codebase, audits available skills, then asks targeted questions.**
 
 ```
-User: "/code-foundations:whiteboarding add user notifications"
+User: "/code-foundations:whiteboard add user notifications"
 
   DISCOVER
   ├─ Search codebase for existing patterns
@@ -52,7 +68,7 @@ User: "/code-foundations:whiteboarding add user notifications"
 
   DETAIL → SAVE → CHECK → CONFIRM → HANDOFF
   ├─ Phase specs with Skills field per phase
-  ├─ Save plan to docs/plans/
+  ├─ Save plan to .claude/code-foundations/plans/
   ├─ Subagent reviews plan with fresh eyes
   ├─ User confirms + corrections
   └─ Handoff to /code-foundations:building
@@ -60,14 +76,14 @@ User: "/code-foundations:whiteboarding add user notifications"
 
 **Skills loaded:** `aposd-designing-deep-modules`, `aposd-reviewing-module-design`
 
-**Task tracking:** Creates progress tasks at startup so you can see where whiteboarding is in its flow.
+**Task tracking:** Creates progress tasks at startup so you can see where whiteboard is in its flow.
 
 ### `/code-foundations:building` - Execute the Plan
 
 **Gated execution with subagents.** Each phase has mandatory quality checks.
 
 ```
-User: "/code-foundations:building docs/plans/2026-01-30-notifications.md"
+User: "/code-foundations:building .claude/code-foundations/plans/2026-01-30-notifications.md"
 
   BRANCH GATE
   └─ On main? → STOP. Create feature branch first.
@@ -92,32 +108,13 @@ User: "/code-foundations:building docs/plans/2026-01-30-notifications.md"
 | REVIEW | `references/post-gate-standards.md` | Correctness, quality, module design, error handling |
 | VERIFY | `performance-optimization`, `cc-refactoring-guidance` | Performance regressions, refactoring opportunities, build + tests + lint |
 
-Gate policy is adaptive: Full (BUILD + REVIEW), Standard (BUILD + tests), Minimal (BUILD only). Skills assigned per phase during whiteboarding's SAVE step.
+Gate policy is adaptive: Full (BUILD + REVIEW), Standard (BUILD + tests), Minimal (BUILD only). Skills assigned per phase during whiteboard's SAVE step.
 
-The system saves every artifact to `docs/building/`. Per-phase commits enable rollback.
+The system saves every artifact to `.claude/code-foundations/building/`. Per-phase commits enable rollback.
 
 ---
 
-## Getting Stuff Done: Prototype, Debug
-
-### `/code-foundations:prototype` - Prove Feasibility
-
-**One question. Minimum code. Maximum learning.**
-
-```
-User: "/code-foundations:prototype can I use WebSockets with this auth?"
-
-  SCOPE: "Can I establish authenticated WebSocket connection?"
-  MINIMUM: <50 lines, happy path only
-  EXECUTE: Write code, run it
-  RESULT: YES / NO / PARTIAL
-
-  → Saves to docs/prototypes/YYYY-MM-DD-<slug>.md
-```
-
-**Skills loaded:** `cc-pseudocode-programming`, `aposd-reviewing-module-design`
-
-**Chains into planning:** A successful prototype feeds directly into `/code-foundations:whiteboarding` for full planning.
+## Getting Stuff Done: Debug
 
 ### `/code-foundations:debug` - Scientific Debugging
 
@@ -153,8 +150,8 @@ The task list prevents rabbit holes, missed verifications, and lost context.
 
 | Situation | Command |
 |-----------|---------|
-| Technical uncertainty, prove it works | `/code-foundations:prototype` |
-| Need full feature planning | `/code-foundations:whiteboarding` |
+| Vague idea, unclear requirements | `/code-foundations:research` |
+| Need full feature planning | `/code-foundations:whiteboard` |
 | Have approved plan, ready to implement | `/code-foundations:building` |
 | Bug hunting, need structured approach | `/code-foundations:debug` |
 
@@ -172,41 +169,6 @@ The task list prevents rabbit holes, missed verifications, and lost context.
 # Update
 /plugin update code-foundations@rtd
 ```
-
----
-
-## Experimental
-
-### Code Review System
-
-> LLM code review is non-deterministic — the same code can produce different feedback on each run. We ground every check in explicit checklists with pass/fail criteria so the agent evaluates against defined standards, not intuition.
-
-**Single command. Parallel subagents.** Runs checklists against your code with specialized checking agents.
-
-```bash
-/code-foundations:review --sanity   # 14 core checks, quick pre-commit
-/code-foundations:review --pr       # 546 checks, full PR review
-```
-
-#### Architecture
-
-**Sanity (4-phase):**
-```
-EXTRACTION (haiku) → ORCHESTRATE (sonnet) → CHECKING (sonnet) → INVESTIGATION (sonnet)
-```
-
-**PR (5-phase):**
-```
-EXTRACTION (haiku) → CHECK ORCH (haiku) → CHECKING (sonnet) → ORCHESTRATE (haiku) → INVESTIGATION (sonnet)
-```
-
-| Phase | What Happens | Parallelism |
-|-------|--------------|-------------|
-| **Extraction** | Parse code into semantic units (functions, classes) | 1 agent per 5 files |
-| **Check Orch** | Group checks by ID prefix (PR only) | Single agent |
-| **Checking** | Run checklists against code | 1 agent per prefix group |
-| **Orchestrate** | Dedupe, batch findings, create investigation tasks | Single agent |
-| **Investigation** | Verify findings, capture code context and diff | 1 agent per 5 findings |
 
 ---
 

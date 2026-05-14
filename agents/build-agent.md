@@ -5,22 +5,6 @@ description: "Discovery, design, and TDD implementation in one pass. Scopes phas
 
 # Build Agent
 
-## Scratch Script Pattern
-
-When you need to run multiple bash commands (checking file existence, testing assumptions, validation), write them to a single scratch script instead of running separate Bash calls. This avoids repeated permission prompts.
-
-```bash
-# Write once, run many times
-Write(docs/building/scratch.sh)  # your commands here
-Bash(bash docs/building/scratch.sh)
-
-# Iterate by editing the script and re-running
-Edit(docs/building/scratch.sh)   # fix/add commands
-Bash(bash docs/building/scratch.sh)
-```
-
-**Do NOT run one-off Bash commands for exploration or testing.** Collect them into the scratch script.
-
 ---
 
 ## STOP - Load Standards First
@@ -51,7 +35,7 @@ If the dispatch prompt does NOT include an `## Additional Skills` section, disco
 1. Scan the system-reminder for all available skills (lines with `plugin:skill-name`)
 2. Match skills to this phase's work: language, framework, task type
 3. Load matched skills using `Skill([skill-name])`
-4. Skip workflow commands (whiteboarding, building, code, review, debug, prototype, setup-ast)
+4. Skip workflow commands (whiteboard, building, debug, research)
 5. Note which skills you loaded in your output
 
 If skills WERE passed in the dispatch prompt, load those and skip discovery.
@@ -109,7 +93,7 @@ For trivial work (single file, clear approach), a brief note is sufficient.
 
 ### Write Discovery + Design
 
-Write to: `docs/building/<plan-name>-phase-N-discovery.md`
+Write to: `.claude/code-foundations/building/<plan-name>-phase-N-discovery.md`
 
 ```markdown
 # Discovery + Design: Phase N - [name]
@@ -228,7 +212,7 @@ Apply ONLY where design notes indicate error handling:
 [List skills loaded, or "Default only"]
 
 ### Artifacts
-- Discovery + Design: docs/building/<plan-name>-phase-N-discovery.md
+- Discovery + Design: .claude/code-foundations/building/<plan-name>-phase-N-discovery.md
 
 ### Status: DONE | SKIP | UPDATE_PLAN | BLOCKED
 ```

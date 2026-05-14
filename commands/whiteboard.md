@@ -2,9 +2,9 @@
 description: "Brainstorm and plan features"
 ---
 
-# Skill: whiteboarding
+# Skill: whiteboard
 
-The plan is a contract between whiteboarding and building. It specifies WHAT and WHY at the strategic level, with explicit interfaces between phases.
+The plan is a contract between whiteboard and building. It specifies WHAT and WHY at the strategic level, with explicit interfaces between phases.
 
 ---
 
@@ -32,7 +32,9 @@ Load `Skill(code-foundations:code-standards)` to generate or update `docs/code-s
 
 ### 2. Clarify Intent
 
-Ask 1-2 questions max via `AskUserQuestion` -- only if genuinely ambiguous. Load `Skill(code-foundations:clarify)` to classify what's unclear (fault type + ambiguity direction) and generate targeted questions. If the request is already clear, skip to step 3.
+Load `Skill(code-foundations:clarify)`. Ask questions via `AskUserQuestion` until answers are decisive and no new open questions remain. Skip if the request is already unambiguous.
+
+**Cap: 5 rounds.** If still unclear at cap, state your remaining assumptions explicitly and ask the user to object.
 
 ### 3. Problem Statement
 
@@ -44,7 +46,7 @@ After scanning and clarifying, write:
 
 Confirm via `AskUserQuestion`: "Does this capture what you want?"
 
-Corrections → update and re-confirm. This becomes the plan's `## Context` section. **No plan writing begins until the problem statement is confirmed.**
+Corrections → update and re-confirm. If the response raises new open questions, re-enter clarify (step 2) on the new gaps before proceeding. This becomes the plan's `## Context` section. **No plan writing begins until the problem statement is confirmed.**
 
 ---
 
@@ -68,7 +70,7 @@ Corrections → update and re-confirm. This becomes the plan's `## Context` sect
    - [ ] DW-N.1: [Verifiable criterion]
    ```
 
-2. **Save** to `docs/plans/YYYY-MM-DD-<topic>.md` wrapped in plan file format:
+2. **Save** to `.claude/code-foundations/plans/YYYY-MM-DD-<topic>.md` wrapped in plan file format:
 
    ```markdown
    # Plan: [Topic]
@@ -98,8 +100,8 @@ Corrections → update and re-confirm. This becomes the plan's `## Context` sect
 3. **Check** — dispatch a sonnet subagent to review the saved plan with fresh eyes:
 
    ```
-   Agent: sonnet, "Review whiteboarding plan"
-   Prompt: Review docs/plans/<plan>.md for structural issues.
+   Agent: sonnet, "Review whiteboard plan"
+   Prompt: Review .claude/code-foundations/plans/<plan>.md for structural issues.
 
    Checklist:
    - Structural: done-when items cover problem statement,
@@ -114,7 +116,7 @@ Corrections → update and re-confirm. This becomes the plan's `## Context` sect
 
 4. **Present and ask** via `AskUserQuestion`: "Here's the plan. Build it, adjust it, or tell me what to do?"
 
-5. **If building:** Suggest default thinking effort, run `/code-foundations:building docs/plans/<plan>.md`.
+5. **If building:** Suggest default thinking effort, run `/code-foundations:building .claude/code-foundations/plans/<plan>.md`.
 
 That's it. No EXPLORE, no 10-task pipeline. Quick track should take under 3 minutes from invocation to handoff.
 

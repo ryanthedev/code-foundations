@@ -39,80 +39,9 @@ description: "Execute plans through gated phases with subagent dispatch."
 
 ### Worktree Gate (MANDATORY - First Check)
 
-**Before anything else, determine workspace mode:**
+Clear the worktree gate before any other work. **Read `references/worktree-gate.md`** for the full procedure: workspace-mode detection, prompts for main/master, worktree vs feature-branch creation, dependency setup, and record-keeping for REPORT.
 
-```bash
-git branch --show-current
-git status
-git worktree list
-```
-
-| Situation | Action |
-|-----------|--------|
-| Already in a worktree (`.git` is a file, not a directory) | On a feature branch — proceed |
-| On `main`/`master`, clean | Ask: worktree or feature branch? |
-| On feature branch, clean | Proceed (single-build mode) |
-| Dirty working tree | Ask: "Uncommitted changes. Stash, commit, or abort?" |
-
-**Ask the user:**
-
-```
-You're on [main]. Building requires an isolated workspace.
-
-Worktree or feature branch?
-- [ ] Worktree — isolated copy, main checkout stays free for other work
-- [ ] Feature branch — simpler, but blocks this checkout during build
-- [ ] Abort
-```
-
-**If worktree:**
-```bash
-# Extract plan slug from plan filename (e.g., 2026-03-17-auth-system → auth-system)
-PLAN_SLUG="<extracted-slug>"
-
-# Create worktree with feature branch
-git worktree add .claude/worktrees/${PLAN_SLUG} -b feature/${PLAN_SLUG}
-```
-
-Then copy the plan file into the worktree and change working directory:
-```bash
-mkdir -p .claude/worktrees/${PLAN_SLUG}/docs/plans
-cp docs/plans/<plan-file>.md .claude/worktrees/${PLAN_SLUG}/docs/plans/
-cd .claude/worktrees/${PLAN_SLUG}
-```
-
-**If feature branch:**
-```bash
-git checkout -b feature/<plan-topic>
-```
-
-**Record workspace mode** for use in REPORT:
-- `worktree: .claude/worktrees/<slug>` + `branch: feature/<slug>`
-- OR `branch: feature/<topic>`
-
-### Dependency Setup (Worktree Mode Only)
-
-After creating a worktree, gitignored files (node_modules, .env, build artifacts) are absent. Detect and install dependencies:
-
-```bash
-# Auto-detect package manager and install
-if [ -f pnpm-lock.yaml ]; then pnpm install --frozen-lockfile
-elif [ -f package-lock.json ]; then npm ci
-elif [ -f yarn.lock ]; then yarn install --frozen-lockfile
-elif [ -f go.mod ]; then go mod download
-elif [ -f Cargo.lock ]; then cargo fetch
-elif [ -f uv.lock ]; then uv sync
-fi
-```
-
-**For macOS (APFS):** If the main checkout has `node_modules`, copy-on-write is near-instant:
-```bash
-cp -Rc ../../../node_modules ./node_modules  # APFS CoW, no actual disk copy
-```
-
-**Skip dependency setup if:** the project has no lockfile or the plan does not involve building/testing code (e.g., documentation-only plans).
-
-**This gate is NON-NEGOTIABLE.** Do not proceed on main/master under any circumstances.
+**Summary:** Inspect `git branch / status / worktree list`. If on main/master, ask user worktree-or-branch. Create the chosen workspace, copy the plan file in if a worktree, install deps if a lockfile is present, and record the mode for use in REPORT. **Non-negotiable — never proceed on main/master.**
 
 ---
 
@@ -120,12 +49,12 @@ cp -Rc ../../../node_modules ./node_modules  # APFS CoW, no actual disk copy
 
 If plan path provided:
 ```bash
-cat docs/plans/<provided-path>.md
+cat .claude/code-foundations/plans/<provided-path>.md
 ```
 
 If no path, list available:
 ```bash
-ls -la docs/plans/*.md | head -20
+ls -la .claude/code-foundations/plans/*.md | head -20
 ```
 
 Ask user: "Which plan should I execute?"
@@ -170,11 +99,11 @@ Check plan status:
 Before creating phase tasks, resolve skills for all phases. Skills affect gate policy (phases with Skills get Full gate), so this must run first.
 
 1. `TaskCreate(subject: "SETUP: Skill Resolution", description: "Validate and resolve skill assignments for all phases.")`
-2. Scan system-reminder for all available skills (exclude workflow commands: whiteboarding, building, review, debug, prototype, setup-ast)
+2. Scan system-reminder for all available skills (exclude workflow commands: whiteboard, building, debug, research)
 3. For each phase, check the plan's `**Skills:**` field:
    - **Specific skills listed** → validate each exists in available skills. Warn on any missing.
    - **`none -- [reason]`** → evaluate phase goal and scope against available skills. If a strong match exists, suggest adding it. Log why `none` was kept or what was added.
-   - **Field missing** → flag as plan defect (whiteboarding CHECK should have caught this). Add skills based on phase goal/scope.
+   - **Field missing** → flag as plan defect (whiteboard CHECK should have caught this). Add skills based on phase goal/scope.
 4. Update the plan file's `**Skills:**` fields with resolved assignments
 5. `TaskUpdate(status: "completed")`
 
@@ -344,92 +273,22 @@ For each task:
 
 The build agent combines discovery, design, and TDD implementation in one pass. It writes a discovery file (for post-gate review), then implements via red-green cycle.
 
-**Full/Standard gate dispatch:**
+**Dispatch templates live in `references/dispatch-templates.md`.** Read the file once per build, then substitute placeholders for each phase.
 
-```
-Agent tool:
-- subagent_type: "code-foundations:build-agent"
-- model: [from plan's **Model:** field, or omit if not set]
-- description: "BUILD Phase N"
-- prompt: |
-    Build Phase N of the building plan. This is a two-part task:
-    1. Discovery + Design — scope the phase work, identify gaps vs plan, make design decisions, map DW items to test cases
-    2. TDD Implementation — write failing tests from DW items, then implement to make them pass (red-green cycle)
+| Gate | Template | Adds discovery file |
+|------|----------|--------------------|
+| Full | `§ FULL_BUILD` | Yes — write `.claude/code-foundations/building/<plan-name>-phase-N-discovery.md` |
+| Standard | `§ FULL_BUILD` | Yes — same template, gate policy differs at REVIEW |
+| Minimal | `§ MINIMAL_BUILD` | No — skips discovery |
 
-    Write discovery file before implementing.
-
-    ## Plan Context
-    [paste the Context section from the plan file — the 2-3 sentence problem statement]
-
-    ## Progress
-    [For Phase 1: "This is the first phase."]
-    [For Phase N>1: "Completed: Phase 1: [name] — [1 sentence summary from execution log]. Phase 2: ..."]
-    Current: Phase N of M
-
-    ## Phase N: [name]
-    [paste phase description and file list from plan]
-
-    ## Done-When Items (DW-IDs)
-    These are the acceptance criteria from the plan. Each DW item must
-    have corresponding test(s) (e.g., `test_DW_1_1_creates_user`).
-    Any DW item without a test is a visible gap.
-    If any item cannot be met, return UPDATE_PLAN.
-    [paste ALL DW items from the plan phase, verbatim:]
-    - [ ] DW-N.1: [done-when item 1]
-    - [ ] DW-N.2: [done-when item 2]
-    - [ ] DW-N.X: [done-when item N...]
-
-    [if plan phase has **Skills:** field, include:]
-    ## Additional Skills
-    Before starting work, load the following skills using the Skill tool:
-    - Skill([skill-from-plan])
-
-    [if plan has Assumptions with "Verify Before Phase: N", include:]
-    ## Assumption Verification
-    Before proceeding with discovery, verify these assumptions from the plan:
-    - [assumption text] (Confidence: [level])
-    If any assumption is wrong, return UPDATE_PLAN with the invalidated assumption
-    and what you found instead.
-
-    ## Inputs
-    - Plan file: docs/plans/<plan-name>.md
-    - Phase: N - [name]
-
-    ## Output Files
-    - Discovery + Design: docs/building/<plan-name>-phase-N-discovery.md
-```
-
-**Minimal gate dispatch:**
-
-```
-Agent tool:
-- subagent_type: "code-foundations:build-agent"
-- model: [from plan's **Model:** field, or omit if not set]
-- description: "BUILD Phase N (minimal)"
-- prompt: |
-    Build Phase N of the building plan. This phase uses minimal gate
-    policy — skip discovery, implement directly from the plan
-    description using TDD (write tests from DW items, then implement).
-
-    ## Plan Context
-    [paste the Context section from the plan file]
-
-    ## Progress
-    [For Phase N>1: "Completed: Phase 1: [name] — [1 sentence summary]. Phase 2: ..."]
-    Current: Phase N of M
-
-    [if plan phase has **Skills:** field, include:]
-    ## Additional Skills
-    Before starting work, load the following skills using the Skill tool:
-    - Skill([skill-from-plan])
-
-    ## Phase N: [name]
-    [paste the full phase description from the plan]
-
-    ## Inputs
-    - Plan file: docs/plans/<plan-name>.md
-    - Phase: N - [name]
-```
+Substitute these placeholders in the chosen template:
+- `[paste the Context section from the plan file ...]` → plan's `## Context`
+- `[For Phase 1: ...] / [For Phase N>1: ...]` → progress block (see Goal-Anchoring Progress block below)
+- `[paste phase description and file list from plan]` → plan phase block
+- `[paste ALL DW items from the plan phase, verbatim:]` → every `- [ ] DW-N.X:` item from plan, unchanged
+- `[if plan phase has **Skills:** field, include:]` → emit the Additional Skills block only when the plan has skills
+- `[if plan has Assumptions with "Verify Before Phase: N", include:]` → emit the Assumption Verification block only when the plan has matching assumptions
+- `[from plan's **Model:** field, or omit if not set]` → see Model Resolution above
 
 **After BUILD returns:**
 1. Check status: DONE, SKIP, UPDATE_PLAN, or BLOCKED
@@ -450,48 +309,9 @@ Agent tool:
 
 **Always use `code-foundations:post-gate-agent`.** Skills are baked into the agent template.
 
-```
-Agent tool:
-- subagent_type: "code-foundations:post-gate-agent"
-- model: [from plan's **Model:** field, or omit if not set]
-- description: "REVIEW Phase N"
-- prompt: |
-    Review Phase N implementation.
-
-    ## Plan Context
-    [paste the Context section from the plan file]
-
-    ## Progress
-    [For Phase N>1: "Completed: Phase 1: [name] — [1 sentence summary]. Phase 2: ..."]
-    Current: Phase N of M
-
-    ## Done-When Items (DW-IDs) — Requirement Verification
-    For EACH item below, mark SATISFIED or NOT_SATISFIED with evidence
-    (file:line, test name, or observable behavior). Any NOT_SATISFIED → FAIL.
-    Do NOT skip items. These come from the original plan and may
-    include items the build agent missed.
-    [paste ALL DW items from the plan phase, verbatim:]
-    - DW-N.1: [done-when item 1] → Status: ___ Evidence: ___
-    - DW-N.2: [done-when item 2] → Status: ___ Evidence: ___
-    - DW-N.X: [done-when item N...] → Status: ___ Evidence: ___
-
-    [if plan phase has **Skills:** field, include:]
-    ## Additional Skills
-    Before starting work, load the following skills using the Skill tool:
-    - Skill([skill-from-plan])
-
-    ## Inputs
-    - Plan: docs/plans/<plan-name>.md (Phase N section)
-    [Full/Standard gate only:]
-    - Discovery + Design: docs/building/<plan-name>-phase-N-discovery.md
-    [Minimal gate: no discovery file exists]
-
-    ## Files Changed
-    [list files from BUILD subagent]
-
-    ## Output
-    Write review to: docs/building/<plan-name>-phase-N-review.md
-```
+**Use `references/dispatch-templates.md § REVIEW`.** Substitute the same placeholders as BUILD plus:
+- `[list files from BUILD subagent]` → file list returned by the BUILD task
+- `[Full/Standard gate only:] - Discovery + Design: ...` → include only when a discovery file exists; omit for Minimal gate
 
 **After REVIEW:**
 1. Read the review file
@@ -506,40 +326,9 @@ Agent tool:
 
 This prevents drift across accumulated Standard/Minimal phases without per-phase overhead.
 
-```
-Agent tool:
-- subagent_type: "code-foundations:post-gate-agent"
-- model: [REVIEW model for the upcoming Full phase]
-- description: "Catch-up REVIEW for Phases X-Y"
-- prompt: |
-    Batch review of Phases X through Y. These phases ran with Standard
-    or Minimal gate policy (tests-only verification). Review them now
-    before proceeding to Phase Z (Full gate).
-
-    ## Plan Context
-    [paste the Context section from the plan file]
-
-    ## Phases to Review
-    [For each accumulated phase:]
-    ### Phase X: [name]
-    Done-When Items:
-    - DW-X.1: [item] → Status: ___ Evidence: ___
-    Files changed: [list]
-
-    ### Phase Y: [name]
-    Done-When Items:
-    - DW-Y.1: [item] → Status: ___ Evidence: ___
-    Files changed: [list]
-
-    ## Cross-Phase Coherence
-    Check that the accumulated phases work together:
-    - No contradictions between phase outputs
-    - No regressions introduced by later phases
-    - Tests still pass for earlier phases' functionality
-
-    ## Output
-    Write review to: docs/building/<plan-name>-catchup-phases-X-Y-review.md
-```
+**Use `references/dispatch-templates.md § CATCHUP_REVIEW`.** Substitute placeholders:
+- `[REVIEW model for the upcoming Full phase]` → resolved from the upcoming Full phase's model (see Model Resolution above)
+- `[For each accumulated phase:]` → emit one block per phase since the last REVIEW, with that phase's DW items and files changed
 
 **After catch-up REVIEW:**
 - If PASS → proceed to the Full phase's BUILD
@@ -560,7 +349,7 @@ git commit -m "[prefix]([scope]): [description]
 [WHY this phase exists — goal, key decisions, constraints that shaped implementation]
 
 Phase: N/M \"[phase name]\"
-Plan: docs/plans/[plan-file].md
+Plan: .claude/code-foundations/plans/[plan-file].md
 AI-Model: [model used]
 AI-Epistemic-Status: [tested|assumed|provisional]
 Gate-Policy: [Full|Standard|Minimal]
@@ -592,42 +381,9 @@ Summary: [1 sentence — what this phase delivered and what state it left the co
 
 ### Gate Failure Protocol
 
-If any gate fails:
+When a BUILD or REVIEW task returns FAIL, **read `references/gate-failure-protocol.md`** for the per-failure action table, retry-cap policy (max 3 failures per gate), and the user-escalation template.
 
-| Gate | Failure | Action |
-|------|---------|--------|
-| BUILD | Discovery finds gaps | Re-dispatch build agent with updated context |
-| BUILD | Design issues | Re-dispatch build agent |
-| REVIEW | Verification fails | Fix code, re-dispatch REVIEW agent |
-| REVIEW | Reviewer finds issues | Fix issues, re-dispatch REVIEW agent |
-
-**The failed task stays `in_progress` until it passes. You CANNOT mark it completed on FAIL.**
-**You CANNOT proceed to next sub-phase until the current task is completed.**
-**blockedBy enforcement prevents skipping - the next task's blockedBy list is not empty until the predecessor is completed.**
-
-### Retry Cap (max 3 failures per gate)
-
-Track the number of times each gate has returned FAIL for the current phase.
-
-| Attempt | Action |
-|---------|--------|
-| 1st FAIL | Fix issues, re-dispatch |
-| 2nd FAIL | Fix issues, re-dispatch. Note: if the same issues recur, the fix approach is wrong. |
-| 3rd FAIL | **STOP.** Do not re-dispatch. Present findings to user: |
-
-```
-Phase N REVIEW has failed 3 times.
-
-Recurring issues:
-- [list findings that appeared in multiple reviews]
-
-Options:
-1. I fix the remaining issues and retry (explain what you'd do differently)
-2. You provide guidance on the recurring issues
-3. We revisit the plan for this phase (UPDATE_PLAN)
-```
-
-**Do NOT silently retry a 4th time.** Three failures indicate a structural problem — either the plan is wrong, the pseudocode is wrong, or the fix approach isn't addressing root causes. Escalate to the user.
+**Hot-path summary:** failed task stays `in_progress`, never mark completed on FAIL, `blockedBy` prevents skipping. Re-dispatch up to 3 times. On the 3rd FAIL, STOP and escalate to the user — never silently retry a 4th time.
 
 ---
 
@@ -728,178 +484,28 @@ Notes: [any issues encountered]
 
 ### Summary Output (Trust Report)
 
-The summary is a **trust report**, not a status dashboard. Engineers need to verify what the AI built.
+The summary is a **trust report**, not a status dashboard. Engineers need to verify what the AI built. Gate metadata (model, review results, epistemic status) lives in commit trailers; the trust report is derived from `git log`.
 
-Gate metadata (model, review results, epistemic status) now lives in commit trailers. The trust report is derived from `git log`:
-
-```bash
-# Full trailer dump for the build
-git log --format="%(trailers)" first-commit..HEAD
-
-# Find all provisional decisions
-git log --format="%(trailers:key=AI-Epistemic-Status)" first-commit..HEAD
-
-# One-line summary
-git log --oneline first-commit..HEAD
-```
-
-The trust report text output focuses on what commit trailers can't capture:
-
-```markdown
-# Build Complete: [plan name]
-
-## Build & Test Summary
-- **Build:** PASS (no new warnings or errors)
-- **Unit tests:** X passed, Y failed, Z skipped
-- **Integration tests:** [results or N/A]
-- **Lint:** PASS (no new issues)
-
-## Manual Testing Steps
-[If the plan includes manual testing steps, or if the feature involves UI/UX,
-user-facing behavior, or interactions that automated tests cannot fully cover:]
-1. [Step-by-step instructions to manually verify the feature]
-2. [Expected behavior for each step]
-3. [Edge cases worth checking manually]
-
-[If no manual testing needed: "All behavior covered by automated tests."]
-
-## Follow-up
-- [Issues flagged by reviewers for future work]
-- [Or: "None identified"]
-
-## Merge Instructions
-[If worktree mode:]
-Worktree: .claude/worktrees/<slug>/
-Branch: feature/<slug>
-
-To merge and clean up (run from main checkout, not the worktree):
-  cd /path/to/main/checkout
-  git worktree remove .claude/worktrees/<slug>   # remove worktree FIRST
-  git merge --no-ff feature/<slug>                # then merge
-  git branch -d feature/<slug>                    # then delete branch
-  git worktree prune                              # clean up stale entries
-
-If using GitHub PR instead of local merge:
-  cd /path/to/main/checkout
-  git push -u origin feature/<slug>               # push from main checkout
-  gh pr create ...                                # create PR
-  gh pr merge <number> --merge --delete-branch    # merge + remote delete
-  git worktree remove .claude/worktrees/<slug>    # remove worktree
-  git branch -D feature/<slug>                    # force-delete local branch
-  git pull --ff-only                              # update main
-
-NOTE: gh pr merge will fail if run from inside the worktree
-(git can't resolve main). Always run from the main checkout.
-If git pull diverges (plan commits on main not on remote),
-rebase: git rebase origin/main
-
-[If feature branch mode:]
-Branch: feature/<topic>
-To merge: git merge --no-ff feature/<topic>
-```
+**Use `references/trust-report.md`** — it contains the trailer-dump commands and the report template (Build & Test Summary, Manual Testing Steps, Follow-up, Merge Instructions).
 
 ---
 
 ## Error Handling
 
-### Build Failure Protocol
-
-If implementation fails:
-
-1. **Stop immediately** - Don't proceed to next task
-2. **Document failure** in execution log:
-   ```markdown
-   ### Phase N: [Name]
-   - [x] Task 1 - Complete
-   - [ ] Task 2 - **FAILED**
-     Error: [description]
-     Attempted: [what was tried]
-   ```
-3. **Update plan status:** `Status: blocked`
-4. **Ask user:**
-   - "Task failed. Options: (A) Debug now, (B) Skip and continue, (C) Pause build"
-
-### Resume Protocol
-
-When resuming blocked plan:
-
-1. Read execution log
-2. Find last successful checkpoint
-3. Show: "Resuming from Phase N, Task M. Last failure: [description]"
-4. Ask: "Ready to retry, or should we discuss the blocker first?"
+For blockers beyond the per-phase Gate Failure Protocol, and for resuming a `blocked` plan, **read `references/build-failure-resume.md`**. It covers stop-and-document procedure, plan status update, user options on failure, and the resume checkpoint flow.
 
 ---
 
-## Integration with /code-foundations:whiteboarding
+## Integration with /code-foundations:whiteboard
 
-### Expected Flow (Single Build)
+For the chained whiteboard→building flow, parallel-build pattern, plan-file model-override syntax, and thinking-effort guidance, **read `references/whiteboard-integration.md`**.
 
-```
-/code-foundations:whiteboarding "user story"
-  ↓
-[Socratic questions]
-[2-3 approaches]
-[Detailed sections]
-[Save to docs/plans/YYYY-MM-DD-topic.md]
-  ↓
-[Set thinking effort to default — plan has the reasoning, orchestration doesn't need max effort]
-  ↓
-/code-foundations:building docs/plans/YYYY-MM-DD-topic.md
-  ↓
-[Worktree Gate → creates .claude/worktrees/<slug>/]
-[Checklist execution in worktree]
-[Tests pass]
-[Summary report with merge instructions]
-```
-
-### Expected Flow (Parallel Builds)
-
-```
-Claude Instance 1                        Claude Instance 2
-────────────────                        ────────────────
-/whiteboarding "auth system"            /whiteboarding "notifications"
-  → saves plan                              → saves plan
-  → clear + build                         → clear + build
-
-/building (worktree: auth-system)       /building (worktree: notifications)
-  → .claude/worktrees/auth-system/        → .claude/worktrees/notifications/
-  → feature/auth-system branch            → feature/notifications branch
-  → all phases run isolated               → all phases run isolated
-  → report: "merge when ready"            → report: "merge when ready"
-
-                    User merges both to main when ready
-```
-
-**Key constraint:** Each parallel build must target a different plan file. Never run two building instances against the same plan.
-
-### Plan File Model Override Syntax
-
-Plans can optionally specify model per phase:
-
-```markdown
-### Phase 1: Simple Config
-- [ ] Update config file
-
-### Phase 2: Complex Engine
-**Model:** opus
-- [ ] Build query parser
-- [ ] Implement optimizer
-```
-
-If `**Model:**` is omitted, auto-detection applies.
-
-### Thinking Effort for Building
-
-Set thinking effort to default before building. The plan already contains the strategic reasoning — max effort during orchestration is wasted overhead. The subagents do the heavy thinking in their own contexts. Default effort on the orchestrator saves tokens without losing quality.
-
-For whiteboarding/planning, use max effort. For building/execution, use default.
-
-Worktree provides filesystem isolation from other builds.
+**Key constraint (always applies):** parallel builds must target different plan files. Never run two building instances against the same plan.
 
 ---
 
 ## Chaining
 
-- **RECEIVES FROM:** whiteboarding (via plan file), user with plan path
+- **RECEIVES FROM:** whiteboard (via plan file), user with plan path
 - **CHAINS TO:** code-foundations skills during execution
 - **RELATED:** aposd-verifying-correctness, cc-quality-practices

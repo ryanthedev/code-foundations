@@ -17,14 +17,14 @@ Each finding gets an **action type** based on two questions:
 |--------|------|--------|
 | **Fix** | High confidence, localized | Code snippet to apply now |
 | **Investigate** | Low confidence, unclear cause | What to check first |
-| **Plan** | Systemic (many files, architecture) | Topic for `/code-foundations:whiteboarding` |
+| **Plan** | Systemic (many files, architecture) | Topic for `/code-foundations:whiteboard` |
 | **Decide** | Trade-off, business logic | Options for human to choose |
 
 ## Decision Flow
 
 ```
 Is it systemic (many files, architecture change)?
-  YES → PLAN (needs /code-foundations:whiteboarding)
+  YES → PLAN (needs /code-foundations:whiteboard)
   NO ↓
 
 Am I confident about the diagnosis AND fix?
@@ -76,7 +76,7 @@ Use these to calibrate when you're "confident":
 ```markdown
 1. 🔴 [CRITICAL] Multiple files - issue (agent)
    Scope: Systemic
-   → `/code-foundations:whiteboarding "[topic]"`
+   → `/code-foundations:whiteboard "[topic]"`
 ```
 
 ### Decide
@@ -102,5 +102,5 @@ For anything not in "Fix", state what you don't know:
 
 1. **Fix** → Apply now, run tests
 2. **Investigate** → Spin off as task
-3. **Plan** → Run `/code-foundations:whiteboarding`
+3. **Plan** → Run `/code-foundations:whiteboard`
 4. **Decide** → Ask stakeholder

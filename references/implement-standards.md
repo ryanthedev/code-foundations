@@ -1,3 +1,10 @@
+<!-- Distilled from:
+  - skills/cc-control-flow-quality
+  - skills/aposd-simplifying-complexity
+  - skills/code-clarity-and-docs
+  When any source skill changes substantively, audit this file for drift.
+-->
+
 # Implementation Standards
 
 Combined constraints from cc-control-flow-quality, aposd-simplifying-complexity, and code-clarity-and-docs. For full details, invoke individual skills.

@@ -1,3 +1,11 @@
+<!-- Distilled from:
+  - skills/aposd-verifying-correctness
+  - skills/cc-quality-practices
+  - skills/aposd-reviewing-module-design
+  - skills/cc-defensive-programming
+  When any source skill changes substantively, audit this file for drift.
+-->
+
 # Post-Gate Review Standards
 
 Combined constraints from aposd-verifying-correctness, cc-quality-practices, aposd-reviewing-module-design, and cc-defensive-programming. For full details, invoke individual skills.
