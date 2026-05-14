@@ -93,7 +93,7 @@ For trivial work (single file, clear approach), a brief note is sufficient.
 
 ### Write Discovery + Design
 
-Write to: `docs/building/<plan-name>-phase-N-discovery.md`
+Write to: `.claude/code-foundations/building/<plan-name>-phase-N-discovery.md`
 
 ```markdown
 # Discovery + Design: Phase N - [name]
@@ -212,7 +212,7 @@ Apply ONLY where design notes indicate error handling:
 [List skills loaded, or "Default only"]
 
 ### Artifacts
-- Discovery + Design: docs/building/<plan-name>-phase-N-discovery.md
+- Discovery + Design: .claude/code-foundations/building/<plan-name>-phase-N-discovery.md
 
 ### Status: DONE | SKIP | UPDATE_PLAN | BLOCKED
 ```

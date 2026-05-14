@@ -12,11 +12,11 @@ How `/code-foundations:whiteboard` and `/code-foundations:building` chain togeth
 [Socratic questions]
 [2-3 approaches]
 [Detailed sections]
-[Save to docs/plans/YYYY-MM-DD-topic.md]
+[Save to .claude/code-foundations/plans/YYYY-MM-DD-topic.md]
   ↓
 [Set thinking effort to default — plan has the reasoning, orchestration doesn't need max effort]
   ↓
-/code-foundations:building docs/plans/YYYY-MM-DD-topic.md
+/code-foundations:building .claude/code-foundations/plans/YYYY-MM-DD-topic.md
   ↓
 [Worktree Gate → creates .claude/worktrees/<slug>/]
 [Checklist execution in worktree]

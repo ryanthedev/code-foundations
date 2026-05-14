@@ -44,7 +44,7 @@ Three-stage pattern for feature development:
 | Command | Purpose | Output |
 |---------|---------|--------|
 | `/code-foundations:research` | Clarify what the user wants through facilitated conversation | Research doc in `.claude/code-foundations/research/` |
-| `/code-foundations:whiteboard` | Plan implementation with phases, models, and skills | Plan file in `docs/plans/` |
+| `/code-foundations:whiteboard` | Plan implementation with phases, models, and skills | Plan file in `.claude/code-foundations/plans/` |
 | `/code-foundations:building` | Checklist-based execution | Working code + tests |
 
 **Full Flow:**
@@ -62,12 +62,12 @@ Three-stage pattern for feature development:
   → Problem statement confirmed (shared step, all tracks)
   → [Quick: plan → check → present]
   → [Standard/Full: classify → explore → detail → save → check → confirm]
-  → Save to docs/plans/YYYY-MM-DD-<topic>.md
+  → Save to .claude/code-foundations/plans/YYYY-MM-DD-<topic>.md
   → User confirms
 
         ↓ (after plan approval)
 
-/code-foundations:building docs/plans/<plan>.md
+/code-foundations:building .claude/code-foundations/plans/<plan>.md
   → Feature branch required
   → Execute phases with quality gates
   → Model auto-detected per phase (haiku/sonnet/opus)

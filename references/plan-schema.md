@@ -7,7 +7,7 @@ Shared schema for whiteboard/building workflow.
 ## File Location
 
 ```
-docs/plans/YYYY-MM-DD-<topic-slug>.md
+.claude/code-foundations/plans/YYYY-MM-DD-<topic-slug>.md
 ```
 
 **Naming convention:**

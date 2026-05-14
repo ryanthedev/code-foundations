@@ -63,7 +63,7 @@ Agent tool:
     - Phase: N - [name]
 
     ## Output Files
-    - Discovery + Design: docs/building/<plan-name>-phase-N-discovery.md
+    - Discovery + Design: .claude/code-foundations/building/<plan-name>-phase-N-discovery.md
 ```
 
 ---
@@ -141,14 +141,14 @@ Agent tool:
     ## Inputs
     - Plan: docs/plans/<plan-name>.md (Phase N section)
     [Full/Standard gate only:]
-    - Discovery + Design: docs/building/<plan-name>-phase-N-discovery.md
+    - Discovery + Design: .claude/code-foundations/building/<plan-name>-phase-N-discovery.md
     [Minimal gate: no discovery file exists]
 
     ## Files Changed
     [list files from BUILD subagent]
 
     ## Output
-    Write review to: docs/building/<plan-name>-phase-N-review.md
+    Write review to: .claude/code-foundations/building/<plan-name>-phase-N-review.md
 ```
 
 ---
@@ -189,5 +189,5 @@ Agent tool:
     - Tests still pass for earlier phases' functionality
 
     ## Output
-    Write review to: docs/building/<plan-name>-catchup-phases-X-Y-review.md
+    Write review to: .claude/code-foundations/building/<plan-name>-catchup-phases-X-Y-review.md
 ```

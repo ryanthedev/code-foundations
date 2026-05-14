@@ -177,7 +177,7 @@ Phase counts: Medium 3-5, Complex 5-7. Prefer fewer. 200-word cap per phase. Exp
 
 ### File Location
 
-`docs/plans/YYYY-MM-DD-<topic-slug>.md`
+`.claude/code-foundations/plans/YYYY-MM-DD-<topic-slug>.md`
 
 ### Model Detection + Skill Assignment
 
@@ -249,7 +249,7 @@ _To be filled during /code-foundations:building_
 
 ### Save (MANDATORY)
 
-`mkdir -p docs/plans`, write plan file. **Do NOT commit** -- the plan is a working document, not a deliverable. Building handles worktree visibility by copying the plan file after worktree creation.
+`mkdir -p .claude/code-foundations/plans`, write plan file. **Do NOT commit** -- the plan is a working document, not a deliverable. Building handles worktree visibility by copying the plan file after worktree creation.
 
 ---
 
@@ -259,7 +259,7 @@ _To be filled during /code-foundations:building_
 
 ```
 Agent: sonnet, "Review whiteboard plan"
-Prompt: Review docs/plans/<plan>.md for structural issues.
+Prompt: Review .claude/code-foundations/plans/<plan>.md for structural issues.
 
 Checklist:
 - Structural: every constraint maps to a phase, done-when items cover problem statement,
@@ -301,7 +301,7 @@ If changes requested: update plan. Structural changes -> re-run CHECK. Minor cha
 
 `AskUserQuestion`: "Plan saved. How would you like to proceed?"
 
-1. **Build now** (Recommended) -- Suggest default thinking effort, run `/code-foundations:building docs/plans/<plan>.md`
+1. **Build now** (Recommended) -- Suggest default thinking effort, run `/code-foundations:building .claude/code-foundations/plans/<plan>.md`
 2. **Tell me what to do** -- Numbered manual steps
 
 **Question style:** See [adaptive-questioning.md]($CLAUDE_PLUGIN_ROOT/references/adaptive-questioning.md). The "Recommended" tag on Build now is the confirmatory cue — keep it there.

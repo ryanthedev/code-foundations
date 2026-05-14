@@ -45,8 +45,8 @@ git worktree add .claude/worktrees/${PLAN_SLUG} -b feature/${PLAN_SLUG}
 Then copy the plan file into the worktree and change working directory:
 
 ```bash
-mkdir -p .claude/worktrees/${PLAN_SLUG}/docs/plans
-cp docs/plans/<plan-file>.md .claude/worktrees/${PLAN_SLUG}/docs/plans/
+mkdir -p .claude/worktrees/${PLAN_SLUG}/.claude/code-foundations/plans
+cp .claude/code-foundations/plans/<plan-file>.md .claude/worktrees/${PLAN_SLUG}/.claude/code-foundations/plans/
 cd .claude/worktrees/${PLAN_SLUG}
 ```
 

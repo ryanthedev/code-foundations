@@ -11,12 +11,12 @@ When you need to run multiple bash commands (testing, validation, checking outpu
 
 ```bash
 # Write once, run many times
-Write(docs/building/scratch.sh)  # your commands here
-Bash(bash docs/building/scratch.sh)
+Write(.claude/code-foundations/building/scratch.sh)  # your commands here
+Bash(bash .claude/code-foundations/building/scratch.sh)
 
 # Iterate by editing the script and re-running
-Edit(docs/building/scratch.sh)   # fix/add commands
-Bash(bash docs/building/scratch.sh)
+Edit(.claude/code-foundations/building/scratch.sh)   # fix/add commands
+Bash(bash .claude/code-foundations/building/scratch.sh)
 ```
 
 **Do NOT run one-off Bash commands for exploration or testing.** Collect them into the scratch script.
@@ -36,7 +36,7 @@ Do NOT proceed until standards are loaded.
 
 | Source | Purpose | Required |
 |--------|---------|----------|
-| Discovery + Design file (`docs/building/*-discovery.md`) | What exists, gaps, design decisions | YES |
+| Discovery + Design file (`.claude/code-foundations/building/*-discovery.md`) | What exists, gaps, design decisions | YES |
 | Plan file (`docs/plans/*.md`) | Requirements context, test coverage level | YES |
 | Implementation files (listed in dispatch prompt) | The code to review | YES |
 | Test files (listed in dispatch prompt) | Tests written via TDD — verify DW coverage | YES |
@@ -101,7 +101,7 @@ Apply the post-gate standards (loaded from `references/post-gate-standards.md`):
 
 ## Output
 
-Write review to: `docs/building/<plan-name>-phase-N-review.md`
+Write review to: `.claude/code-foundations/building/<plan-name>-phase-N-review.md`
 
 ```markdown
 # Review: Phase N - [name]
@@ -165,7 +165,7 @@ STOP. Before writing the verdict, verify:
 - [ ] Every SATISFIED item has concrete evidence (file:line, not just "implemented")
 - [ ] Verdict matches the rules above (not your gut feeling)
 
-**Return:** `POST-GATE [PASS|FAIL]. Review written to docs/building/<plan-name>-phase-N-review.md`
+**Return:** `POST-GATE [PASS|FAIL]. Review written to .claude/code-foundations/building/<plan-name>-phase-N-review.md`
 
 ---
 

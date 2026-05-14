@@ -30,9 +30,9 @@ Three commands work together: Research clarifies intent, Whiteboard creates the 
      ↓
 /code-foundations:whiteboard .claude/code-foundations/research/2026-01-30-notifications.md
      ↓
-docs/plans/2026-01-30-notifications.md
+.claude/code-foundations/plans/2026-01-30-notifications.md
      ↓
-/code-foundations:building docs/plans/2026-01-30-notifications.md
+/code-foundations:building .claude/code-foundations/plans/2026-01-30-notifications.md
 ```
 
 ### `/code-foundations:research` - Clarify What You Want
@@ -68,7 +68,7 @@ User: "/code-foundations:whiteboard add user notifications"
 
   DETAIL → SAVE → CHECK → CONFIRM → HANDOFF
   ├─ Phase specs with Skills field per phase
-  ├─ Save plan to docs/plans/
+  ├─ Save plan to .claude/code-foundations/plans/
   ├─ Subagent reviews plan with fresh eyes
   ├─ User confirms + corrections
   └─ Handoff to /code-foundations:building
@@ -83,7 +83,7 @@ User: "/code-foundations:whiteboard add user notifications"
 **Gated execution with subagents.** Each phase has mandatory quality checks.
 
 ```
-User: "/code-foundations:building docs/plans/2026-01-30-notifications.md"
+User: "/code-foundations:building .claude/code-foundations/plans/2026-01-30-notifications.md"
 
   BRANCH GATE
   └─ On main? → STOP. Create feature branch first.
@@ -110,7 +110,7 @@ User: "/code-foundations:building docs/plans/2026-01-30-notifications.md"
 
 Gate policy is adaptive: Full (BUILD + REVIEW), Standard (BUILD + tests), Minimal (BUILD only). Skills assigned per phase during whiteboard's SAVE step.
 
-The system saves every artifact to `docs/building/`. Per-phase commits enable rollback.
+The system saves every artifact to `.claude/code-foundations/building/`. Per-phase commits enable rollback.
 
 ---
 
