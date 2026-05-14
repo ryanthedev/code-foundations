@@ -1,5 +1,5 @@
 ---
-description: "Extract and document what the user wants — even when they don't know yet. Use before whiteboarding, or standalone when exploring an idea."
+description: "Extract and document what the user wants — even when they don't know yet. Use before whiteboard, or standalone when exploring an idea."
 ---
 
 # Skill: research
@@ -130,13 +130,13 @@ Don't force a template. Write what emerged from the conversation in a form that'
 ## What Comes Next
 
 Research doesn't prescribe what happens after. The user might:
-- Take it into `/code-foundations:whiteboarding` for implementation planning
+- Take it into `/code-foundations:whiteboard` for implementation planning
 - Use it to write a slide deck or RFC
 - Share it with their team for feedback
 - Decide not to build it
 - Come back later with more clarity
 
-If the user wants to move to whiteboarding, tell them:
+If the user wants to move to whiteboard, tell them:
 ```
-/code-foundations:whiteboarding .claude/code-foundations/research/<file>.md
+/code-foundations:whiteboard .claude/code-foundations/research/<file>.md
 ```

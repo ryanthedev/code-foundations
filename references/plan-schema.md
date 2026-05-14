@@ -1,6 +1,6 @@
 # Plan File Schema
 
-Shared schema for whiteboarding/building workflow.
+Shared schema for whiteboard/building workflow.
 
 ---
 
@@ -42,7 +42,7 @@ docs/plans/YYYY-MM-DD-<topic-slug>.md
 
 ## Context
 
-[1-2 sentence problem statement from whiteboarding Phase 1]
+[1-2 sentence problem statement from whiteboard Phase 1]
 
 ## Constraints
 
@@ -94,7 +94,7 @@ docs/plans/YYYY-MM-DD-<topic-slug>.md
 
 **Level:** 100% | Backend only | Backend + frontend | None | Per-phase
 
-_Chosen during whiteboarding. Affects REVIEW gate and final verification._
+_Chosen during whiteboard. Affects REVIEW gate and final verification._
 
 ---
 

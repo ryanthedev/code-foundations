@@ -1,14 +1,14 @@
 ---
-name: whiteboarding-planning
-description: "Standard/Full planning pipeline for whiteboarding. Steps: discover, classify, explore, detail, save, check, confirm, handoff. Use when dispatched from whiteboarding command for Medium/Complex tasks. Triggers on 'planning pipeline', 'standard track', 'full track'."
+name: whiteboard-planning
+description: "Standard/Full planning pipeline for whiteboard. Steps: discover, classify, explore, detail, save, check, confirm, handoff. Use when dispatched from whiteboard command for Medium/Complex tasks. Triggers on 'planning pipeline', 'standard track', 'full track'."
 user-invocable: false
 ---
 
-# Skill: whiteboarding-planning
+# Skill: whiteboard-planning
 
 Standard/Full planning pipeline: **Discover -> Classify -> Explore -> Detail -> Save -> Check -> Confirm -> Handoff**
 
-The plan is a contract between whiteboarding and building. It specifies WHAT and WHY at the strategic level, with explicit interfaces between phases.
+The plan is a contract between whiteboard and building. It specifies WHAT and WHY at the strategic level, with explicit interfaces between phases.
 
 **Thinking effort:** Planning benefits from max effort. If not already at max, suggest the user increase it before proceeding.
 
@@ -54,7 +54,7 @@ Use its framework to classify what's unclear (fault type + ambiguity direction) 
 
 ### Output: Problem Statement
 
-A confirmed problem statement arrives from the shared steps in the whiteboarding command. DISCOVER refines it with deeper codebase context — don't redo clarification from scratch.
+A confirmed problem statement arrives from the shared steps in the whiteboard command. DISCOVER refines it with deeper codebase context — don't redo clarification from scratch.
 
 Review the existing problem statement against what deeper discovery found. If it holds, proceed. If discovery reveals the problem is different or broader than stated, update and re-confirm via `AskUserQuestion`: "Discovery found [X]. Updated problem statement: [Y]. Does this still capture what you want?"
 
@@ -194,12 +194,12 @@ Any OPUS_KEYWORD OR (DW items >= 6 AND file hints >= 4 areas)  -> opus
 Otherwise                                                       -> sonnet
 ```
 
-**Why Sonnet is the default, not omit:** Omit means inherit the user's session model -- and whiteboarding tells the user to crank to max effort, so Opus propagates to every subagent. Most code-touching phases (test, fix, validate, implement, wire, helper, hook, integration) are mechanical translation work that runs faster and cheaper on Sonnet without measurable quality loss. Reserve Opus for the keyword-flagged design-heavy phases.
+**Why Sonnet is the default, not omit:** Omit means inherit the user's session model -- and whiteboard tells the user to crank to max effort, so Opus propagates to every subagent. Most code-touching phases (test, fix, validate, implement, wire, helper, hook, integration) are mechanical translation work that runs faster and cheaper on Sonnet without measurable quality loss. Reserve Opus for the keyword-flagged design-heavy phases.
 
 **Skill assignment (EVERY phase MUST have `**Skills:**` field):**
 1. Scan system-reminder for all available skills (`plugin:skill-name` lines)
 2. Match to phase goal, scope, and work type (tech stack, task type, domain)
-3. Exclude workflow commands (whiteboarding, building, code, review, debug, prototype, setup-ast)
+3. Exclude workflow commands (whiteboard, building, code, review, debug, prototype, setup-ast)
 4. Write `**Skills:**` on every phase -- `none -- [reason]` valid, omission NOT valid
 
 ### Plan File Schema
@@ -258,7 +258,7 @@ _To be filled during /code-foundations:building_
 **ALL tracks:** Dispatch subagent to review saved plan with fresh eyes. Never skip — independent review catches blind spots regardless of task size.
 
 ```
-Agent: sonnet, "Review whiteboarding plan"
+Agent: sonnet, "Review whiteboard plan"
 Prompt: Review docs/plans/<plan>.md for structural issues.
 
 Checklist:
@@ -310,5 +310,5 @@ If changes requested: update plan. Structural changes -> re-run CHECK. Minor cha
 
 ## Chain
 
-- **Receives from:** whiteboarding command (router dispatch)
+- **Receives from:** whiteboard command (router dispatch)
 - **Chains to:** building (via saved plan file)

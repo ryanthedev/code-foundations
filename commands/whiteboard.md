@@ -2,9 +2,9 @@
 description: "Brainstorm and plan features"
 ---
 
-# Skill: whiteboarding
+# Skill: whiteboard
 
-The plan is a contract between whiteboarding and building. It specifies WHAT and WHY at the strategic level, with explicit interfaces between phases.
+The plan is a contract between whiteboard and building. It specifies WHAT and WHY at the strategic level, with explicit interfaces between phases.
 
 ---
 
@@ -100,7 +100,7 @@ Corrections → update and re-confirm. If the response raises new open questions
 3. **Check** — dispatch a sonnet subagent to review the saved plan with fresh eyes:
 
    ```
-   Agent: sonnet, "Review whiteboarding plan"
+   Agent: sonnet, "Review whiteboard plan"
    Prompt: Review docs/plans/<plan>.md for structural issues.
 
    Checklist:

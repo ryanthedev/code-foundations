@@ -1,13 +1,13 @@
-# Whiteboarding ↔ Building Integration
+# Whiteboard ↔ Building Integration
 
-How `/code-foundations:whiteboarding` and `/code-foundations:building` chain together. Reference material — orchestrator does not need this hot path.
+How `/code-foundations:whiteboard` and `/code-foundations:building` chain together. Reference material — orchestrator does not need this hot path.
 
 ---
 
 ## Expected Flow (Single Build)
 
 ```
-/code-foundations:whiteboarding "user story"
+/code-foundations:whiteboard "user story"
   ↓
 [Socratic questions]
 [2-3 approaches]
@@ -31,7 +31,7 @@ How `/code-foundations:whiteboarding` and `/code-foundations:building` chain tog
 ```
 Claude Instance 1                        Claude Instance 2
 ────────────────                        ────────────────
-/whiteboarding "auth system"            /whiteboarding "notifications"
+/whiteboard "auth system"            /whiteboard "notifications"
   → saves plan                              → saves plan
   → clear + build                         → clear + build
 
@@ -70,7 +70,7 @@ If `**Model:**` is omitted, auto-detection applies (see Model Resolution + Gate 
 
 Set thinking effort to **default** before building. The plan already contains the strategic reasoning — max effort during orchestration is wasted overhead. The subagents do the heavy thinking in their own contexts. Default effort on the orchestrator saves tokens without losing quality.
 
-- Whiteboarding/planning: **max** effort
+- Whiteboard/planning: **max** effort
 - Building/execution: **default** effort
 
 Worktree provides filesystem isolation from other builds.

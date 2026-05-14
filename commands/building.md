@@ -99,11 +99,11 @@ Check plan status:
 Before creating phase tasks, resolve skills for all phases. Skills affect gate policy (phases with Skills get Full gate), so this must run first.
 
 1. `TaskCreate(subject: "SETUP: Skill Resolution", description: "Validate and resolve skill assignments for all phases.")`
-2. Scan system-reminder for all available skills (exclude workflow commands: whiteboarding, building, review, debug, prototype, setup-ast)
+2. Scan system-reminder for all available skills (exclude workflow commands: whiteboard, building, review, debug, prototype, setup-ast)
 3. For each phase, check the plan's `**Skills:**` field:
    - **Specific skills listed** → validate each exists in available skills. Warn on any missing.
    - **`none -- [reason]`** → evaluate phase goal and scope against available skills. If a strong match exists, suggest adding it. Log why `none` was kept or what was added.
-   - **Field missing** → flag as plan defect (whiteboarding CHECK should have caught this). Add skills based on phase goal/scope.
+   - **Field missing** → flag as plan defect (whiteboard CHECK should have caught this). Add skills based on phase goal/scope.
 4. Update the plan file's `**Skills:**` fields with resolved assignments
 5. `TaskUpdate(status: "completed")`
 
@@ -496,9 +496,9 @@ For blockers beyond the per-phase Gate Failure Protocol, and for resuming a `blo
 
 ---
 
-## Integration with /code-foundations:whiteboarding
+## Integration with /code-foundations:whiteboard
 
-For the chained whiteboarding→building flow, parallel-build pattern, plan-file model-override syntax, and thinking-effort guidance, **read `references/whiteboarding-integration.md`**.
+For the chained whiteboard→building flow, parallel-build pattern, plan-file model-override syntax, and thinking-effort guidance, **read `references/whiteboard-integration.md`**.
 
 **Key constraint (always applies):** parallel builds must target different plan files. Never run two building instances against the same plan.
 
@@ -506,6 +506,6 @@ For the chained whiteboarding→building flow, parallel-build pattern, plan-file
 
 ## Chaining
 
-- **RECEIVES FROM:** whiteboarding (via plan file), user with plan path
+- **RECEIVES FROM:** whiteboard (via plan file), user with plan path
 - **CHAINS TO:** code-foundations skills during execution
 - **RELATED:** aposd-verifying-correctness, cc-quality-practices

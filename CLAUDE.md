@@ -98,31 +98,30 @@ Code-foundations is a Claude Code plugin providing software engineering skills b
 | Situation | Command | Ceremony |
 |-----------|---------|----------|
 | Bug investigation | `/code-foundations:debug` | Minimal |
-| Technical uncertainty | `/code-foundations:prototype` | Minimal |
-| Feature needs planning | `/code-foundations:whiteboarding` | Medium |
+| Vague idea or unclear requirements | `/code-foundations:research` | Minimal |
+| Feature needs planning | `/code-foundations:whiteboard` | Medium |
 | Executing approved plan | `/code-foundations:building` | Full |
 
-### Prototype → Whiteboarding → Building Workflow
+### Research → Whiteboard → Building Workflow
 
 Three-stage pattern for feature development:
 
 | Command | Purpose | Output |
 |---------|---------|--------|
-| `/code-foundations:prototype` | Prove feasibility with minimum code | Prototype log in `docs/prototypes/` |
-| `/code-foundations:whiteboarding` | Discovery-oriented brainstorming | Plan file in `docs/plans/` |
+| `/code-foundations:research` | Clarify what the user wants through facilitated conversation | Research doc in `.claude/code-foundations/research/` |
+| `/code-foundations:whiteboard` | Plan implementation with phases, models, and skills | Plan file in `docs/plans/` |
 | `/code-foundations:building` | Checklist-based execution | Working code + tests |
 
 **Full Flow:**
 ```
-/code-foundations:prototype "can I show a notification?"
-  → One question to prove
-  → Minimum code (~50 lines max)
-  → Binary answer: YES/NO/PARTIAL
-  → Capture learnings to docs/prototypes/
+/code-foundations:research "I want to build a notification system"
+  → Facilitated conversation to clarify intent
+  → Progressive narrowing: purpose, actors, context, boundaries, needs, risks
+  → Save confirmed requirements to .claude/code-foundations/research/
 
-        ↓ (if feasible)
+        ↓ (when requirements are clear)
 
-/code-foundations:whiteboarding "build notification system"
+/code-foundations:whiteboard .claude/code-foundations/research/<file>.md
   → Codebase scan (shared step, all tracks)
   → Clarify intent (shared step, all tracks)
   → Problem statement confirmed (shared step, all tracks)
@@ -145,8 +144,8 @@ Three-stage pattern for feature development:
 
 | Situation | Command |
 |-----------|---------|
-| "Can I do X?" / technical uncertainty | `/code-foundations:prototype` |
-| Ready to plan full feature | `/code-foundations:whiteboarding` |
+| "I have an idea but it's vague" / unclear requirements | `/code-foundations:research` |
+| Ready to plan full feature | `/code-foundations:whiteboard` |
 | Plan exists, ready to implement | `/code-foundations:building` |
 
 **Quality Gates (per phase during /code-foundations:building):**
@@ -159,9 +158,9 @@ VERIFY:  performance-optimization + cc-refactoring-guidance + build + tests + li
 COMMIT:  Orchestrator commits directly after gates pass
 ```
 
-`[plan Skills]` = skills assigned per phase during whiteboarding's SAVE step, then validated/resolved during building's SETUP skill resolution task.
+`[plan Skills]` = skills assigned per phase during whiteboard's SAVE step, then validated/resolved during building's SETUP skill resolution task.
 
-Model and skills are assigned during whiteboarding's SAVE step. Building's SETUP runs a one-time skill resolution task that validates assignments, fills gaps, and updates the plan before creating phase tasks (skills affect gate policy). Cannot proceed to next phase until current phase passes all gates including REVIEW PASS (Full gate).
+Model and skills are assigned during whiteboard's SAVE step. Building's SETUP runs a one-time skill resolution task that validates assignments, fills gaps, and updates the plan before creating phase tasks (skills affect gate policy). Cannot proceed to next phase until current phase passes all gates including REVIEW PASS (Full gate).
 
 ## Skill File Structure
 

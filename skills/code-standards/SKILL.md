@@ -119,5 +119,5 @@ See `$SKILL_DIR/references/section-templates.md` for detailed format per section
 
 | From | To |
 |------|-----|
-| whiteboarding (codebase scan step) | Returns `docs/code-standards.md` path |
+| whiteboard (codebase scan step) | Returns `docs/code-standards.md` path |
 | build-agent (discovery phase) | Reads the file directly |
