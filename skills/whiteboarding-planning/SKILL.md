@@ -1,6 +1,7 @@
 ---
 name: whiteboarding-planning
 description: "Standard/Full planning pipeline for whiteboarding. Steps: discover, classify, explore, detail, save, check, confirm, handoff. Use when dispatched from whiteboarding command for Medium/Complex tasks. Triggers on 'planning pipeline', 'standard track', 'full track'."
+user-invocable: false
 ---
 
 # Skill: whiteboarding-planning
@@ -180,16 +181,20 @@ Phase counts: Medium 3-5, Complex 5-7. Prefer fewer. 200-word cap per phase. Exp
 
 ### Model Detection + Skill Assignment
 
-**Model detection per phase:**
+**Model detection per phase (MANDATORY -- every phase MUST have `**Model:**` populated):**
 
 ```
-OPUS_KEYWORDS  = [refactor, architect, migrate, redesign, rewrite, overhaul]
-HAIKU_KEYWORDS = [config, rename, typo, bump, cleanup, delete, remove]
+OPUS_KEYWORDS  = [refactor, architect, migrate, redesign, rewrite, overhaul,
+                  new abstraction, novel pattern, system design]
+HAIKU_KEYWORDS = [config, rename, typo, bump, cleanup, delete, remove,
+                  backfill, data fix, sql update, doc update]
 
-DW items <= 2 AND file hints <= 2 areas AND no OPUS_KEYWORDS -> haiku
-DW items >= 6 OR file hints >= 6 areas OR any OPUS_KEYWORD  -> opus
-Otherwise -> omit (building uses default)
+DW items <= 2 AND file hints <= 1 area AND any HAIKU_KEYWORD   -> haiku
+Any OPUS_KEYWORD OR (DW items >= 6 AND file hints >= 4 areas)  -> opus
+Otherwise                                                       -> sonnet
 ```
+
+**Why Sonnet is the default, not omit:** Omit means inherit the user's session model -- and whiteboarding tells the user to crank to max effort, so Opus propagates to every subagent. Most code-touching phases (test, fix, validate, implement, wire, helper, hook, integration) are mechanical translation work that runs faster and cheaper on Sonnet without measurable quality loss. Reserve Opus for the keyword-flagged design-heavy phases.
 
 **Skill assignment (EVERY phase MUST have `**Skills:**` field):**
 1. Scan system-reminder for all available skills (`plugin:skill-name` lines)
@@ -263,6 +268,7 @@ Checklist:
 - Coherence: no contradictions, Phase N output matches N+1 input,
   user-observable output exists, high-uncertainty phases early
 - Skills: every phase has Skills field, skills match work type, skills actually available
+- Models: every phase has Model field populated (haiku/sonnet/opus -- never omitted)
 
 Output: PASS or FINDINGS with specific fix recommendations.
 ```

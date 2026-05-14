@@ -1,3 +1,10 @@
+<!-- Distilled from:
+  - skills/cc-pseudocode-programming
+  - skills/aposd-designing-deep-modules
+  - skills/cc-routine-and-class-design
+  When any source skill changes substantively, audit this file for drift.
+-->
+
 # Pre-Gate Standards
 
 Combined constraints from cc-pseudocode-programming, aposd-designing-deep-modules, and cc-routine-and-class-design. For full details, invoke individual skills.
