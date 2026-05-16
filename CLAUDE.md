@@ -34,7 +34,7 @@ Code-foundations is a Claude Code plugin providing software engineering skills b
 |-----------|---------|----------|
 | Bug investigation | `/code-foundations:debug` | Minimal |
 | Vague idea or unclear requirements | `/code-foundations:research` | Minimal |
-| Feature needs planning | `/code-foundations:whiteboard` | Medium |
+| Feature needs planning | `/code-foundations:plan` | Medium |
 | Executing approved plan | `/code-foundations:building` | Full |
 
 ### Research → Whiteboard → Building Workflow
@@ -43,8 +43,8 @@ Three-stage pattern for feature development:
 
 | Command | Purpose | Output |
 |---------|---------|--------|
-| `/code-foundations:research` | Clarify what the user wants through facilitated conversation | Research doc in `.claude/code-foundations/research/` |
-| `/code-foundations:whiteboard` | Plan implementation with phases, models, and skills | Plan file in `.claude/code-foundations/plans/` |
+| `/code-foundations:research` | Clarify what the user wants through facilitated conversation | Research doc in `.local/state/code-foundations/research/` |
+| `/code-foundations:plan` | Plan implementation with phases, models, and skills | Plan file in `.local/state/code-foundations/plans/` |
 | `/code-foundations:building` | Checklist-based execution | Working code + tests |
 
 **Full Flow:**
@@ -52,22 +52,22 @@ Three-stage pattern for feature development:
 /code-foundations:research "I want to build a notification system"
   → Facilitated conversation to clarify intent
   → Progressive narrowing: purpose, actors, context, boundaries, needs, risks
-  → Save confirmed requirements to .claude/code-foundations/research/
+  → Save confirmed requirements to .local/state/code-foundations/research/
 
         ↓ (when requirements are clear)
 
-/code-foundations:whiteboard .claude/code-foundations/research/<file>.md
+/code-foundations:plan .local/state/code-foundations/research/<file>.md
   → Codebase scan (shared step, all tracks)
   → Clarify intent (shared step, all tracks)
   → Problem statement confirmed (shared step, all tracks)
   → [Quick: plan → check → present]
   → [Standard/Full: classify → explore → detail → save → check → confirm]
-  → Save to .claude/code-foundations/plans/YYYY-MM-DD-<topic>.md
+  → Save to .local/state/code-foundations/plans/YYYY-MM-DD-<topic>.md
   → User confirms
 
         ↓ (after plan approval)
 
-/code-foundations:building .claude/code-foundations/plans/<plan>.md
+/code-foundations:building .local/state/code-foundations/plans/<plan>.md
   → Feature branch required
   → Execute phases with quality gates
   → Model auto-detected per phase (haiku/sonnet/opus)
@@ -80,7 +80,7 @@ Three-stage pattern for feature development:
 | Situation | Command |
 |-----------|---------|
 | "I have an idea but it's vague" / unclear requirements | `/code-foundations:research` |
-| Ready to plan full feature | `/code-foundations:whiteboard` |
+| Ready to plan full feature | `/code-foundations:plan` |
 | Plan exists, ready to implement | `/code-foundations:building` |
 
 **Quality Gates (per phase during /code-foundations:building):**
@@ -93,9 +93,9 @@ VERIFY:  performance-optimization + cc-refactoring-guidance + build + tests + li
 COMMIT:  Orchestrator commits directly after gates pass
 ```
 
-`[plan Skills]` = skills assigned per phase during whiteboard's SAVE step, then validated/resolved during building's SETUP skill resolution task.
+`[plan Skills]` = skills assigned per phase during plan's SAVE step, then validated/resolved during building's SETUP skill resolution task.
 
-Model and skills are assigned during whiteboard's SAVE step. Building's SETUP runs a one-time skill resolution task that validates assignments, fills gaps, and updates the plan before creating phase tasks (skills affect gate policy). Cannot proceed to next phase until current phase passes all gates including REVIEW PASS (Full gate).
+Model and skills are assigned during plan's SAVE step. Building's SETUP runs a one-time skill resolution task that validates assignments, fills gaps, and updates the plan before creating phase tasks (skills affect gate policy). Cannot proceed to next phase until current phase passes all gates including REVIEW PASS (Full gate).
 
 ## Skill File Structure
 

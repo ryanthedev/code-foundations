@@ -223,5 +223,5 @@ OUTPUT:
 
 | After | Next |
 |-------|------|
-| Issues found | Fix or flag for /code-foundations:whiteboard |
+| Issues found | Fix or flag for /code-foundations:plan |
 | No issues | Done |

@@ -1,13 +1,13 @@
 # Plan File Schema
 
-Shared schema for whiteboard/building workflow.
+Shared schema for plan/building workflow.
 
 ---
 
 ## File Location
 
 ```
-.claude/code-foundations/plans/YYYY-MM-DD-<topic-slug>.md
+.local/state/code-foundations/plans/YYYY-MM-DD-<topic-slug>.md
 ```
 
 **Naming convention:**
@@ -42,7 +42,7 @@ Shared schema for whiteboard/building workflow.
 
 ## Context
 
-[1-2 sentence problem statement from whiteboard Phase 1]
+[1-2 sentence problem statement from plan Phase 1]
 
 ## Constraints
 
@@ -94,7 +94,7 @@ Shared schema for whiteboard/building workflow.
 
 **Level:** 100% | Backend only | Backend + frontend | None | Per-phase
 
-_Chosen during whiteboard. Affects REVIEW gate and final verification._
+_Chosen during planning. Affects REVIEW gate and final verification._
 
 ---
 

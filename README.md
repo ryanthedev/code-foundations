@@ -11,7 +11,7 @@
 | Command | Purpose | When to Use |
 |---------|---------|-------------|
 | `/code-foundations:research` | Clarify what you want through facilitated conversation | Exploring ideas |
-| `/code-foundations:whiteboard` | Create implementation-ready plans | Feature planning |
+| `/code-foundations:plan` | Create implementation-ready plans | Feature planning |
 | `/code-foundations:building` | Execute plans with quality gates | Implementing approved plans |
 | `/code-foundations:debug` | Scientific debugging with task tracking | Bug hunting |
 
@@ -21,18 +21,18 @@
 
 ## Planning and Execution: Research to Building
 
-Three commands work together: Research clarifies intent, Whiteboard creates the plan, Building executes it.
+Three commands work together: Research clarifies intent, Plan creates the plan, Building executes it.
 
 ```
 /code-foundations:research "add notification system"
      ↓
-.claude/code-foundations/research/2026-01-30-notifications.md
+.local/state/code-foundations/research/2026-01-30-notifications.md
      ↓
-/code-foundations:whiteboard .claude/code-foundations/research/2026-01-30-notifications.md
+/code-foundations:plan .local/state/code-foundations/research/2026-01-30-notifications.md
      ↓
-.claude/code-foundations/plans/2026-01-30-notifications.md
+.local/state/code-foundations/plans/2026-01-30-notifications.md
      ↓
-/code-foundations:building .claude/code-foundations/plans/2026-01-30-notifications.md
+/code-foundations:building .local/state/code-foundations/plans/2026-01-30-notifications.md
 ```
 
 ### `/code-foundations:research` - Clarify What You Want
@@ -44,15 +44,15 @@ User: "/code-foundations:research add user notifications"
 
   → Facilitated conversation
   → Progressive narrowing: purpose, actors, context, boundaries, needs, risks
-  → Save confirmed requirements to .claude/code-foundations/research/
+  → Save confirmed requirements to .local/state/code-foundations/research/
 ```
 
-### `/code-foundations:whiteboard` - Create the Plan
+### `/code-foundations:plan` — Create the Plan
 
 **Researches your codebase, audits available skills, then asks targeted questions.**
 
 ```
-User: "/code-foundations:whiteboard add user notifications"
+User: "/code-foundations:plan add user notifications"
 
   DISCOVER
   ├─ Search codebase for existing patterns
@@ -68,7 +68,7 @@ User: "/code-foundations:whiteboard add user notifications"
 
   DETAIL → SAVE → CHECK → CONFIRM → HANDOFF
   ├─ Phase specs with Skills field per phase
-  ├─ Save plan to .claude/code-foundations/plans/
+  ├─ Save plan to .local/state/code-foundations/plans/
   ├─ Subagent reviews plan with fresh eyes
   ├─ User confirms + corrections
   └─ Handoff to /code-foundations:building
@@ -76,14 +76,14 @@ User: "/code-foundations:whiteboard add user notifications"
 
 **Skills loaded:** `aposd-designing-deep-modules`, `aposd-reviewing-module-design`
 
-**Task tracking:** Creates progress tasks at startup so you can see where whiteboard is in its flow.
+**Task tracking:** Creates progress tasks at startup so you can see where plan is in its flow.
 
 ### `/code-foundations:building` - Execute the Plan
 
 **Gated execution with subagents.** Each phase has mandatory quality checks.
 
 ```
-User: "/code-foundations:building .claude/code-foundations/plans/2026-01-30-notifications.md"
+User: "/code-foundations:building .local/state/code-foundations/plans/2026-01-30-notifications.md"
 
   BRANCH GATE
   └─ On main? → STOP. Create feature branch first.
@@ -108,9 +108,9 @@ User: "/code-foundations:building .claude/code-foundations/plans/2026-01-30-noti
 | REVIEW | `references/post-gate-standards.md` | Correctness, quality, module design, error handling |
 | VERIFY | `performance-optimization`, `cc-refactoring-guidance` | Performance regressions, refactoring opportunities, build + tests + lint |
 
-Gate policy is adaptive: Full (BUILD + REVIEW), Standard (BUILD + tests), Minimal (BUILD only). Skills assigned per phase during whiteboard's SAVE step.
+Gate policy is adaptive: Full (BUILD + REVIEW), Standard (BUILD + tests), Minimal (BUILD only). Skills assigned per phase during plan's SAVE step.
 
-The system saves every artifact to `.claude/code-foundations/building/`. Per-phase commits enable rollback.
+The system saves every artifact to `.local/state/code-foundations/building/`. Per-phase commits enable rollback.
 
 ---
 
@@ -151,7 +151,7 @@ The task list prevents rabbit holes, missed verifications, and lost context.
 | Situation | Command |
 |-----------|---------|
 | Vague idea, unclear requirements | `/code-foundations:research` |
-| Need full feature planning | `/code-foundations:whiteboard` |
+| Need full feature planning | `/code-foundations:plan` |
 | Have approved plan, ready to implement | `/code-foundations:building` |
 | Bug hunting, need structured approach | `/code-foundations:debug` |
 

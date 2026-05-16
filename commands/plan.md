@@ -1,10 +1,10 @@
 ---
-description: "Brainstorm and plan features"
+description: "Plan features and implementation"
 ---
 
-# Skill: whiteboard
+# Skill: plan
 
-The plan is a contract between whiteboard and building. It specifies WHAT and WHY at the strategic level, with explicit interfaces between phases.
+The plan is a contract between plan and building. It specifies WHAT and WHY at the strategic level, with explicit interfaces between phases.
 
 ---
 
@@ -70,7 +70,7 @@ Corrections → update and re-confirm. If the response raises new open questions
    - [ ] DW-N.1: [Verifiable criterion]
    ```
 
-2. **Save** to `.claude/code-foundations/plans/YYYY-MM-DD-<topic>.md` wrapped in plan file format:
+2. **Save** to `.local/state/code-foundations/plans/YYYY-MM-DD-<topic>.md` wrapped in plan file format:
 
    ```markdown
    # Plan: [Topic]
@@ -100,8 +100,8 @@ Corrections → update and re-confirm. If the response raises new open questions
 3. **Check** — dispatch a sonnet subagent to review the saved plan with fresh eyes:
 
    ```
-   Agent: sonnet, "Review whiteboard plan"
-   Prompt: Review .claude/code-foundations/plans/<plan>.md for structural issues.
+   Agent: sonnet, "Review plan"
+   Prompt: Review .local/state/code-foundations/plans/<plan>.md for structural issues.
 
    Checklist:
    - Structural: done-when items cover problem statement,
@@ -116,7 +116,7 @@ Corrections → update and re-confirm. If the response raises new open questions
 
 4. **Present and ask** via `AskUserQuestion`: "Here's the plan. Build it, adjust it, or tell me what to do?"
 
-5. **If building:** Suggest default thinking effort, run `/code-foundations:building .claude/code-foundations/plans/<plan>.md`.
+5. **If building:** Suggest default thinking effort, run `/code-foundations:building .local/state/code-foundations/plans/<plan>.md`.
 
 That's it. No EXPLORE, no 10-task pipeline. Quick track should take under 3 minutes from invocation to handoff.
 
@@ -126,7 +126,7 @@ That's it. No EXPLORE, no 10-task pipeline. Quick track should take under 3 minu
 
 For Medium and Complex tasks, load the planning pipeline:
 
-`Skill(code-foundations:whiteboarding-planning)`
+`Skill(code-foundations:planning)`
 
 **Pass the confirmed problem statement** from shared step 3. The planning pipeline's DISCOVER step deepens codebase research and may refine the problem statement, but does not redo clarification from scratch.
 

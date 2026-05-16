@@ -2,7 +2,7 @@
 
 How to question the user without changing what you need to know — only what they have to type.
 
-Used by `clarify` and any whiteboard gate that asks the user a question (`AskUserQuestion`, free-form, or option-list).
+Used by `clarify` and any plan gate that asks the user a question (`AskUserQuestion`, free-form, or option-list).
 
 ---
 

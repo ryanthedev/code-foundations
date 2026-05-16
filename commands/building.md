@@ -49,12 +49,12 @@ Clear the worktree gate before any other work. **Read `references/worktree-gate.
 
 If plan path provided:
 ```bash
-cat .claude/code-foundations/plans/<provided-path>.md
+cat .local/state/code-foundations/plans/<provided-path>.md
 ```
 
 If no path, list available:
 ```bash
-ls -la .claude/code-foundations/plans/*.md | head -20
+ls -la .local/state/code-foundations/plans/*.md | head -20
 ```
 
 Ask user: "Which plan should I execute?"
@@ -99,11 +99,11 @@ Check plan status:
 Before creating phase tasks, resolve skills for all phases. Skills affect gate policy (phases with Skills get Full gate), so this must run first.
 
 1. `TaskCreate(subject: "SETUP: Skill Resolution", description: "Validate and resolve skill assignments for all phases.")`
-2. Scan system-reminder for all available skills (exclude workflow commands: whiteboard, building, debug, research)
+2. Scan system-reminder for all available skills (exclude workflow commands: plan, building, debug, research)
 3. For each phase, check the plan's `**Skills:**` field:
    - **Specific skills listed** → validate each exists in available skills. Warn on any missing.
    - **`none -- [reason]`** → evaluate phase goal and scope against available skills. If a strong match exists, suggest adding it. Log why `none` was kept or what was added.
-   - **Field missing** → flag as plan defect (whiteboard CHECK should have caught this). Add skills based on phase goal/scope.
+   - **Field missing** → flag as plan defect (plan CHECK should have caught this). Add skills based on phase goal/scope.
 4. Update the plan file's `**Skills:**` fields with resolved assignments
 5. `TaskUpdate(status: "completed")`
 
@@ -277,7 +277,7 @@ The build agent combines discovery, design, and TDD implementation in one pass. 
 
 | Gate | Template | Adds discovery file |
 |------|----------|--------------------|
-| Full | `§ FULL_BUILD` | Yes — write `.claude/code-foundations/building/<plan-name>-phase-N-discovery.md` |
+| Full | `§ FULL_BUILD` | Yes — write `.local/state/code-foundations/building/<plan-name>-phase-N-discovery.md` |
 | Standard | `§ FULL_BUILD` | Yes — same template, gate policy differs at REVIEW |
 | Minimal | `§ MINIMAL_BUILD` | No — skips discovery |
 
@@ -349,7 +349,7 @@ git commit -m "[prefix]([scope]): [description]
 [WHY this phase exists — goal, key decisions, constraints that shaped implementation]
 
 Phase: N/M \"[phase name]\"
-Plan: .claude/code-foundations/plans/[plan-file].md
+Plan: .local/state/code-foundations/plans/[plan-file].md
 AI-Model: [model used]
 AI-Epistemic-Status: [tested|assumed|provisional]
 Gate-Policy: [Full|Standard|Minimal]
@@ -496,9 +496,9 @@ For blockers beyond the per-phase Gate Failure Protocol, and for resuming a `blo
 
 ---
 
-## Integration with /code-foundations:whiteboard
+## Integration with /code-foundations:plan
 
-For the chained whiteboard→building flow, parallel-build pattern, plan-file model-override syntax, and thinking-effort guidance, **read `references/whiteboard-integration.md`**.
+For the chained plan→building flow, parallel-build pattern, plan-file model-override syntax, and thinking-effort guidance, **read `references/plan-integration.md`**.
 
 **Key constraint (always applies):** parallel builds must target different plan files. Never run two building instances against the same plan.
 
@@ -506,6 +506,6 @@ For the chained whiteboard→building flow, parallel-build pattern, plan-file mo
 
 ## Chaining
 
-- **RECEIVES FROM:** whiteboard (via plan file), user with plan path
+- **RECEIVES FROM:** plan (via plan file), user with plan path
 - **CHAINS TO:** code-foundations skills during execution
 - **RELATED:** aposd-verifying-correctness, cc-quality-practices

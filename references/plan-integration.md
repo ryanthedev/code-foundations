@@ -1,22 +1,22 @@
-# Whiteboard ↔ Building Integration
+# Plan ↔ Building Integration
 
-How `/code-foundations:whiteboard` and `/code-foundations:building` chain together. Reference material — orchestrator does not need this hot path.
+How `/code-foundations:plan` and `/code-foundations:building` chain together. Reference material — orchestrator does not need this hot path.
 
 ---
 
 ## Expected Flow (Single Build)
 
 ```
-/code-foundations:whiteboard "user story"
+/code-foundations:plan "user story"
   ↓
 [Socratic questions]
 [2-3 approaches]
 [Detailed sections]
-[Save to .claude/code-foundations/plans/YYYY-MM-DD-topic.md]
+[Save to .local/state/code-foundations/plans/YYYY-MM-DD-topic.md]
   ↓
 [Set thinking effort to default — plan has the reasoning, orchestration doesn't need max effort]
   ↓
-/code-foundations:building .claude/code-foundations/plans/YYYY-MM-DD-topic.md
+/code-foundations:building .local/state/code-foundations/plans/YYYY-MM-DD-topic.md
   ↓
 [Worktree Gate → creates .claude/worktrees/<slug>/]
 [Checklist execution in worktree]
@@ -31,7 +31,7 @@ How `/code-foundations:whiteboard` and `/code-foundations:building` chain togeth
 ```
 Claude Instance 1                        Claude Instance 2
 ────────────────                        ────────────────
-/whiteboard "auth system"            /whiteboard "notifications"
+/plan "auth system"            /plan "notifications"
   → saves plan                              → saves plan
   → clear + build                         → clear + build
 
@@ -70,7 +70,7 @@ If `**Model:**` is omitted, auto-detection applies (see Model Resolution + Gate 
 
 Set thinking effort to **default** before building. The plan already contains the strategic reasoning — max effort during orchestration is wasted overhead. The subagents do the heavy thinking in their own contexts. Default effort on the orchestrator saves tokens without losing quality.
 
-- Whiteboard/planning: **max** effort
+- Planning: **max** effort
 - Building/execution: **default** effort
 
 Worktree provides filesystem isolation from other builds.

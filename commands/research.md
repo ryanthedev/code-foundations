@@ -1,5 +1,5 @@
 ---
-description: "Extract and document what the user wants — even when they don't know yet. Use before whiteboard, or standalone when exploring an idea."
+description: "Extract and document what the user wants — even when they don't know yet. Use before plan, or standalone when exploring an idea."
 ---
 
 # Skill: research
@@ -106,10 +106,10 @@ Don't push for completeness. Some things will be figured out later. The goal is 
 When the conversation reaches a natural stopping point, save the documented output:
 
 ```
-mkdir -p .claude/code-foundations/research
+mkdir -p .local/state/code-foundations/research
 ```
 
-File: `.claude/code-foundations/research/YYYY-MM-DD-<topic-slug>.md`
+File: `.local/state/code-foundations/research/YYYY-MM-DD-<topic-slug>.md`
 
 The document format is **whatever the findings demand.** It might be:
 - A requirements list with priorities
@@ -130,13 +130,13 @@ Don't force a template. Write what emerged from the conversation in a form that'
 ## What Comes Next
 
 Research doesn't prescribe what happens after. The user might:
-- Take it into `/code-foundations:whiteboard` for implementation planning
+- Take it into `/code-foundations:plan` for implementation planning
 - Use it to write a slide deck or RFC
 - Share it with their team for feedback
 - Decide not to build it
 - Come back later with more clarity
 
-If the user wants to move to whiteboard, tell them:
+If the user wants to move to plan, tell them:
 ```
-/code-foundations:whiteboard .claude/code-foundations/research/<file>.md
+/code-foundations:plan .local/state/code-foundations/research/<file>.md
 ```
