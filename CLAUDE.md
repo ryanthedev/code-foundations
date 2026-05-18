@@ -43,8 +43,8 @@ Three-stage pattern for feature development:
 
 | Command | Purpose | Output |
 |---------|---------|--------|
-| `/code-foundations:research` | Clarify what the user wants through facilitated conversation | Research doc in `.local/state/code-foundations/research/` |
-| `/code-foundations:plan` | Plan implementation with phases, models, and skills | Plan file in `.local/state/code-foundations/plans/` |
+| `/code-foundations:research` | Clarify what the user wants through facilitated conversation | Research doc in `.code-foundations/research/` |
+| `/code-foundations:plan` | Plan implementation with phases, models, and skills | Plan file in `.code-foundations/plans/` |
 | `/code-foundations:building` | Checklist-based execution | Working code + tests |
 
 **Full Flow:**
@@ -52,22 +52,22 @@ Three-stage pattern for feature development:
 /code-foundations:research "I want to build a notification system"
   → Facilitated conversation to clarify intent
   → Progressive narrowing: purpose, actors, context, boundaries, needs, risks
-  → Save confirmed requirements to .local/state/code-foundations/research/
+  → Save confirmed requirements to .code-foundations/research/
 
         ↓ (when requirements are clear)
 
-/code-foundations:plan .local/state/code-foundations/research/<file>.md
+/code-foundations:plan .code-foundations/research/<file>.md
   → Codebase scan (shared step, all tracks)
   → Clarify intent (shared step, all tracks)
   → Problem statement confirmed (shared step, all tracks)
   → [Quick: plan → check → present]
   → [Standard/Full: classify → explore → detail → save → check → confirm]
-  → Save to .local/state/code-foundations/plans/YYYY-MM-DD-<topic>.md
+  → Save to .code-foundations/plans/YYYY-MM-DD-<topic>.md
   → User confirms
 
         ↓ (after plan approval)
 
-/code-foundations:building .local/state/code-foundations/plans/<plan>.md
+/code-foundations:building .code-foundations/plans/<plan>.md
   → Feature branch required
   → Execute phases with quality gates
   → Model auto-detected per phase (haiku/sonnet/opus)

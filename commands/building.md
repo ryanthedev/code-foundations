@@ -49,12 +49,12 @@ Clear the worktree gate before any other work. **Read `references/worktree-gate.
 
 If plan path provided:
 ```bash
-cat .local/state/code-foundations/plans/<provided-path>.md
+cat .code-foundations/plans/<provided-path>.md
 ```
 
 If no path, list available:
 ```bash
-ls -la .local/state/code-foundations/plans/*.md | head -20
+ls -la .code-foundations/plans/*.md | head -20
 ```
 
 Ask user: "Which plan should I execute?"
@@ -277,7 +277,7 @@ The build agent combines discovery, design, and TDD implementation in one pass. 
 
 | Gate | Template | Adds discovery file |
 |------|----------|--------------------|
-| Full | `§ FULL_BUILD` | Yes — write `.local/state/code-foundations/building/<plan-name>-phase-N-discovery.md` |
+| Full | `§ FULL_BUILD` | Yes — write `.code-foundations/building/<plan-name>-phase-N-discovery.md` |
 | Standard | `§ FULL_BUILD` | Yes — same template, gate policy differs at REVIEW |
 | Minimal | `§ MINIMAL_BUILD` | No — skips discovery |
 
@@ -349,7 +349,7 @@ git commit -m "[prefix]([scope]): [description]
 [WHY this phase exists — goal, key decisions, constraints that shaped implementation]
 
 Phase: N/M \"[phase name]\"
-Plan: .local/state/code-foundations/plans/[plan-file].md
+Plan: .code-foundations/plans/[plan-file].md
 AI-Model: [model used]
 AI-Epistemic-Status: [tested|assumed|provisional]
 Gate-Policy: [Full|Standard|Minimal]

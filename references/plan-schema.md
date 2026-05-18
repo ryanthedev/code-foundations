@@ -7,7 +7,7 @@ Shared schema for plan/building workflow.
 ## File Location
 
 ```
-.local/state/code-foundations/plans/YYYY-MM-DD-<topic-slug>.md
+.code-foundations/plans/YYYY-MM-DD-<topic-slug>.md
 ```
 
 **Naming convention:**

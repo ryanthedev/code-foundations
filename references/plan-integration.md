@@ -12,11 +12,11 @@ How `/code-foundations:plan` and `/code-foundations:building` chain together. Re
 [Socratic questions]
 [2-3 approaches]
 [Detailed sections]
-[Save to .local/state/code-foundations/plans/YYYY-MM-DD-topic.md]
+[Save to .code-foundations/plans/YYYY-MM-DD-topic.md]
   ↓
 [Set thinking effort to default — plan has the reasoning, orchestration doesn't need max effort]
   ↓
-/code-foundations:building .local/state/code-foundations/plans/YYYY-MM-DD-topic.md
+/code-foundations:building .code-foundations/plans/YYYY-MM-DD-topic.md
   ↓
 [Worktree Gate → creates .claude/worktrees/<slug>/]
 [Checklist execution in worktree]

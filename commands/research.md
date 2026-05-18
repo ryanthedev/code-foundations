@@ -106,10 +106,10 @@ Don't push for completeness. Some things will be figured out later. The goal is 
 When the conversation reaches a natural stopping point, save the documented output:
 
 ```
-mkdir -p .local/state/code-foundations/research
+mkdir -p .code-foundations/research
 ```
 
-File: `.local/state/code-foundations/research/YYYY-MM-DD-<topic-slug>.md`
+File: `.code-foundations/research/YYYY-MM-DD-<topic-slug>.md`
 
 The document format is **whatever the findings demand.** It might be:
 - A requirements list with priorities
@@ -138,5 +138,5 @@ Research doesn't prescribe what happens after. The user might:
 
 If the user wants to move to plan, tell them:
 ```
-/code-foundations:plan .local/state/code-foundations/research/<file>.md
+/code-foundations:plan .code-foundations/research/<file>.md
 ```

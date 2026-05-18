@@ -70,7 +70,7 @@ Corrections → update and re-confirm. If the response raises new open questions
    - [ ] DW-N.1: [Verifiable criterion]
    ```
 
-2. **Save** to `.local/state/code-foundations/plans/YYYY-MM-DD-<topic>.md` wrapped in plan file format:
+2. **Save** to `.code-foundations/plans/YYYY-MM-DD-<topic>.md` wrapped in plan file format:
 
    ```markdown
    # Plan: [Topic]
@@ -101,7 +101,7 @@ Corrections → update and re-confirm. If the response raises new open questions
 
    ```
    Agent: sonnet, "Review plan"
-   Prompt: Review .local/state/code-foundations/plans/<plan>.md for structural issues.
+   Prompt: Review .code-foundations/plans/<plan>.md for structural issues.
 
    Checklist:
    - Structural: done-when items cover problem statement,
@@ -116,7 +116,7 @@ Corrections → update and re-confirm. If the response raises new open questions
 
 4. **Present and ask** via `AskUserQuestion`: "Here's the plan. Build it, adjust it, or tell me what to do?"
 
-5. **If building:** Suggest default thinking effort, run `/code-foundations:building .local/state/code-foundations/plans/<plan>.md`.
+5. **If building:** Suggest default thinking effort, run `/code-foundations:building .code-foundations/plans/<plan>.md`.
 
 That's it. No EXPLORE, no 10-task pipeline. Quick track should take under 3 minutes from invocation to handoff.
 
