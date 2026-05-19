@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Code-foundations is a Claude Code plugin providing software engineering skills based on *Code Complete* (McConnell) and *A Philosophy of Software Design* (Ousterhout). It includes a building workflow with gated phases (BUILD, REVIEW, orchestrator commit) and an experimental code review system.
+Code-foundations is a Claude Code plugin providing software engineering skills based on *Code Complete* (McConnell) and *A Philosophy of Software Design* (Ousterhout). It includes a build workflow with gated phases (BUILD, REVIEW, orchestrator commit) and an experimental code review system.
 
 ## Architecture
 
@@ -35,7 +35,7 @@ Code-foundations is a Claude Code plugin providing software engineering skills b
 | Bug investigation | `/code-foundations:debug` | Minimal |
 | Vague idea or unclear requirements | `/code-foundations:research` | Minimal |
 | Feature needs planning | `/code-foundations:plan` | Medium |
-| Executing approved plan | `/code-foundations:building` | Full |
+| Executing approved plan | `/code-foundations:build` | Full |
 
 ### Research → Whiteboard → Building Workflow
 
@@ -45,7 +45,7 @@ Three-stage pattern for feature development:
 |---------|---------|--------|
 | `/code-foundations:research` | Clarify what the user wants through facilitated conversation | Research doc in `.code-foundations/research/` |
 | `/code-foundations:plan` | Plan implementation with phases, models, and skills | Plan file in `.code-foundations/plans/` |
-| `/code-foundations:building` | Checklist-based execution | Working code + tests |
+| `/code-foundations:build` | Checklist-based execution | Working code + tests |
 
 **Full Flow:**
 ```
@@ -67,7 +67,7 @@ Three-stage pattern for feature development:
 
         ↓ (after plan approval)
 
-/code-foundations:building .code-foundations/plans/<plan>.md
+/code-foundations:build .code-foundations/plans/<plan>.md
   → Feature branch required
   → Execute phases with quality gates
   → Model auto-detected per phase (haiku/sonnet/opus)
@@ -81,9 +81,9 @@ Three-stage pattern for feature development:
 |-----------|---------|
 | "I have an idea but it's vague" / unclear requirements | `/code-foundations:research` |
 | Ready to plan full feature | `/code-foundations:plan` |
-| Plan exists, ready to implement | `/code-foundations:building` |
+| Plan exists, ready to implement | `/code-foundations:build` |
 
-**Quality Gates (per phase during /code-foundations:building):**
+**Quality Gates (per phase during /code-foundations:build):**
 ```
 BUILD:   references/pre-gate-standards.md + references/implement-standards.md + [plan Skills]
          (discovery + design → TDD implementation in one agent)
@@ -93,7 +93,7 @@ VERIFY:  performance-optimization + cc-refactoring-guidance + build + tests + li
 COMMIT:  Orchestrator commits directly after gates pass
 ```
 
-`[plan Skills]` = skills assigned per phase during plan's SAVE step, then validated/resolved during building's SETUP skill resolution task.
+`[plan Skills]` = skills assigned per phase during plan's SAVE step, then validated/resolved during build's SETUP skill resolution task.
 
 Model and skills are assigned during plan's SAVE step. Building's SETUP runs a one-time skill resolution task that validates assignments, fills gaps, and updates the plan before creating phase tasks (skills affect gate policy). Cannot proceed to next phase until current phase passes all gates including REVIEW PASS (Full gate).
 

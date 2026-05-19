@@ -1,6 +1,6 @@
 ---
 name: code-standards
-description: "Generate or update docs/code-standards.md by scanning codebase conventions. Produces example-rich standards that help LLMs write consistent code. Use when starting a planning or building task. Triggers on 'code standards', 'codebase scan', 'scan conventions'."
+description: "Generate or update docs/code-standards.md by scanning codebase conventions. Produces example-rich standards that help LLMs write consistent code. Use when starting a planning or build task. Triggers on 'code standards', 'codebase scan', 'scan conventions'."
 ---
 
 # Skill: code-standards

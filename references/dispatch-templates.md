@@ -1,8 +1,8 @@
 # Dispatch Templates
 
-Subagent dispatch prompts used by the orchestrator (`commands/building.md`) when dispatching the build and post-gate agents. Templates are referenced by section header (e.g., `§ FULL_BUILD`) from the orchestrator and substituted with phase-specific values at dispatch time.
+Subagent dispatch prompts used by the orchestrator (`commands/build.md`) when dispatching the build and post-gate agents. Templates are referenced by section header (e.g., `§ FULL_BUILD`) from the orchestrator and substituted with phase-specific values at dispatch time.
 
-Keeping these here instead of inline in `building.md`:
+Keeping these here instead of inline in `build.md`:
 - Keeps the orchestrator's hot path lean (~520 lines vs ~905)
 - Lets templates evolve without touching orchestration logic
 - Makes the dispatch surface a single auditable file
@@ -19,7 +19,7 @@ Agent tool:
 - model: [from plan's **Model:** field, or omit if not set]
 - description: "BUILD Phase N"
 - prompt: |
-    Build Phase N of the building plan. This is a two-part task:
+    Build Phase N of the build plan. This is a two-part task:
     1. Discovery + Design — scope the phase work, identify gaps vs plan, make design decisions, map DW items to test cases
     2. TDD Implementation — write failing tests from DW items, then implement to make them pass (red-green cycle)
 
@@ -63,7 +63,7 @@ Agent tool:
     - Phase: N - [name]
 
     ## Output Files
-    - Discovery + Design: .code-foundations/building/<plan-name>-phase-N-discovery.md
+    - Discovery + Design: .code-foundations/build/<plan-name>-phase-N-discovery.md
 ```
 
 ---
@@ -78,7 +78,7 @@ Agent tool:
 - model: [from plan's **Model:** field, or omit if not set]
 - description: "BUILD Phase N (minimal)"
 - prompt: |
-    Build Phase N of the building plan. This phase uses minimal gate
+    Build Phase N of the build plan. This phase uses minimal gate
     policy — skip discovery, implement directly from the plan
     description using TDD (write tests from DW items, then implement).
 
@@ -141,14 +141,14 @@ Agent tool:
     ## Inputs
     - Plan: docs/plans/<plan-name>.md (Phase N section)
     [Full/Standard gate only:]
-    - Discovery + Design: .code-foundations/building/<plan-name>-phase-N-discovery.md
+    - Discovery + Design: .code-foundations/build/<plan-name>-phase-N-discovery.md
     [Minimal gate: no discovery file exists]
 
     ## Files Changed
     [list files from BUILD subagent]
 
     ## Output
-    Write review to: .code-foundations/building/<plan-name>-phase-N-review.md
+    Write review to: .code-foundations/build/<plan-name>-phase-N-review.md
 ```
 
 ---
@@ -189,5 +189,5 @@ Agent tool:
     - Tests still pass for earlier phases' functionality
 
     ## Output
-    Write review to: .code-foundations/building/<plan-name>-catchup-phases-X-Y-review.md
+    Write review to: .code-foundations/build/<plan-name>-catchup-phases-X-Y-review.md
 ```

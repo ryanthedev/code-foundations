@@ -12,16 +12,16 @@
 |---------|---------|-------------|
 | `/code-foundations:research` | Clarify what you want through facilitated conversation | Exploring ideas |
 | `/code-foundations:plan` | Create implementation-ready plans | Feature planning |
-| `/code-foundations:building` | Execute plans with quality gates | Implementing approved plans |
+| `/code-foundations:build` | Execute plans with quality gates | Implementing approved plans |
 | `/code-foundations:debug` | Scientific debugging with task tracking | Bug hunting |
 
 **Why this exists:** LLMs write code fast. Fast code without engineering discipline creates debt. This plugin loads proven checklists and mental models so Claude applies them automatically.
 
 ---
 
-## Planning and Execution: Research to Building
+## Planning and Execution: Research to Build
 
-Three commands work together: Research clarifies intent, Plan creates the plan, Building executes it.
+Three commands work together: Research clarifies intent, Plan creates the plan, Build executes it.
 
 ```
 /code-foundations:research "add notification system"
@@ -32,7 +32,7 @@ Three commands work together: Research clarifies intent, Plan creates the plan, 
      ↓
 .code-foundations/plans/2026-01-30-notifications.md
      ↓
-/code-foundations:building .code-foundations/plans/2026-01-30-notifications.md
+/code-foundations:build .code-foundations/plans/2026-01-30-notifications.md
 ```
 
 ### `/code-foundations:research` - Clarify What You Want
@@ -71,19 +71,19 @@ User: "/code-foundations:plan add user notifications"
   ├─ Save plan to .code-foundations/plans/
   ├─ Subagent reviews plan with fresh eyes
   ├─ User confirms + corrections
-  └─ Handoff to /code-foundations:building
+  └─ Handoff to /code-foundations:build
 ```
 
 **Skills loaded:** `aposd-designing-deep-modules`, `aposd-reviewing-module-design`
 
 **Task tracking:** Creates progress tasks at startup so you can see where plan is in its flow.
 
-### `/code-foundations:building` - Execute the Plan
+### `/code-foundations:build` - Execute the Plan
 
 **Gated execution with subagents.** Each phase has mandatory quality checks.
 
 ```
-User: "/code-foundations:building .code-foundations/plans/2026-01-30-notifications.md"
+User: "/code-foundations:build .code-foundations/plans/2026-01-30-notifications.md"
 
   BRANCH GATE
   └─ On main? → STOP. Create feature branch first.
@@ -110,7 +110,7 @@ User: "/code-foundations:building .code-foundations/plans/2026-01-30-notificatio
 
 Gate policy is adaptive: Full (BUILD + REVIEW), Standard (BUILD + tests), Minimal (BUILD only). Skills assigned per phase during plan's SAVE step.
 
-The system saves every artifact to `.code-foundations/building/`. Per-phase commits enable rollback.
+The system saves every artifact to `.code-foundations/build/`. Per-phase commits enable rollback.
 
 ---
 
@@ -152,7 +152,7 @@ The task list prevents rabbit holes, missed verifications, and lost context.
 |-----------|---------|
 | Vague idea, unclear requirements | `/code-foundations:research` |
 | Need full feature planning | `/code-foundations:plan` |
-| Have approved plan, ready to implement | `/code-foundations:building` |
+| Have approved plan, ready to implement | `/code-foundations:build` |
 | Bug hunting, need structured approach | `/code-foundations:debug` |
 
 ---

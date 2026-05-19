@@ -1,7 +1,7 @@
 {
   "name": "code-foundations",
-  "version": "4.10.0",
-  "description": "Software engineering skills from Code Complete and A Philosophy of Software Design. 20 skills across 2 agents (build, post-gate). Research → whiteboard → building workflow with adaptive gates (BUILD, REVIEW, commit).",
+  "version": "4.11.0",
+  "description": "Software engineering skills from Code Complete and A Philosophy of Software Design. 20 skills across 2 agents (build, post-gate). Research → plan → build workflow with adaptive gates (BUILD, REVIEW, commit).",
   "author": {
     "name": "ryanthedev"
   },

@@ -1,6 +1,6 @@
 # Trust Report
 
-The summary output for `commands/building.md` Phase 5: REPORT. The summary is a **trust report**, not a status dashboard. Engineers need to verify what the AI built.
+The summary output for `commands/build.md` Phase 5: REPORT. The summary is a **trust report**, not a status dashboard. Engineers need to verify what the AI built.
 
 Gate metadata (model, review results, epistemic status) lives in commit trailers and is derived from `git log` at report time — not duplicated in this template.
 

@@ -35,7 +35,7 @@ If the dispatch prompt does NOT include an `## Additional Skills` section, disco
 1. Scan the system-reminder for all available skills (lines with `plugin:skill-name`)
 2. Match skills to this phase's work: language, framework, task type
 3. Load matched skills using `Skill([skill-name])`
-4. Skip workflow commands (plan, building, debug, research)
+4. Skip workflow commands (plan, build, debug, research)
 5. Note which skills you loaded in your output
 
 If skills WERE passed in the dispatch prompt, load those and skip discovery.
@@ -93,7 +93,7 @@ For trivial work (single file, clear approach), a brief note is sufficient.
 
 ### Write Discovery + Design
 
-Write to: `.code-foundations/building/<plan-name>-phase-N-discovery.md`
+Write to: `.code-foundations/build/<plan-name>-phase-N-discovery.md`
 
 ```markdown
 # Discovery + Design: Phase N - [name]
@@ -212,7 +212,7 @@ Apply ONLY where design notes indicate error handling:
 [List skills loaded, or "Default only"]
 
 ### Artifacts
-- Discovery + Design: .code-foundations/building/<plan-name>-phase-N-discovery.md
+- Discovery + Design: .code-foundations/build/<plan-name>-phase-N-discovery.md
 
 ### Status: DONE | SKIP | UPDATE_PLAN | BLOCKED
 ```

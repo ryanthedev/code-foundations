@@ -8,7 +8,7 @@ user-invocable: false
 
 Standard/Full planning pipeline: **Discover -> Classify -> Explore -> Detail -> Save -> Check -> Confirm -> Handoff**
 
-The plan is a contract between plan and building. It specifies WHAT and WHY at the strategic level, with explicit interfaces between phases.
+The plan is a contract between plan and build. It specifies WHAT and WHY at the strategic level, with explicit interfaces between phases.
 
 **Thinking effort:** Planning benefits from max effort. If not already at max, suggest the user increase it before proceeding.
 
@@ -199,7 +199,7 @@ Otherwise                                                       -> sonnet
 **Skill assignment (EVERY phase MUST have `**Skills:**` field):**
 1. Scan system-reminder for all available skills (`plugin:skill-name` lines)
 2. Match to phase goal, scope, and work type (tech stack, task type, domain)
-3. Exclude workflow commands (plan, building, debug, research)
+3. Exclude workflow commands (plan, build, debug, research)
 4. Write `**Skills:**` on every phase -- `none -- [reason]` valid, omission NOT valid
 
 ### Plan File Schema
@@ -244,7 +244,7 @@ Otherwise                                                       -> sonnet
 - [edge cases, gotchas, open questions]
 ---
 ## Execution Log
-_To be filled during /code-foundations:building_
+_To be filled during /code-foundations:build_
 ```
 
 ### Save (MANDATORY)
@@ -301,7 +301,7 @@ If changes requested: update plan. Structural changes -> re-run CHECK. Minor cha
 
 `AskUserQuestion`: "Plan saved. How would you like to proceed?"
 
-1. **Build now** (Recommended) -- Suggest default thinking effort, run `/code-foundations:building .code-foundations/plans/<plan>.md`
+1. **Build now** (Recommended) -- Suggest default thinking effort, run `/code-foundations:build .code-foundations/plans/<plan>.md`
 2. **Tell me what to do** -- Numbered manual steps
 
 **Question style:** See [adaptive-questioning.md]($CLAUDE_PLUGIN_ROOT/references/adaptive-questioning.md). The "Recommended" tag on Build now is the confirmatory cue — keep it there.
@@ -311,4 +311,4 @@ If changes requested: update plan. Structural changes -> re-run CHECK. Minor cha
 ## Chain
 
 - **Receives from:** plan command (router dispatch)
-- **Chains to:** building (via saved plan file)
+- **Chains to:** build (via saved plan file)

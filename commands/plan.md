@@ -4,7 +4,7 @@ description: "Plan features and implementation"
 
 # Skill: plan
 
-The plan is a contract between plan and building. It specifies WHAT and WHY at the strategic level, with explicit interfaces between phases.
+The plan is a contract between plan and build. It specifies WHAT and WHY at the strategic level, with explicit interfaces between phases.
 
 ---
 
@@ -92,7 +92,7 @@ Corrections → update and re-confirm. If the response raises new open questions
    - [ ] [specific tests]
    ---
    ## Execution Log
-   _To be filled during /code-foundations:building_
+   _To be filled during /code-foundations:build_
    ```
 
    Do NOT commit the plan file.
@@ -116,7 +116,7 @@ Corrections → update and re-confirm. If the response raises new open questions
 
 4. **Present and ask** via `AskUserQuestion`: "Here's the plan. Build it, adjust it, or tell me what to do?"
 
-5. **If building:** Suggest default thinking effort, run `/code-foundations:building .code-foundations/plans/<plan>.md`.
+5. **If build:** Suggest default thinking effort, run `/code-foundations:build .code-foundations/plans/<plan>.md`.
 
 That's it. No EXPLORE, no 10-task pipeline. Quick track should take under 3 minutes from invocation to handoff.
 
@@ -135,4 +135,4 @@ For Medium and Complex tasks, load the planning pipeline:
 ## Chain
 
 - **Receives from:** User request, feature description, user story
-- **Chains to:** building (via saved plan file)
+- **Chains to:** build (via saved plan file)

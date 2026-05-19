@@ -2,7 +2,7 @@
 description: "Execute plans through gated phases with subagent dispatch."
 ---
 
-# Skill: building
+# Skill: build
 
 **Load Plan → Setup → Execute → Verify → Report**
 
@@ -99,7 +99,7 @@ Check plan status:
 Before creating phase tasks, resolve skills for all phases. Skills affect gate policy (phases with Skills get Full gate), so this must run first.
 
 1. `TaskCreate(subject: "SETUP: Skill Resolution", description: "Validate and resolve skill assignments for all phases.")`
-2. Scan system-reminder for all available skills (exclude workflow commands: plan, building, debug, research)
+2. Scan system-reminder for all available skills (exclude workflow commands: plan, build, debug, research)
 3. For each phase, check the plan's `**Skills:**` field:
    - **Specific skills listed** → validate each exists in available skills. Warn on any missing.
    - **`none -- [reason]`** → evaluate phase goal and scope against available skills. If a strong match exists, suggest adding it. Log why `none` was kept or what was added.
@@ -150,8 +150,8 @@ Phase 3.2: REVIEW         → blockedBy: [3.1]
 ### CRITICAL: DO NOT DO ANYTHING DIRECTLY
 
 **You MUST dispatch subagents for ALL work. DO NOT:**
-- Read/explore code files directly during building
-- Edit code files directly during building
+- Read/explore code files directly during build
+- Edit code files directly during build
 - Skip any task
 - Proceed when a blockedBy dependency is not completed
 - Mark a gate task completed when it returned FAIL
@@ -277,7 +277,7 @@ The build agent combines discovery, design, and TDD implementation in one pass. 
 
 | Gate | Template | Adds discovery file |
 |------|----------|--------------------|
-| Full | `§ FULL_BUILD` | Yes — write `.code-foundations/building/<plan-name>-phase-N-discovery.md` |
+| Full | `§ FULL_BUILD` | Yes — write `.code-foundations/build/<plan-name>-phase-N-discovery.md` |
 | Standard | `§ FULL_BUILD` | Yes — same template, gate policy differs at REVIEW |
 | Minimal | `§ MINIMAL_BUILD` | No — skips discovery |
 
@@ -498,9 +498,9 @@ For blockers beyond the per-phase Gate Failure Protocol, and for resuming a `blo
 
 ## Integration with /code-foundations:plan
 
-For the chained plan→building flow, parallel-build pattern, plan-file model-override syntax, and thinking-effort guidance, **read `references/plan-integration.md`**.
+For the chained plan→build flow, parallel-build pattern, plan-file model-override syntax, and thinking-effort guidance, **read `references/plan-integration.md`**.
 
-**Key constraint (always applies):** parallel builds must target different plan files. Never run two building instances against the same plan.
+**Key constraint (always applies):** parallel builds must target different plan files. Never run two build instances against the same plan.
 
 ---
 

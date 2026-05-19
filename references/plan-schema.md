@@ -1,6 +1,6 @@
 # Plan File Schema
 
-Shared schema for plan/building workflow.
+Shared schema for plan/build workflow.
 
 ---
 
@@ -35,7 +35,7 @@ Shared schema for plan/building workflow.
 
 **Created:** YYYY-MM-DD
 **Status:** ready | in-progress | blocked | complete
-**Started:** YYYY-MM-DD HH:MM (filled during building)
+**Started:** YYYY-MM-DD HH:MM (filled during build)
 **Completed:** YYYY-MM-DD HH:MM (filled when done)
 
 ---
@@ -122,7 +122,7 @@ _Chosen during planning. Affects REVIEW gate and final verification._
 
 ## Execution Log
 
-_Filled during /code-foundations:building execution_
+_Filled during /code-foundations:build execution_
 
 ### Phase 1: [Name]
 - [x] Task 1 - Completed YYYY-MM-DD HH:MM
@@ -146,7 +146,7 @@ _Filled during /code-foundations:building execution_
 - [hash] Phase 2: [name]
 
 **Follow-up Items:**
-- [items discovered during building that weren't in scope]
+- [items discovered during build that weren't in scope]
 ```
 
 ---

@@ -1,6 +1,6 @@
 # Gate Failure Protocol
 
-Used by the orchestrator (`commands/building.md` Phase 3: EXECUTE) when a BUILD or REVIEW task returns FAIL.
+Used by the orchestrator (`commands/build.md` Phase 3: EXECUTE) when a BUILD or REVIEW task returns FAIL.
 
 ---
 

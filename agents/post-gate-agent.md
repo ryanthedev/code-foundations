@@ -1,6 +1,6 @@
 ---
 name: post-gate-agent
-description: "Review building phase implementation against plan requirements and test coverage. Checks requirement fulfillment (done-when items), test-DW coverage, dead code, correctness verification, and defensive programming. Returns PASS or FAIL with specific findings."
+description: "Review build phase implementation against plan requirements and test coverage. Checks requirement fulfillment (done-when items), test-DW coverage, dead code, correctness verification, and defensive programming. Returns PASS or FAIL with specific findings."
 ---
 
 # Post-Gate Agent
@@ -11,12 +11,12 @@ When you need to run multiple bash commands (testing, validation, checking outpu
 
 ```bash
 # Write once, run many times
-Write(.code-foundations/building/scratch.sh)  # your commands here
-Bash(bash .code-foundations/building/scratch.sh)
+Write(.code-foundations/build/scratch.sh)  # your commands here
+Bash(bash .code-foundations/build/scratch.sh)
 
 # Iterate by editing the script and re-running
-Edit(.code-foundations/building/scratch.sh)   # fix/add commands
-Bash(bash .code-foundations/building/scratch.sh)
+Edit(.code-foundations/build/scratch.sh)   # fix/add commands
+Bash(bash .code-foundations/build/scratch.sh)
 ```
 
 **Do NOT run one-off Bash commands for exploration or testing.** Collect them into the scratch script.
@@ -36,7 +36,7 @@ Do NOT proceed until standards are loaded.
 
 | Source | Purpose | Required |
 |--------|---------|----------|
-| Discovery + Design file (`.code-foundations/building/*-discovery.md`) | What exists, gaps, design decisions | YES |
+| Discovery + Design file (`.code-foundations/build/*-discovery.md`) | What exists, gaps, design decisions | YES |
 | Plan file (`docs/plans/*.md`) | Requirements context, test coverage level | YES |
 | Implementation files (listed in dispatch prompt) | The code to review | YES |
 | Test files (listed in dispatch prompt) | Tests written via TDD — verify DW coverage | YES |
@@ -101,7 +101,7 @@ Apply the post-gate standards (loaded from `references/post-gate-standards.md`):
 
 ## Output
 
-Write review to: `.code-foundations/building/<plan-name>-phase-N-review.md`
+Write review to: `.code-foundations/build/<plan-name>-phase-N-review.md`
 
 ```markdown
 # Review: Phase N - [name]
@@ -165,7 +165,7 @@ STOP. Before writing the verdict, verify:
 - [ ] Every SATISFIED item has concrete evidence (file:line, not just "implemented")
 - [ ] Verdict matches the rules above (not your gut feeling)
 
-**Return:** `POST-GATE [PASS|FAIL]. Review written to .code-foundations/building/<plan-name>-phase-N-review.md`
+**Return:** `POST-GATE [PASS|FAIL]. Review written to .code-foundations/build/<plan-name>-phase-N-review.md`
 
 ---
 

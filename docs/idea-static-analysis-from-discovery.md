@@ -68,8 +68,8 @@ This produces rules the team didn't consciously know they had. The codebase is t
 
 - `code-standards` skill already exists and does the scan — natural predecessor
 - `ast-grep` skill already exists — can be used in the discovery/rule-writing phase
-- New skill slots between `code-standards` and the building workflow
-- Rules can be run as part of the VERIFY phase in `/code-foundations:building`
+- New skill slots between `code-standards` and the build workflow
+- Rules can be run as part of the VERIFY phase in `/code-foundations:build`
 
 ## Open Questions for Discovery
 

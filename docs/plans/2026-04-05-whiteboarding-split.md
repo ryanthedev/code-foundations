@@ -101,4 +101,4 @@ The whiteboarding command is 957 lines. Quick track tasks (1-file renames, simpl
 
 ## Execution Log
 
-_To be filled during /code-foundations:building_
+_To be filled during /code-foundations:build_

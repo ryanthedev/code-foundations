@@ -22,7 +22,7 @@ The build pipeline doesn't use a single agent that writes and reviews its own wo
 
 **A three-stage pipeline that separates knowing from planning from doing.**
 
-Research, plan, and building are distinct commands with distinct outputs. Research produces confirmed requirements through facilitated conversation — the skill has opinions, matches the user's energy, and knows when to stop asking. Plan produces a plan file with phased implementation, skill assignments per phase, model overrides, and done-when items with unique IDs. Building consumes that plan file mechanically — worktree isolation, subagent dispatch, TDD red-green cycles, structured commits with epistemic-status trailers, trust reports. The plan is a contract between plan and building. Each stage can be used independently or chained.
+Research, plan, and build are distinct commands with distinct outputs. Research produces confirmed requirements through facilitated conversation — the skill has opinions, matches the user's energy, and knows when to stop asking. Plan produces a plan file with phased implementation, skill assignments per phase, model overrides, and done-when items with unique IDs. Build consumes that plan file mechanically — worktree isolation, subagent dispatch, TDD red-green cycles, structured commits with epistemic-status trailers, trust reports. The plan is a contract between plan and build. Each stage can be used independently or chained.
 
 > Requirements, architecture, and execution as separate concerns. The AI that clarifies your idea is not the same invocation that implements it.
 
@@ -38,7 +38,7 @@ The system is structured as a Claude Code plugin: 19 skills, 4 commands, 2 agent
 
 **Skills** are the knowledge layer. Each encodes a specific engineering discipline as an actionable protocol — not documentation to read, but procedures to follow. They're organized by source: `cc-*` skills from Code Complete (debugging, control flow, defensive programming, refactoring, quality practices), `aposd-*` from A Philosophy of Software Design (deep modules, complexity reduction, correctness verification), `gof-*` for Gang of Four patterns, `ca-*` for Clean Architecture boundaries, and `welc-*` for legacy code. Skills are invoked by agents during builds, loaded during reviews, and available standalone.
 
-**Commands** are the workflow layer. `/research` facilitates requirements discovery. `/plan` produces implementation plans with complexity-adaptive tracks (Quick/Standard/Full). `/building` executes plans through gated phases with subagent dispatch. `/debug` guides scientific debugging. Commands orchestrate — they dispatch agents, manage tasks, enforce gates, and handle failures.
+**Commands** are the workflow layer. `/research` facilitates requirements discovery. `/plan` produces implementation plans with complexity-adaptive tracks (Quick/Standard/Full). `/build` executes plans through gated phases with subagent dispatch. `/debug` guides scientific debugging. Commands orchestrate — they dispatch agents, manage tasks, enforce gates, and handle failures.
 
 **References** are the shared-knowledge layer. Pre-gate, implementation, and post-gate standards are distilled from multiple skills into single files that agents load once instead of invoking 3-4 separate skills. Dispatch templates, gate failure protocols, worktree gates, and trust reports live here. When a source skill changes, the distilled reference is audited for drift — the provenance is tracked in HTML comments.
 

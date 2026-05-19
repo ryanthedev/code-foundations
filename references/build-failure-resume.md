@@ -1,6 +1,6 @@
 # Build Failure & Resume Protocol
 
-Used by the orchestrator (`commands/building.md`) when implementation encounters a blocker that the per-phase Gate Failure Protocol cannot resolve, or when resuming a previously blocked plan.
+Used by the orchestrator (`commands/build.md`) when implementation encounters a blocker that the per-phase Gate Failure Protocol cannot resolve, or when resuming a previously blocked plan.
 
 These are cold paths — they fire only on real failures or explicit resume.
 

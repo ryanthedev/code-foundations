@@ -1,6 +1,6 @@
-# Plan ↔ Building Integration
+# Plan ↔ Build Integration
 
-How `/code-foundations:plan` and `/code-foundations:building` chain together. Reference material — orchestrator does not need this hot path.
+How `/code-foundations:plan` and `/code-foundations:build` chain together. Reference material — orchestrator does not need this hot path.
 
 ---
 
@@ -16,7 +16,7 @@ How `/code-foundations:plan` and `/code-foundations:building` chain together. Re
   ↓
 [Set thinking effort to default — plan has the reasoning, orchestration doesn't need max effort]
   ↓
-/code-foundations:building .code-foundations/plans/YYYY-MM-DD-topic.md
+/code-foundations:build .code-foundations/plans/YYYY-MM-DD-topic.md
   ↓
 [Worktree Gate → creates .claude/worktrees/<slug>/]
 [Checklist execution in worktree]
@@ -35,7 +35,7 @@ Claude Instance 1                        Claude Instance 2
   → saves plan                              → saves plan
   → clear + build                         → clear + build
 
-/building (worktree: auth-system)       /building (worktree: notifications)
+/build (worktree: auth-system)       /build (worktree: notifications)
   → .claude/worktrees/auth-system/        → .claude/worktrees/notifications/
   → feature/auth-system branch            → feature/notifications branch
   → all phases run isolated               → all phases run isolated
@@ -44,7 +44,7 @@ Claude Instance 1                        Claude Instance 2
                     User merges both to main when ready
 ```
 
-**Key constraint:** Each parallel build must target a different plan file. Never run two building instances against the same plan.
+**Key constraint:** Each parallel build must target a different plan file. Never run two build instances against the same plan.
 
 ---
 
@@ -62,13 +62,13 @@ Plans can optionally specify model per phase:
 - [ ] Implement optimizer
 ```
 
-If `**Model:**` is omitted, auto-detection applies (see Model Resolution + Gate Policy Detection in `commands/building.md`).
+If `**Model:**` is omitted, auto-detection applies (see Model Resolution + Gate Policy Detection in `commands/build.md`).
 
 ---
 
 ## Thinking Effort for Building
 
-Set thinking effort to **default** before building. The plan already contains the strategic reasoning — max effort during orchestration is wasted overhead. The subagents do the heavy thinking in their own contexts. Default effort on the orchestrator saves tokens without losing quality.
+Set thinking effort to **default** before build. The plan already contains the strategic reasoning — max effort during orchestration is wasted overhead. The subagents do the heavy thinking in their own contexts. Default effort on the orchestrator saves tokens without losing quality.
 
 - Planning: **max** effort
 - Building/execution: **default** effort

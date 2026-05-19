@@ -1,6 +1,6 @@
 # Merge Instructions
 
-Used in the REPORT phase of `commands/building.md`. Substituted into the trust report's "Merge Instructions" section based on workspace mode recorded by `references/worktree-gate.md`.
+Used in the REPORT phase of `commands/build.md`. Substituted into the trust report's "Merge Instructions" section based on workspace mode recorded by `references/worktree-gate.md`.
 
 ---
 

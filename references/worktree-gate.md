@@ -1,6 +1,6 @@
 # Worktree Gate (MANDATORY - First Check Before Any Build)
 
-The orchestrator (`commands/building.md` Phase 1: LOAD) must clear this gate before any other work. Multi-phase commits on `main` would have no rollback and pollute history.
+The orchestrator (`commands/build.md` Phase 1: LOAD) must clear this gate before any other work. Multi-phase commits on `main` would have no rollback and pollute history.
 
 ---
 
