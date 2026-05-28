@@ -61,6 +61,7 @@ Source: A Philosophy of Software Design (Ousterhout), Chapter 4, 6, 9
 - [ ] RF-5: "Temporal Decomposition?" - Structure mirrors execution order → Structure by knowledge encapsulation
 - [ ] RF-6: "False Abstraction?" - Interface hides info caller actually needs → Expose necessary information
 - [ ] RF-7: "Granularity Mismatch?" - Caller must do work that belongs in module → Move logic into module
+- [ ] RF-8: "Module absorbs failures silently?" - Module handles errors internally but gives callers no way to know something went wrong (no error return, no observable state change, no logging) → Errors are implementation details that can be hidden; failures are not — surface failure states even when hiding the mechanism
 
 ---
 
@@ -82,4 +83,4 @@ Source: A Philosophy of Software Design (Ousterhout), Chapter 4, 6, 9
 
 ---
 
-Total items: 35
+Total items: 36

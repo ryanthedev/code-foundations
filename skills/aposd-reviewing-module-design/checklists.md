@@ -62,6 +62,7 @@ Source: A Philosophy of Software Design (Ousterhout), Chapters 2, 4, 5, 7, 9
 - [ ] TA-2: "Special-General Mixture" - General mechanism has use-case code
 - [ ] TA-3: "Code Repetition" - Same code appears multiple places
 - [ ] TA-4: "Shallow Split" - Method split resulted in interface equal to implementation
+- [ ] SF-1: "Silent Failure" - Module swallows errors, returns defaults, or hides failure states from callers — operations can fail without the caller knowing
 
 ---
 
@@ -104,4 +105,4 @@ Source: A Philosophy of Software Design (Ousterhout), Chapters 2, 4, 5, 7, 9
 
 ---
 
-Total items: 36
+Total items: 37

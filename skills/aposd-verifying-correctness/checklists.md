@@ -38,6 +38,7 @@ Source: A Philosophy of Software Design (Ousterhout) + verification practices
 - [ ] EH-2: "No bare `except:` or `except Exception: pass`?"
 - [ ] EH-3: "Are error messages actionable (what failed, why, how to fix)?"
 - [ ] EH-4: "Are partial failures handled (rollback, cleanup, consistent state)?"
+- [ ] EH-5: "Does any error path silently continue as if nothing happened?" → Catch-log-continue, default returns on failure, and swallowed callbacks all create silent failures — verify each error path either surfaces to the caller or is observable (logs, metrics, alerts)
 
 **Red flag:** "Errors are rare" or "caller handles it" without checking caller
 
@@ -96,4 +97,4 @@ Source: A Philosophy of Software Design (Ousterhout) + verification practices
 
 ---
 
-Total items: 34
+Total items: 35

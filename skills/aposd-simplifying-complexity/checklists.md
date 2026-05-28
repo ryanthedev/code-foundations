@@ -95,7 +95,8 @@ Source: A Philosophy of Software Design (Ousterhout), Chapters 8, 10, 18
 - [ ] RF-4: "Over-defensive code?" - Checks for impossible conditions → Define errors out
 - [ ] RF-5: "Generic containers?" - `Pair<X,Y>` obscures meaning → Create named structure
 - [ ] RF-6: "Comment-dependent understanding?" - Code unreadable without comments → Refactor for obviousness
+- [ ] RF-7: "Error masked without observability?" - Applying Mask or Define-out but no logging, metrics, or alternate signal when the error actually occurs → Every masked error needs an observability escape hatch (log, metric, health check) so operators can detect when masking hides a real problem
 
 ---
 
-Total items: 44
+Total items: 45

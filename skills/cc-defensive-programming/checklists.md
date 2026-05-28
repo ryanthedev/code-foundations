@@ -124,7 +124,9 @@ GS-1 to GS-4 (General Standard), SM-1 to SM-6 (Security Modern), SA-1 to SA-4 (S
 - [ ] RF-8: "Unhandled promise rejections?" - Silent failures in async code → Add rejection handlers
 - [ ] RF-9: "Assertions for normal error handling?" - Using assert for expected errors → Use proper error handling mechanisms
 - [ ] RF-10: "Ignoring return codes?" - Not checking for failure → Check all return values
+- [ ] RF-11: "Catch-log-continue?" - Exception caught and logged but execution continues with no indication of failure to caller → Return error result, re-throw, or set observable error state
+- [ ] RF-12: "Fallback masking failure?" - Default value substituted on error (`catch { return null }`, `|| default`, `?? fallback`) without distinguishing "no result" from "operation failed" → Use Result type or distinct error sentinel; log the original error
 
 ---
 
-Total items: 31
+Total items: 33

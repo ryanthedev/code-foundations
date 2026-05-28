@@ -1,13 +1,12 @@
-<!-- Distilled from:
+<!-- Source skills (checklists are authoritative — this file provides framework only):
   - skills/cc-control-flow-quality
   - skills/aposd-simplifying-complexity
   - skills/code-clarity-and-docs
-  When any source skill changes substantively, audit this file for drift.
 -->
 
 # Implementation Standards
 
-Combined constraints from cc-control-flow-quality, aposd-simplifying-complexity, and code-clarity-and-docs. For full details, invoke individual skills.
+Framework and narrative guidance for implementation. Checklists referenced below are the authoritative source — Read() them.
 
 ---
 
@@ -30,6 +29,10 @@ Combined constraints from cc-control-flow-quality, aposd-simplifying-complexity,
 - Verify exit conditions are reachable
 
 **Booleans:** Use `true`/`false` not `0`/`1`. Use `!done` for bool, `balance != 0` for numeric. Fully parenthesize complex expressions. Extract complex booleans to named intermediate variables.
+
+**Checklists:**
+- `Read($CLAUDE_PLUGIN_ROOT/skills/cc-control-flow-quality/checklists/conditionals-and-structure.md)` — conditionals, sequential code, boolean expressions
+- `Read($CLAUDE_PLUGIN_ROOT/skills/cc-control-flow-quality/checklists/loops-and-advanced.md)` — loops, recursion, async/await, red flags (including RF-11: silent catch-continue, RF-12: empty default/else)
 
 ---
 
@@ -64,6 +67,8 @@ All three must be YES to pull down. Pulling UNRELATED complexity into a module c
 
 **Configuration parameters are incomplete solutions.** Every parameter pushes complexity to users. Prefer dynamic computation over static configuration.
 
+**Checklist:** `Read($CLAUDE_PLUGIN_ROOT/skills/aposd-simplifying-complexity/checklists.md)` — apply Error Reduction Hierarchy, Validation Gates, and Red Flags (including RF-7: error masked without observability).
+
 ---
 
 ## Comments and Naming
@@ -91,6 +96,8 @@ All three must be YES to pull down. Pulling UNRELATED complexity into a module c
 - Hard to describe the routine → design is unclear
 - Hard to pick a name → responsibility is unclear
 - Comment needed to clarify name → name is wrong
+
+**Checklist:** `Read($CLAUDE_PLUGIN_ROOT/skills/code-clarity-and-docs/checklists.md)` — apply Comments, Naming, and Red Flags sections.
 
 ---
 

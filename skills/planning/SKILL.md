@@ -197,10 +197,18 @@ Otherwise                                                       -> sonnet
 **Why Sonnet is the default, not omit:** Omit means inherit the user's session model -- and plan tells the user to crank to max effort, so Opus propagates to every subagent. Most code-touching phases (test, fix, validate, implement, wire, helper, hook, integration) are mechanical translation work that runs faster and cheaper on Sonnet without measurable quality loss. Reserve Opus for the keyword-flagged design-heavy phases.
 
 **Skill assignment (EVERY phase MUST have `**Skills:**` field):**
-1. Scan system-reminder for all available skills (`plugin:skill-name` lines)
-2. Match to phase goal, scope, and work type (tech stack, task type, domain)
-3. Exclude workflow commands (plan, build, debug, research)
-4. Write `**Skills:**` on every phase -- `none -- [reason]` valid, omission NOT valid
+
+**STOP. Before writing any `**Skills:**` field, do this:**
+1. Read the system-reminder in this conversation — find every line with a skill name (format: `plugin:skill-name` or `skill-name`)
+2. For each skill, read its description (shown next to its name in the system-reminder)
+3. For each phase, compare the phase's goal and scope against every skill's description and trigger conditions
+4. Assign skills whose triggers match the phase work. Most phases match 1-3 skills.
+5. Exclude workflow commands (plan, build, debug, research, code-standards, clarify)
+6. Write `**Skills:**` on every phase — `none -- [reason]` valid, omission NOT valid
+
+**`none` is the exception, not the default.** If a phase writes code, designs an API, refactors, handles errors, touches control flow, or modifies existing untested code — there is almost certainly a matching skill. Writing `none` for a code-writing phase without checking every available skill description is a plan defect.
+
+Skills affect gate policy: phases WITH skills get Full gate. This is intentional — skills mean the work is complex enough to warrant review.
 
 ### Plan File Schema
 
@@ -267,7 +275,9 @@ Checklist:
   approach notes only non-discoverable, file hints present, done-when observable + has DW-ID, YAGNI
 - Coherence: no contradictions, Phase N output matches N+1 input,
   user-observable output exists, high-uncertainty phases early
-- Skills: every phase has Skills field, skills match work type, skills actually available
+- Skills: every phase has Skills field (not omitted), skills match work type,
+  each skill name matches an available skill in system-reminder (reject typos/nonexistent names),
+  code-writing phases with `none` justify why no skill's triggers match
 - Models: every phase has Model field populated (haiku/sonnet/opus -- never omitted)
 
 Output: PASS or FINDINGS with specific fix recommendations.

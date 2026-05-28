@@ -1,14 +1,13 @@
-<!-- Distilled from:
+<!-- Source skills (checklists are authoritative — this file provides framework only):
   - skills/aposd-verifying-correctness
   - skills/cc-quality-practices
   - skills/aposd-reviewing-module-design
   - skills/cc-defensive-programming
-  When any source skill changes substantively, audit this file for drift.
 -->
 
 # Post-Gate Review Standards
 
-Combined constraints from aposd-verifying-correctness, cc-quality-practices, aposd-reviewing-module-design, and cc-defensive-programming. For full details, invoke individual skills.
+Framework and narrative guidance for post-gate reviews. Checklists referenced below are the authoritative source — Read() them.
 
 ---
 
@@ -29,45 +28,13 @@ Before checking code quality, verify the implementation satisfies requirements.
 
 For each dimension: detect if it applies, verify if YES, mark N/A with reason if NO.
 
-**Concurrency** (shared state, async, web handlers, background tasks):
-- All shared mutable state identified and protected
-- No TOCTOU gaps
-- Lock ordering consistent
+Dimensions: **Concurrency** (shared state, async, web handlers, background tasks), **Error Handling** (I/O, external calls, parsing, user input), **Resources** (file handles, connections, locks, caches, threads), **Boundaries** (collections, strings, numerics, optionals), **Security** (untrusted input).
 
-**Error Handling** (I/O, external calls, parsing, user input):
-- Each failure point has explicit handling or intentional propagation
-- No bare catch / `except Exception: pass`
-- Error messages are actionable (what, why, how to fix)
-- Partial failures handled (rollback, cleanup, consistent state)
-
-**Resources** (file handles, connections, locks, caches, threads):
-- Every acquire has corresponding release in finally/using/destructor
-- Release happens on error paths too
-- Bounded growth (caches have limits)
-
-**Boundaries** (collections, strings, numerics, optionals):
-- Empty: `[]`, `""`, `null`, `0`
-- Single item (often different from N items)
-- Maximum size (memory? time?)
-
-**Security** (untrusted input — any data not provably controlled by current code path):
-- Input validated before use
-- No string concatenation for SQL/shell/HTML
-- Path traversal prevented
-- Secrets not logged or exposed in errors
+**Checklist:** `Read($CLAUDE_PLUGIN_ROOT/skills/aposd-verifying-correctness/checklists.md)` — apply all sections that match detected dimensions.
 
 ---
 
 ## Defensive Programming
-
-**Crisis triage (EMERGENCY ONLY — 2 min, 5 checks = 80% of defensive bugs):**
-1. External input validated at boundaries?
-2. Return values checked for all external calls?
-3. Error paths tested (not just happy path)?
-4. Assertions on critical invariants (no side effects — code inside assertions disappears in production)?
-5. Resources released on all paths?
-
-For non-emergency review, use the full 21-item checklist: `Skill(code-foundations:cc-defensive-programming)`.
 
 **Assertions vs Error Handling — different tools for different conditions:**
 - **Assertion:** Condition that should NEVER be true (programmer bug). Use for internal invariants.
@@ -80,6 +47,8 @@ For non-emergency review, use the full 21-item checklist: `Skill(code-foundation
 **Barricade caveat:** Barricades reduce redundant validation but do NOT replace defense-in-depth for security-critical code. Ask: "If the barricade validation has a bug, what happens?"
 
 **Correctness vs Robustness:** Safety-critical = shut down over wrong result. Consumer apps = keep running. B2B/data pipelines = analyze per case. This is a choice, not a law.
+
+**Checklist:** `Read($CLAUDE_PLUGIN_ROOT/skills/cc-defensive-programming/checklists.md)` — apply General, Exceptions, Security, and Red Flags sections. Pay special attention to RF-11 (catch-log-continue) and RF-12 (fallback masking failure).
 
 ---
 
@@ -99,6 +68,8 @@ For non-emergency review, use the full 21-item checklist: `Skill(code-foundation
 
 **Pass-through methods** that delegate with the same API signal a layer problem. Validation test: trace a single operation through layers — does the abstraction change at each call? If not, a layer isn't adding value.
 
+**Checklist:** `Read($CLAUDE_PLUGIN_ROOT/skills/aposd-reviewing-module-design/checklists.md)` — apply Complexity Symptoms, Module Depth, Information Hiding, and Quick Reference Red Flags (including SF-1: Silent Failure).
+
 ---
 
 ## Testing Quality
@@ -110,6 +81,8 @@ For non-emergency review, use the full 21-item checklist: `Skill(code-foundation
 **Preparation finds 90% of inspection defects.** The meeting finds only 10% more. Invest in preparation.
 
 **No single technique exceeds 75% effectiveness.** Combining techniques (review + testing + static analysis) nearly doubles detection rates.
+
+**Checklist:** `Read($CLAUDE_PLUGIN_ROOT/skills/cc-quality-practices/checklists/qa-and-testing.md)` — apply Test Cases section and Data-Flow Anomaly Patterns.
 
 ---
 
@@ -130,7 +103,7 @@ For non-emergency review, use the full 21-item checklist: `Skill(code-foundation
 - Security: [PASS/FAIL/N/A] — [evidence]
 
 ### Defensive Programming: [PASS/FAIL]
-[crisis triage results]
+[checklist results]
 
 ### Design Quality: [findings with severity]
 

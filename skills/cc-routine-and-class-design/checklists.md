@@ -83,7 +83,8 @@ Source: Code Complete 2nd Edition, Chapters 5, 6, 7
 - [ ] RF-8: "Input parameters modified?" - Confusing control flow → Use separate output variables or return values
 - [ ] RF-9: "Many data members (>7)?" - Class doing too much → Split into cohesive classes with focused responsibilities
 - [ ] RF-10: "First design shipped?" - Missed better alternatives → Always iterate and compare multiple design approaches
+- [ ] RF-11: "Routine hides failure as default?" - Function returns neutral value (null, empty, zero) on error indistinguishable from a valid "no result" → Use Result type, throw, or distinct sentinel so callers can tell success from failure
 
 ---
 
-Total items: 53
+Total items: 54

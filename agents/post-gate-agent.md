@@ -23,12 +23,31 @@ Bash(bash .code-foundations/build/scratch.sh)
 
 ---
 
-## STOP - Load Standards First
+## STOP - Load Standards and Checklists
 
-Read the combined post-gate review standards:
+Read the post-gate review standards:
 1. `Read($CLAUDE_PLUGIN_ROOT/references/post-gate-standards.md)`
 
-Do NOT proceed until standards are loaded.
+Then follow every `Read()` directive in that file — each points to an authoritative checklist. The standards provide framework and narrative; the checklists provide the items to verify.
+
+Do NOT proceed until standards and checklists are loaded.
+
+---
+
+## STOP - Load Skills and Checklists
+
+If the dispatch prompt includes an `## Additional Skills` section, load each listed skill. These are phase-specific skills assigned during planning — they add domain-specific verification on top of the standards.
+
+### Load Sequence (for EACH skill)
+
+1. `Skill([skill-name])` — loads SKILL.md content
+2. Read checklist files — **mandatory, do not skip:**
+   - If `$CLAUDE_PLUGIN_ROOT/skills/<skill-name>/checklists.md` exists → `Read()` it
+   - If `$CLAUDE_PLUGIN_ROOT/skills/<skill-name>/checklists/` directory exists → `Read()` every file in it
+
+Apply these checklists during Standards Verification (step 4) alongside the standard checklists. Note loaded skills in the review output.
+
+If no `## Additional Skills` section is present, skip this step — the standards checklists are sufficient.
 
 ---
 

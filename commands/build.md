@@ -99,15 +99,15 @@ Check plan status:
 Before creating phase tasks, resolve skills for all phases. Skills affect gate policy (phases with Skills get Full gate), so this must run first.
 
 1. `TaskCreate(subject: "SETUP: Skill Resolution", description: "Validate and resolve skill assignments for all phases.")`
-2. Scan system-reminder for all available skills (exclude workflow commands: plan, build, debug, research)
+2. Scan system-reminder for all available skills — read every skill's description and trigger conditions. Exclude workflow commands (plan, build, debug, research, code-standards, clarify).
 3. For each phase, check the plan's `**Skills:**` field:
-   - **Specific skills listed** → validate each exists in available skills. Warn on any missing.
-   - **`none -- [reason]`** → evaluate phase goal and scope against available skills. If a strong match exists, suggest adding it. Log why `none` was kept or what was added.
-   - **Field missing** → flag as plan defect (plan CHECK should have caught this). Add skills based on phase goal/scope.
-4. Update the plan file's `**Skills:**` fields with resolved assignments
+   - **Specific skills listed** → validate each exists in available skills. If a skill name doesn't match any available skill, STOP and ask the user before proceeding.
+   - **`none -- [reason]`** → compare phase goal and scope against every available skill's description. If a skill's triggers match the phase work, add it. Every phase MUST have at least one skill — skills exist for code, documentation, design, and more.
+   - **Field missing** → flag as plan defect. Add skills by matching phase goal/scope against available skill descriptions.
+4. Update the plan file's `**Skills:**` fields with resolved assignments.
 5. `TaskUpdate(status: "completed")`
 
-**Output:** Resolved skill map logged in the task. Phase task creation uses these resolved skills for gate policy detection.
+**CRITICAL: Re-read the plan file after Skill Resolution completes.** The plan was modified in step 4. All subsequent steps (gate policy detection, phase task creation, dispatch) MUST use the updated plan state — not the version from LOAD.
 
 ### Create Phase Tasks Upfront
 
@@ -168,11 +168,11 @@ Phase 3.2: REVIEW         → blockedBy: [3.1]
 | N.2 REVIEW | `code-foundations:post-gate-agent` | `references/post-gate-standards.md` |
 | Commit | Orchestrator (you) | N/A |
 
-**Standards files are combined references** distilled from individual skills. Agents Read() one file instead of loading 3-4 separate Skill() calls. Individual skills remain available for standalone invocation and code review.
+**Standards files provide framework and narrative.** They contain Read() directives pointing to authoritative checklists in individual skills. Agents read the standards file first, then follow each Read() directive to load the actual checklist items.
 
 ### Skills from Plan
 
-If the plan's phase has a `**Skills:**` field, include those skills in the agent dispatch prompt. The build-agent also does its own skill discovery if no skills are passed — but explicit skills from the plan take precedence.
+Every phase should have skills assigned. If a phase has a `**Skills:**` field, include those skills in BOTH the BUILD and REVIEW dispatch prompts. Skills flow through the full pipeline — BUILD uses them for implementation guidance, REVIEW uses them for verification.
 
 **Add this block to the dispatch prompt when `**Skills:**` is present:**
 ```
@@ -181,6 +181,8 @@ Before starting work, load the following skills using the Skill tool:
 - Skill([skill-1])
 - Skill([skill-2])
 ```
+
+**If BUILD discovers additional skills** (reported in its `### Skills Loaded` output), add those to the REVIEW dispatch's `## Additional Skills` block too. The REVIEW agent needs the same skill context to verify against.
 
 ---
 

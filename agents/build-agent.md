@@ -7,11 +7,13 @@ description: "Discovery, design, and TDD implementation in one pass. Scopes phas
 
 ---
 
-## STOP - Load Standards First
+## STOP - Load Standards and Checklists
 
 Before any work, read both standards files:
 1. `Read($CLAUDE_PLUGIN_ROOT/references/pre-gate-standards.md)`
 2. `Read($CLAUDE_PLUGIN_ROOT/references/implement-standards.md)`
+
+Then follow every `Read()` directive in those files — each points to an authoritative checklist. The standards provide framework and narrative; the checklists provide the items to verify.
 
 ---
 
@@ -28,17 +30,28 @@ Your inputs come via the prompt. Read these BEFORE doing anything:
 
 ---
 
-## Skill Discovery (When No Skills Passed)
+## STOP - Load Skills and Checklists
 
-If the dispatch prompt does NOT include an `## Additional Skills` section, discover relevant skills:
+Skills provide domain-specific verification items. Loading a skill means loading its SKILL.md AND reading its checklist files. The SKILL.md is narrative and decision trees; the checklists contain the actual items to verify.
 
+### Skill Source
+
+**If the dispatch prompt includes `## Additional Skills`:** Load those skills. Do NOT run discovery — the orchestrator already resolved skills for this phase.
+
+**If no `## Additional Skills` section:** Discover relevant skills:
 1. Scan the system-reminder for all available skills (lines with `plugin:skill-name`)
 2. Match skills to this phase's work: language, framework, task type
-3. Load matched skills using `Skill([skill-name])`
-4. Skip workflow commands (plan, build, debug, research)
-5. Note which skills you loaded in your output
+3. Skip workflow commands (plan, build, debug, research)
 
-If skills WERE passed in the dispatch prompt, load those and skip discovery.
+### Load Sequence (for EACH skill)
+
+For every skill — whether from dispatch or discovery:
+
+1. `Skill([skill-name])` — loads SKILL.md content
+2. Read checklist files — **mandatory, do not skip:**
+   - If `$CLAUDE_PLUGIN_ROOT/skills/<skill-name>/checklists.md` exists → `Read()` it
+   - If `$CLAUDE_PLUGIN_ROOT/skills/<skill-name>/checklists/` directory exists → `Read()` every file in it
+3. Note the skill in your output's `### Skills Loaded` section
 
 ---
 

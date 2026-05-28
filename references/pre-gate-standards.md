@@ -1,13 +1,12 @@
-<!-- Distilled from:
+<!-- Source skills (checklists are authoritative — this file provides framework only):
   - skills/cc-pseudocode-programming
   - skills/aposd-designing-deep-modules
   - skills/cc-routine-and-class-design
-  When any source skill changes substantively, audit this file for drift.
 -->
 
 # Pre-Gate Standards
 
-Combined constraints from cc-pseudocode-programming, aposd-designing-deep-modules, and cc-routine-and-class-design. For full details, invoke individual skills.
+Framework and narrative guidance for discovery and design. Checklists referenced below are the authoritative source — Read() them.
 
 ---
 
@@ -27,17 +26,13 @@ Write pseudocode before code. Iterating on pseudocode is cheaper than iterating 
 
 **Skip criteria (ALL must be true):** Simple accessor with NO logic, OR pass-through with NO transformation, OR single statement with zero decision points obvious from signature alone. If you're debating whether to skip, don't skip.
 
+**Checklist:** `Read($CLAUDE_PLUGIN_ROOT/skills/cc-pseudocode-programming/checklists.md)` — apply Prerequisites, Pseudocode Quality, and Red Flags (including RF-11: no failure surfacing plan).
+
 ---
 
 ## Design-It-Twice
 
 Never implement your first design. Generate 2-3 **radically different** approaches (not variations), sketch interfaces only, then compare.
-
-**Process integrity checks:**
-- [ ] Alternatives written out BEFORE evaluating (not just "thought through")
-- [ ] Comparison has at least one criterion where preferred option loses
-- [ ] If hybrid chosen, what's sacrificed from each parent is stated
-- [ ] Someone could reasonably disagree based on the same comparison
 
 **Comparison criteria (minimum required):** Interface simplicity, information hiding, caller ease of use, + domain-specific criterion.
 
@@ -47,6 +42,8 @@ Never implement your first design. Generate 2-3 **radically different** approach
 3. "Is this easy to use for my current needs?" — guard against over-generalization (red flag: "I need lots of wrapper code")
 
 **If none attractive:** Use identified problems to drive a new round of alternatives.
+
+**Checklist:** `Read($CLAUDE_PLUGIN_ROOT/skills/aposd-designing-deep-modules/checklists.md)` — apply Design-It-Twice Workflow, Process Integrity Checks, and Red Flags (including RF-8: module absorbs failures silently).
 
 ---
 
@@ -88,19 +85,7 @@ Never implement your first design. Generate 2-3 **radically different** approach
 | Temporal | REDESIGN | Unless the routine orchestrates (coordinates, delegates, dispatches) rather than performs direct work |
 | Procedural / Logical / Coincidental | REDESIGN | — |
 
----
-
-## Red Flags
-
-| Red Flag | Symptom | Action |
-|----------|---------|-------|
-| Shallow Module | Interface complexity rivals implementation | Combine with related functionality |
-| Classitis | Many small classes, little functionality each | Consolidate |
-| Single-Use Method | Designed for exactly one caller | Generalize |
-| Information Leakage | Same knowledge in multiple modules | Consolidate in one |
-| Temporal Decomposition | Structure mirrors execution order | Structure by knowledge |
-| False Abstraction | Interface hides info caller actually needs | Expose necessary information |
-| Granularity Mismatch | Caller does work that belongs in module | Move logic down |
+**Checklist:** `Read($CLAUDE_PLUGIN_ROOT/skills/cc-routine-and-class-design/checklists.md)` — apply Class Quality, High-Quality Routines, and Red Flags (including RF-11: routine hides failure as default).
 
 ---
 

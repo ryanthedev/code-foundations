@@ -133,10 +133,11 @@ Agent tool:
     - DW-N.2: [done-when item 2] → Status: ___ Evidence: ___
     - DW-N.X: [done-when item N...] → Status: ___ Evidence: ___
 
-    [if plan phase has **Skills:** field, include:]
+    [if plan phase has **Skills:** field OR BUILD agent reported additional skills, include:]
     ## Additional Skills
-    Before starting work, load the following skills using the Skill tool:
+    Load each skill AND read its checklist files before reviewing:
     - Skill([skill-from-plan])
+    [also include any skills from BUILD agent's "Skills Loaded" output that aren't already listed]
 
     ## Inputs
     - Plan: docs/plans/<plan-name>.md (Phase N section)

@@ -108,7 +108,8 @@ When full PPP is impractical, these 4 items are MANDATORY:
 - [ ] RF-8: "Ignoring compiler warnings?" - "Warnings don't matter" attitude → Hasty, unconsidered code
 - [ ] RF-9: "No test plan?" - "I'll figure it out later" → Will lead to untestable code
 - [ ] RF-10: "Reinventing the wheel?" - Didn't check libraries → Wasting time on solved problems
+- [ ] RF-11: "No failure surfacing plan?" - Error handling considered ("what can go wrong") but no plan for how callers learn about failures → For each failure mode, decide: error result, exception, observable state change, or documented justification for silencing
 
 ---
 
-Total items: 26
+Total items: 27
