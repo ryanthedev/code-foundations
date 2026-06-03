@@ -52,9 +52,13 @@ Corrections → update and re-confirm. If the response raises new open questions
 
 ## Quick Track (default for simple tasks)
 
-**Problem statement confirmed → plan → check → present → go.**
+**Problem statement confirmed → decompose → detail → cross-cut → save → check → present → go.** Even Quick is staged, just compressed — don't write all phase bodies in one shot.
 
-1. **Write the plan inline** -- 1-2 phases, 50-75 words each. Use this template per phase:
+1. **Decompose (skeleton).** For each of the 1-2 phases write only: name, one-line goal, difficulty. If there are 2 phases, add `**Depends on:**` and `**Produces:**` (what phase 1 hands phase 2). Write this skeleton to the plan file.
+
+2. **Skeleton checkpoint.** If 2 phases: `AskUserQuestion` showing the split + handoff — "Looks right" / "Adjust". If 1 phase: skip — nothing to decompose.
+
+3. **Detail each phase**, in order, one short pass each. Start with a one-line reframe — `Phase N: [name]. Consumes: [upstream Produces, or "nothing"]. Must produce: [Produces]. Difficulty: X.` — then fill the body in place using this template:
 
    ```markdown
    ### Phase N: [Name]
@@ -66,11 +70,15 @@ Corrections → update and re-confirm. If the response raises new open questions
    - IN: [covered]
    - OUT: [excluded]
 
+   **Produces:** [what downstream consumes -- omit if single phase]
+
    **Done when:**
    - [ ] DW-N.1: [Verifiable criterion]
    ```
 
-2. **Save** to `.code-foundations/plans/YYYY-MM-DD-<topic>.md` wrapped in plan file format:
+4. **Cross-cut.** Derive the test plan from the done-when items; record the test coverage level (ask user or default to 100%).
+
+5. **Finalize the file.** The plan was built progressively across steps 1-4; ensure it matches the schema. **Do NOT commit it.**
 
    ```markdown
    # Plan: [Topic]
@@ -84,20 +92,18 @@ Corrections → update and re-confirm. If the response raises new open questions
    - [constraints from shared step 3]
    ---
    ## Implementation Phases
-   [phases from step 3]
+   [phase bodies from step 3]
    ---
    ## Test Coverage
-   **Level:** [ask user or default to 100%]
+   **Level:** [from step 4]
    ## Test Plan
-   - [ ] [specific tests]
+   - [ ] [tests from step 4]
    ---
    ## Execution Log
    _To be filled during /code-foundations:build_
    ```
 
-   Do NOT commit the plan file.
-
-3. **Check** — dispatch a sonnet subagent to review the saved plan with fresh eyes:
+6. **Check** — dispatch a sonnet subagent to review the saved plan with fresh eyes:
 
    ```
    Agent: sonnet, "Review plan"
@@ -106,7 +112,7 @@ Corrections → update and re-confirm. If the response raises new open questions
    Checklist:
    - Structural: done-when items cover problem statement,
      no scope overlap, union covers full feature, done-when observable + has DW-ID, YAGNI
-   - Coherence: no contradictions, Phase N output matches N+1 input
+   - Coherence: no contradictions, phase 1's Produces matches what phase 2 consumes (if 2 phases)
    - Skills: every phase has Skills field, skills match work type, skills actually available
 
    Output: PASS or FINDINGS with specific fix recommendations.
@@ -114,11 +120,11 @@ Corrections → update and re-confirm. If the response raises new open questions
 
    PASS -> proceed. FINDINGS -> fix issues, then proceed.
 
-4. **Present and ask** via `AskUserQuestion`: "Here's the plan. Build it, adjust it, or tell me what to do?"
+7. **Present and ask** via `AskUserQuestion`: "Here's the plan. Build it, adjust it, or tell me what to do?"
 
-5. **If build:** Suggest default thinking effort, run `/code-foundations:build .code-foundations/plans/<plan>.md`.
+8. **If build:** Suggest default thinking effort, run `/code-foundations:build .code-foundations/plans/<plan>.md`.
 
-That's it. No EXPLORE, no 10-task pipeline. Quick track should take under 3 minutes from invocation to handoff.
+That's it. No EXPLORE, no 10-task pipeline. Quick track stays compressed — the staging is lightweight at 1-2 phases — and should take under 3 minutes from invocation to handoff.
 
 ---
 

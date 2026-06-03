@@ -82,6 +82,8 @@ Shared schema for plan/build workflow.
 
 **Dependencies:** [what must be done first, or "None"]
 
+**Produces:** [the handoff — what this phase hands the phase(s) that consume it; the explicit seam downstream phases depend on. "None" if nothing downstream consumes it.]
+
 ---
 
 ### Phase 2: [Phase Name]
@@ -185,6 +187,7 @@ Before saving plan:
 - [ ] Context clearly states what we're building
 - [ ] At least one phase in implementation checklist
 - [ ] Each phase has specific tasks (not vague goals)
+- [ ] Each phase has a **Produces** (handoff), or "None" if nothing downstream consumes it
 - [ ] **Test coverage level specified** (default: 100%)
 - [ ] Test plan has at least one item
 - [ ] No hypothetical/YAGNI features included

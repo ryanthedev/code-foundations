@@ -6,7 +6,9 @@ user-invocable: false
 
 # Skill: planning
 
-Standard/Full planning pipeline: **Discover -> Classify -> Explore -> Detail -> Save -> Check -> Confirm -> Handoff**
+Standard/Full planning pipeline: **Discover -> Classify -> Explore -> Decompose -> Detail -> Cross-cut -> Save -> Check -> Confirm -> Handoff**
+
+The plan is written in stages, not one shot: DECOMPOSE fixes the phase shape and seams, DETAIL fills one phase at a time with a reset between each, CROSS-CUT derives the whole-plan sections. Each stage writes to the file in place.
 
 The plan is a contract between plan and build. It specifies WHAT and WHY at the strategic level, with explicit interfaces between phases.
 
@@ -14,15 +16,17 @@ The plan is a contract between plan and build. It specifies WHAT and WHY at the 
 
 ### Load Design Standards
 
-Before any work: `Read($CLAUDE_PLUGIN_ROOT/references/pre-gate-standards.md)`
+Before any work: `Read(${CLAUDE_PLUGIN_ROOT}/references/pre-gate-standards.md)`
 
 ### Create Progress Tasks
 
 `TaskCreate` for each step, `TaskUpdate` with `blockedBy` to enforce ordering:
 
 ```
-DISCOVER: Codebase search | DISCOVER: Questioning | CLASSIFY | EXPLORE | DETAIL | SAVE | CHECK | CONFIRM | HANDOFF
+DISCOVER: Codebase search | DISCOVER: Questioning | CLASSIFY | EXPLORE | DECOMPOSE | DETAIL | CROSS-CUT | SAVE | CHECK | CONFIRM | HANDOFF
 ```
+
+During DETAIL, add one sub-task per phase under it (one `TaskCreate` each), worked in DAG order.
 
 **CHECK runs on all tracks** — never skip independent review.
 
@@ -34,7 +38,7 @@ DISCOVER: Codebase search | DISCOVER: Questioning | CLASSIFY | EXPLORE | DETAIL 
 
 **Before asking ANY questions**, load `Skill(code-foundations:code-standards)` to generate or update `docs/code-standards.md`. The skill handles staleness detection, codebase scanning, legacy migration, and writing.
 
-**See also:** [pattern-reuse-gate.md]($CLAUDE_PLUGIN_ROOT/references/pattern-reuse-gate.md)
+**See also:** [pattern-reuse-gate.md](${CLAUDE_PLUGIN_ROOT}/references/pattern-reuse-gate.md)
 
 ### 1b: Clarify Intent
 
@@ -113,13 +117,15 @@ After presenting the approach table, **name a recommendation with 1-sentence rat
 
 **Hard gate: Cannot proceed to DETAIL until the user picks an approach via `AskUserQuestion`.** Writing "Going with X" and moving on is a violation — the user must answer. No silent defaults, no "I'll flag it at confirm."
 
-**Question style:** See [adaptive-questioning.md]($CLAUDE_PLUGIN_ROOT/references/adaptive-questioning.md). Encode the recommendation in the option labels (e.g., "Use JWT (recommended)") so confirmatory mode works inside the structured tool.
+**Question style:** See [adaptive-questioning.md](${CLAUDE_PLUGIN_ROOT}/references/adaptive-questioning.md). Encode the recommendation in the option labels (e.g., "Use JWT (recommended)") so confirmatory mode works inside the structured tool.
 
 Record chosen approach, rationale, and fallback.
 
 ---
 
-## Step 4: DETAIL
+## Step 4: DECOMPOSE
+
+Get the *shape* right before investing in phase bodies. Write the skeleton only — no internals yet.
 
 ### The Plan Is a Contract
 
@@ -127,11 +133,56 @@ The plan specifies WHAT and WHY. Subagents determine HOW. Four readers: orchestr
 
 **No implementation details in phases** -- pre-gate writes pseudocode after fresh discovery. **Plans must be pipeline-compatible** -- deterministic rules, not interactive user prompts between sub-phases.
 
+### Define the Phases as a DAG
+
+For each phase, write only:
+
+- **Name** + **one-line goal**
+- **Depends on / Unlocks** — the edges
+- **Produces:** what this phase hands the phase(s) that consume it — the explicit seam. This is the interface the contract promises; designing it now is exactly what one-shotting skips.
+- **Difficulty:** LOW / MEDIUM / HIGH
+
+### YAGNI Gate + Phase Sizing
+
+Before accepting each phase: Is it needed for success criteria? Could we ship without it? If "not needed now" -> remove. **Granularity test:** each phase produces a deliverable meaningful to the orchestrator and verifiable by post-gate. If it's an internal component of another phase's deliverable, fold it in.
+
+Phase counts: Medium 3-5, Complex 5-7. Prefer fewer. Express independent phases as DAG -- don't artificially linearize.
+
+### Write the Skeleton to the File
+
+Create the plan file now (see Step 7 schema): header + Context + Constraints + Chosen Approach, then one header per phase carrying name, goal, Depends on / Unlocks, Produces, Difficulty. The file is built **progressively** across DECOMPOSE -> DETAIL -> CROSS-CUT -> SAVE — recoverable if interrupted. Do not commit it.
+
+### Skeleton Checkpoint
+
+**`AskUserQuestion`** — present the phase shape and the handoffs (Produces edges). Options:
+- "Looks right" -- proceed to DETAIL
+- "Adjust" -- user names what's off; revise the skeleton and re-present
+
+Lightweight react-or-pass. Catching a wrong decomposition here is far cheaper than after the bodies are written.
+
+---
+
+## Step 5: DETAIL
+
+Fill in one phase at a time. **Create a task per phase** (`TaskCreate`, ordered by the DAG) and work them in order — a deliberate stop-and-reset so each phase gets fresh attention instead of degrading across one long pass.
+
+### Per-Phase Loop
+
+For each phase task, in DAG order:
+
+**1. Reframe** (the reset — write it before the body):
+
+> Phase N: [name]. Consumes: [upstream Produces, or "nothing -- entry phase"]. Must produce: [this phase's Produces]. Difficulty: [X].
+
+**2. Write the body** using the phase template below.
+
+**3. Complete the task**, then move to the next phase.
+
 ### Phase Template
 
 ```markdown
 ### Phase N: [Name]
-**Model:** [recommended model]
+**Model:** [assigned at SAVE]
 **Skills:** [assigned at SAVE -- skills or `none -- [reason]`]
 
 **Goal:** [One sentence (Simple) | 1-2 sentences (Medium/Complex)]
@@ -146,18 +197,19 @@ The plan specifies WHAT and WHY. Subagents determine HOW. Four readers: orchestr
 **Approach notes:** [non-discoverable user decisions -- omit if none]
 **File hints:** `path/` -- [why relevant]
 **Depends on:** [Phase X] | **Unlocks:** [Phase Y]
+**Produces:** [what downstream consumes -- carried from skeleton]
 [/Medium/Complex only]
 
 **Done when:**
 - [ ] DW-N.1: [verifiable criterion]
 
 [Medium/Complex only]
-**Difficulty:** LOW / MEDIUM / HIGH
+**Difficulty:** LOW / MEDIUM / HIGH  [carried from skeleton]
 **Uncertainty:** [what could change, or "None"]
 [/Medium/Complex only]
 ```
 
-**DW-ID format:** `DW-{phase}.{item}` -- every done-when item gets a stable ID.
+**DW-ID format:** `DW-{phase}.{item}` -- every done-when item gets a stable ID. **200-word cap per phase body.**
 
 ### Approach Notes
 
@@ -165,15 +217,35 @@ Only non-discoverable user decisions. **Test:** could codebase search find it? I
 - Good: "Use JWT not sessions -- user chose stateless for horizontal scaling"
 - Bad: "Create a UserService class with getUser(), createUser()" (implementation detail)
 
-### YAGNI Gate + Phase Sizing
+---
 
-Before each phase: Is it needed for success criteria? Could we ship without it? If "not needed now" -> remove. **Phase granularity test:** each phase produces a deliverable meaningful to the orchestrator and verifiable by post-gate. If it's an internal component of another phase's deliverable, fold it in.
+## Step 6: CROSS-CUT
 
-Phase counts: Medium 3-5, Complex 5-7. Prefer fewer. 200-word cap per phase. Express independent phases as DAG -- don't artificially linearize.
+Derive the whole-plan sections now that every phase body exists — they fall out of the full phase set.
+
+### Test Coverage (MANDATORY -- ask first)
+
+`AskUserQuestion`: "How much test coverage?" Options: 100% (recommended), Backend only, Backend + frontend, None, Per-phase. Record under `## Test Coverage`. The level gates how much you derive next.
+
+### Test Plan
+
+Derive test items **from the done-when items** across all phases, to the chosen coverage level: Unit + Integration + Manual.
+
+### Assumptions + Decision Log (Medium/Complex)
+
+Fill from the choices made during EXPLORE and DETAIL:
+- **Assumptions** table: assumption, confidence, verify-before-phase, fallback-if-wrong.
+- **Decision Log:** decision, alternatives, rationale, phase.
+
+### Notes
+
+Edge cases, gotchas, and open questions surfaced while detailing.
 
 ---
 
-## Step 5: SAVE
+## Step 7: SAVE
+
+The file already exists from DECOMPOSE, with bodies and cross-cut sections filled. SAVE annotates each phase with model + skill, then validates the whole file against the schema.
 
 ### File Location
 
@@ -232,7 +304,7 @@ Skills affect gate policy: phases WITH skills get Full gate. This is intentional
 
 ---
 ## Implementation Phases
-(Use phase template from Step 4)
+(Use phase template from Step 5)
 ---
 ## Test Coverage
 **Level:** [100% / Backend only / Backend + frontend / None / Per-phase]
@@ -257,11 +329,11 @@ _To be filled during /code-foundations:build_
 
 ### Save (MANDATORY)
 
-`mkdir -p .code-foundations/plans`, write plan file. **Do NOT commit** -- the plan is a working document, not a deliverable. Building handles worktree visibility by copying the plan file after worktree creation.
+The file was created at DECOMPOSE (`mkdir -p .code-foundations/plans` already done). Ensure every phase has `**Model:**` and `**Skills:**` populated and the schema is complete. **Do NOT commit** -- the plan is a working document, not a deliverable. Building handles worktree visibility by copying the plan file after worktree creation.
 
 ---
 
-## Step 6: CHECK
+## Step 8: CHECK
 
 **ALL tracks:** Dispatch subagent to review saved plan with fresh eyes. Never skip — independent review catches blind spots regardless of task size.
 
@@ -272,8 +344,9 @@ Prompt: Review .code-foundations/plans/<plan>.md for structural issues.
 Checklist:
 - Structural: every constraint maps to a phase, done-when items cover problem statement,
   no scope overlap, union covers full feature, depends-on references exist, no orphan phases,
-  approach notes only non-discoverable, file hints present, done-when observable + has DW-ID, YAGNI
-- Coherence: no contradictions, Phase N output matches N+1 input,
+  every phase has a Produces (handoff), approach notes only non-discoverable, file hints present,
+  done-when observable + has DW-ID, YAGNI
+- Coherence: no contradictions, each phase's Produces matches what its dependents consume,
   user-observable output exists, high-uncertainty phases early
 - Skills: every phase has Skills field (not omitted), skills match work type,
   each skill name matches an available skill in system-reminder (reject typos/nonexistent names),
@@ -287,19 +360,15 @@ After return: PASS -> proceed. FINDINGS -> fix issues, then proceed.
 
 ---
 
-## Step 7: CONFIRM
+## Step 9: CONFIRM
 
-**Present to user:** phases, goals, skill assignments, constraint coverage, review results.
+**Present to user:** phases, goals, skill assignments, constraint coverage, test coverage level (chosen at CROSS-CUT), review results.
 
 **Simple:** "Does this look right? Anything to add or change?"
 
 **Medium/Complex:** Structured summary with phases, constraint -> phase mapping, review results, remaining questions.
 
-**Question style:** See [adaptive-questioning.md]($CLAUDE_PLUGIN_ROOT/references/adaptive-questioning.md). If the user has been terse during planning, present the plan with assumptions stated rather than asking open-ended "thoughts?"
-
-### Test Coverage (MANDATORY)
-
-Ask: "How much test coverage?" Options: 100% (recommended), Backend only, Backend + frontend, None, Per-phase. Record in plan file under `## Test Coverage`.
+**Question style:** See [adaptive-questioning.md](${CLAUDE_PLUGIN_ROOT}/references/adaptive-questioning.md). If the user has been terse during planning, present the plan with assumptions stated rather than asking open-ended "thoughts?"
 
 ### Corrections
 
@@ -307,14 +376,14 @@ If changes requested: update plan. Structural changes -> re-run CHECK. Minor cha
 
 ---
 
-## Step 8: HANDOFF
+## Step 10: HANDOFF
 
 `AskUserQuestion`: "Plan saved. How would you like to proceed?"
 
 1. **Build now** (Recommended) -- Suggest default thinking effort, run `/code-foundations:build .code-foundations/plans/<plan>.md`
 2. **Tell me what to do** -- Numbered manual steps
 
-**Question style:** See [adaptive-questioning.md]($CLAUDE_PLUGIN_ROOT/references/adaptive-questioning.md). The "Recommended" tag on Build now is the confirmatory cue — keep it there.
+**Question style:** See [adaptive-questioning.md](${CLAUDE_PLUGIN_ROOT}/references/adaptive-questioning.md). The "Recommended" tag on Build now is the confirmatory cue — keep it there.
 
 ---
 
