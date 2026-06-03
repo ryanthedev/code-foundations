@@ -131,7 +131,7 @@ Get the *shape* right before investing in phase bodies. Write the skeleton only 
 
 The plan specifies WHAT and WHY. Subagents determine HOW. Four readers: orchestrator (phase names, ordering, DW counts), pre-gate (goal, scope, constraints, approach notes, file hints), post-gate (goal, done-when), human (strategic intent, rationale).
 
-**No implementation details in phases** -- pre-gate writes pseudocode after fresh discovery. **Plans must be pipeline-compatible** -- deterministic rules, not interactive user prompts between sub-phases.
+**No implementation details in phases** -- pre-gate writes pseudocode after fresh discovery. Cross-phase seams are the one exception: the Produces contract pins the interface; internals stay the build agent's latitude. **Plans must be pipeline-compatible** -- deterministic rules, not interactive user prompts between sub-phases.
 
 ### Define the Phases as a DAG
 
@@ -140,7 +140,20 @@ For each phase, write only:
 - **Name** + **one-line goal**
 - **Depends on / Unlocks** — the edges
 - **Produces:** what this phase hands the phase(s) that consume it — the explicit seam. This is the interface the contract promises; designing it now is exactly what one-shotting skips.
+- **Skills:** matched now so DETAIL can load them (see below)
 - **Difficulty:** LOW / MEDIUM / HIGH
+
+### Match Skills per Phase
+
+Skills are matched HERE so DETAIL can load them while writing phase bodies — a phase body written without domain knowledge is the planner guessing.
+
+1. Read the system-reminder in this conversation — find every line with a skill name (format: `plugin:skill-name` or `skill-name`) and its description
+2. For each phase, compare the phase's goal against every skill's description and trigger conditions
+3. Assign skills whose triggers match the phase work. Most phases match 1-3 skills.
+4. Exclude workflow commands (plan, build, debug, research, code-standards, clarify)
+5. Write `**Skills:**` on every skeleton header — `none -- [reason]` valid, omission NOT valid
+
+**`none` is the exception, not the default.** If a phase writes code, designs an API, refactors, handles errors, touches control flow, or modifies existing untested code — there is almost certainly a matching skill. DETAIL may add skills it discovers while writing bodies; SAVE validates the final set.
 
 ### YAGNI Gate + Phase Sizing
 
@@ -150,7 +163,7 @@ Phase counts: Medium 3-5, Complex 5-7. Prefer fewer. Express independent phases 
 
 ### Write the Skeleton to the File
 
-Create the plan file now (see Step 7 schema): header + Context + Constraints + Chosen Approach, then one header per phase carrying name, goal, Depends on / Unlocks, Produces, Difficulty. The file is built **progressively** across DECOMPOSE -> DETAIL -> CROSS-CUT -> SAVE — recoverable if interrupted. Do not commit it.
+Create the plan file now (see Step 7 schema): header + Context + Constraints + Chosen Approach, then one header per phase carrying name, goal, Depends on / Unlocks, Produces, Skills, Difficulty. The file is built **progressively** across DECOMPOSE -> DETAIL -> CROSS-CUT -> SAVE — recoverable if interrupted. Do not commit it.
 
 ### Skeleton Checkpoint
 
@@ -174,16 +187,18 @@ For each phase task, in DAG order:
 
 > Phase N: [name]. Consumes: [upstream Produces, or "nothing -- entry phase"]. Must produce: [this phase's Produces]. Difficulty: [X].
 
-**2. Write the body** using the phase template below.
+**2. Load the phase's skills** (matched at DECOMPOSE). For each skill not already loaded this conversation: `Skill(code-foundations:<name>)` + Read its checklist(s). Skills load once — later phases reuse them. Apply them while writing Constraints, Edge cases, and Done-when. If the work reveals a skill the skeleton missed, add it to the field.
 
-**3. Complete the task**, then move to the next phase.
+**3. Write the body** using the phase template below.
+
+**4. Complete the task**, then move to the next phase.
 
 ### Phase Template
 
 ```markdown
 ### Phase N: [Name]
 **Model:** [assigned at SAVE]
-**Skills:** [assigned at SAVE -- skills or `none -- [reason]`]
+**Skills:** [matched at DECOMPOSE, loaded during DETAIL -- skills or `none -- [reason]`]
 
 **Goal:** [One sentence (Simple) | 1-2 sentences (Medium/Complex)]
 
@@ -192,13 +207,15 @@ For each phase task, in DAG order:
 - OUT: [excluded]
 
 **Constraints:** [non-discoverable requirements -- omit if none]
+**Edge cases:** [boundaries + error paths this phase must handle -- skill-informed; omit if none]
 
 [Medium/Complex only]
 **Approach notes:** [non-discoverable user decisions -- omit if none]
 **File hints:** `path/` -- [why relevant]
 **Depends on:** [Phase X] | **Unlocks:** [Phase Y]
-**Produces:** [what downstream consumes -- carried from skeleton]
+**Produces:** [what downstream consumes -- carried from skeleton. If the seam is code, state the contract: signature / type / route / schema -- not prose]
 **Security-sensitive:** [yes -- ONLY if the phase touches auth, crypto, secrets, deserialization, or untrusted input; omit otherwise. Triggers 3-sample majority-vote REVIEW during build.]
+**Rollback:** [REQUIRED if the phase performs destructive or irreversible actions (data deletion, prod deploy, migration): the compensating action, or "point of no return -- [mitigation]"; omit otherwise]
 [/Medium/Complex only]
 
 **Done when:**
@@ -210,7 +227,7 @@ For each phase task, in DAG order:
 [/Medium/Complex only]
 ```
 
-**DW-ID format:** `DW-{phase}.{item}` -- every done-when item gets a stable ID. **200-word cap per phase body.**
+**DW-ID format:** `DW-{phase}.{item}` -- every done-when item gets a stable ID. **250-word cap per phase body.**
 
 ### Approach Notes
 
@@ -230,7 +247,11 @@ Derive the whole-plan sections now that every phase body exists — they fall ou
 
 ### Test Plan
 
-Derive test items **from the done-when items** across all phases, to the chosen coverage level: Unit + Integration + Manual.
+Load `Skill(code-foundations:cc-quality-practices)` + `Read(${CLAUDE_PLUGIN_ROOT}/skills/cc-quality-practices/checklists/qa-and-testing.md)` (skip if already loaded). Apply its Test Case Generation to derive test items, to the chosen coverage level:
+
+- **Per-DW:** one test item per done-when item across all phases (Unit + Integration + Manual)
+- **Boundary:** below / at / above each boundary named in the phases' Edge cases
+- **Dirty:** error paths, bad data, wrong size -- aim toward the 5:1 dirty:clean ratio; every code-touching phase contributes at least one dirty test
 
 ### Assumptions + Decision Log (Medium/Complex)
 
@@ -240,19 +261,19 @@ Fill from the choices made during EXPLORE and DETAIL:
 
 ### Notes
 
-Edge cases, gotchas, and open questions surfaced while detailing.
+Gotchas and open questions surfaced while detailing. Per-phase edge cases live in the phase bodies, not here.
 
 ---
 
 ## Step 7: SAVE
 
-The file already exists from DECOMPOSE, with bodies and cross-cut sections filled. SAVE annotates each phase with model + skill, then validates the whole file against the schema.
+The file already exists from DECOMPOSE, with bodies and cross-cut sections filled. SAVE annotates each phase with a model, validates the skill assignments made upstream, then validates the whole file against the schema.
 
 ### File Location
 
 `.code-foundations/plans/YYYY-MM-DD-<topic-slug>.md`
 
-### Model Detection + Skill Assignment
+### Model Detection + Skill Validation
 
 **Model detection per phase (MANDATORY -- every phase MUST have `**Model:**` populated):**
 
@@ -269,17 +290,14 @@ Otherwise                                                       -> sonnet
 
 **Why Sonnet is the default, not omit:** Omit means inherit the user's session model -- and plan tells the user to crank to max effort, so Opus propagates to every subagent. Most code-touching phases (test, fix, validate, implement, wire, helper, hook, integration) are mechanical translation work that runs faster and cheaper on Sonnet without measurable quality loss. Reserve Opus for the keyword-flagged design-heavy phases.
 
-**Skill assignment (EVERY phase MUST have `**Skills:**` field):**
+**Skill validation (EVERY phase MUST have `**Skills:**` field):**
 
-**STOP. Before writing any `**Skills:**` field, do this:**
-1. Read the system-reminder in this conversation — find every line with a skill name (format: `plugin:skill-name` or `skill-name`)
-2. For each skill, read its description (shown next to its name in the system-reminder)
-3. For each phase, compare the phase's goal and scope against every skill's description and trigger conditions
-4. Assign skills whose triggers match the phase work. Most phases match 1-3 skills.
-5. Exclude workflow commands (plan, build, debug, research, code-standards, clarify)
-6. Write `**Skills:**` on every phase — `none -- [reason]` valid, omission NOT valid
+Skills were matched at DECOMPOSE and refined during DETAIL. Validate the final set:
 
-**`none` is the exception, not the default.** If a phase writes code, designs an API, refactors, handles errors, touches control flow, or modifies existing untested code — there is almost certainly a matching skill. Writing `none` for a code-writing phase without checking every available skill description is a plan defect.
+1. Every phase has `**Skills:**` populated — `none -- [reason]` valid, omission NOT valid
+2. Every skill name matches an available skill in the system-reminder (reject typos/nonexistent names)
+3. No workflow commands (plan, build, debug, research, code-standards, clarify)
+4. Code-writing phases with `none` justify why no skill's triggers match — on any gap, re-run the DECOMPOSE matching procedure for that phase
 
 Skills affect gate policy: phases WITH skills get Full gate. This is intentional — skills mean the work is complex enough to warrant review.
 
@@ -345,11 +363,14 @@ Prompt: Review .code-foundations/plans/<plan>.md for structural issues.
 Checklist:
 - Structural: every constraint maps to a phase, done-when items cover problem statement,
   no scope overlap, union covers full feature, depends-on references exist, no orphan phases,
-  every phase has a Produces (handoff), phases touching auth/crypto/secrets/deserialization/
-  untrusted input are marked Security-sensitive, approach notes only non-discoverable,
-  file hints present, done-when observable + has DW-ID, YAGNI
+  every phase has a Produces (handoff) -- code seams stated as contracts (signature/type/
+  route/schema, not prose), phases with destructive/irreversible actions carry Rollback,
+  phases touching auth/crypto/secrets/deserialization/untrusted input are marked
+  Security-sensitive, approach notes only non-discoverable, file hints present,
+  done-when observable + has DW-ID, YAGNI
 - Coherence: no contradictions, each phase's Produces matches what its dependents consume,
   user-observable output exists, high-uncertainty phases early
+- Tests: test plan covers every DW item; boundary + dirty tests derived from phase Edge cases
 - Skills: every phase has Skills field (not omitted), skills match work type,
   each skill name matches an available skill in system-reminder (reject typos/nonexistent names),
   code-writing phases with `none` justify why no skill's triggers match

@@ -38,6 +38,7 @@ You have latitude over implementation detail INSIDE this phase. You have NONE ov
 
 - Do NOT add scope, skip a DW item, or decide a requirement is unnecessary.
 - Do NOT weaken, disable, or delete a test to make progress.
+- The plan's `**Produces:**` contract is scope. If the plan pins a cross-phase seam (signature/type/route/schema), implement it as specified or return UPDATE_PLAN — never silently redesign it. Downstream phases build against that contract.
 - New requirements, missing prerequisites, or an unmeetable DW item → return UPDATE_PLAN or BLOCKED. Never absorb scope silently.
 
 ### Done-When Traceability

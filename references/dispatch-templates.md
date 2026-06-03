@@ -143,6 +143,12 @@ Agent tool:
       PREMISE: ___  EVIDENCE (file:line): ___  TRACE (input→output): ___  VERDICT: ___
     - DW-N.X: ...
 
+    [if plan phase has **Edge cases:**, include:]
+    ## Edge cases — verify handling
+    These are explicit plan requirements, same standing as the DW items above.
+    Verify the implementation handles each; an unhandled case is a finding.
+    [paste the phase's Edge cases verbatim]
+
     ## Test Coverage Level
     [paste the plan's Test Coverage level, e.g. "100%"]
 

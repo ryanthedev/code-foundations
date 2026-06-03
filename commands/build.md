@@ -319,6 +319,7 @@ Substitute these placeholders in the chosen template:
 
 Substitute:
 - `[paste ALL DW items ...]` → every DW item from the plan phase, verbatim
+- `[if plan phase has **Edge cases:**, include:]` → emit the Edge cases block only when the plan phase has one, items verbatim
 - `[paste the plan's Test Coverage level]` → from the plan
 - `[implementation + test file paths from the BUILD agent's report]` → paths only, no commentary
 - `[exact test command + typecheck/lint commands]` → from project config (package.json scripts, Makefile, etc.)

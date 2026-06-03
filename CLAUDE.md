@@ -96,9 +96,9 @@ COMMIT:  Orchestrator commits directly after gates pass
 
 Gates load ONLY per-phase skills — there is no always-on skill set. Each agent definition carries its own protocol and works with zero skills assigned. The REVIEW dispatch is deliberately stripped of intent-framing (no plan context, no progress narrative, no discovery file) — the reviewer is an independent critic.
 
-`[plan Skills]` = skills assigned per phase during plan's SAVE step, then validated/resolved during build's SETUP skill resolution task.
+`[plan Skills]` = skills matched per phase at plan's DECOMPOSE step, loaded during DETAIL (they inform constraints, edge cases, and done-when items), validated at SAVE, then re-validated/resolved during build's SETUP skill resolution task.
 
-Model and skills are assigned during plan's SAVE step. Building's SETUP runs a one-time skill resolution task that validates assignments, fills gaps, and updates the plan before creating phase tasks (skills affect gate policy). Cannot proceed to next phase until current phase passes all gates including REVIEW PASS (Full gate).
+Models are assigned during plan's SAVE step. Building's SETUP runs a one-time skill resolution task that validates assignments, fills gaps, and updates the plan before creating phase tasks (skills affect gate policy). Cannot proceed to next phase until current phase passes all gates including REVIEW PASS (Full gate).
 
 ## Skill File Structure
 

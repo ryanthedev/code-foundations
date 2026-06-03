@@ -54,11 +54,11 @@ Corrections → update and re-confirm. If the response raises new open questions
 
 **Problem statement confirmed → decompose → detail → cross-cut → save → check → present → go.** Even Quick is staged, just compressed — don't write all phase bodies in one shot.
 
-1. **Decompose (skeleton).** For each of the 1-2 phases write only: name, one-line goal, difficulty. If there are 2 phases, add `**Depends on:**` and `**Produces:**` (what phase 1 hands phase 2). Write this skeleton to the plan file.
+1. **Decompose (skeleton).** For each of the 1-2 phases write only: name, one-line goal, matched skills (compare the phase goal against available skill descriptions in the system-reminder; `none -- [reason]` valid; exclude workflow commands), difficulty. If there are 2 phases, add `**Depends on:**` and `**Produces:**` (what phase 1 hands phase 2). Write this skeleton to the plan file.
 
 2. **Skeleton checkpoint.** If 2 phases: `AskUserQuestion` showing the split + handoff — "Looks right" / "Adjust". If 1 phase: skip — nothing to decompose.
 
-3. **Detail each phase**, in order, one short pass each. Start with a one-line reframe — `Phase N: [name]. Consumes: [upstream Produces, or "nothing"]. Must produce: [Produces]. Difficulty: X.` — then fill the body in place using this template:
+3. **Detail each phase**, in order, one short pass each. Start with a one-line reframe — `Phase N: [name]. Consumes: [upstream Produces, or "nothing"]. Must produce: [Produces]. Difficulty: X.` — then load the phase's matched skills if not already loaded (`Skill()` + checklist `Read()`; they inform Edge cases and Done-when), and fill the body in place using this template:
 
    ```markdown
    ### Phase N: [Name]
@@ -70,13 +70,15 @@ Corrections → update and re-confirm. If the response raises new open questions
    - IN: [covered]
    - OUT: [excluded]
 
-   **Produces:** [what downstream consumes -- omit if single phase]
+   **Edge cases:** [boundaries + error paths -- omit if none]
+
+   **Produces:** [what downstream consumes -- if the seam is code, state the contract (signature/type/route); omit if single phase]
 
    **Done when:**
    - [ ] DW-N.1: [Verifiable criterion]
    ```
 
-4. **Cross-cut.** Derive the test plan from the done-when items; record the test coverage level (ask user or default to 100%).
+4. **Cross-cut.** Derive the test plan from the done-when items, plus at least one dirty test (error path or boundary from Edge cases) per code-touching phase; record the test coverage level (ask user or default to 100%).
 
 5. **Finalize the file.** The plan was built progressively across steps 1-4; ensure it matches the schema. **Do NOT commit it.**
 
@@ -112,7 +114,9 @@ Corrections → update and re-confirm. If the response raises new open questions
    Checklist:
    - Structural: done-when items cover problem statement,
      no scope overlap, union covers full feature, done-when observable + has DW-ID, YAGNI
-   - Coherence: no contradictions, phase 1's Produces matches what phase 2 consumes (if 2 phases)
+   - Coherence: no contradictions, phase 1's Produces matches what phase 2 consumes (if 2 phases),
+     code seams in Produces stated as contracts (signature/type/route)
+   - Tests: test plan covers DW items + at least one dirty test per code-touching phase
    - Skills: every phase has Skills field, skills match work type, skills actually available
 
    Output: PASS or FINDINGS with specific fix recommendations.
