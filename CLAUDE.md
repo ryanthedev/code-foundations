@@ -85,13 +85,16 @@ Three-stage pattern for feature development:
 
 **Quality Gates (per phase during /code-foundations:build):**
 ```
-BUILD:   references/pre-gate-standards.md + references/implement-standards.md + [plan Skills]
+BUILD:   baseline discipline (DW→test traceability, TDD red-green, anchoring, scope clamp) + [plan Skills]
          (discovery + design → TDD implementation in one agent)
-REVIEW:  references/post-gate-standards.md + [plan Skills]
-         (Full gate only — standard/minimal use tests as gate)
+REVIEW:  debiased review protocol (execute-first, per-DW evidence + trace, anti-overcorrection) + [plan Skills]
+         (Full gate only — standard/minimal use tests as gate;
+          Security-sensitive phases get 3-sample majority-vote REVIEW)
 VERIFY:  performance-optimization + cc-refactoring-guidance + build + tests + lint
 COMMIT:  Orchestrator commits directly after gates pass
 ```
+
+Gates load ONLY per-phase skills — there is no always-on skill set. Each agent definition carries its own protocol and works with zero skills assigned. The REVIEW dispatch is deliberately stripped of intent-framing (no plan context, no progress narrative, no discovery file) — the reviewer is an independent critic.
 
 `[plan Skills]` = skills assigned per phase during plan's SAVE step, then validated/resolved during build's SETUP skill resolution task.
 

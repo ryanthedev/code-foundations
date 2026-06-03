@@ -3,9 +3,14 @@
 Subagent dispatch prompts used by the orchestrator (`commands/build.md`) when dispatching the build and post-gate agents. Templates are referenced by section header (e.g., `§ FULL_BUILD`) from the orchestrator and substituted with phase-specific values at dispatch time.
 
 Keeping these here instead of inline in `build.md`:
-- Keeps the orchestrator's hot path lean (~520 lines vs ~905)
+- Keeps the orchestrator's hot path lean
 - Lets templates evolve without touching orchestration logic
 - Makes the dispatch surface a single auditable file
+
+**Substitution rules (orchestrator):**
+- `[bracketed]` placeholders → phase-specific values.
+- `${CLAUDE_PLUGIN_ROOT}` → the absolute plugin root. This file is read at runtime, so the variable is NOT auto-substituted — replace it with the real path (you know it: it's the directory you read this template from, minus `/references/dispatch-templates.md`).
+- `## Additional Skills` blocks: for EACH skill assigned to the phase, emit its `Skill()` line, then one `Read()` line per checklist file — `${CLAUDE_PLUGIN_ROOT}/skills/<name>/checklists.md` if it exists, else every `.md` file under `${CLAUDE_PLUGIN_ROOT}/skills/<name>/checklists/`. Resolve with `ls` once during SETUP. Never emit a bare "load the skill" instruction without its checklist Read() lines.
 
 ---
 
@@ -48,8 +53,10 @@ Agent tool:
 
     [if plan phase has **Skills:** field, include:]
     ## Additional Skills
-    Before starting work, load the following skills using the Skill tool:
-    - Skill([skill-from-plan])
+    Execute EVERY line below, in order, BEFORE starting work:
+    - Skill(code-foundations:[skill-from-plan])
+    - Read([resolved checklist path for that skill])
+    [repeat Skill()+Read() pair(s) for each assigned skill]
 
     [if plan has Assumptions with "Verify Before Phase: N", include:]
     ## Assumption Verification
@@ -91,8 +98,10 @@ Agent tool:
 
     [if plan phase has **Skills:** field, include:]
     ## Additional Skills
-    Before starting work, load the following skills using the Skill tool:
-    - Skill([skill-from-plan])
+    Execute EVERY line below, in order, BEFORE starting work:
+    - Skill(code-foundations:[skill-from-plan])
+    - Read([resolved checklist path for that skill])
+    [repeat Skill()+Read() pair(s) for each assigned skill]
 
     ## Phase N: [name]
     [paste the full phase description from the plan]
@@ -108,45 +117,53 @@ Agent tool:
 
 Use for **Full gate** REVIEW sub-phases. Always uses `code-foundations:post-gate-agent`.
 
+**Debiasing rules (do not violate):** the reviewer must receive NO intent-framing. Do NOT include the plan's Context/problem statement, progress summaries ("Completed Phase…"), the discovery file, or any account of what the build agent did or intended. Requirements + files + commands only. If the phase is marked `**Security-sensitive:** yes` in the plan, dispatch THREE independent copies of this prompt (separate Agent calls) and take the majority verdict.
+
 ```
 Agent tool:
 - subagent_type: "code-foundations:post-gate-agent"
 - model: [from plan's **Model:** field, or omit if not set]
 - description: "REVIEW Phase N"
 - prompt: |
-    Review Phase N implementation.
+    Independently verify the implementation in the files below against the
+    requirements below. You did not write this code and have no information
+    about how or why it was written. Do NOT assume it is correct or complete.
+    Assume requirements may be unmet and bugs may be present; verify each item
+    from scratch against the actual code and executed test results. Do NOT
+    introduce requirements that are not listed here.
 
-    ## Plan Context
-    [paste the Context section from the plan file]
-
-    ## Progress
-    [For Phase N>1: "Completed: Phase 1: [name] — [1 sentence summary]. Phase 2: ..."]
-    Current: Phase N of M
-
-    ## Done-When Items (DW-IDs) — Requirement Verification
-    For EACH item below, mark SATISFIED or NOT_SATISFIED with evidence
-    (file:line, test name, or observable behavior). Any NOT_SATISFIED → FAIL.
-    Do NOT skip items. These come from the original plan and may
-    include items the build agent missed.
+    ## Requirements to verify (Done-When items)
+    For EACH item, fill the template. A PASS verdict REQUIRES execution
+    evidence (a passing test you ran, or observed behavior) — not "implemented".
+    Do NOT skip items.
     [paste ALL DW items from the plan phase, verbatim:]
-    - DW-N.1: [done-when item 1] → Status: ___ Evidence: ___
-    - DW-N.2: [done-when item 2] → Status: ___ Evidence: ___
-    - DW-N.X: [done-when item N...] → Status: ___ Evidence: ___
+    - DW-N.1: [done-when item 1]
+      PREMISE: ___  EVIDENCE (file:line): ___  TRACE (input→output): ___  VERDICT: ___
+    - DW-N.2: [done-when item 2]
+      PREMISE: ___  EVIDENCE (file:line): ___  TRACE (input→output): ___  VERDICT: ___
+    - DW-N.X: ...
+
+    ## Test Coverage Level
+    [paste the plan's Test Coverage level, e.g. "100%"]
+
+    ## Files to review
+    [implementation + test file paths from the BUILD agent's report — paths only, no commentary]
+
+    ## How to run the suite
+    [exact test command + typecheck/lint commands for this project]
+
+    [ONLY if this phase consumes an interface from a prior phase — neutral
+    wording, no "completed/done/working" language:]
+    ## Dependency
+    Phase N consumes [interface X] defined in [file:line]. Treat its contract
+    as given; do not re-review it, but flag if this phase misuses it.
 
     [if plan phase has **Skills:** field OR BUILD agent reported additional skills, include:]
     ## Additional Skills
-    Load each skill AND read its checklist files before reviewing:
-    - Skill([skill-from-plan])
-    [also include any skills from BUILD agent's "Skills Loaded" output that aren't already listed]
-
-    ## Inputs
-    - Plan: docs/plans/<plan-name>.md (Phase N section)
-    [Full/Standard gate only:]
-    - Discovery + Design: .code-foundations/build/<plan-name>-phase-N-discovery.md
-    [Minimal gate: no discovery file exists]
-
-    ## Files Changed
-    [list files from BUILD subagent]
+    Execute EVERY line below BEFORE reviewing:
+    - Skill(code-foundations:[skill-from-plan])
+    - Read([resolved checklist path for that skill])
+    [repeat for each skill; also include skills from BUILD's "Skills Loaded" output not already listed]
 
     ## Output
     Write review to: .code-foundations/build/<plan-name>-phase-N-review.md
@@ -156,7 +173,7 @@ Agent tool:
 
 ## § CATCHUP_REVIEW
 
-Inserted dynamically before a Full gate phase when 2+ phases have run since the last REVIEW. Batches verification across accumulated Standard/Minimal phases.
+Inserted dynamically before a Full gate phase when 2+ phases have run since the last REVIEW. Batches verification across accumulated Standard/Minimal phases. Same debiasing rules as § REVIEW: no plan Context, no progress narrative, no discovery files.
 
 ```
 Agent tool:
@@ -164,24 +181,28 @@ Agent tool:
 - model: [REVIEW model for the upcoming Full phase]
 - description: "Catch-up REVIEW for Phases X-Y"
 - prompt: |
-    Batch review of Phases X through Y. These phases ran with Standard
-    or Minimal gate policy (tests-only verification). Review them now
-    before proceeding to Phase Z (Full gate).
+    Independently verify the implementations below against their requirements.
+    You did not write this code. Do NOT assume it is correct or complete.
+    Assume requirements may be unmet and bugs may be present; verify each item
+    from scratch against the actual code and executed test results. Do NOT
+    introduce requirements that are not listed here.
 
-    ## Plan Context
-    [paste the Context section from the plan file]
-
-    ## Phases to Review
+    ## Phases to verify
     [For each accumulated phase:]
     ### Phase X: [name]
-    Done-When Items:
-    - DW-X.1: [item] → Status: ___ Evidence: ___
-    Files changed: [list]
+    Requirements (fill the template per item; PASS requires execution evidence):
+    - DW-X.1: [item]
+      PREMISE: ___  EVIDENCE (file:line): ___  TRACE (input→output): ___  VERDICT: ___
+    Files: [implementation + test file paths]
 
     ### Phase Y: [name]
-    Done-When Items:
-    - DW-Y.1: [item] → Status: ___ Evidence: ___
-    Files changed: [list]
+    Requirements:
+    - DW-Y.1: [item]
+      PREMISE: ___  EVIDENCE (file:line): ___  TRACE (input→output): ___  VERDICT: ___
+    Files: [implementation + test file paths]
+
+    ## How to run the suite
+    [exact test command + typecheck/lint commands]
 
     ## Cross-Phase Coherence
     Check that the accumulated phases work together:

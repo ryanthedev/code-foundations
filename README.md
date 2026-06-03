@@ -102,13 +102,13 @@ User: "/code-foundations:build .code-foundations/plans/2026-01-30-notifications.
 
 ### Quality Gates per Phase
 
-| Phase | Standards Loaded | What Gets Enforced |
-|-------|-----------------|-------------------|
-| BUILD | `references/pre-gate-standards.md` + `references/implement-standards.md` | Design-before-code, interface depth, control flow, naming, complexity |
-| REVIEW | `references/post-gate-standards.md` | Correctness, quality, module design, error handling |
+| Phase | Guidance | What Gets Enforced |
+|-------|----------|-------------------|
+| BUILD | Baseline discipline (agent definition) + per-phase skills | DW→test traceability, TDD red-green, test anchoring, scope clamp, plus assigned skill checklists |
+| REVIEW | Debiased review protocol (agent definition) + per-phase skills | Execute-first verification, per-requirement evidence + trace, anti-overcorrection verdict |
 | VERIFY | `performance-optimization`, `cc-refactoring-guidance` | Performance regressions, refactoring opportunities, build + tests + lint |
 
-Gate policy is adaptive: Full (BUILD + REVIEW), Standard (BUILD + tests), Minimal (BUILD only). Skills assigned per phase during plan's SAVE step.
+Gate policy is adaptive: Full (BUILD + REVIEW), Standard (BUILD + tests), Minimal (BUILD only). Skills assigned per phase during plan's SAVE step — gates load only those skills; each agent carries its own protocol. Security-sensitive phases get a 3-sample majority-vote REVIEW.
 
 The system saves every artifact to `.code-foundations/build/`. Per-phase commits enable rollback.
 

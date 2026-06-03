@@ -71,6 +71,7 @@ Extract from plan file:
 7. **Model overrides** - Optional `**Model:** <model>` per phase
 8. **Pipeline overrides** - Optional `**Pipeline:** direct` per phase
 9. **Assumptions** - Assumptions table with `Verify Before Phase` timing
+10. **Security-sensitive flags** - Optional `**Security-sensitive:** yes` per phase (triggers 3-sample REVIEW majority vote)
 
 **If Test Coverage is missing:** Default to "100% coverage" and inform user.
 
@@ -104,8 +105,9 @@ Before creating phase tasks, resolve skills for all phases. Skills affect gate p
    - **Specific skills listed** → validate each exists in available skills. If a skill name doesn't match any available skill, STOP and ask the user before proceeding.
    - **`none -- [reason]`** → compare phase goal and scope against every available skill's description. If a skill's triggers match the phase work, add it. Every phase MUST have at least one skill — skills exist for code, documentation, design, and more.
    - **Field missing** → flag as plan defect. Add skills by matching phase goal/scope against available skill descriptions.
-4. Update the plan file's `**Skills:**` fields with resolved assignments.
-5. `TaskUpdate(status: "completed")`
+4. **Resolve checklist paths** for every assigned skill (one `ls` pass): `${CLAUDE_PLUGIN_ROOT}/skills/<name>/checklists.md` if it exists, else every `.md` file under `${CLAUDE_PLUGIN_ROOT}/skills/<name>/checklists/`. Record the resolved path(s) per skill — dispatch prompts emit them as explicit `Read()` lines.
+5. Update the plan file's `**Skills:**` fields with resolved assignments.
+6. `TaskUpdate(status: "completed")`
 
 **CRITICAL: Re-read the plan file after Skill Resolution completes.** The plan was modified in step 4. All subsequent steps (gate policy detection, phase task creation, dispatch) MUST use the updated plan state — not the version from LOAD.
 
@@ -162,27 +164,29 @@ Phase 3.2: REVIEW         → blockedBy: [3.1]
 
 ### Agent Types Per Sub-Phase
 
-| Sub-Phase | Agent Type | Standards Loaded (baked into agent template) |
-|-----------|-----------|-------------------------------|
-| N.1 BUILD | `code-foundations:build-agent` | `${CLAUDE_PLUGIN_ROOT}/references/pre-gate-standards.md` + `${CLAUDE_PLUGIN_ROOT}/references/implement-standards.md` |
-| N.2 REVIEW | `code-foundations:post-gate-agent` | `${CLAUDE_PLUGIN_ROOT}/references/post-gate-standards.md` |
+| Sub-Phase | Agent Type | Guidance |
+|-----------|-----------|----------|
+| N.1 BUILD | `code-foundations:build-agent` | Baseline discipline in the agent definition (DW traceability, TDD red-green, anchoring, scope clamp) + per-phase skills from the dispatch prompt |
+| N.2 REVIEW | `code-foundations:post-gate-agent` | Debiased review protocol in the agent definition (execute-first, per-DW evidence + trace, anti-overcorrection verdict) + per-phase skills from the dispatch prompt |
 | Commit | Orchestrator (you) | N/A |
 
-**Standards files provide framework and narrative.** They contain Read() directives pointing to authoritative checklists in individual skills. Agents read the standards file first, then follow each Read() directive to load the actual checklist items.
+**Gates load ONLY per-phase skills.** There is no always-on skill set — each agent definition carries its own protocol and works with zero skills assigned. Skills arrive exclusively via the dispatch prompt's `## Additional Skills` block.
 
 ### Skills from Plan
 
 Every phase should have skills assigned. If a phase has a `**Skills:**` field, include those skills in BOTH the BUILD and REVIEW dispatch prompts. Skills flow through the full pipeline — BUILD uses them for implementation guidance, REVIEW uses them for verification.
 
-**Add this block to the dispatch prompt when `**Skills:**` is present:**
+**Add this block to the dispatch prompt when `**Skills:**` is present** — one `Skill()` line plus its resolved checklist `Read()` line(s) per skill (paths resolved during SETUP; substitute `${CLAUDE_PLUGIN_ROOT}` with the real plugin root — the dispatch prompt is plain text, nothing expands variables for the subagent):
 ```
 ## Additional Skills
-Before starting work, load the following skills using the Skill tool:
-- Skill([skill-1])
-- Skill([skill-2])
+Execute EVERY line below, in order, BEFORE starting work:
+- Skill(code-foundations:[skill-1])
+- Read([resolved checklist path for skill-1])
+- Skill(code-foundations:[skill-2])
+- Read([resolved checklist path for skill-2])
 ```
 
-**If BUILD discovers additional skills** (reported in its `### Skills Loaded` output), add those to the REVIEW dispatch's `## Additional Skills` block too. The REVIEW agent needs the same skill context to verify against.
+**If BUILD discovers additional skills** (reported in its `### Skills Loaded` output), add those to the REVIEW dispatch's `## Additional Skills` block too (with their checklist Read() lines). The REVIEW agent needs the same skill context to verify against.
 
 ---
 
@@ -309,15 +313,23 @@ Substitute these placeholders in the chosen template:
 
 **TaskUpdate → in_progress, then dispatch.**
 
-**Always use `code-foundations:post-gate-agent`.** Skills are baked into the agent template.
+**Always use `code-foundations:post-gate-agent`.**
 
-**Use `${CLAUDE_PLUGIN_ROOT}/references/dispatch-templates.md § REVIEW`.** Substitute the same placeholders as BUILD plus:
-- `[list files from BUILD subagent]` → file list returned by the BUILD task
-- `[Full/Standard gate only:] - Discovery + Design: ...` → include only when a discovery file exists; omit for Minimal gate
+**Use `${CLAUDE_PLUGIN_ROOT}/references/dispatch-templates.md § REVIEW`.** The reviewer is a debiased independent critic — research shows intent-framing ("this should work", progress summaries) collapses bug detection by up to 93pp. **Do NOT include:** the plan's Context section, any Progress block, the discovery file, or any account of what the BUILD agent did or intended.
+
+Substitute:
+- `[paste ALL DW items ...]` → every DW item from the plan phase, verbatim
+- `[paste the plan's Test Coverage level]` → from the plan
+- `[implementation + test file paths from the BUILD agent's report]` → paths only, no commentary
+- `[exact test command + typecheck/lint commands]` → from project config (package.json scripts, Makefile, etc.)
+- `[ONLY if this phase consumes an interface from a prior phase ...]` → emit the neutral Dependency note only for a real contract dependency; never use "completed/done/working" language
+- `## Additional Skills` → per Skills from Plan above (Skill() + Read() pairs)
+
+**Security-sensitive phases:** if the plan phase has `**Security-sensitive:** yes`, dispatch THREE independent REVIEW agents with the identical prompt (separate Agent calls — independence is the point), collect the three verdicts, and take the majority. Record all three verdicts in the execution log.
 
 **After REVIEW:**
 1. Read the review file
-2. If PASS → TaskUpdate → completed → commit (see Commit After Phase)
+2. If PASS (or 2-of-3 PASS for security-sensitive) → TaskUpdate → completed → commit (see Commit After Phase)
 3. If FAIL → do NOT mark completed → follow Gate Failure Protocol
 
 ---

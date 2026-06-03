@@ -14,9 +14,9 @@ The plan is a contract between plan and build. It specifies WHAT and WHY at the 
 
 **Thinking effort:** Planning benefits from max effort. If not already at max, suggest the user increase it before proceeding.
 
-### Load Design Standards
+### Load Design Vocabulary
 
-Before any work: `Read(${CLAUDE_PLUGIN_ROOT}/references/pre-gate-standards.md)`
+Before any work: `Skill(code-foundations:aposd-designing-deep-modules)` — depth, interfaces, and design-it-twice vocabulary for shaping phases and their Produces seams.
 
 ### Create Progress Tasks
 
@@ -198,6 +198,7 @@ For each phase task, in DAG order:
 **File hints:** `path/` -- [why relevant]
 **Depends on:** [Phase X] | **Unlocks:** [Phase Y]
 **Produces:** [what downstream consumes -- carried from skeleton]
+**Security-sensitive:** [yes -- ONLY if the phase touches auth, crypto, secrets, deserialization, or untrusted input; omit otherwise. Triggers 3-sample majority-vote REVIEW during build.]
 [/Medium/Complex only]
 
 **Done when:**
@@ -344,8 +345,9 @@ Prompt: Review .code-foundations/plans/<plan>.md for structural issues.
 Checklist:
 - Structural: every constraint maps to a phase, done-when items cover problem statement,
   no scope overlap, union covers full feature, depends-on references exist, no orphan phases,
-  every phase has a Produces (handoff), approach notes only non-discoverable, file hints present,
-  done-when observable + has DW-ID, YAGNI
+  every phase has a Produces (handoff), phases touching auth/crypto/secrets/deserialization/
+  untrusted input are marked Security-sensitive, approach notes only non-discoverable,
+  file hints present, done-when observable + has DW-ID, YAGNI
 - Coherence: no contradictions, each phase's Produces matches what its dependents consume,
   user-observable output exists, high-uncertainty phases early
 - Skills: every phase has Skills field (not omitted), skills match work type,

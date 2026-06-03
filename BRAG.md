@@ -34,15 +34,15 @@ Every plan phase has explicit done-when items (DW-1.1, DW-1.2, ...) that flow un
 
 ## How It Works
 
-The system is structured as a Claude Code plugin: 19 skills, 4 commands, 2 agent templates, and 17 reference documents.
+The system is structured as a Claude Code plugin: 19 skills, 4 commands, 2 agent templates, and 14 reference documents.
 
 **Skills** are the knowledge layer. Each encodes a specific engineering discipline as an actionable protocol — not documentation to read, but procedures to follow. They're organized by source: `cc-*` skills from Code Complete (debugging, control flow, defensive programming, refactoring, quality practices), `aposd-*` from A Philosophy of Software Design (deep modules, complexity reduction, correctness verification), `gof-*` for Gang of Four patterns, `ca-*` for Clean Architecture boundaries, and `welc-*` for legacy code. Skills are invoked by agents during builds, loaded during reviews, and available standalone.
 
 **Commands** are the workflow layer. `/research` facilitates requirements discovery. `/plan` produces implementation plans with complexity-adaptive tracks (Quick/Standard/Full). `/build` executes plans through gated phases with subagent dispatch. `/debug` guides scientific debugging. Commands orchestrate — they dispatch agents, manage tasks, enforce gates, and handle failures.
 
-**References** are the shared-knowledge layer. Pre-gate, implementation, and post-gate standards are distilled from multiple skills into single files that agents load once instead of invoking 3-4 separate skills. Dispatch templates, gate failure protocols, worktree gates, and trust reports live here. When a source skill changes, the distilled reference is audited for drift — the provenance is tracked in HTML comments.
+**References** are the orchestration-knowledge layer. Dispatch templates, gate failure protocols, worktree gates, plan schema, and trust reports live here. Engineering guidance lives in the skills themselves — gates load each phase's assigned skills (with their checklists) directly, and each agent definition carries its own protocol, so it works even with zero skills assigned.
 
-**Agents** are the execution layer. The build agent combines discovery, design, and TDD implementation in one pass — it scopes the phase, makes design decisions (design-it-twice), maps done-when items to test cases, then implements via red-green cycle. The post-gate agent reviews against five correctness dimensions (concurrency, errors, resources, boundaries, security), checks requirement fulfillment with evidence, and returns PASS or FAIL. The orchestrator never touches code directly during builds — it dispatches, waits, commits, and handles failures.
+**Agents** are the execution layer. The build agent combines discovery, design, and TDD implementation in one pass under an always-on baseline discipline: requirement→test traceability (no silent descoping), red-green cycle, test anchoring, and a scope clamp — design ceremony comes only from assigned skills. The post-gate agent is a debiased independent critic: it receives no intent-framing (no plan narrative, no progress summary, no build-agent reasoning — research shows such framing collapses bug detection by up to 93 percentage points), runs the test suite first, verifies each done-when item with evidence and an execution trace, checks five correctness dimensions (concurrency, errors, resources, boundaries, security), and returns a verdict that can only FAIL on demonstrated defects — never on inferred requirements or style opinions. Security-sensitive phases get a 3-sample majority-vote review. The orchestrator never touches code directly during builds — it dispatches, waits, commits, and handles failures.
 
 ## What Makes It Different
 

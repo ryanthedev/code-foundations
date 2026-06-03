@@ -84,6 +84,8 @@ Shared schema for plan/build workflow.
 
 **Produces:** [the handoff — what this phase hands the phase(s) that consume it; the explicit seam downstream phases depend on. "None" if nothing downstream consumes it.]
 
+**Security-sensitive:** yes | no — [optional; default no. Set `yes` when the phase touches auth, crypto, secrets, deserialization, or untrusted input. Triggers a 3-sample majority-vote REVIEW during build.]
+
 ---
 
 ### Phase 2: [Phase Name]
@@ -188,6 +190,7 @@ Before saving plan:
 - [ ] At least one phase in implementation checklist
 - [ ] Each phase has specific tasks (not vague goals)
 - [ ] Each phase has a **Produces** (handoff), or "None" if nothing downstream consumes it
+- [ ] Phases touching auth/crypto/secrets/deserialization/untrusted input are marked **Security-sensitive:** yes
 - [ ] **Test coverage level specified** (default: 100%)
 - [ ] Test plan has at least one item
 - [ ] No hypothetical/YAGNI features included
