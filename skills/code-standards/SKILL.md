@@ -62,7 +62,7 @@ Search the codebase for conventions. Adapt searches to what the project actually
 
 ### 4. Write
 
-Read the section templates before writing: `Read($SKILL_DIR/references/section-templates.md)`
+Read the section templates before writing: `Read(${CLAUDE_PLUGIN_ROOT}/skills/code-standards/references/section-templates.md)`
 
 **File format:**
 
@@ -111,7 +111,7 @@ Nine sections. Contrastive sections (DO/DON'T) come first — they resist confir
 8. **Technology Decisions** — Non-obvious choices and constraints only
 9. **Exemplar Files** — Pointers to "gold standard" files for common tasks
 
-See `$SKILL_DIR/references/section-templates.md` for detailed format per section.
+See `${CLAUDE_PLUGIN_ROOT}/skills/code-standards/references/section-templates.md` for detailed format per section.
 
 ---
 

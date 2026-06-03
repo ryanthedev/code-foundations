@@ -132,7 +132,7 @@ Techniques that are tedious but guaranteed to work. Use when quick approaches fa
 
 **If no pattern found:** You're potentially establishing one. Be deliberate.
 
-**See:** [pattern-reuse-gate.md]($CLAUDE_PLUGIN_ROOT/references/pattern-reuse-gate.md) for full gate protocol.
+**See:** [pattern-reuse-gate.md](${CLAUDE_PLUGIN_ROOT}/references/pattern-reuse-gate.md) for full gate protocol.
 
 ---
 
@@ -148,7 +148,7 @@ Triggers:
 Non-Triggers:
   - "help me find this bug" -> APPLIER
   - "review my code" -> cc-routine-and-class-design
-Checklist: **See [checklists.md]($CLAUDE_PLUGIN_ROOT/skills/cc-debugging/checklists.md)**
+Checklist: **See [checklists.md](${CLAUDE_PLUGIN_ROOT}/skills/cc-debugging/checklists.md)**
 Output Format:
   | Step | Status | Evidence | Issue |
   |------|--------|----------|-------|

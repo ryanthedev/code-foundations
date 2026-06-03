@@ -10,8 +10,8 @@ description: "Discovery, design, and TDD implementation in one pass. Scopes phas
 ## STOP - Load Standards and Checklists
 
 Before any work, read both standards files:
-1. `Read($CLAUDE_PLUGIN_ROOT/references/pre-gate-standards.md)`
-2. `Read($CLAUDE_PLUGIN_ROOT/references/implement-standards.md)`
+1. `Read(${CLAUDE_PLUGIN_ROOT}/references/pre-gate-standards.md)`
+2. `Read(${CLAUDE_PLUGIN_ROOT}/references/implement-standards.md)`
 
 Then follow every `Read()` directive in those files — each points to an authoritative checklist. The standards provide framework and narrative; the checklists provide the items to verify.
 
@@ -49,8 +49,8 @@ For every skill — whether from dispatch or discovery:
 
 1. `Skill([skill-name])` — loads SKILL.md content
 2. Read checklist files — **mandatory, do not skip:**
-   - If `$CLAUDE_PLUGIN_ROOT/skills/<skill-name>/checklists.md` exists → `Read()` it
-   - If `$CLAUDE_PLUGIN_ROOT/skills/<skill-name>/checklists/` directory exists → `Read()` every file in it
+   - If `${CLAUDE_PLUGIN_ROOT}/skills/<skill-name>/checklists.md` exists → `Read()` it
+   - If `${CLAUDE_PLUGIN_ROOT}/skills/<skill-name>/checklists/` directory exists → `Read()` every file in it
 3. Note the skill in your output's `### Skills Loaded` section
 
 ---

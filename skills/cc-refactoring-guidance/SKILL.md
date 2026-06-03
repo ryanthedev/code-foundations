@@ -62,7 +62,7 @@ description: "Use when modifying existing code, improving structure without chan
 - Should you refactor MORE code to establish the pattern consistently?
 - Document the new pattern for future reference.
 
-**See:** [pattern-reuse-gate.md]($CLAUDE_PLUGIN_ROOT/references/pattern-reuse-gate.md) for full gate protocol.
+**See:** [pattern-reuse-gate.md](${CLAUDE_PLUGIN_ROOT}/references/pattern-reuse-gate.md) for full gate protocol.
 
 ---
 

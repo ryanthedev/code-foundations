@@ -283,7 +283,7 @@ Never skip steps. Never assume.
 
 ## Checker
 
-Checklist: **[checklists.md]($CLAUDE_PLUGIN_ROOT/skills/performance-optimization/checklists.md)**
+Checklist: **[checklists.md](${CLAUDE_PLUGIN_ROOT}/skills/performance-optimization/checklists.md)**
 
 Output Format:
   | Item | Status | Evidence | Location |

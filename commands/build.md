@@ -39,7 +39,7 @@ description: "Execute plans through gated phases with subagent dispatch."
 
 ### Worktree Gate (MANDATORY - First Check)
 
-Clear the worktree gate before any other work. **Read `references/worktree-gate.md`** for the full procedure: workspace-mode detection, prompts for main/master, worktree vs feature-branch creation, dependency setup, and record-keeping for REPORT.
+Clear the worktree gate before any other work. **Read `${CLAUDE_PLUGIN_ROOT}/references/worktree-gate.md`** for the full procedure: workspace-mode detection, prompts for main/master, worktree vs feature-branch creation, dependency setup, and record-keeping for REPORT.
 
 **Summary:** Inspect `git branch / status / worktree list`. If on main/master, ask user worktree-or-branch. Create the chosen workspace, copy the plan file in if a worktree, install deps if a lockfile is present, and record the mode for use in REPORT. **Non-negotiable — never proceed on main/master.**
 
@@ -164,8 +164,8 @@ Phase 3.2: REVIEW         → blockedBy: [3.1]
 
 | Sub-Phase | Agent Type | Standards Loaded (baked into agent template) |
 |-----------|-----------|-------------------------------|
-| N.1 BUILD | `code-foundations:build-agent` | `references/pre-gate-standards.md` + `references/implement-standards.md` |
-| N.2 REVIEW | `code-foundations:post-gate-agent` | `references/post-gate-standards.md` |
+| N.1 BUILD | `code-foundations:build-agent` | `${CLAUDE_PLUGIN_ROOT}/references/pre-gate-standards.md` + `${CLAUDE_PLUGIN_ROOT}/references/implement-standards.md` |
+| N.2 REVIEW | `code-foundations:post-gate-agent` | `${CLAUDE_PLUGIN_ROOT}/references/post-gate-standards.md` |
 | Commit | Orchestrator (you) | N/A |
 
 **Standards files provide framework and narrative.** They contain Read() directives pointing to authoritative checklists in individual skills. Agents read the standards file first, then follow each Read() directive to load the actual checklist items.
@@ -275,7 +275,7 @@ For each task:
 
 The build agent combines discovery, design, and TDD implementation in one pass. It writes a discovery file (for post-gate review), then implements via red-green cycle.
 
-**Dispatch templates live in `references/dispatch-templates.md`.** Read the file once per build, then substitute placeholders for each phase.
+**Dispatch templates live in `${CLAUDE_PLUGIN_ROOT}/references/dispatch-templates.md`.** Read the file once per build, then substitute placeholders for each phase.
 
 | Gate | Template | Adds discovery file |
 |------|----------|--------------------|
@@ -311,7 +311,7 @@ Substitute these placeholders in the chosen template:
 
 **Always use `code-foundations:post-gate-agent`.** Skills are baked into the agent template.
 
-**Use `references/dispatch-templates.md § REVIEW`.** Substitute the same placeholders as BUILD plus:
+**Use `${CLAUDE_PLUGIN_ROOT}/references/dispatch-templates.md § REVIEW`.** Substitute the same placeholders as BUILD plus:
 - `[list files from BUILD subagent]` → file list returned by the BUILD task
 - `[Full/Standard gate only:] - Discovery + Design: ...` → include only when a discovery file exists; omit for Minimal gate
 
@@ -328,7 +328,7 @@ Substitute these placeholders in the chosen template:
 
 This prevents drift across accumulated Standard/Minimal phases without per-phase overhead.
 
-**Use `references/dispatch-templates.md § CATCHUP_REVIEW`.** Substitute placeholders:
+**Use `${CLAUDE_PLUGIN_ROOT}/references/dispatch-templates.md § CATCHUP_REVIEW`.** Substitute placeholders:
 - `[REVIEW model for the upcoming Full phase]` → resolved from the upcoming Full phase's model (see Model Resolution above)
 - `[For each accumulated phase:]` → emit one block per phase since the last REVIEW, with that phase's DW items and files changed
 
@@ -383,7 +383,7 @@ Summary: [1 sentence — what this phase delivered and what state it left the co
 
 ### Gate Failure Protocol
 
-When a BUILD or REVIEW task returns FAIL, **read `references/gate-failure-protocol.md`** for the per-failure action table, retry-cap policy (max 3 failures per gate), and the user-escalation template.
+When a BUILD or REVIEW task returns FAIL, **read `${CLAUDE_PLUGIN_ROOT}/references/gate-failure-protocol.md`** for the per-failure action table, retry-cap policy (max 3 failures per gate), and the user-escalation template.
 
 **Hot-path summary:** failed task stays `in_progress`, never mark completed on FAIL, `blockedBy` prevents skipping. Re-dispatch up to 3 times. On the 3rd FAIL, STOP and escalate to the user — never silently retry a 4th time.
 
@@ -488,19 +488,19 @@ Notes: [any issues encountered]
 
 The summary is a **trust report**, not a status dashboard. Engineers need to verify what the AI built. Gate metadata (model, review results, epistemic status) lives in commit trailers; the trust report is derived from `git log`.
 
-**Use `references/trust-report.md`** — it contains the trailer-dump commands and the report template (Build & Test Summary, Manual Testing Steps, Follow-up, Merge Instructions).
+**Use `${CLAUDE_PLUGIN_ROOT}/references/trust-report.md`** — it contains the trailer-dump commands and the report template (Build & Test Summary, Manual Testing Steps, Follow-up, Merge Instructions).
 
 ---
 
 ## Error Handling
 
-For blockers beyond the per-phase Gate Failure Protocol, and for resuming a `blocked` plan, **read `references/build-failure-resume.md`**. It covers stop-and-document procedure, plan status update, user options on failure, and the resume checkpoint flow.
+For blockers beyond the per-phase Gate Failure Protocol, and for resuming a `blocked` plan, **read `${CLAUDE_PLUGIN_ROOT}/references/build-failure-resume.md`**. It covers stop-and-document procedure, plan status update, user options on failure, and the resume checkpoint flow.
 
 ---
 
 ## Integration with /code-foundations:plan
 
-For the chained plan→build flow, parallel-build pattern, plan-file model-override syntax, and thinking-effort guidance, **read `references/plan-integration.md`**.
+For the chained plan→build flow, parallel-build pattern, plan-file model-override syntax, and thinking-effort guidance, **read `${CLAUDE_PLUGIN_ROOT}/references/plan-integration.md`**.
 
 **Key constraint (always applies):** parallel builds must target different plan files. Never run two build instances against the same plan.
 

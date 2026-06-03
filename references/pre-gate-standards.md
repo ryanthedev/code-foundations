@@ -26,7 +26,7 @@ Write pseudocode before code. Iterating on pseudocode is cheaper than iterating 
 
 **Skip criteria (ALL must be true):** Simple accessor with NO logic, OR pass-through with NO transformation, OR single statement with zero decision points obvious from signature alone. If you're debating whether to skip, don't skip.
 
-**Checklist:** `Read($CLAUDE_PLUGIN_ROOT/skills/cc-pseudocode-programming/checklists.md)` — apply Prerequisites, Pseudocode Quality, and Red Flags (including RF-11: no failure surfacing plan).
+**Checklist:** `Read(${CLAUDE_PLUGIN_ROOT}/skills/cc-pseudocode-programming/checklists.md)` — apply Prerequisites, Pseudocode Quality, and Red Flags (including RF-11: no failure surfacing plan).
 
 ---
 
@@ -43,7 +43,7 @@ Never implement your first design. Generate 2-3 **radically different** approach
 
 **If none attractive:** Use identified problems to drive a new round of alternatives.
 
-**Checklist:** `Read($CLAUDE_PLUGIN_ROOT/skills/aposd-designing-deep-modules/checklists.md)` — apply Design-It-Twice Workflow, Process Integrity Checks, and Red Flags (including RF-8: module absorbs failures silently).
+**Checklist:** `Read(${CLAUDE_PLUGIN_ROOT}/skills/aposd-designing-deep-modules/checklists.md)` — apply Design-It-Twice Workflow, Process Integrity Checks, and Red Flags (including RF-8: module absorbs failures silently).
 
 ---
 
@@ -85,7 +85,7 @@ Never implement your first design. Generate 2-3 **radically different** approach
 | Temporal | REDESIGN | Unless the routine orchestrates (coordinates, delegates, dispatches) rather than performs direct work |
 | Procedural / Logical / Coincidental | REDESIGN | — |
 
-**Checklist:** `Read($CLAUDE_PLUGIN_ROOT/skills/cc-routine-and-class-design/checklists.md)` — apply Class Quality, High-Quality Routines, and Red Flags (including RF-11: routine hides failure as default).
+**Checklist:** `Read(${CLAUDE_PLUGIN_ROOT}/skills/cc-routine-and-class-design/checklists.md)` — apply Class Quality, High-Quality Routines, and Red Flags (including RF-11: routine hides failure as default).
 
 ---
 

@@ -30,7 +30,7 @@ For each dimension: detect if it applies, verify if YES, mark N/A with reason if
 
 Dimensions: **Concurrency** (shared state, async, web handlers, background tasks), **Error Handling** (I/O, external calls, parsing, user input), **Resources** (file handles, connections, locks, caches, threads), **Boundaries** (collections, strings, numerics, optionals), **Security** (untrusted input).
 
-**Checklist:** `Read($CLAUDE_PLUGIN_ROOT/skills/aposd-verifying-correctness/checklists.md)` — apply all sections that match detected dimensions.
+**Checklist:** `Read(${CLAUDE_PLUGIN_ROOT}/skills/aposd-verifying-correctness/checklists.md)` — apply all sections that match detected dimensions.
 
 ---
 
@@ -48,7 +48,7 @@ Dimensions: **Concurrency** (shared state, async, web handlers, background tasks
 
 **Correctness vs Robustness:** Safety-critical = shut down over wrong result. Consumer apps = keep running. B2B/data pipelines = analyze per case. This is a choice, not a law.
 
-**Checklist:** `Read($CLAUDE_PLUGIN_ROOT/skills/cc-defensive-programming/checklists.md)` — apply General, Exceptions, Security, and Red Flags sections. Pay special attention to RF-11 (catch-log-continue) and RF-12 (fallback masking failure).
+**Checklist:** `Read(${CLAUDE_PLUGIN_ROOT}/skills/cc-defensive-programming/checklists.md)` — apply General, Exceptions, Security, and Red Flags sections. Pay special attention to RF-11 (catch-log-continue) and RF-12 (fallback masking failure).
 
 ---
 
@@ -68,7 +68,7 @@ Dimensions: **Concurrency** (shared state, async, web handlers, background tasks
 
 **Pass-through methods** that delegate with the same API signal a layer problem. Validation test: trace a single operation through layers — does the abstraction change at each call? If not, a layer isn't adding value.
 
-**Checklist:** `Read($CLAUDE_PLUGIN_ROOT/skills/aposd-reviewing-module-design/checklists.md)` — apply Complexity Symptoms, Module Depth, Information Hiding, and Quick Reference Red Flags (including SF-1: Silent Failure).
+**Checklist:** `Read(${CLAUDE_PLUGIN_ROOT}/skills/aposd-reviewing-module-design/checklists.md)` — apply Complexity Symptoms, Module Depth, Information Hiding, and Quick Reference Red Flags (including SF-1: Silent Failure).
 
 ---
 
@@ -82,7 +82,7 @@ Dimensions: **Concurrency** (shared state, async, web handlers, background tasks
 
 **No single technique exceeds 75% effectiveness.** Combining techniques (review + testing + static analysis) nearly doubles detection rates.
 
-**Checklist:** `Read($CLAUDE_PLUGIN_ROOT/skills/cc-quality-practices/checklists/qa-and-testing.md)` — apply Test Cases section and Data-Flow Anomaly Patterns.
+**Checklist:** `Read(${CLAUDE_PLUGIN_ROOT}/skills/cc-quality-practices/checklists/qa-and-testing.md)` — apply Test Cases section and Data-Flow Anomaly Patterns.
 
 ---
 
