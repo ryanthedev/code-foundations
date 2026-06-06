@@ -14,10 +14,6 @@ The plan is a contract between plan and build. It specifies WHAT and WHY at the 
 
 **Thinking effort:** Planning benefits from max effort. If not already at max, suggest the user increase it before proceeding.
 
-### Load Design Vocabulary
-
-Before any work: `Skill(code-foundations:aposd-designing-deep-modules)` — depth, interfaces, and design-it-twice vocabulary for shaping phases and their Produces seams.
-
 ### Create Progress Tasks
 
 `TaskCreate` for each step, `TaskUpdate` with `blockedBy` to enforce ordering:
@@ -82,6 +78,10 @@ State explicitly: "This is a **[Medium/Complex]** task. [1-sentence justificatio
 ## Step 3: EXPLORE
 
 **Research BEFORE proposing** -- uninformed proposals waste the user's decision-making.
+
+### Load Design Vocabulary
+
+`Skill(code-foundations:ca-architecture-boundaries)` — system-level vocabulary (boundaries, dependency direction, SRP-by-actor) for generating structurally different approaches here and shaping phase seams at DECOMPOSE. Module-level design skills (e.g. aposd-designing-deep-modules) are NOT loaded here — they get matched per phase at DECOMPOSE and loaded during DETAIL.
 
 ### Research (Medium/Complex)
 
