@@ -1,5 +1,5 @@
 ---
-description: "Execute plans through gated phases with subagent dispatch."
+description: "Execute an approved plan through gated phases (BUILD → REVIEW → commit) with subagent dispatch. Use when a plan exists in .code-foundations/plans/ and the user wants it implemented — phased TDD execution, per-phase quality gates, orchestrator commits, and a final trust report."
 ---
 
 # Skill: build
@@ -8,61 +8,33 @@ description: "Execute plans through gated phases with subagent dispatch."
 
 ---
 
-## Quick Reference
+## Crisis Invariants — NEVER SKIP
 
-| Phase | Goal | Output |
-|-------|------|--------|
-| LOAD | Read plan file | Parsed implementation checklist |
-| SETUP | Initialize tracking | Plan status updated |
-| EXECUTE | Implement each section | Working code |
-| VERIFY | Run tests, confirm completion | All tests pass |
-| REPORT | Update plan, summarize | Execution log |
-
----
-
-## Crisis Invariants - NEVER SKIP
-
-| Check | Why Non-Negotiable |
-|-------|-------------------|
-| **Worktree isolation required** | Multi-phase commits on main = no rollback, polluted history. Worktrees enable parallel builds. |
-| **Load plan before coding** | No plan = no checklist = forgotten tasks |
-| **One section at a time** | Parallel sections = merge conflicts + lost context |
-| **BUILD before review (Full/Standard gate)** | No design = coding without discovery = rework. Exception: Minimal gate phases skip discovery. |
-| **Verification before commit (per gate policy)** | Full phases: REVIEW required. Standard/Minimal: tests are the gate. Catch-up review before next Full phase if 2+ phases ran ungated. |
-| **Independent verification on complex work** | Self-review is blind; fresh agent catches issues. But over-verification on trivial work injects noise (CR-Bench: SNR drops 69% on small models under reflexion). |
-| **Mark complete only when gates pass** | Premature completion = unverified work shipped |
-| **Update execution log** | Log enables debugging failed builds |
+- **Worktree isolation** — never build on main/master; multi-phase commits there have no rollback
+- **Load plan before coding** — no plan = no checklist = forgotten tasks
+- **One section at a time** — parallel sections cause merge conflicts and lost context
+- **BUILD before REVIEW** (Full/Standard gate) — Minimal gate phases skip discovery
+- **Verification before commit, per gate policy** — Full: REVIEW must PASS; Standard/Minimal: tests are the gate
+- **Independent verification on complex work only** — self-review is blind, but over-verifying trivial work injects noise
+- **Mark complete only when gates pass** — premature completion ships unverified work
+- **Update the execution log** — it debugs failed builds and anchors later phases
 
 ---
 
 ## Phase 1: LOAD (Read Plan File)
 
-### Worktree Gate (MANDATORY - First Check)
+### Worktree Gate (MANDATORY — first check)
 
-Clear the worktree gate before any other work. **Read `${CLAUDE_PLUGIN_ROOT}/references/worktree-gate.md`** for the full procedure: workspace-mode detection, prompts for main/master, worktree vs feature-branch creation, dependency setup, and record-keeping for REPORT.
-
-**Summary:** Inspect `git branch / status / worktree list`. If on main/master, ask user worktree-or-branch. Create the chosen workspace, copy the plan file in if a worktree, install deps if a lockfile is present, and record the mode for use in REPORT. **Non-negotiable — never proceed on main/master.**
-
----
+**Read `${CLAUDE_PLUGIN_ROOT}/references/worktree-gate.md`** and clear the gate before any other work: workspace-mode detection, worktree vs feature-branch creation, dependency setup, and record-keeping for REPORT. **Non-negotiable — never proceed on main/master.**
 
 ### Locate Plan
 
-If plan path provided:
-```bash
-cat .code-foundations/plans/<provided-path>.md
-```
-
-If no path, list available:
-```bash
-ls -la .code-foundations/plans/*.md | head -20
-```
-
-Ask user: "Which plan should I execute?"
+Read the provided plan path from `.code-foundations/plans/`. If no path was given, `ls .code-foundations/plans/*.md` and ask: "Which plan should I execute?"
 
 ### Parse Plan Structure
 
-Extract from plan file:
-1. **Context** - What we're building (used for goal anchoring in all subagent prompts)
+Extract from the plan file:
+1. **Context** - What we're building (used for goal anchoring in BUILD dispatch prompts)
 2. **Approach** - How we're building it
 3. **Phases** - Implementation sections
 4. **Done-when items per phase** - Every `- [ ]` under each phase's `**Done when:**` (passed verbatim to build and review agents)
@@ -77,11 +49,12 @@ Extract from plan file:
 
 ### Verify Plan is Ready
 
-Check plan status:
-- `Status: ready` → Proceed
-- `Status: in-progress` → Resume from last checkpoint
-- `Status: complete` → Ask: "Plan already complete. Re-execute or archive?"
-- `Status: blocked` → Show blockers, ask how to proceed
+| Plan status | Action |
+|-------------|--------|
+| `ready` | Proceed |
+| `in-progress` | Resume from last checkpoint |
+| `complete` | Ask: "Plan already complete. Re-execute or archive?" |
+| `blocked` | Show blockers, ask how to proceed |
 
 ---
 
@@ -89,11 +62,7 @@ Check plan status:
 
 ### Update Plan Status
 
-```markdown
-**Status:** in-progress
-**Started:** YYYY-MM-DD HH:MM
-**Current Phase:** 1
-```
+Set in the plan file: `**Status:** in-progress`, `**Started:** YYYY-MM-DD HH:MM`, `**Current Phase:** 1`.
 
 ### Skill Resolution (One-Time Task)
 
@@ -105,98 +74,21 @@ Before creating phase tasks, resolve skills for all phases. Skills affect gate p
    - **Specific skills listed** → validate each exists in available skills. If a skill name doesn't match any available skill, STOP and ask the user before proceeding.
    - **`none -- [reason]`** → compare phase goal and scope against every available skill's description. If a skill's triggers match the phase work, add it. Every phase MUST have at least one skill — skills exist for code, documentation, design, and more.
    - **Field missing** → flag as plan defect. Add skills by matching phase goal/scope against available skill descriptions.
-4. **Resolve checklist paths** for every assigned skill (one `ls` pass): `${CLAUDE_PLUGIN_ROOT}/skills/<name>/checklists.md` if it exists, else every `.md` file under `${CLAUDE_PLUGIN_ROOT}/skills/<name>/checklists/`. Record the resolved path(s) per skill — dispatch prompts emit them as explicit `Read()` lines.
+4. **Resolve checklist paths** for every assigned skill in one pass — use `find`, NOT shell globs (zsh aborts the whole command on an unmatched glob):
+   ```bash
+   find ${CLAUDE_PLUGIN_ROOT}/skills/<name-1> ${CLAUDE_PLUGIN_ROOT}/skills/<name-2> ... \( -name 'checklists.md' -o -path '*/checklists/*.md' \)
+   ```
+   A skill resolves to its single `checklists.md`, every `.md` under its `checklists/` directory, or nothing — some skills have no checklist files; those get only their `Skill()` line in dispatch prompts. Record the resolved path(s) per skill — dispatch prompts emit them as explicit `Read()` lines.
 5. Update the plan file's `**Skills:**` fields with resolved assignments.
 6. `TaskUpdate(status: "completed")`
 
-**CRITICAL: Re-read the plan file after Skill Resolution completes.** The plan was modified in step 4. All subsequent steps (gate policy detection, phase task creation, dispatch) MUST use the updated plan state — not the version from LOAD.
-
-### Create Phase Tasks Upfront
-
-For each phase N, run Model Auto-Detection and Gate Policy Detection (see below), then create tasks.
-
-**Full gate (2 tasks):**
-
-1. `TaskCreate(subject: "Phase N.1: BUILD - [phase name]", description: "Discovery + design + TDD. Model: [from plan or default].", activeForm: "Building Phase N")`
-2. `TaskCreate(subject: "Phase N.2: REVIEW - [phase name]", description: "Post-gate review. Model: [from plan or default]. Must return PASS.", activeForm: "Reviewing Phase N")`
-
-**Standard gate (1 task — REVIEW skipped, tests are the gate):**
-
-1. `TaskCreate(subject: "Phase N.1: BUILD - [phase name]", description: "Discovery + design + TDD. Model: [from plan or default].", activeForm: "Building Phase N")`
-
-**Minimal gate (1 task — no discovery/pseudocode):**
-
-1. `TaskCreate(subject: "Phase N.1: BUILD - [phase name]", description: "Implement from plan description (minimal gate). Model: [from plan or default].", activeForm: "Building Phase N")`
-
-**Chain dependencies:**
-- Full gate: N.2 blockedBy N.1. Next phase blockedBy N.2.
-- Standard/Minimal: Next phase blockedBy N.1.
-
-**Orchestrator handles commits** directly after each phase completes (after REVIEW passes for Full gate, or after BUILD completes for Standard/Minimal gate).
-
-**Catch-up review tasks** are NOT created upfront. They are inserted dynamically when the catch-up rule triggers (2+ phases since last REVIEW, before a Full phase).
-
-Example for a 3-phase plan (Full + Minimal + Full):
-```
-Phase 1.1: BUILD          → no blockedBy (Full gate)
-Phase 1.2: REVIEW         → blockedBy: [1.1]
-Phase 2.1: BUILD          → blockedBy: [1.2] (Minimal gate)
-Phase 3.1: BUILD          → blockedBy: [2.1] (Full gate — catch-up check happens here)
-Phase 3.2: REVIEW         → blockedBy: [3.1]
-```
-
----
-
-## Phase 3: EXECUTE (Implement Sections)
-
-### CRITICAL: DO NOT DO ANYTHING DIRECTLY
-
-**You MUST dispatch subagents for ALL work. DO NOT:**
-- Read/explore code files directly during build
-- Edit code files directly during build
-- Skip any task
-- Proceed when a blockedBy dependency is not completed
-- Mark a gate task completed when it returned FAIL
-
-**Exception: You DO handle commits directly** — no subagent needed for git operations.
-
----
-
-### Agent Types Per Sub-Phase
-
-| Sub-Phase | Agent Type | Guidance |
-|-----------|-----------|----------|
-| N.1 BUILD | `code-foundations:build-agent` | Baseline discipline in the agent definition (DW traceability, TDD red-green, anchoring, scope clamp) + per-phase skills from the dispatch prompt |
-| N.2 REVIEW | `code-foundations:post-gate-agent` | Debiased review protocol in the agent definition (execute-first, per-DW evidence + trace, anti-overcorrection verdict) + per-phase skills from the dispatch prompt |
-| Commit | Orchestrator (you) | N/A |
-
-**Gates load ONLY per-phase skills.** There is no always-on skill set — each agent definition carries its own protocol and works with zero skills assigned. Skills arrive exclusively via the dispatch prompt's `## Additional Skills` block.
-
-### Skills from Plan
-
-Every phase should have skills assigned. If a phase has a `**Skills:**` field, include those skills in BOTH the BUILD and REVIEW dispatch prompts. Skills flow through the full pipeline — BUILD uses them for implementation guidance, REVIEW uses them for verification.
-
-**Add this block to the dispatch prompt when `**Skills:**` is present** — one `Skill()` line plus its resolved checklist `Read()` line(s) per skill (paths resolved during SETUP; substitute `${CLAUDE_PLUGIN_ROOT}` with the real plugin root — the dispatch prompt is plain text, nothing expands variables for the subagent):
-```
-## Additional Skills
-Execute EVERY line below, in order, BEFORE starting work:
-- Skill(code-foundations:[skill-1])
-- Read([resolved checklist path for skill-1])
-- Skill(code-foundations:[skill-2])
-- Read([resolved checklist path for skill-2])
-```
-
-**If BUILD discovers additional skills** (reported in its `### Skills Loaded` output), add those to the REVIEW dispatch's `## Additional Skills` block too (with their checklist Read() lines). The REVIEW agent needs the same skill context to verify against.
-
----
+**CRITICAL: Re-read the plan file after Skill Resolution completes.** The plan was modified in step 5. All subsequent steps (gate policy detection, phase task creation, dispatch) MUST use the updated plan state — not the version from LOAD.
 
 ### Model Resolution
 
-Use the `**Model:**` field from the plan if present. If not specified, omit the model parameter — the agent runs on whatever model is active.
+Use the `**Model:**` field from the plan if present. If not specified, omit the model parameter for both BUILD and REVIEW — the agent runs on whatever model is active.
 
-**REVIEW model downgrade (Prover-Verifier):**
-
-If the plan specifies a model, downgrade REVIEW one tier:
+If the plan specifies a model, downgrade REVIEW one tier (prover-verifier asymmetry — intentional):
 
 | BUILD model | REVIEW model |
 |-------------|--------------|
@@ -204,19 +96,9 @@ If the plan specifies a model, downgrade REVIEW one tier:
 | sonnet | haiku |
 | haiku | haiku (floor) |
 
-If no model specified, omit for both BUILD and REVIEW.
-
-Research basis: prover-verifier gap (2407.13692). The asymmetry is intentional.
-
----
-
 ### Gate Policy Detection
 
-After resolving the model, determine the gate level for each phase. This controls which sub-phases run.
-
-**Research basis:** Non-uniform verification is strictly better than uniform (Plan and Budget: 193.8% efficiency gain). Over-verification on easy tasks injects noise and wastes budget (Thinkless: 86.7% of easy queries harmed by deep reasoning; CR-Bench: reflexion on small models collapses SNR 69%). Simpler pipelines with fewer verification loops produce better results at lower cost (Agentless: $0.70/32% vs SWE-agent $2.53/18%).
-
-**Gate levels:**
+Determine the gate level for each phase. This controls which sub-phases run. Non-uniform verification beats uniform: heavy gates on risky work, tests-as-gate on the rest.
 
 | Level | Sub-Phases | When |
 |---|---|---|
@@ -241,60 +123,77 @@ After resolving the model, determine the gate level for each phase. This control
    - Done-when items <= 2
 4. **Standard** — everything else
 
-**Catch-up rule:** Before executing any Full phase, check: have 2 or more phases run since the last REVIEW? If yes, insert a catch-up REVIEW covering the accumulated phases before proceeding. This prevents drift without per-phase overhead.
+**State the resolved gate level when creating tasks:** "Phase N gate: [Full/Standard/Minimal] (reason: [auto/plan override])"
 
-**State the resolved gate level when creating tasks:**
-"Phase N gate: [Full/Standard/Minimal] (reason: [auto/plan override])"
+### Create Phase Tasks Upfront
+
+For each phase N (using its resolved gate level and model):
+
+- **Full gate — 2 tasks:** `Phase N.1: BUILD - [phase name]` (description: "Discovery + design + TDD. Model: [from plan or default].") and `Phase N.2: REVIEW - [phase name]` (description: "Post-gate review. Model: [REVIEW model]. Must return PASS."), N.2 blockedBy N.1.
+- **Standard/Minimal gate — 1 task:** `Phase N.1: BUILD - [phase name]` (Minimal description notes "Implement from plan description (minimal gate)").
+- **Chaining:** next phase's first task blockedBy this phase's last task.
+- **Catch-up review tasks are NOT created upfront** — they are inserted dynamically when the catch-up trigger fires.
+- **Orchestrator handles commits directly** after each phase's last task completes — no commit tasks.
+
+Example for a 3-phase plan (Full + Minimal + Full):
+```
+Phase 1.1 BUILD → Phase 1.2 REVIEW (blockedBy 1.1) → Phase 2.1 BUILD (blockedBy 1.2)
+  → Phase 3.1 BUILD (blockedBy 2.1, catch-up check fires here) → Phase 3.2 REVIEW (blockedBy 3.1)
+```
 
 ---
 
+## Phase 3: EXECUTE (Implement Sections)
+
+### CRITICAL: DO NOT DO ANYTHING DIRECTLY
+
+**You MUST dispatch subagents for ALL work. DO NOT:**
+- Read/explore code files directly during build
+- Edit code files directly during build
+- Skip any task
+- Proceed when a blockedBy dependency is not completed
+- Mark a gate task completed when it returned FAIL
+
+**Exception: You DO handle commits directly** — no subagent needed for git operations.
+
+### Agent Types Per Sub-Phase
+
+| Sub-Phase | Agent Type |
+|-----------|-----------|
+| N.1 BUILD | `code-foundations:build-agent` |
+| N.2 REVIEW | `code-foundations:post-gate-agent` |
+| Commit | Orchestrator (you) |
+
+**Gates load ONLY per-phase skills.** Each agent definition carries its own protocol and works with zero skills assigned. Skills arrive exclusively via the dispatch prompt's `## Additional Skills` block — construction rules and BUILD→REVIEW skill propagation live in the dispatch-templates Substitution rules.
+
 ### Execution Loop
 
-All tasks were created in SETUP. Execute them in order.
-
-For each task:
+All tasks were created in SETUP. Execute them in order. For each task:
 
 ```
 1. TaskGet(task_id) → verify blockedBy list is empty (all predecessors completed)
 2. TaskUpdate(task_id, status: "in_progress")
-3. Dispatch subagent (see templates below)
+3. Dispatch subagent (see sub-phases below)
 4. Wait for completion
-5. If result is FAIL:
-   → Do NOT mark completed
-   → Follow Gate Failure Protocol
-6. If success:
-   → TaskUpdate(task_id, status: "completed")
-   → If this is the last task for the phase (REVIEW for Full, BUILD for Standard/Minimal):
-     commit (see Commit After Phase below)
+5. If result is FAIL → do NOT mark completed → Gate Failure Protocol
+6. If success → TaskUpdate(task_id, status: "completed")
+   → If this is the phase's last task (REVIEW for Full, BUILD for Standard/Minimal): commit
 7. Proceed to next task
 ```
-
----
 
 ### Sub-Phase N.1: BUILD (Discovery + Design + TDD)
 
 ## STOP. YOU CANNOT EXPLORE CODE, WRITE TESTS, OR IMPLEMENT DIRECTLY.
 
-**TaskUpdate → in_progress, then dispatch the build agent.**
+TaskUpdate → in_progress, then dispatch the build agent. It combines discovery, design, and TDD implementation in one pass.
 
-The build agent combines discovery, design, and TDD implementation in one pass. It writes a discovery file (for post-gate review), then implements via red-green cycle.
+**Dispatch templates live in `${CLAUDE_PLUGIN_ROOT}/references/dispatch-templates.md`.** Read the file once per build (the Substitution rules at the top govern all placeholders), then substitute per phase:
 
-**Dispatch templates live in `${CLAUDE_PLUGIN_ROOT}/references/dispatch-templates.md`.** Read the file once per build, then substitute placeholders for each phase.
-
-| Gate | Template | Adds discovery file |
-|------|----------|--------------------|
-| Full | `§ FULL_BUILD` | Yes — write `.code-foundations/build/<plan-name>-phase-N-discovery.md` |
-| Standard | `§ FULL_BUILD` | Yes — same template, gate policy differs at REVIEW |
-| Minimal | `§ MINIMAL_BUILD` | No — skips discovery |
-
-Substitute these placeholders in the chosen template:
-- `[paste the Context section from the plan file ...]` → plan's `## Context`
-- `[For Phase 1: ...] / [For Phase N>1: ...]` → progress block (see Goal-Anchoring Progress block below)
-- `[paste phase description and file list from plan]` → plan phase block
-- `[paste ALL DW items from the plan phase, verbatim:]` → every `- [ ] DW-N.X:` item from plan, unchanged
-- `[if plan phase has **Skills:** field, include:]` → emit the Additional Skills block only when the plan has skills
-- `[if plan has Assumptions with "Verify Before Phase: N", include:]` → emit the Assumption Verification block only when the plan has matching assumptions
-- `[from plan's **Model:** field, or omit if not set]` → see Model Resolution above
+| Gate | Template | Discovery file |
+|------|----------|----------------|
+| Full | `§ FULL_BUILD` | Yes — `.code-foundations/build/<plan-name>-phase-N-discovery.md` |
+| Standard | `§ FULL_BUILD` | Yes — same template, gate differs at REVIEW |
+| Minimal | `§ MINIMAL_BUILD` | No |
 
 **After BUILD returns:**
 1. Check status: DONE, SKIP, UPDATE_PLAN, or BLOCKED
@@ -305,168 +204,64 @@ Substitute these placeholders in the chosen template:
 6. If Standard/Minimal gate → commit now (see Commit After Phase)
 7. If Full gate → proceed to REVIEW
 
----
-
 ### Sub-Phase N.2: REVIEW (Post-Gate)
 
 ## STOP. Verify BUILD task is completed before proceeding.
 
-**TaskUpdate → in_progress, then dispatch.**
+TaskUpdate → in_progress, then dispatch `code-foundations:post-gate-agent` with `§ REVIEW`.
 
-**Always use `code-foundations:post-gate-agent`.**
+**The reviewer is a debiased independent critic — give it NO intent-framing.** Do NOT include the plan's Context, any Progress block, the discovery file, or any account of what the BUILD agent did or intended — intent-framing collapses defect detection. Requirements + files + commands only (the template enforces this).
 
-**Use `${CLAUDE_PLUGIN_ROOT}/references/dispatch-templates.md § REVIEW`.** The reviewer is a debiased independent critic — research shows intent-framing ("this should work", progress summaries) collapses bug detection by up to 93pp. **Do NOT include:** the plan's Context section, any Progress block, the discovery file, or any account of what the BUILD agent did or intended.
-
-Substitute:
-- `[paste ALL DW items ...]` → every DW item from the plan phase, verbatim
-- `[if plan phase has **Edge cases:**, include:]` → emit the Edge cases block only when the plan phase has one, items verbatim
-- `[paste the plan's Test Coverage level]` → from the plan
-- `[implementation + test file paths from the BUILD agent's report]` → paths only, no commentary
-- `[exact test command + typecheck/lint commands]` → from project config (package.json scripts, Makefile, etc.)
-- `[ONLY if this phase consumes an interface from a prior phase ...]` → emit the neutral Dependency note only for a real contract dependency; never use "completed/done/working" language
-- `## Additional Skills` → per Skills from Plan above (Skill() + Read() pairs)
-
-**Security-sensitive phases:** if the plan phase has `**Security-sensitive:** yes`, dispatch THREE independent REVIEW agents with the identical prompt (separate Agent calls — independence is the point), collect the three verdicts, and take the majority. Record all three verdicts in the execution log.
+**Security-sensitive phases** (`**Security-sensitive:** yes` in the plan): dispatch THREE independent REVIEW agents with the identical prompt (separate Agent calls — independence is the point), take the majority verdict, record all three in the execution log.
 
 **After REVIEW:**
 1. Read the review file
-2. If PASS (or 2-of-3 PASS for security-sensitive) → TaskUpdate → completed → commit (see Commit After Phase)
-3. If FAIL → do NOT mark completed → follow Gate Failure Protocol
-
----
+2. If PASS (or 2-of-3 for security-sensitive) → TaskUpdate → completed → commit
+3. If FAIL → do NOT mark completed → Gate Failure Protocol
 
 ### Catch-Up REVIEW (inserted dynamically)
 
-**Trigger:** Before executing any Full gate phase, check: have 2+ phases completed since the last REVIEW ran? If yes, insert a catch-up review before proceeding to the Full phase's BUILD.
+**Trigger:** before any Full gate phase's BUILD, check: have 2+ phases run since the last REVIEW? If yes, insert a catch-up review first using `§ CATCHUP_REVIEW` (model rule is in the template header). This prevents drift across accumulated Standard/Minimal phases without per-phase overhead.
 
-This prevents drift across accumulated Standard/Minimal phases without per-phase overhead.
-
-**Use `${CLAUDE_PLUGIN_ROOT}/references/dispatch-templates.md § CATCHUP_REVIEW`.** Substitute placeholders:
-- `[REVIEW model for the upcoming Full phase]` → resolved from the upcoming Full phase's model (see Model Resolution above)
-- `[For each accumulated phase:]` → emit one block per phase since the last REVIEW, with that phase's DW items and files changed
-
-**After catch-up REVIEW:**
-- If PASS → proceed to the Full phase's BUILD
-- If FAIL → fix issues before proceeding. Same Gate Failure Protocol applies.
-
-**Do NOT create catch-up tasks upfront.** Insert them dynamically when the trigger fires. This keeps the initial task list clean.
-
----
+- PASS → proceed to the Full phase's BUILD
+- FAIL → Gate Failure Protocol before proceeding
 
 ### Commit After Phase (Orchestrator Handles Directly)
 
-After the last task for a phase completes (REVIEW for Full, BUILD for Standard/Minimal), **you commit directly** — no subagent, no task.
+After the phase's last task completes, **you commit directly** — no subagent, no task.
 
-```bash
-git add .
-git commit -m "[prefix]([scope]): [description]
+**Commit per `${CLAUDE_PLUGIN_ROOT}/references/commit-format.md`** (read once per build — it holds the recipe, message rules, and execution-log entry format). Required trailers: `Phase:`, `Plan:`, `AI-Model:`, `AI-Epistemic-Status:`, `Gate-Policy:`, `Review:`.
 
-[WHY this phase exists — goal, key decisions, constraints that shaped implementation]
-
-Phase: N/M \"[phase name]\"
-Plan: .code-foundations/plans/[plan-file].md
-AI-Model: [model used]
-AI-Epistemic-Status: [tested|assumed|provisional]
-Gate-Policy: [Full|Standard|Minimal]
-Review: [pass|fail->pass (N attempts)|skipped (Standard/Minimal)|catch-up (batch)]"
-```
-
-**Commit message rules:**
-- **Subject**: Conventional Commits prefix (`feat`, `fix`, `refactor`, `chore`, etc.) + scope + description
-- **Body**: WHY — goal, key decisions, constraints. Not operational telemetry.
-- **Trailers**: Machine-parseable metadata via git trailer format
-- **AI-Epistemic-Status**: `tested` (verified by tests), `assumed` (believed correct, not proven), `provisional` (expected to change)
-- **AI-Temporal-Validity**: Add only when a decision has a known expiry (e.g., `until-v2-migration`)
-
-Update plan file execution log:
-```markdown
-### Phase N: [Name] (Gate: [Full/Standard/Minimal])
-- [x] BUILD: Discovery + design + TDD implementation complete
-- [x] REVIEW: Verification passed [or "SKIPPED — tests are gate" or "Covered by catch-up review"]
-- [x] Committed
-Commit: [hash]
-Summary: [1 sentence — what this phase delivered and what state it left the codebase in]
-```
-
-**The Summary line is critical for goal anchoring.** It feeds into the `## Progress` block of subsequent subagent dispatch prompts, giving later phases context about what earlier phases accomplished.
+Then append the phase's execution-log entry to the plan file. **Its Summary line feeds the `## Progress` block of later dispatch prompts** — write it as goal anchoring for subsequent phases, not as telemetry.
 
 **State:** "Phase N complete. Committed. Proceeding to Phase N+1."
 
----
-
 ### Gate Failure Protocol
 
-When a BUILD or REVIEW task returns FAIL, **read `${CLAUDE_PLUGIN_ROOT}/references/gate-failure-protocol.md`** for the per-failure action table, retry-cap policy (max 3 failures per gate), and the user-escalation template.
-
-**Hot-path summary:** failed task stays `in_progress`, never mark completed on FAIL, `blockedBy` prevents skipping. Re-dispatch up to 3 times. On the 3rd FAIL, STOP and escalate to the user — never silently retry a 4th time.
+When a BUILD or REVIEW task returns FAIL, **read `${CLAUDE_PLUGIN_ROOT}/references/gate-failure-protocol.md`** for the per-failure action table and user-escalation template. The failed task stays `in_progress`; re-dispatch at most 3 times, then STOP and escalate — never silently retry a 4th time.
 
 ---
 
 ## Phase 4: VERIFY (Full Test Suite)
 
-### Load Skill
+### Load Skills
 
-1. `Skill(code-foundations:performance-optimization)` — catch obvious performance regressions (O(n²), N+1 queries, unnecessary allocations) and flag unnecessary complexity in hot paths
+1. `Skill(code-foundations:performance-optimization)` — catch obvious performance regressions (O(n²), N+1 queries, unnecessary allocations)
 2. `Skill(code-foundations:cc-refactoring-guidance)` — identify refactoring opportunities introduced during implementation
 
 ### Test Coverage Check
 
-Read the **Test Coverage** field from the plan:
+Verify against the plan's **Test Coverage** level: **100%** (unit tests for all new code + integration), **Backend only**, **Backend + frontend**, **None** (skip, warn: technical debt), or **Per-phase** (check each phase's test notes). **If coverage falls short:** FAIL verification, require tests before proceeding.
 
-| Level | Verification |
-|-------|--------------|
-| **100%** | Unit tests for ALL new code + integration tests |
-| **Backend only** | Server-side tests only, skip frontend |
-| **Backend + frontend** | Tests for both layers |
-| **None** | Skip test verification (warn: technical debt) |
-| **Per-phase** | Check each phase's test notes |
+### Run Test Plan + Clean Build
 
-**If coverage falls short:** FAIL verification, require tests before proceeding.
-
-### Pre-Completion Checks
-
-- [ ] All plan phases marked complete
-- [ ] **Test coverage matches plan level**
-- [ ] All tests pass (unit + integration as required)
-- [ ] No skipped tasks
-- [ ] Code compiles without warnings
-
-### Run Test Plan
-
-Execute each item from plan's Test Plan section:
-
-```bash
-# Unit tests
-npm test  # or equivalent
-
-# Integration tests (if specified)
-npm run test:integration
-```
-
-### Build Verification
-
-Run a clean build and capture output:
-
-```bash
-# Build the project (detect build system)
-npm run build  # or equivalent: cargo build, go build, make, tsc, etc.
-```
-
-**Check for regressions:**
-1. **Build succeeds** — if build fails, fix before proceeding
-2. **No new warnings** — build output should be clean. Any warnings in output = fix them or verify they are pre-existing (`git stash && build && git stash pop` if uncertain)
-3. **No new lint errors** — run linter if configured (`npm run lint`, `cargo clippy`, etc.)
-
-If new warnings or errors are found:
-- Fix them before proceeding
-- Re-run build to confirm clean
-- Only proceed when build is clean
+Execute each item from the plan's Test Plan section, then run a clean build and linter. No new warnings or lint errors — if uncertain whether a warning is pre-existing, disambiguate with `git stash && build && git stash pop`. Fix everything new before proceeding.
 
 ### Verification Gate
 
 | Condition | Action |
 |-----------|--------|
-| All tests pass, coverage met, build clean | Proceed to REPORT |
+| All tests pass, coverage met, build clean, no skipped tasks | Proceed to REPORT |
 | Tests fail | Debug, fix, re-verify |
 | Build warnings/errors introduced | Fix, rebuild, re-verify |
 | Tests missing (but required by coverage level) | Write tests, then re-verify |
@@ -478,36 +273,17 @@ If new warnings or errors are found:
 
 ### Update Plan File
 
-```markdown
-**Status:** complete
-**Completed:** YYYY-MM-DD HH:MM
-**Duration:** [time from start to complete]
-
----
-
-## Execution Log
-
-### Phase 1: [Name]
-- [x] Task 1 - Completed YYYY-MM-DD HH:MM
-- [x] Task 2 - Completed YYYY-MM-DD HH:MM
-Commit: [hash]
-Notes: [any issues encountered]
-
-### Phase 2: [Name]
-...
-```
+Set `**Status:** complete`, `**Completed:** YYYY-MM-DD HH:MM`, `**Duration:** [start → complete]`. The execution log is already populated per-phase at commit time.
 
 ### Summary Output (Trust Report)
 
-The summary is a **trust report**, not a status dashboard. Engineers need to verify what the AI built. Gate metadata (model, review results, epistemic status) lives in commit trailers; the trust report is derived from `git log`.
-
-**Use `${CLAUDE_PLUGIN_ROOT}/references/trust-report.md`** — it contains the trailer-dump commands and the report template (Build & Test Summary, Manual Testing Steps, Follow-up, Merge Instructions).
+The summary is a **trust report**, not a status dashboard — engineers need to verify what the AI built. Gate metadata lives in commit trailers; **use `${CLAUDE_PLUGIN_ROOT}/references/trust-report.md`** for the trailer-dump commands and report template (Build & Test Summary, Manual Testing Steps, Follow-up, Merge Instructions).
 
 ---
 
 ## Error Handling
 
-For blockers beyond the per-phase Gate Failure Protocol, and for resuming a `blocked` plan, **read `${CLAUDE_PLUGIN_ROOT}/references/build-failure-resume.md`**. It covers stop-and-document procedure, plan status update, user options on failure, and the resume checkpoint flow.
+For blockers beyond the per-phase Gate Failure Protocol, and for resuming a `blocked` plan, **read `${CLAUDE_PLUGIN_ROOT}/references/build-failure-resume.md`**: stop-and-document procedure, plan status update, user options on failure, resume checkpoint flow.
 
 ---
 
@@ -516,11 +292,3 @@ For blockers beyond the per-phase Gate Failure Protocol, and for resuming a `blo
 For the chained plan→build flow, parallel-build pattern, plan-file model-override syntax, and thinking-effort guidance, **read `${CLAUDE_PLUGIN_ROOT}/references/plan-integration.md`**.
 
 **Key constraint (always applies):** parallel builds must target different plan files. Never run two build instances against the same plan.
-
----
-
-## Chaining
-
-- **RECEIVES FROM:** plan (via plan file), user with plan path
-- **CHAINS TO:** code-foundations skills during execution
-- **RELATED:** aposd-verifying-correctness, cc-quality-practices

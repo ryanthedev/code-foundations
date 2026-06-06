@@ -2,15 +2,26 @@
 
 Subagent dispatch prompts used by the orchestrator (`commands/build.md`) when dispatching the build and post-gate agents. Templates are referenced by section header (e.g., `§ FULL_BUILD`) from the orchestrator and substituted with phase-specific values at dispatch time.
 
+## Contents
+
+| Section | Used for |
+|---------|----------|
+| `§ FULL_BUILD` | Full and Standard gate BUILD sub-phases |
+| `§ MINIMAL_BUILD` | Minimal gate BUILD sub-phases (no discovery) |
+| `§ REVIEW` | Full gate REVIEW sub-phases (post-gate-agent) |
+| `§ CATCHUP_REVIEW` | Batch review inserted before a Full phase when 2+ phases have run since the last REVIEW |
+
 Keeping these here instead of inline in `build.md`:
 - Keeps the orchestrator's hot path lean
 - Lets templates evolve without touching orchestration logic
 - Makes the dispatch surface a single auditable file
 
 **Substitution rules (orchestrator):**
-- `[bracketed]` placeholders → phase-specific values.
+- `[bracketed]` placeholders → phase-specific values. Each placeholder names its source (plan section, agent report, project config); conditional blocks (`[if plan phase has ...]`) are emitted only when the condition holds, with items pasted verbatim.
 - `${CLAUDE_PLUGIN_ROOT}` → the absolute plugin root. This file is read at runtime, so the variable is NOT auto-substituted — replace it with the real path (you know it: it's the directory you read this template from, minus `/references/dispatch-templates.md`).
-- `## Additional Skills` blocks: for EACH skill assigned to the phase, emit its `Skill()` line, then one `Read()` line per checklist file — `${CLAUDE_PLUGIN_ROOT}/skills/<name>/checklists.md` if it exists, else every `.md` file under `${CLAUDE_PLUGIN_ROOT}/skills/<name>/checklists/`. Resolve with `ls` once during SETUP. Never emit a bare "load the skill" instruction without its checklist Read() lines.
+- `## Additional Skills` blocks: for EACH skill assigned to the phase, emit its `Skill()` line, then one `Read()` line per checklist file (paths resolved once during SETUP's Skill Resolution — a skill resolves to its single `checklists.md`, every `.md` under its `checklists/` directory, or nothing; skills with no checklist files get only their `Skill()` line). Never emit a bare "load the skill" instruction when checklist files exist for that skill.
+- **Skills propagate BUILD → REVIEW:** if the BUILD agent's `### Skills Loaded` output reports skills beyond the plan's assignment, add those (with their checklist Read() lines) to the REVIEW dispatch's `## Additional Skills` block too. The reviewer needs the same skill context to verify against.
+- Test/typecheck/lint command placeholders → resolve from project config (package.json scripts, Makefile, Cargo.toml, etc.) — exact runnable commands, not descriptions.
 
 ---
 
@@ -66,7 +77,7 @@ Agent tool:
     and what you found instead.
 
     ## Inputs
-    - Plan file: docs/plans/<plan-name>.md
+    - Plan file: .code-foundations/plans/<plan-name>.md
     - Phase: N - [name]
 
     ## Output Files
@@ -107,7 +118,7 @@ Agent tool:
     [paste the full phase description from the plan]
 
     ## Inputs
-    - Plan file: docs/plans/<plan-name>.md
+    - Plan file: .code-foundations/plans/<plan-name>.md
     - Phase: N - [name]
 ```
 
@@ -181,10 +192,12 @@ Agent tool:
 
 Inserted dynamically before a Full gate phase when 2+ phases have run since the last REVIEW. Batches verification across accumulated Standard/Minimal phases. Same debiasing rules as § REVIEW: no plan Context, no progress narrative, no discovery files.
 
+**Model:** use the upcoming Full phase's resolved REVIEW model (its BUILD model downgraded one tier per the orchestrator's Model Resolution). If that phase has no `**Model:**` set, omit the model parameter.
+
 ```
 Agent tool:
 - subagent_type: "code-foundations:post-gate-agent"
-- model: [REVIEW model for the upcoming Full phase]
+- model: [upcoming Full phase's resolved REVIEW model, or omit]
 - description: "Catch-up REVIEW for Phases X-Y"
 - prompt: |
     Independently verify the implementations below against their requirements.

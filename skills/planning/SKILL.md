@@ -167,7 +167,9 @@ Create the plan file now (see Step 7 schema): header + Context + Constraints + C
 
 ### Skeleton Checkpoint
 
-**`AskUserQuestion`** — present the phase shape and the handoffs (Produces edges). Options:
+**Render the skeleton in conversation first** — the user reviews what you print, not the file. The Write tool result is collapsed in the UI, and the AskUserQuestion dialog can't carry a multi-phase summary. Output markdown: one line per phase (name, goal, difficulty) plus the DAG edges and each Produces seam.
+
+**Then `AskUserQuestion`** — "Does the N-phase decomposition look right?" Options:
 - "Looks right" -- proceed to DETAIL
 - "Adjust" -- user names what's off; revise the skeleton and re-present
 
@@ -385,7 +387,7 @@ After return: PASS -> proceed. FINDINGS -> fix issues, then proceed.
 
 ## Step 9: CONFIRM
 
-**Present to user:** phases, goals, skill assignments, constraint coverage, test coverage level (chosen at CROSS-CUT), review results.
+**Present to user:** phases, goals, skill assignments, constraint coverage, test coverage level (chosen at CROSS-CUT), review results. Render this as markdown in the conversation BEFORE any `AskUserQuestion` — the question dialog can't carry the summary, and the user won't open the saved file.
 
 **Simple:** "Does this look right? Anything to add or change?"
 

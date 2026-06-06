@@ -56,7 +56,7 @@ Corrections → update and re-confirm. If the response raises new open questions
 
 1. **Decompose (skeleton).** For each of the 1-2 phases write only: name, one-line goal, matched skills (compare the phase goal against available skill descriptions in the system-reminder; `none -- [reason]` valid; exclude workflow commands), difficulty. If there are 2 phases, add `**Depends on:**` and `**Produces:**` (what phase 1 hands phase 2). Write this skeleton to the plan file.
 
-2. **Skeleton checkpoint.** If 2 phases: `AskUserQuestion` showing the split + handoff — "Looks right" / "Adjust". If 1 phase: skip — nothing to decompose.
+2. **Skeleton checkpoint.** If 2 phases: print the split in conversation (each phase's name + goal, and the Produces handoff between them), then `AskUserQuestion` — "Looks right" / "Adjust". The dialog alone isn't a presentation — the user must see the split before being asked about it. If 1 phase: skip — nothing to decompose.
 
 3. **Detail each phase**, in order, one short pass each. Start with a one-line reframe — `Phase N: [name]. Consumes: [upstream Produces, or "nothing"]. Must produce: [Produces]. Difficulty: X.` — then load the phase's matched skills if not already loaded (`Skill()` + checklist `Read()`; they inform Edge cases and Done-when), and fill the body in place using this template:
 
@@ -124,7 +124,7 @@ Corrections → update and re-confirm. If the response raises new open questions
 
    PASS -> proceed. FINDINGS -> fix issues, then proceed.
 
-7. **Present and ask** via `AskUserQuestion`: "Here's the plan. Build it, adjust it, or tell me what to do?"
+7. **Present and ask.** Summarize the plan as markdown in conversation — phases with goals, done-when items, test coverage — then `AskUserQuestion`: "Build it, adjust it, or tell me what to do?" Never ask without the summary visible; the collapsed Write output doesn't count.
 
 8. **If build:** Suggest default thinking effort, run `/code-foundations:build .code-foundations/plans/<plan>.md`.
 

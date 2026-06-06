@@ -23,7 +23,7 @@ Your inputs come via the prompt. Read these BEFORE doing anything:
 
 | Input | Source | Required |
 |-------|--------|----------|
-| Plan file (`docs/plans/*.md`) | File path in prompt | YES |
+| Plan file (`.code-foundations/plans/*.md`) | File path in prompt | YES |
 | Phase number and name | In prompt | YES |
 | File list from plan | In prompt | YES |
 | Code standards (`docs/code-standards.md`) | Project root | YES — read and follow all conventions. If file does not exist, note in discovery output. |
