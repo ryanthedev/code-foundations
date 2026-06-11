@@ -7,11 +7,15 @@ How `/code-foundations:plan` and `/code-foundations:build` chain together. Refer
 ## Expected Flow (Single Build)
 
 ```
-/code-foundations:plan "user story"
+/code-foundations:plan "user story"  OR  /code-foundations:plan .code-foundations/research/<doc>.md
   ↓
-[Socratic questions]
-[2-3 approaches]
-[Detailed sections]
+[Shared steps: code-standards scan → clarify (5-round cap) → confirmed problem statement]
+  ↓
+[Quick track: decompose → detail → cross-cut → save → check → present]   (Simple)
+[Standard/Full pipeline (skill: planning), staged in place:                (Medium/Complex)
+   Discover → Classify → Explore → Decompose → Detail → Cross-cut → Save → Check → Confirm → Handoff]
+  ↓
+[Each phase gets **Model:**, **Gate:**, **Skills:** — Gate drives build's gate policy]
 [Save to .code-foundations/plans/YYYY-MM-DD-topic.md]
   ↓
 [Set thinking effort to default — plan has the reasoning, orchestration doesn't need max effort]
@@ -19,8 +23,8 @@ How `/code-foundations:plan` and `/code-foundations:build` chain together. Refer
 /code-foundations:build .code-foundations/plans/YYYY-MM-DD-topic.md
   ↓
 [Worktree Gate → creates .claude/worktrees/<slug>/]
-[Checklist execution in worktree]
-[Tests pass]
+[Per-phase gated execution in worktree (BUILD → REVIEW per the phase's **Gate:**)]
+[Tests pass → orchestrator commits per phase]
 [Summary report with merge instructions]
 ```
 

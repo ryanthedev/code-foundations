@@ -296,3 +296,10 @@ Summary: Validator floor is green across all 19 skills — every description is 
 - [x] Committed
 Commit: d471854
 Summary: Build pipeline is internally consistent — gate policy resolves from the per-phase **Gate:** field (contract authored at commands/build.md:112-123, values Full|Standard|Minimal, risk fallback for field-less plans; Phase 3 must copy these semantics verbatim into plan SAVE), § REVIEW dispatches the one-tier-downgraded model, 3-sample REVIEW uses per-sample -sample-K paths (post-gate-agent paths are prompt-supplied), § MINIMAL_BUILD carries DW-IDs, observed-behavior evidence and prompt-listed edge cases have defined verdict standing, SKIP logs, and all skill loading in build files is Read(${CLAUDE_PLUGIN_ROOT}/...) form.
+
+### Phase 4: Invocation surface (Gate: Full)
+- [x] BUILD: Discovery + design + TDD implementation complete
+- [x] REVIEW: Verification passed (4/4 DW in scope; DW-4.2 verified via official docs + orchestrator validator)
+- [x] Committed
+Commit: feaf4c7
+Summary: All 19 skills carry disable-model-invocation: true (slash-invocable, never auto-triggered, descriptions out of model context); descriptions are lean ≤2-sentence capability statements; references/skill-catalog.md (19 entries, family-grouped, with disambiguation notes) is now the single home for when-to-match knowledge — Phase 3 must wire plan DECOMPOSE matching to read it. Validator zero errors ×19.

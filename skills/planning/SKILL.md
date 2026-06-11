@@ -17,10 +17,10 @@ The plan is a contract between plan and build. It specifies WHAT and WHY at the 
 
 ### Create Progress Tasks
 
-`TaskCreate` for each step, `TaskUpdate` with `blockedBy` to enforce ordering:
+`TaskCreate` one task per pipeline step (the ten named in the header line above), `TaskUpdate` with `blockedBy` to enforce ordering:
 
 ```
-DISCOVER: Codebase search | DISCOVER: Questioning | CLASSIFY | EXPLORE | DECOMPOSE | DETAIL | CROSS-CUT | SAVE | CHECK | CONFIRM | HANDOFF
+DISCOVER | CLASSIFY | EXPLORE | DECOMPOSE | DETAIL | CROSS-CUT | SAVE | CHECK | CONFIRM | HANDOFF
 ```
 
 During DETAIL, add one sub-task per phase under it (one `TaskCreate` each), worked in DAG order.
@@ -31,27 +31,24 @@ During DETAIL, add one sub-task per phase under it (one `TaskCreate` each), work
 
 ## Step 1: DISCOVER
 
-### 1a: Codebase Search (MANDATORY -- Do First)
+DISCOVER runs **after** the plan command's shared steps (code-standards scan, clarify, confirmed problem statement). Do NOT re-run them. This step is the *delta*: deepen codebase research, and re-confirm the problem statement only if discovery contradicts it.
 
-**Before asking ANY questions**, load `Skill(code-foundations:code-standards)` to generate or update `docs/code-standards.md`. The skill handles staleness detection, codebase scanning, legacy migration, and writing.
+### 1a: Deepen Codebase Research
+
+The code-standards scan already ran in the plan command's shared step 1 — `docs/code-standards.md` exists. Do **not** reload the code-standards skill. Deepen the research instead: how similar problems are solved here, existing libraries/patterns to reuse, and patterns intentionally omitted (check git history).
 
 **See also:** [pattern-reuse-gate.md](${CLAUDE_PLUGIN_ROOT}/references/pattern-reuse-gate.md)
 
-### 1b: Clarify Intent
+### 1b: Re-confirm Problem Statement (only on contradiction)
 
-**Load the clarify skill:** `Skill(code-foundations:clarify)`
-
-Use its framework to classify what's unclear (fault type + ambiguity direction) and generate targeted questions. Do not duplicate the questioning protocol here -- the skill has it.
-
-**Enforcement:** Each question MUST use `AskUserQuestion` tool. No proceeding until answered. Short-circuit: zero questions if already clear.
+A confirmed problem statement already arrives from the plan command's shared step — clarification ran there, under its 5-round cap. Do **not** reload the clarify skill or re-clarify from scratch. Only if deeper research contradicts or materially broadens the stated problem do you re-confirm (see Output below).
 
 ### Questioning Gate
 
 **STOP. Cannot proceed until ALL true:**
-- [ ] Codebase searched
-- [ ] Complexity classified (Medium/Complex)
-- [ ] Hypotheses converged (or request was already unambiguous)
-- [ ] Each question asked via `AskUserQuestion`, each answer received
+- [ ] Codebase research deepened (pattern reuse + prior art checked)
+- [ ] Track received from dispatch (Medium/Complex)
+- [ ] Problem statement holds, or was re-confirmed after a discovery contradiction
 
 ### Output: Problem Statement
 
@@ -65,7 +62,9 @@ Review the existing problem statement against what deeper discovery found. If it
 
 Classify using signals: files touched (Medium 4-8, Complex 9+), patterns (Medium 2-3 some new, Complex multiple cross-cutting), cross-cutting concerns (Medium 1-2, Complex 3+), uncertainty (Medium approach unclear, Complex requirements uncertain), phase count (Medium 3-5, Complex 5-7).
 
-State explicitly: "This is a **[Medium/Complex]** task. [1-sentence justification]." **If uncertain, choose higher.**
+State explicitly: "This is a **[Medium/Complex]** task. [1-sentence justification]." **If uncertain between Medium and Complex, choose higher** (this tie-breaker refines Medium-vs-Complex only; the plan command's "Default to Quick" already routed the task here).
+
+**Demotion path — discovery reveals the task is actually Simple:** if the signals now read Simple (one focused change, 1-2 phases, no approach comparison needed), stop the pipeline and hand back to the Quick track in `commands/plan.md`. Do not force a 3-phase plan onto a one-thing change. Say so explicitly: "Discovery shows this is a Simple task — switching to the Quick track."
 
 | Track | Phases | Approach Comparison |
 |-------|--------|---------------------|
@@ -82,7 +81,7 @@ State explicitly: "This is a **[Medium/Complex]** task. [1-sentence justificatio
 
 ### Load Design Vocabulary
 
-`Skill(code-foundations:ca-architecture-boundaries)` — system-level vocabulary (boundaries, dependency direction, SRP-by-actor) for generating structurally different approaches here and shaping phase seams at DECOMPOSE. Module-level design skills (e.g. aposd-designing-deep-modules) are NOT loaded here — they get matched per phase at DECOMPOSE and loaded during DETAIL.
+`Read(${CLAUDE_PLUGIN_ROOT}/skills/ca-architecture-boundaries/SKILL.md)` — system-level vocabulary (boundaries, dependency direction, SRP-by-actor) for generating structurally different approaches here and shaping phase seams at DECOMPOSE. Module-level design skills (e.g. aposd-designing-deep-modules) are NOT loaded here — they get matched per phase at DECOMPOSE and loaded during DETAIL.
 
 ### Research (Medium/Complex)
 
@@ -129,9 +128,9 @@ Get the *shape* right before investing in phase bodies. Write the skeleton only 
 
 ### The Plan Is a Contract
 
-The plan specifies WHAT and WHY. Subagents determine HOW. Four readers: orchestrator (phase names, ordering, DW counts), pre-gate (goal, scope, constraints, approach notes, file hints), post-gate (goal, done-when), human (strategic intent, rationale).
+The plan specifies WHAT and WHY. Subagents determine HOW. Four readers: orchestrator (phase names, ordering, DW counts), build-agent (goal, scope, constraints, approach notes, file hints), post-gate-agent (goal, done-when), human (strategic intent, rationale).
 
-**No implementation details in phases** -- pre-gate writes pseudocode after fresh discovery. Cross-phase seams are the one exception: the Produces contract pins the interface; internals stay the build agent's latitude. **Plans must be pipeline-compatible** -- deterministic rules, not interactive user prompts between sub-phases.
+**No implementation details in phases** -- the build-agent writes pseudocode after fresh discovery. Cross-phase seams are the one exception: the Produces contract pins the interface; internals stay the build agent's latitude. **Plans must be pipeline-compatible** -- deterministic rules, not interactive user prompts between sub-phases.
 
 ### Define the Phases as a DAG
 
@@ -147,8 +146,8 @@ For each phase, write only:
 
 Skills are matched HERE so DETAIL can load them while writing phase bodies — a phase body written without domain knowledge is the planner guessing.
 
-1. Read the system-reminder in this conversation — find every line with a skill name (format: `plugin:skill-name` or `skill-name`) and its description
-2. For each phase, compare the phase's goal against every skill's description and trigger conditions
+1. `Read(${CLAUDE_PLUGIN_ROOT}/references/skill-catalog.md)` — the single source of when-to-match knowledge for all 19 skills. Do NOT scan the system-reminder listing for descriptions; it no longer carries them.
+2. For each phase, compare the phase's goal against every catalog entry's when-to-match conditions (including its disambiguation notes for sibling pairs)
 3. Assign skills whose triggers match the phase work. Most phases match 1-3 skills.
 4. Exclude workflow commands (plan, build, debug, research, code-standards, clarify)
 5. Write `**Skills:**` on every skeleton header — `none -- [reason]` valid, omission NOT valid
@@ -157,7 +156,7 @@ Skills are matched HERE so DETAIL can load them while writing phase bodies — a
 
 ### YAGNI Gate + Phase Sizing
 
-Before accepting each phase: Is it needed for success criteria? Could we ship without it? If "not needed now" -> remove. **Granularity test:** each phase produces a deliverable meaningful to the orchestrator and verifiable by post-gate. If it's an internal component of another phase's deliverable, fold it in.
+Before accepting each phase: Is it needed for success criteria? Could we ship without it? If "not needed now" -> remove. **Granularity test:** each phase produces a deliverable meaningful to the orchestrator and verifiable by the post-gate-agent. If it's an internal component of another phase's deliverable, fold it in.
 
 Phase counts: Medium 3-5, Complex 5-7. Prefer fewer. Express independent phases as DAG -- don't artificially linearize.
 
@@ -202,7 +201,7 @@ For each phase task, in DAG order:
 
 > Phase N: [name]. Consumes: [upstream Produces, or "nothing -- entry phase"]. Must produce: [this phase's Produces]. Difficulty: [X].
 
-**2. Load the phase's skills** (matched at DECOMPOSE). For each skill not already loaded this conversation: `Skill(code-foundations:<name>)` + Read its checklist(s). Skills load once — later phases reuse them. Apply them while writing Constraints, Edge cases, and Done-when. If the work reveals a skill the skeleton missed, add it to the field.
+**2. Load the phase's skills** (matched at DECOMPOSE). For each skill not already loaded this conversation: `Read(${CLAUDE_PLUGIN_ROOT}/skills/<name>/SKILL.md)` + Read its checklist(s). Skills load once — later phases reuse them. Apply them while writing Constraints, Edge cases, and Done-when. If the work reveals a skill the skeleton missed, add it to the field.
 
 **3. Write the body** using the phase template below.
 
@@ -214,6 +213,7 @@ For each phase task, in DAG order:
 ### Phase N: [Name]
 **Model:** [assigned at SAVE]
 **Skills:** [matched at DECOMPOSE, loaded during DETAIL -- skills or `none -- [reason]`]
+**Gate:** [Full | Standard | Minimal -- assigned at SAVE]
 
 **Goal:** [One sentence (Simple) | 1-2 sentences (Medium/Complex)]
 
@@ -262,7 +262,7 @@ Derive the whole-plan sections now that every phase body exists — they fall ou
 
 ### Test Plan
 
-Load `Skill(code-foundations:cc-quality-practices)` + `Read(${CLAUDE_PLUGIN_ROOT}/skills/cc-quality-practices/checklists/qa-and-testing.md)` (skip if already loaded). Apply its Test Case Generation to derive test items, to the chosen coverage level:
+Load `Read(${CLAUDE_PLUGIN_ROOT}/skills/cc-quality-practices/SKILL.md)` + `Read(${CLAUDE_PLUGIN_ROOT}/skills/cc-quality-practices/checklists/qa-and-testing.md)` (skip if already loaded). Apply its Test Case Generation to derive test items, to the chosen coverage level:
 
 - **Per-DW:** one test item per done-when item across all phases (Unit + Integration + Manual)
 - **Boundary:** below / at / above each boundary named in the phases' Edge cases
@@ -288,7 +288,7 @@ The file already exists from DECOMPOSE, with bodies and cross-cut sections fille
 
 `.code-foundations/plans/YYYY-MM-DD-<topic-slug>.md`
 
-### Model Detection + Skill Validation
+### Model Detection + Gate Assignment + Skill Validation
 
 **Model detection per phase (MANDATORY -- every phase MUST have `**Model:**` populated):**
 
@@ -305,16 +305,27 @@ Otherwise                                                       -> sonnet
 
 **Why Sonnet is the default, not omit:** Omit means inherit the user's session model -- and plan tells the user to crank to max effort, so Opus propagates to every subagent. Most code-touching phases (test, fix, validate, implement, wire, helper, hook, integration) are mechanical translation work that runs faster and cheaper on Sonnet without measurable quality loss. Reserve Opus for the keyword-flagged design-heavy phases.
 
+**Gate assignment per phase (MANDATORY -- every phase MUST have `**Gate:**` populated):**
+
+Build consumes the `**Gate:**` field verbatim — `Full`, `Standard`, or `Minimal` (see `commands/build.md` resolution order, rule 2). The planner sets it here with the risk context in hand. Mirror build.md's risk rules:
+
+| Risk signal in the phase | Gate |
+|---|---|
+| Security / auth / payment work (matches `**Security-sensitive:**`) | Full |
+| Multi-file change introducing new cross-phase seams | Full |
+| Docs-only or config-only change | Minimal |
+| (none of the above) | Standard |
+
+Skill presence does NOT decide the gate — every phase carries skills, so skills cannot discriminate gate level. Gate is keyed off the risk of the work itself, exactly as build resolves it.
+
 **Skill validation (EVERY phase MUST have `**Skills:**` field):**
 
 Skills were matched at DECOMPOSE and refined during DETAIL. Validate the final set:
 
 1. Every phase has `**Skills:**` populated — `none -- [reason]` valid, omission NOT valid
-2. Every skill name matches an available skill in the system-reminder (reject typos/nonexistent names)
+2. Every skill name matches an available skill — check against `Read(${CLAUDE_PLUGIN_ROOT}/references/skill-catalog.md)` (the 19-skill roster), not the system-reminder (reject typos/nonexistent names)
 3. No workflow commands (plan, build, debug, research, code-standards, clarify)
 4. Code-writing phases with `none` justify why no skill's triggers match — on any gap, re-run the DECOMPOSE matching procedure for that phase
-
-Skills affect gate policy: phases WITH skills get Full gate. This is intentional — skills mean the work is complex enough to warrant review.
 
 ### Plan File Schema
 
@@ -363,7 +374,7 @@ _To be filled during /code-foundations:build_
 
 ### Save (MANDATORY)
 
-The file was created at DECOMPOSE (`mkdir -p .code-foundations/plans` already done). Ensure every phase has `**Model:**` and `**Skills:**` populated and the schema is complete. **Do NOT commit** -- the plan is a working document, not a deliverable. Building handles worktree visibility by copying the plan file after worktree creation.
+The file was created at DECOMPOSE (`mkdir -p .code-foundations/plans` already done). Ensure every phase has `**Model:**`, `**Gate:**`, and `**Skills:**` populated and the schema is complete. **Do NOT commit** -- the plan is a working document, not a deliverable. Building handles worktree visibility by copying the plan file after worktree creation.
 
 ---
 
@@ -387,14 +398,16 @@ Checklist:
   user-observable output exists, high-uncertainty phases early
 - Tests: test plan covers every DW item; boundary + dirty tests derived from phase Edge cases
 - Skills: every phase has Skills field (not omitted), skills match work type,
-  each skill name matches an available skill in system-reminder (reject typos/nonexistent names),
+  each skill name matches an available skill in references/skill-catalog.md (reject typos/nonexistent names),
   code-writing phases with `none` justify why no skill's triggers match
+- Gates: every phase has a Gate field populated (Full/Standard/Minimal), matching its risk
+  (Full for security/auth/payment or new cross-phase seams; Minimal for docs/config-only; Standard otherwise)
 - Models: every phase has Model field populated (haiku/sonnet/opus -- never omitted)
 
 Output: PASS or FINDINGS with specific fix recommendations.
 ```
 
-After return: PASS -> proceed. FINDINGS -> fix issues, then proceed.
+After return: PASS -> proceed. FINDINGS -> fix; **structural fixes (phase boundaries, DW set, Produces seams, Gate/Model/Skills assignments) -> re-run CHECK**; minor fixes -> proceed (mirrors CONFIRM's rule).
 
 ---
 
