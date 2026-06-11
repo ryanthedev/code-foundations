@@ -11,7 +11,7 @@ You implement ONE phase of a plan via test-driven development. The Baseline Disc
 
 ## STOP - Load Phase Skills
 
-**If the dispatch prompt includes `## Additional Skills`:** execute EVERY `Skill()` and `Read()` line in that section, in order, BEFORE any other work. Skills carry the phase's domain checklists — apply them during design and implementation, and list them in your output's `### Skills Loaded` section.
+**If the dispatch prompt includes `## Additional Skills`:** execute EVERY `Read()` line in that section, in order, BEFORE any other work. Skills carry the phase's domain checklists — apply them during design and implementation, and list them in your output's `### Skills Loaded` section.
 
 **If there is no `## Additional Skills` section:** proceed with the Baseline Discipline alone. Do not load skills on your own initiative.
 
@@ -26,7 +26,7 @@ Your inputs come via the prompt. Read these BEFORE doing anything:
 | Plan file (`.code-foundations/plans/*.md`) | File path in prompt | YES |
 | Phase number and name | In prompt | YES |
 | File list from plan | In prompt | YES |
-| Code standards (`docs/code-standards.md`) | Project root | YES — read and follow all conventions. If file does not exist, note in discovery output. |
+| Code standards (`docs/code-standards.md`) | Project root | If present — read and follow all conventions. If the file does not exist, note that in the discovery output (Full mode) or the final Output's Code standards line (minimal mode). |
 
 ---
 
@@ -85,13 +85,7 @@ Read the dispatch prompt's `## Done-When Items (DW-IDs)` section. For each DW it
 
 If any item is CANNOT_MEET, return UPDATE_PLAN.
 
-### Self-Check Before Writing Discovery
-
-STOP. Verify:
-- [ ] Every DW item from the dispatch prompt is in the table (compare counts)
-- [ ] No DW items were silently omitted
-- [ ] Items marked COVERED name specific test case(s)
-- [ ] Items marked CANNOT_MEET have a clear reason
+The DW table is complete only when its DW-ID count equals the dispatch prompt's DW-ID count (the deterministic count rule under Done-When Traceability). Each COVERED item names specific test case(s); each CANNOT_MEET item states why.
 
 ### Design Decisions
 
@@ -178,6 +172,8 @@ For each DW item (or logical group of related DW items):
 
 ## Output
 
+**Full mode** (discovery + design + TDD):
+
 ```markdown
 ## BUILD Complete
 
@@ -203,6 +199,30 @@ For each DW item (or logical group of related DW items):
 - Discovery + Design: .code-foundations/build/<plan-name>-phase-N-discovery.md
 
 ### Status: DONE | SKIP | UPDATE_PLAN | BLOCKED
+```
+
+**Minimal mode** (no discovery — Discovery+Design fields collapse, no discovery artifact):
+
+```markdown
+## BUILD Complete
+
+### Discovery + Design
+- Recommendation: N/A (minimal gate — no discovery)
+- Code standards: [applied | not found]
+
+### TDD Implementation
+- DW items covered: [count/total]
+- Tests written: [count]
+- All tests GREEN: YES/NO
+- Files changed: [list with what was done]
+
+### Skills Loaded
+[List skills loaded, or "None assigned"]
+
+### Artifacts
+- none (minimal gate)
+
+### Status: DONE | UPDATE_PLAN | BLOCKED
 ```
 
 **Status DONE requires ALL DW items COVERED, ALL tests GREEN, and test anchoring intact.**

@@ -282,4 +282,10 @@ Mid-planning decision (supersedes the audit's trigger-tuning recommendations): t
 - Build runs on a feature branch off the current working tree; per-phase commits per references/commit-format.md.
 ---
 ## Execution Log
-_To be filled during /code-foundations:build_
+
+### Phase 1: Mechanical floor sweep (Gate: Full)
+- [x] BUILD: Discovery + design + TDD implementation complete
+- [x] REVIEW: Verification passed
+- [x] Committed
+Commit: fd92f15
+Summary: Validator floor is green across all 19 skills — every description is valid quoted YAML (performance-optimization and code-clarity-and-docs are parseable again), Total-items counts and CSO KEYWORDS sections are gone, commands are titled as commands, and the cc-debugging/gof bundled-file paths use braced ${CLAUDE_SKILL_DIR} vars. Later phases edit on a clean textual base; skill resolution deviation: Phase 1 ran with no skills (mechanical work, reason recorded).
