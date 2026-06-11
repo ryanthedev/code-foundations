@@ -1,6 +1,7 @@
 ---
 name: aposd-reviewing-module-design
-description: "Use when reviewing code, assessing interfaces, during PR review, or evaluating 'is this too complex?' Triggers on: code review, design review, module complexity, interface assessment, PR review, structural analysis."
+description: "Assesses existing module and interface design for complexity symptoms: information leakage, shallow interfaces, pass-through layers, and unknown unknowns. Produces a structured assessment — not transformations."
+disable-model-invocation: true
 ---
 
 # Skill: aposd-reviewing-module-design

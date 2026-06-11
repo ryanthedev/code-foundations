@@ -1,6 +1,7 @@
 ---
 name: cc-quality-practices
-description: "Use when planning QA, choosing review methods, designing tests, or debugging fails. Triggers on: defects found late, tests pass but production bugs, coverage disputes, review ineffective, spending excessive time debugging."
+description: "Applies Code Complete's QA process design: selects defect-detection techniques by phase, sizes the test suite, and designs review and inspection processes. For QA planning and process design, not active bug investigation."
+disable-model-invocation: true
 ---
 
 # Skill: cc-quality-practices

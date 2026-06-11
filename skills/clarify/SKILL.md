@@ -1,6 +1,7 @@
 ---
 name: clarify
-description: "Decompose user intent through structured brainstorming. Detects underspecification, ambiguity, and false premises through hypothesis-driven questioning. Use when a request is unclear, could have multiple valid interpretations, or critical details are missing."
+description: "Decomposes underspecified requests by classifying gaps (missing info, ambiguity, false premises) and generating targeted clarifying questions. Produces a confirmed problem statement before any implementation begins."
+disable-model-invocation: true
 ---
 
 # Skill: clarify

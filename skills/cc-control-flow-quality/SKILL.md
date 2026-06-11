@@ -1,6 +1,7 @@
 ---
 name: cc-control-flow-quality
-description: "Use when code has deep nesting (3+ levels), complex conditionals, loop design questions, high cyclomatic complexity (McCabe >10), or callback hell. Symptoms: arrow-shaped code, repeated conditions, confusing loop exits, lengthy if-else chains"
+description: "Audits and restructures control flow using Code Complete's nesting, cyclomatic complexity, loop design, guard-clause, and boolean simplification rules. Covers deep nesting, loop exit design, index naming, and callback chains."
+disable-model-invocation: true
 ---
 
 # Skill: cc-control-flow-quality

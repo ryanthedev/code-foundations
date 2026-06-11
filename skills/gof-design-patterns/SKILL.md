@@ -1,6 +1,7 @@
 ---
 name: gof-design-patterns
-description: "Use when applying or selecting a Gang of Four design pattern. Triggers on: design pattern, strategy pattern, factory, observer, decorator, command, adapter, composite, singleton, builder, proxy, facade, template method, state pattern, visitor, refactoring to a pattern, if/else chain on type, subclass explosion, dispatcher, event notification."
+description: "Provides all 23 Gang of Four patterns as a decision guide: maps code symptoms to patterns, then loads the structural recipe for the selected pattern."
+disable-model-invocation: true
 ---
 
 # Skill: gof-design-patterns

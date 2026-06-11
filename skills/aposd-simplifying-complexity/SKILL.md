@@ -1,6 +1,7 @@
 ---
 name: aposd-simplifying-complexity
-description: "Use when code is too complex, has scattered error handling, configuration explosion, or callers doing module work. Triggers on: too complex, simplify, scattered errors, configuration proliferation, verbose error handling"
+description: "Transforms complex code by applying APOSD's pull-complexity-downward principle: resolves error hierarchies, collapses configuration, and moves caller-side logic into modules. Produces edited code, not just assessment."
+disable-model-invocation: true
 ---
 
 # Skill: aposd-simplifying-complexity

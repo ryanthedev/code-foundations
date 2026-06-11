@@ -1,6 +1,7 @@
 ---
 name: cc-pseudocode-programming
-description: "Use when designing routines, stuck on where to start coding, caught in compile-debug loops, or code works but you don't understand why. Triggers on: starting a new coding task"
+description: "Structures routine design through pseudocode-first iteration: clarifies naming and purpose before any code, catches design flaws cheaply, and prevents compile-debug loops on poorly understood routines."
+disable-model-invocation: true
 ---
 
 # Skill: cc-pseudocode-programming

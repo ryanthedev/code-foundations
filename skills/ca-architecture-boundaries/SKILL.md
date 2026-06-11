@@ -1,6 +1,7 @@
 ---
 name: ca-architecture-boundaries
-description: "Use when designing system architecture, drawing boundaries between business logic and infrastructure, or when changes touch many unrelated files. Triggers on: architecture design, dependency direction, separating business rules from database/UI/frameworks."
+description: "Applies Clean Architecture's dependency-direction and SRP-by-actor rules to system-level boundary design: separates business logic from infrastructure, identifies actor-coupling risks, and enforces inward-pointing dependency arrows."
+disable-model-invocation: true
 ---
 
 # Architecture Boundaries (Clean Architecture)

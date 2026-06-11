@@ -1,6 +1,7 @@
 ---
 name: code-clarity-and-docs
-description: "Use when reviewing code clarity, writing comments, checking documentation accuracy, or auditing AI-facing docs. Triggers on: naming, comments, documentation, README, CLAUDE.md."
+description: "Audits and improves code clarity and documentation using APOSD's obviousness rules: naming quality, comment accuracy, AI-facing doc completeness, and the comments-first workflow for new code."
+disable-model-invocation: true
 ---
 
 # Code Clarity and Documentation

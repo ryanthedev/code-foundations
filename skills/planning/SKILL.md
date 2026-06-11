@@ -1,7 +1,8 @@
 ---
 name: planning
-description: "Standard/Full planning pipeline for plan command. Steps: discover, classify, explore, detail, save, check, confirm, handoff. Use when dispatched from plan command for Medium/Complex tasks. Triggers on 'planning pipeline', 'standard track', 'full track'."
+description: "Implements the Standard/Full planning pipeline for Medium and Complex tasks: multi-step discovery, phase decomposition with skill matching, cross-cutting concerns, and plan emission with Gate fields."
 user-invocable: false
+disable-model-invocation: true
 ---
 
 # Skill: planning

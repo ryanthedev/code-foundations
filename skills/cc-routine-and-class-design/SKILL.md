@@ -1,6 +1,7 @@
 ---
 name: cc-routine-and-class-design
-description: "Use when designing routines or classes, reviewing class interfaces, choosing between inheritance and containment, or evaluating routine cohesion. Also trigger when inheritance is used without LSP verification, or when design issues are present despite passing tests"
+description: "Applies Code Complete's routine and class design rules at the routine level: cohesion classification, parameter-count thresholds, LSP inheritance verification, and containment-vs-inheritance decision. For routine and class scope, not system architecture."
+disable-model-invocation: true
 ---
 
 # Skill: cc-routine-and-class-design

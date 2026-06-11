@@ -1,6 +1,7 @@
 ---
 name: aposd-verifying-correctness
-description: "Use after implementing code. Triggers on: is it done, ready to commit, verify correctness, did I miss anything, pre-commit check."
+description: "Verifies implementation completeness across functional correctness, error handling, concurrency, and security dimensions using APOSD's post-implementation checklist. Run after a coding task is nominally complete."
+disable-model-invocation: true
 ---
 
 # Skill: aposd-verifying-correctness

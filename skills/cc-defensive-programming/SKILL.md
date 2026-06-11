@@ -1,6 +1,7 @@
 ---
 name: cc-defensive-programming
-description: "Use when auditing defensive code, designing barricades, choosing assertion vs error handling, or deciding correctness vs robustness strategy. Triggers on: empty catch blocks, missing input validation, assertions with side effects, wrong exception abstraction level, garbage in garbage out mentality, deadline pressure to skip validation, trusted source rationalization."
+description: "Applies Code Complete's defensive programming rules: barricade design, assertion vs error-handling selection, input validation policy, and correctness-vs-robustness strategy for the current context."
+disable-model-invocation: true
 ---
 
 # Skill: cc-defensive-programming

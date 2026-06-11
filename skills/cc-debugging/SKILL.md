@@ -1,6 +1,7 @@
 ---
 name: cc-debugging
-description: "Use when investigating a bug, diagnosing a failure, debugging a flaky test, or tracing the root cause of unexpected behavior. Triggers on: debugging, bug, defect, broken test, flaky test, intermittent failure, root cause, can't reproduce, weird behavior, race condition."
+description: "Applies Code Complete's scientific debugging method: STABILIZE → LOCATE → HYPOTHESIZE → EXPERIMENT → FIX → TEST → SEARCH. For active bug investigation, not QA process design or test coverage planning."
+disable-model-invocation: true
 ---
 
 # Skill: cc-debugging

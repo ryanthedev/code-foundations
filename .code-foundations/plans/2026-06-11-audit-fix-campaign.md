@@ -289,3 +289,10 @@ Mid-planning decision (supersedes the audit's trigger-tuning recommendations): t
 - [x] Committed
 Commit: fd92f15
 Summary: Validator floor is green across all 19 skills — every description is valid quoted YAML (performance-optimization and code-clarity-and-docs are parseable again), Total-items counts and CSO KEYWORDS sections are gone, commands are titled as commands, and the cc-debugging/gof bundled-file paths use braced ${CLAUDE_SKILL_DIR} vars. Later phases edit on a clean textual base; skill resolution deviation: Phase 1 ran with no skills (mechanical work, reason recorded).
+
+### Phase 2: Build orchestration repair (Gate: Full)
+- [x] BUILD: Discovery + design + TDD implementation complete
+- [x] REVIEW: Verification passed (9/9 DW)
+- [x] Committed
+Commit: d471854
+Summary: Build pipeline is internally consistent — gate policy resolves from the per-phase **Gate:** field (contract authored at commands/build.md:112-123, values Full|Standard|Minimal, risk fallback for field-less plans; Phase 3 must copy these semantics verbatim into plan SAVE), § REVIEW dispatches the one-tier-downgraded model, 3-sample REVIEW uses per-sample -sample-K paths (post-gate-agent paths are prompt-supplied), § MINIMAL_BUILD carries DW-IDs, observed-behavior evidence and prompt-listed edge cases have defined verdict standing, SKIP logs, and all skill loading in build files is Read(${CLAUDE_PLUGIN_ROOT}/...) form.

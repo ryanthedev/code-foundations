@@ -1,6 +1,7 @@
 ---
 name: cc-refactoring-guidance
-description: "Use when modifying existing code, improving structure without changing behavior, or deciding between refactor, rewrite, or fix-first."
+description: "Guides safe refactoring using Code Complete's fix-first-then-refactor discipline: decides between refactor, rewrite, and fix-first; enforces separate commits; applies small-change rigor to high-error-rate one-liners."
+disable-model-invocation: true
 ---
 
 # Skill: cc-refactoring-guidance
