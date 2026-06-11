@@ -229,6 +229,3 @@ public class AlertNotification extends Notification {
 
 **COUNTER-INDICATOR:** If there's only one implementation and no foreseeable need for variation, or if the abstraction and implementation should be tightly coupled, suggest simpler direct inheritance or composition instead.
 
-## CSO KEYWORDS
-
-bridge pattern, handle body, abstraction implementation separation, decouple abstraction, implementation hierarchy, platform independence, driver abstraction, rendering engine abstraction, cross-platform design, orthogonal class hierarchies, nested generalizations, runtime implementation switching, composition over inheritance, interface implementation decoupling, structural pattern

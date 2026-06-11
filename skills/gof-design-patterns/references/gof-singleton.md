@@ -1,7 +1,7 @@
 ---
 name: gof-singleton
 classification: Creational / Object
-description: Use when exactly one instance of a class must exist system-wide with a well-known access point; Symptoms: multiple global variables storing sole instances, inconsistent state from duplicate instances, need for controlled access to shared resource
+description: "Use when exactly one instance of a class must exist system-wide with a well-known access point; Symptoms: multiple global variables storing sole instances, inconsistent state from duplicate instances, need for controlled access to shared resource"
 ---
 
 ## INTENT
@@ -230,25 +230,3 @@ public class ApplicationRegistry {
 
 **COUNTER-INDICATOR:** If subclass selection is complex or frequent, consider Strategy pattern with a singleton context instead
 
-## CSO KEYWORDS
-
-- singleton pattern
-- single instance
-- global access point
-- lazy initialization
-- eager initialization
-- thread-safe singleton
-- double-checked locking
-- static instance
-- getInstance method
-- private constructor
-- controlled instantiation
-- unique instance
-- registry pattern
-- module pattern
-- service locator
-- dependency injection alternative
-- singleton scope
-- application context
-- shared resource
-- global state management

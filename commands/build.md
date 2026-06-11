@@ -2,7 +2,7 @@
 description: "Execute an approved plan through gated phases (BUILD → REVIEW → commit) with subagent dispatch. Use when a plan exists in .code-foundations/plans/ and the user wants it implemented — phased TDD execution, per-phase quality gates, orchestrator commits, and a final trust report."
 ---
 
-# Skill: build
+# Command: build
 
 **Load Plan → Setup → Execute → Verify → Report**
 

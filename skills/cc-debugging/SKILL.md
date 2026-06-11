@@ -120,7 +120,7 @@ Rule these out in 2 minutes before deep investigation:
 
 ## Full Checklists
 
-The complete 99-item checklist — finding defects, fixing defects, syntax errors, brute-force techniques, common defect patterns: `Read skills/cc-debugging/checklists.md`.
+The complete 99-item checklist — finding defects, fixing defects, syntax errors, brute-force techniques, common defect patterns: `Read(${CLAUDE_SKILL_DIR}/checklists.md)`.
 
 ---
 

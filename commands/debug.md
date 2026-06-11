@@ -2,7 +2,7 @@
 description: "Guide systematic debugging"
 ---
 
-# Skill: cc-debugging
+# Command: debug
 
 ## STOP - Scientific Method Required
 

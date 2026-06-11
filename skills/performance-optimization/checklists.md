@@ -123,5 +123,3 @@ Sources: A Philosophy of Software Design (Ch. 20), Code Complete 2nd Ed. (Ch. 25
 - [ ] RF-11: "Compiler can do it better?" Trust modern compilers for simple transforms
 
 ---
-
-Total items: 67

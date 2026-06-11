@@ -96,5 +96,3 @@ Source: A Philosophy of Software Design (Ousterhout) + verification practices
 - [ ] QV-6: "Untrusted input?" → Input validated
 
 ---
-
-Total items: 35

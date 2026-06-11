@@ -68,5 +68,3 @@ Source: Code Complete 2nd Edition, Chapter 24
 - [ ] RF-10: "Tramp data chains?" - Parameters passed through multiple layers → Use object context or remove middle layers
 
 ---
-
-Total items: 40

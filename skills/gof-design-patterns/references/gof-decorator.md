@@ -1,7 +1,7 @@
 ---
 name: gof-decorator
 classification: Structural / Object
-description: Use when you need to add responsibilities to objects dynamically without affecting other objects; Symptoms: subclass explosion for optional features, rigid feature combinations, need to add/remove behaviors at runtime
+description: "Use when you need to add responsibilities to objects dynamically without affecting other objects; Symptoms: subclass explosion for optional features, rigid feature combinations, need to add/remove behaviors at runtime"
 ---
 
 # DECORATOR
@@ -154,15 +154,3 @@ public class LoggingDecorator {
 **ACTION:** Wrap the class in a decorator that implements the same interface, delegates to the original, and adds behavior before/after delegation
 **COUNTER-INDICATOR:** If you need to change the interface itself, use Adapter instead
 
-## CSO KEYWORDS
-
-- dynamic behavior extension
-- runtime composition
-- transparent wrapping
-- recursive composition
-- single responsibility layering
-- subclass explosion prevention
-- flexible alternative to inheritance
-- object augmentation
-- behavior stacking
-- transparent enclosure

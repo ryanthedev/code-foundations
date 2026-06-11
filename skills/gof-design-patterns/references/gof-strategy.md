@@ -92,6 +92,3 @@ ACTION: Extract each algorithm into a ConcreteStrategy class implementing a comm
 COUNTER-INDICATOR: When there's only one algorithm with no variants, when algorithm selection overhead exceeds benefits, or when variation is not client-relevant
 ```
 
-## CSO KEYWORDS
-
-strategy pattern, policy pattern, algorithm encapsulation, interchangeable algorithms, behavioral pattern, eliminate conditionals, switch statement refactoring, algorithm family, composition over inheritance, delegation, pluggable behavior, runtime algorithm selection, open-closed principle, dependency injection, validator, compositor, configurable behavior, algorithm variation, decoupled algorithms

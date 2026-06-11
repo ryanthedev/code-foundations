@@ -111,5 +111,3 @@ When full PPP is impractical, these 4 items are MANDATORY:
 - [ ] RF-11: "No failure surfacing plan?" - Error handling considered ("what can go wrong") but no plan for how callers learn about failures → For each failure mode, decide: error result, exception, observable state change, or documented justification for silencing
 
 ---
-
-Total items: 27

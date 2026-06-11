@@ -1,7 +1,7 @@
 ---
 name: gof-factory-method
 classification: Creational / Class
-description: Use when a class cannot anticipate the class of objects it must create, or wants subclasses to specify the objects it creates; Symptoms: hard-coded class names in constructors, parallel class hierarchies requiring coordinated instantiation, framework code that must instantiate application-specific classes
+description: "Use when a class cannot anticipate the class of objects it must create, or wants subclasses to specify the objects it creates; Symptoms: hard-coded class names in constructors, parallel class hierarchies requiring coordinated instantiation, framework code that must instantiate application-specific classes"
 ---
 
 # FACTORY METHOD
@@ -239,21 +239,3 @@ public class NotificationServiceFactory {
 - Configuration-based or prototype-based creation would be simpler
 - Products have many variations best handled by Abstract Factory
 
-## CSO KEYWORDS
-
-- factory method
-- virtual constructor
-- object creation
-- creational pattern
-- class instantiation
-- product creation
-- deferred instantiation
-- subclass instantiation
-- creator class
-- concrete product
-- abstract factory method
-- parallel class hierarchies
-- extensible instantiation
-- framework object creation
-- parameterized factory
-- template method creation

@@ -146,5 +146,3 @@ Quick checks for common bugs:
 - [ ] RF-10: "Incomplete diagnosis?" - Fixing without understanding program vicinity → Study hundreds of lines, not just error location
 
 ---
-
-Total items: 99

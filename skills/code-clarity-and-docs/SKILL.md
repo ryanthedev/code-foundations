@@ -1,6 +1,6 @@
 ---
 name: code-clarity-and-docs
-description: Use when reviewing code clarity, writing comments, checking documentation accuracy, or auditing AI-facing docs. Triggers on: naming, comments, documentation, README, CLAUDE.md.
+description: "Use when reviewing code clarity, writing comments, checking documentation accuracy, or auditing AI-facing docs. Triggers on: naming, comments, documentation, README, CLAUDE.md."
 ---
 
 # Code Clarity and Documentation

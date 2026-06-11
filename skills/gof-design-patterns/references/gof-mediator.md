@@ -90,6 +90,3 @@ ACTION: Introduce a Mediator that encapsulates interaction logic; have colleague
 COUNTER-INDICATOR: When the mediator becomes a god object; when interactions are simple; when performance overhead of indirection is unacceptable; when only 2-3 objects interact
 ```
 
-## CSO KEYWORDS
-
-mediator, colleague, coordination, loose coupling, interaction encapsulation, many-to-many, one-to-many, dialog director, widget changed, event bus, message broker, centralized control, object protocol, interdependencies, indirect communication, hub, behavioral pattern

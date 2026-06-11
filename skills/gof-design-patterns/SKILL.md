@@ -92,7 +92,7 @@ Every pattern adds indirection. Apply one only when:
 
 ## Reference Files
 
-Each pattern has a full file in `skills/gof-design-patterns/references/`:
+Each pattern has a full file in `${CLAUDE_SKILL_DIR}/references/`:
 
 - `foundations.md` — GoF principles (program to interface, favor composition, encapsulate what varies)
 - `techniques.md` — master table, pattern relationships, alternative-pattern decision guide

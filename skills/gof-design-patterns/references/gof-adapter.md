@@ -175,20 +175,3 @@ public class LegacyLoggerAdapter implements LoggingService {
 | "need to wrap multiple implementations" | Apply object adapter pattern to compose rather than inherit | All implementations share common base class |
 | "class hierarchy integration" | Consider class adapter if language supports multiple inheritance | Single inheritance language or need to adapt subclasses |
 
-## CSO KEYWORDS
-
-- adapter pattern
-- wrapper pattern
-- interface adapter
-- legacy integration
-- API compatibility
-- interface conversion
-- class adapter
-- object adapter
-- interface translation
-- pluggable adapter
-- two-way adapter
-- structural pattern
-- incompatible interfaces
-- interface mismatch
-- third-party integration

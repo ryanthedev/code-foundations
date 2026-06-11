@@ -1,6 +1,6 @@
 ---
 name: performance-optimization
-description: Use when code is too slow, has performance issues, timeouts, OOM errors, high CPU/memory, or doesn't scale. Triggers on: profiler hot spots, latency complaints, needs optimization, critical path analysis.
+description: "Use when code is too slow, has performance issues, timeouts, OOM errors, high CPU/memory, or doesn't scale. Triggers on: profiler hot spots, latency complaints, needs optimization, critical path analysis."
 ---
 
 # Skill: performance-optimization

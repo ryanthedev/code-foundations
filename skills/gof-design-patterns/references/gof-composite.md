@@ -214,6 +214,3 @@ ACTION: Place child management operations in Component (transparency) or only in
 COUNTER-INDICATOR: Safety is paramount and type-unsafe operations are unacceptable
 ```
 
-## CSO KEYWORDS
-
-composite, tree structure, part-whole hierarchy, recursive composition, uniform treatment, component, leaf, container, child management, transparency vs safety, graphics system, file system, organization hierarchy, menu structure, DOM tree, AST, parse tree

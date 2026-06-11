@@ -92,6 +92,3 @@ ACTION: Extract the algorithm skeleton into an abstract class template method; i
 COUNTER-INDICATOR: The entire algorithm varies (use Strategy); need runtime flexibility; inheritance hierarchy is already complex; steps need to be reordered by subclasses
 ```
 
-## CSO KEYWORDS
-
-template method, algorithm skeleton, inheritance, hook operations, primitive operations, Hollywood principle, inversion of control, code reuse, abstract class, subclass customization, lifecycle methods, framework design, refactoring to generalize, class behavioral, invariant algorithm, deferred steps, factoring common behavior

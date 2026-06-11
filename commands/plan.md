@@ -2,7 +2,7 @@
 description: "Plan features and implementation"
 ---
 
-# Skill: plan
+# Command: plan
 
 The plan is a contract between plan and build. It specifies WHAT and WHY at the strategic level, with explicit interfaces between phases.
 

@@ -1,7 +1,10 @@
 # Plan: Audit Fix Campaign — code-foundations v4.17.0 → v5.0.0
 **Created:** 2026-06-11
-**Status:** ready
+**Status:** in-progress
+**Started:** 2026-06-11
+**Current Phase:** 1
 **Complexity:** complex
+**Workspace:** branch: feature/audit-fix-campaign (baseline 9798c47)
 ---
 ## Context
 The 2026-06 full skill-craft audit (`.skill-audit/AUDIT-REPORT.md`) found the plugin unshippable: 6 P0 blockers (invalid YAML in 2 skills + 9 gof refs; build gate policy that collapses to always-Full; REVIEW-model rule nullified by its own template; 3-sample security REVIEW racing on fixed paths; plan.md unable to receive its documented research-doc argument; cc-debugging failing its own workflow behaviorally), systemic P1s (orphaned bundled files with proven drift in ~10 skills; seam divergences; 4 internal contradictions), and P2 debt (banned constructs, duplicated STOP blocks, wrong counts, textbook bloat).

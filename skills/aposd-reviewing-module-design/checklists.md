@@ -104,5 +104,3 @@ Source: A Philosophy of Software Design (Ousterhout), Chapters 2, 4, 5, 7, 9
 - [ ] PC-3: "Simple Interface vs Configurability" → Real systems need configuration; penalize only unnecessary complexity
 
 ---
-
-Total items: 37

@@ -128,5 +128,3 @@ GS-1 to GS-4 (General Standard), SM-1 to SM-6 (Security Modern), SA-1 to SA-4 (S
 - [ ] RF-12: "Fallback masking failure?" - Default value substituted on error (`catch { return null }`, `|| default`, `?? fallback`) without distinguishing "no result" from "operation failed" → Use Result type or distinct error sentinel; log the original error
 
 ---
-
-Total items: 33

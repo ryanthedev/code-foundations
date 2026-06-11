@@ -167,5 +167,3 @@ Check whichever files exist: `CLAUDE.md`, `.cursorrules`, `.github/copilot-instr
 - [ ] RF-13: "Migration steps missing for breaking changes?" -> Users can't upgrade
 
 ---
-
-Total items: 82

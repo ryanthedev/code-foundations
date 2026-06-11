@@ -98,5 +98,3 @@ Source: A Philosophy of Software Design (Ousterhout), Chapters 8, 10, 18
 - [ ] RF-7: "Error masked without observability?" - Applying Mask or Define-out but no logging, metrics, or alternate signal when the error actually occurs → Every masked error needs an observability escape hatch (log, metric, health check) so operators can detect when masking hides a real problem
 
 ---
-
-Total items: 45

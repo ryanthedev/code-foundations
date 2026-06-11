@@ -82,5 +82,3 @@ Source: A Philosophy of Software Design (Ousterhout), Chapter 4, 6, 9
 - [ ] EB-4: "Am I committing to return for proper implementation within 24 hours?"
 
 ---
-
-Total items: 36

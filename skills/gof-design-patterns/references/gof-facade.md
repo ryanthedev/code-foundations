@@ -1,7 +1,7 @@
 ---
 name: gof-facade
 classification: Structural / Object
-description: Use when you need to provide a simple interface to a complex subsystem; Symptoms: clients coupled to many subsystem classes, complex initialization sequences, subsystem complexity leaking into client code
+description: "Use when you need to provide a simple interface to a complex subsystem; Symptoms: clients coupled to many subsystem classes, complex initialization sequences, subsystem complexity leaking into client code"
 ---
 
 ## INTENT
@@ -178,6 +178,3 @@ public class OrderFacade {
 
 **COUNTER-INDICATOR:** Don't create a facade when clients legitimately need varied, fine-grained access patterns; when the "subsystem" is just one or two classes; or when the facade would simply mirror the subsystem interface without simplification.
 
-## CSO KEYWORDS
-
-facade, subsystem, unified interface, simplify, wrapper, API gateway, service layer, anti-corruption layer, encapsulation, weak coupling, layered architecture, convenience interface, entry point, delegation, abstraction

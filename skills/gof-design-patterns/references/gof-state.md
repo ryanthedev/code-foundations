@@ -1,7 +1,7 @@
 ---
 name: gof-state
 classification: Behavioral / Object
-description: Use when an object's behavior depends on its state and must change at runtime; Symptoms: large switch/if-else statements checking object state, operations scattered with same conditional structure, state represented by enumerated constants
+description: "Use when an object's behavior depends on its state and must change at runtime; Symptoms: large switch/if-else statements checking object state, operations scattered with same conditional structure, state represented by enumerated constants"
 ---
 
 ## INTENT
@@ -404,36 +404,3 @@ Provide Context with `setState()` or `changeState()` method for States to use.
 
 **COUNTER-INDICATOR:** Premature optimization - start with simplest approach (create on demand) unless profiling shows performance issues
 
-## CSO KEYWORDS
-
-- state pattern
-- state machine
-- finite state machine
-- FSM
-- state transition
-- state-dependent behavior
-- behavioral state
-- objects for states
-- state object
-- context and state
-- state interface
-- concrete state
-- change state
-- transition logic
-- state encapsulation
-- eliminate conditionals
-- replace conditional with polymorphism
-- TCP connection states
-- workflow states
-- order status
-- mode switching
-- status management
-- XState
-- state machine library
-- useReducer state machine
-- Spring State Machine
-- statechart
-- hierarchical states
-- guard conditions
-- entry actions
-- exit actions
