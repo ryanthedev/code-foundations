@@ -67,17 +67,9 @@ Source: Code Complete 2nd Edition, Chapter 23 (pp. 559-560)
 
 ---
 
-## Quick Reference: Scientific Debugging Steps
+## Scientific Debugging Steps
 
-| Step | Action | Checkpoint |
-|------|--------|------------|
-| 1 | **STABILIZE** the error | Can reproduce reliably? |
-| 2 | Form **HYPOTHESIS** | Based on actual data? |
-| 3 | Design **EXPERIMENT** | How will you prove/disprove? |
-| 4 | **PROVE/DISPROVE** | Run experiment, record result |
-| 5 | **FIX** the defect | Root cause, not symptom? |
-| 6 | **TEST** the fix | Triangulation + regression? |
-| 7 | **SEARCH** for similar | Check clusters? |
+The canonical 7-step list (STABILIZE → LOCATE → HYPOTHESIZE → EXPERIMENT → FIX → TEST → SEARCH) and its gate preconditions live in `SKILL.md` — follow that order; this file holds the supporting checklists below.
 
 ---
 
@@ -146,5 +138,3 @@ Quick checks for common bugs:
 - [ ] RF-10: "Incomplete diagnosis?" - Fixing without understanding program vicinity → Study hundreds of lines, not just error location
 
 ---
-
-Total items: 99

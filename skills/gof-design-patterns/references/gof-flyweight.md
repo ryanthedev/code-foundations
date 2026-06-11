@@ -169,6 +169,3 @@ ACTION: Pass parent references as extrinsic state; use directed-acyclic graph in
 COUNTER-INDICATOR: Need bidirectional traversal with stored parent references
 ```
 
-## CSO KEYWORDS
-
-object sharing, intrinsic state, extrinsic state, fine-grained objects, memory optimization, flyweight pool, flyweight factory, shared objects, context-independent state, glyph, character objects, document editor, space efficiency, storage savings, object pooling, reference counting, immutable shared state

@@ -2,7 +2,7 @@
 description: "Execute an approved plan through gated phases (BUILD → REVIEW → commit) with subagent dispatch. Use when a plan exists in .code-foundations/plans/ and the user wants it implemented — phased TDD execution, per-phase quality gates, orchestrator commits, and a final trust report."
 ---
 
-# Skill: build
+# Command: build
 
 **Load Plan → Setup → Execute → Verify → Report**
 
@@ -13,7 +13,7 @@ description: "Execute an approved plan through gated phases (BUILD → REVIEW �
 - **Worktree isolation** — never build on main/master; multi-phase commits there have no rollback
 - **Load plan before coding** — no plan = no checklist = forgotten tasks
 - **One section at a time** — parallel sections cause merge conflicts and lost context
-- **BUILD before REVIEW** (Full/Standard gate) — Minimal gate phases skip discovery
+- **BUILD before REVIEW** (Full gate only) — Standard/Minimal gates have no REVIEW; Minimal additionally skips discovery
 - **Verification before commit, per gate policy** — Full: REVIEW must PASS; Standard/Minimal: tests are the gate
 - **Independent verification on complex work only** — self-review is blind, but over-verifying trivial work injects noise
 - **Mark complete only when gates pass** — premature completion ships unverified work
@@ -66,7 +66,7 @@ Set in the plan file: `**Status:** in-progress`, `**Started:** YYYY-MM-DD HH:MM`
 
 ### Skill Resolution (One-Time Task)
 
-Before creating phase tasks, resolve skills for all phases. Skills affect gate policy (phases with Skills get Full gate), so this must run first.
+Before creating phase tasks, resolve skills for all phases. Skills do NOT affect gate policy — every phase carries at least one skill, so skill presence cannot discriminate gate level (gate is keyed off the plan's `**Gate:**` field or risk fallback). Resolving skills first still matters: dispatch prompts need the resolved checklist paths.
 
 1. `TaskCreate(subject: "SETUP: Skill Resolution", description: "Validate and resolve skill assignments for all phases.")`
 2. Scan system-reminder for all available skills — read every skill's description and trigger conditions. Exclude workflow commands (plan, build, debug, research, code-standards, clarify).
@@ -78,7 +78,7 @@ Before creating phase tasks, resolve skills for all phases. Skills affect gate p
    ```bash
    find ${CLAUDE_PLUGIN_ROOT}/skills/<name-1> ${CLAUDE_PLUGIN_ROOT}/skills/<name-2> ... \( -name 'checklists.md' -o -path '*/checklists/*.md' \)
    ```
-   A skill resolves to its single `checklists.md`, every `.md` under its `checklists/` directory, or nothing — some skills have no checklist files; those get only their `Skill()` line in dispatch prompts. Record the resolved path(s) per skill — dispatch prompts emit them as explicit `Read()` lines.
+   A skill resolves to its single `checklists.md`, every `.md` under its `checklists/` directory, or nothing — some skills have no checklist files; those get only their SKILL.md `Read()` line in dispatch prompts. Record the resolved path(s) per skill — dispatch prompts emit them as explicit `Read()` lines.
 5. Update the plan file's `**Skills:**` fields with resolved assignments.
 6. `TaskUpdate(status: "completed")`
 
@@ -109,21 +109,20 @@ Determine the gate level for each phase. This controls which sub-phases run. Non
 
 **Resolution order** (first match wins):
 
-1. **Plan override:** `**Pipeline:** full` forces Full. `**Pipeline:** direct` forces Minimal.
-2. **Always Full** if ANY of these are true:
-   - First phase in the plan (errors here cascade to everything)
-   - Final phase in the plan (last chance before merge)
-   - Model is set to opus
-   - Phase has `**Uncertainty:**` that is NOT "None"
-   - Phase has assumptions to verify (from Assumptions table)
-   - Phase has a `**Skills:**` field
-3. **Minimal** if ALL of these are true:
-   - Model is set to haiku
-   - No Skills, no assumptions, no uncertainty
-   - Done-when items <= 2
-4. **Standard** — everything else
+1. **Pipeline override (topmost):** `**Pipeline:** full` forces Full. `**Pipeline:** direct` forces Minimal.
+2. **Plan-declared gate:** use the phase's `**Gate:**` field verbatim — `Full`, `Standard`, or `Minimal`. The planner sets this at SAVE with the risk context in hand; the decision is visible and reviewable in the plan file.
+3. **Risk fallback (no `**Gate:**` field — e.g. plans authored before v5):** apply the first matching risk rule, else Standard.
 
-**State the resolved gate level when creating tasks:** "Phase N gate: [Full/Standard/Minimal] (reason: [auto/plan override])"
+| Risk signal in the phase | Gate |
+|---|---|
+| Security / auth / payment work | Full |
+| Multi-file change introducing new cross-phase seams | Full |
+| Docs-only or config-only change | Minimal |
+| (none of the above) | Standard |
+
+Skill presence does NOT affect the gate — every phase carries skills (see Skill Resolution), so skills cannot discriminate gate level. Gate level is keyed off the declared field or, absent it, the risk of the work itself.
+
+**State the resolved gate level when creating tasks:** "Phase N gate: [Full/Standard/Minimal] (reason: plan `**Gate:**` field | risk fallback: [rule] | pipeline override)"
 
 ### Create Phase Tasks Upfront
 
@@ -197,7 +196,7 @@ TaskUpdate → in_progress, then dispatch the build agent. It combines discovery
 
 **After BUILD returns:**
 1. Check status: DONE, SKIP, UPDATE_PLAN, or BLOCKED
-2. If SKIP → mark task completed, skip REVIEW task if exists, proceed to next phase
+2. If SKIP → mark task completed, skip REVIEW task if exists, **append a SKIP execution-log entry** to the plan file (the `### Phase N` entry from `commit-format.md` with BUILD/REVIEW/Committed lines replaced by a single `- [x] SKIPPED — [reason from build agent]` and no commit hash), then proceed to next phase
 3. If UPDATE_PLAN → pause and ask user
 4. If BLOCKED → do NOT mark completed → debug and re-dispatch or escalate
 5. If DONE → TaskUpdate → completed
@@ -212,7 +211,7 @@ TaskUpdate → in_progress, then dispatch `code-foundations:post-gate-agent` wit
 
 **The reviewer is a debiased independent critic — give it NO intent-framing.** Do NOT include the plan's Context, any Progress block, the discovery file, or any account of what the BUILD agent did or intended — intent-framing collapses defect detection. Requirements + files + commands only (the template enforces this).
 
-**Security-sensitive phases** (`**Security-sensitive:** yes` in the plan): dispatch THREE independent REVIEW agents with the identical prompt (separate Agent calls — independence is the point), take the majority verdict, record all three in the execution log.
+**Security-sensitive phases** (`**Security-sensitive:** yes` in the plan): dispatch THREE independent REVIEW agents (separate Agent calls — independence is the point). The prompts are identical EXCEPT for the per-sample paths: substitute `K`=1,2,3 into the `§ REVIEW` review-path and scratch-path placeholders so each sample writes a distinct `<plan>-phase-N-review-sample-K.md` and `scratch-K.sh` (otherwise the samples race and overwrite each other). Take the majority verdict; all three sample files are the record.
 
 **After REVIEW:**
 1. Read the review file
@@ -246,8 +245,8 @@ When a BUILD or REVIEW task returns FAIL, **read `${CLAUDE_PLUGIN_ROOT}/referenc
 
 ### Load Skills
 
-1. `Skill(code-foundations:performance-optimization)` — catch obvious performance regressions (O(n²), N+1 queries, unnecessary allocations)
-2. `Skill(code-foundations:cc-refactoring-guidance)` — identify refactoring opportunities introduced during implementation
+1. `Read(${CLAUDE_PLUGIN_ROOT}/skills/performance-optimization/SKILL.md)` — catch obvious performance regressions (O(n²), N+1 queries, unnecessary allocations)
+2. `Read(${CLAUDE_PLUGIN_ROOT}/skills/cc-refactoring-guidance/SKILL.md)` — identify refactoring opportunities introduced during implementation
 
 ### Test Coverage Check
 

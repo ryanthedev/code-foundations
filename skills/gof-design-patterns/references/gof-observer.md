@@ -100,6 +100,3 @@ COUNTER-INDICATOR: Single dependent that won't change; very frequent micro-updat
                    notification overhead exceeds benefit; need for strict update ordering
 ```
 
-## CSO KEYWORDS
-
-observer, subject, publish-subscribe, pub-sub, event, notification, broadcast, listener, callback, subscription, reactive, one-to-many dependency, state synchronization, loose coupling, MVC, model-view, data binding, event-driven, change propagation, dependency notification, attach, detach, notify, update, push model, pull model, ChangeManager

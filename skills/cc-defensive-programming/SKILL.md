@@ -1,392 +1,122 @@
 ---
 name: cc-defensive-programming
-description: "Use when auditing defensive code, designing barricades, choosing assertion vs error handling, or deciding correctness vs robustness strategy. Triggers on: empty catch blocks, missing input validation, assertions with side effects, wrong exception abstraction level, garbage in garbage out mentality, deadline pressure to skip validation, trusted source rationalization."
+description: "Applies Code Complete's defensive programming rules: barricade design, assertion vs error-handling selection, input validation policy, and correctness-vs-robustness strategy for the current context."
+disable-model-invocation: true
 ---
 
-# Skill: cc-defensive-programming
+# cc-defensive-programming
 
-## STOP - Never Skip
+Defensive code keeps small failures from compounding into silent, hard-to-diagnose ones. These four checks catch the violations that corrupt data and hide bugs rather than crashing loudly — each is almost always required; exceptions need explicit justification:
 
-| Check | Why Critical |
-|-------|--------------|
-| **No executable code in assertions** | Code disappears in production builds |
-| **No empty catch blocks** | Silently swallows bugs that compound |
-| **External input validated** | Security vulnerabilities, data corruption |
+| Check | Why |
+|---|---|
+| No executable code in assertions | Assertions are compiled out of production builds; the code vanishes with them |
+| No empty catch blocks | Silently swallows bugs that cascade into harder failures downstream |
+| External input validated at entry | Unvalidated input is security vulnerabilities and data corruption |
+| Assertions for bugs only | Anticipated runtime errors need handling, not assertions (which are disabled in production) |
 
----
+Shared thresholds and the information-hiding rationale: `Read(${CLAUDE_PLUGIN_ROOT}/references/cc-foundations.md)`.
 
-## CRISIS TRIAGE (2 minutes)
+## Two rules that override the textbook
 
-**Production down? Use this prioritized subset:**
+- **"Internal team API" is still external.** Any data crossing a network or process boundary is external input — validate it, even from a service your own team owns.
+- **A barricade reduces redundant validation; it does not replace defense-in-depth.** Inside the barricade you may assume data is validated — except for security-critical paths (auth, crypto, PII), where you validate again. Barricade validation has bugs too.
 
-### Immediate (30 seconds each)
-1. **Is external input validated at entry point?** If no → add validation NOW
-2. **Any empty catch blocks hiding the real error?** If yes → add logging, find root cause
-3. **Any assertions with side effects?** If yes → extract to separate statement
+External input = any data not provably controlled by the current code path: user input, files, network/API/DB responses, environment variables, and data from any other service.
 
-### Before Deploying Fix (60 seconds)
-4. **Does fix match architectural error strategy?** (return code vs exception vs shut down)
-5. **Are you catching at right abstraction level?** (not `EOFException` from `GetEmployee()`)
+## When NOT to apply
 
-**Why triage works:** These 5 items catch 80% of defensive programming bugs. Full checklist (21 items) is for non-emergency review.
+- Pure functions without side effects (but still validate inputs at system boundaries).
+- Prototype/spike code, time-boxed before committing to an error strategy.
+- Test code — test doubles intentionally violate production patterns.
+- Performance-critical inner loops where assertion overhead is profiled at >5%.
 
-**Empty catch blocks cause compounding failures.** A suppressed error in one layer cascades into harder-to-diagnose failures in production.
-
----
-
-## Key Definitions
-
-### External Input
-**Any data not provably controlled by current code path:**
-- User input (keyboard, forms, CLI args)
-- Files (config, data, uploads)
-- Network (APIs, databases, inter-service calls)
-- Environment variables, system properties
-- Data from ANY other service, even internal ones
-
-**"Internal team API" is still external.** If it crosses a network boundary or process boundary, validate it.
-
-### Assertion
-Code used during development that allows a program to check itself as it runs. When true = operating as expected. When false = detected an unexpected error (bug). Use for conditions that should **never** occur.
-
-### Barricade
-A damage-containment strategy. Interfaces designated as boundaries to "safe" areas. Data crossing these boundaries is checked for validity.
-
-**Limitation:** Barricades reduce redundant validation but do NOT replace defense-in-depth for security-critical operations. If barricade validation has a bug, what happens?
-
-### Correctness vs Robustness
-- **Correctness:** Never returning an inaccurate result; no result is better than wrong result (safety-critical)
-- **Robustness:** Always trying to keep software operating, even if results are sometimes inaccurate (consumer apps)
-
-### Preconditions / Postconditions
-- **Preconditions:** Properties client code promises are true BEFORE calling routine
-- **Postconditions:** Properties routine promises are true AFTER executing
-- [XREF: Meyer 1997, "Design by Contract"]
-
-## When NOT to Use
-
-- **Pure functions without side effects** - Immutable data flows don't need defensive mutation protection (but still validate inputs at system boundaries)
-- **Prototype/spike code** - Time-boxed exploration (max 1 week) before committing to error strategy
-- **Test code** - Test doubles intentionally violate production patterns
-- **Performance-critical inner loops** - Where assertion overhead matters (must show profiling data proving >5% overhead)
-
-**SECURITY EXCEPTION:** Security-critical code (authentication, authorization, cryptographic operations, PII handling) is NEVER exempt from defensive programming regardless of other factors. When in doubt, validate.
-
-## Crisis Invariants - NEVER SKIP
-
-**These checks are almost always required. Exceptions need explicit justification and documentation:**
-
-| Check | Time | Why Critical |
-|-------|------|--------------|
-| **No executable code in assertions** | 15 sec | Code disappears in production builds |
-| **No empty catch blocks** | 15 sec | Silently swallows bugs that compound |
-| **External input validated** | 30 sec | Security vulnerabilities, data corruption |
-| **Assertions for bugs only** | 15 sec | Assertions disabled in production; anticipated errors need handling |
-
-**Why these four?** Violations create silent failures that are nearly impossible to debug later. They don't crash loudly - they corrupt data and hide bugs.
-
-**Error handling deferred to a future session is rarely completed.** Edge cases are forgotten once the code moves out of active context. If deferral is necessary, create a tracked ticket with specific scope.
-
----
-
-## Pattern Reuse Gate
-
-**BEFORE implementing any error handling, search the codebase:**
-
-| Search For | Why |
-|------------|-----|
-| Same error type elsewhere | How is it handled? Log? Throw? Return code? |
-| Same module's error handling | What's the established pattern here? |
-| Barricade/validation patterns | Where are the trust boundaries? |
-| Exception hierarchy | What custom exceptions exist? |
-
-**Questions to answer:**
-1. How does this codebase handle this type of error elsewhere?
-2. Is there an established error-handling strategy (exceptions vs return codes vs Result types)?
-3. What logging/monitoring patterns are used?
-4. Are there existing custom exception classes I should use?
-
-**If pattern found:** Follow it. Consistency in error handling is critical for debugging.
-
-**If no pattern found:** You're establishing one. Document your decision. Consider if this should become the pattern.
-
-**See:** [pattern-reuse-gate.md](${CLAUDE_PLUGIN_ROOT}/references/pattern-reuse-gate.md) for full gate protocol.
-
----
+Security-critical code (authentication, authorization, cryptographic operations, PII handling) is never exempt, regardless of the above. When in doubt, validate.
 
 ## Modes
 
 ### CHECKER
-Purpose: Execute checklists for defensive programming, assertions, exceptions, and error handling
-Triggers:
-  - "review my error handling"
-  - "check for defensive programming"
-  - "review assertions"
-  - "check exception handling"
-  - "audit my validation code"
-Non-Triggers:
-  - "design my error handling strategy" -> APPLIER
-  - "review my control flow" -> cc-control-flow-quality
-  - "review my class design" -> cc-routine-and-class-design
-Checklist: **See [checklists.md](${CLAUDE_PLUGIN_ROOT}/skills/cc-defensive-programming/checklists.md)**
-Output Format:
-  | Item | Status | Evidence | Location |
-  |------|--------|----------|----------|
-Severity:
-  - VIOLATION: Fails checklist item (missing validation, empty catch blocks, assertions with side effects)
-  - WARNING: Partial compliance (inconsistent error handling, missing documentation)
-  - PASS: Meets requirement
+
+Execute the defensive-programming, assertion, and exception checklists against the code: `Read(${CLAUDE_SKILL_DIR}/checklists.md)`. Output one row per item: `| Item | Status | Evidence | Location |`, status ∈ VIOLATION (missing validation, empty catch, side-effecting assertion) / WARNING (inconsistent handling, missing docs) / PASS.
 
 ### APPLIER
-Purpose: Apply defensive programming techniques when implementing error handling and validation
-Triggers:
-  - "how should I handle this error"
-  - "should I use assertion or error handling"
-  - "help me design barricades"
-  - "set up defensive programming"
-  - "implement input validation"
-Non-Triggers:
-  - "review my existing error handling" -> CHECKER
-  - "optimize my error handling performance" -> performance skill
-Produces:
-  - Assertion placement recommendations
-  - Error-handling strategy decisions
-  - Barricade architecture designs
-  - Input validation implementations
-Constraints:
-  - Use assertions for bugs that should never occur (p.191)
-  - Use error handling for anticipated error conditions (p.194)
-  - Design barricades at external interfaces (p.203)
-  - Favor development debugging aids over production constraints (p.205)
 
-## Decision Flowcharts
+Produce assertion placement, error-handling strategy, barricade architecture, and validation implementations. Search the codebase for the existing error-handling pattern (exception vs return code vs Result type, custom exception classes, logging conventions) and follow it — consistency in error handling is what makes failures debuggable. Full gate: `Read(${CLAUDE_PLUGIN_ROOT}/references/pattern-reuse-gate.md)`.
 
-### Assertion vs Error Handling
+## Assertion vs error handling
 
-```dot
-digraph assertion_vs_error {
-    rankdir=TB;
+| Condition | Assertion | Error handling |
+|---|---|---|
+| Should never occur (programmer bug) | Yes | No |
+| Can occur at runtime / anticipated bad input | No | Yes |
+| External input | No | Yes — always validate |
+| Internal interface, same module | Yes | No |
+| Internal interface crossing a trust boundary | Yes | Yes |
+| Public-API precondition violation | Yes | Yes |
+| Security-critical / highly robust system | Both | Both (defense in depth) |
 
-    START [label="Handling a potentially\nbad condition" shape=doublecircle];
-    never [label="Should this NEVER happen?\n(programmer bug)" shape=diamond];
-    assertion [label="Use ASSERTION" shape=box style=filled fillcolor=lightblue];
-    anticipated [label="Is it anticipated\nbad input?" shape=diamond];
-    errorhandling [label="Use ERROR HANDLING" shape=box style=filled fillcolor=lightgreen];
-    robust [label="Building highly\nrobust system?" shape=diamond];
-    both [label="Use BOTH\n(assert + handle)" shape=box style=filled fillcolor=lightyellow];
-    reconsider [label="Clarify requirements:\nIs it a bug or expected?\nAsk domain expert." shape=box style=filled fillcolor=lightcoral];
+When a condition is genuinely unclear ("is this a bug or expected?"), clarify requirements with a domain expert rather than guessing.
 
-    START -> never;
-    never -> robust [label="yes"];
-    never -> anticipated [label="no"];
-    robust -> both [label="yes"];
-    robust -> assertion [label="no"];
-    anticipated -> errorhandling [label="yes"];
-    anticipated -> reconsider [label="no/unsure"];
-}
-```
+## Correctness vs robustness
 
-### Correctness vs Robustness
+- **Correctness** — never return an inaccurate result; shut down rather than produce a wrong answer (safety-critical, financial, data pipelines).
+- **Robustness** — keep operating even if results are sometimes inaccurate (consumer apps, internal tools).
 
-```dot
-digraph correctness_vs_robustness {
-    rankdir=TB;
+| Domain | Lean toward | Key question |
+|---|---|---|
+| Safety-critical (medical, aviation) | Correctness | — |
+| Enterprise/B2B, financial, data pipelines | Correctness | Would wrong data drive a bad business decision? Does downstream assume integrity? |
+| SaaS platforms | Balanced | Blast radius of a wrong answer vs unavailability? |
+| Consumer apps, internal tools | Robustness | Can the user recover from a crash? |
+| Real-time systems | Context-dependent | Is stale data better or worse than no data? |
 
-    START [label="Choose error\nhandling philosophy" shape=doublecircle];
-    safety [label="Safety-critical?\n(medical, aviation, nuclear)" shape=diamond];
-    correctness [label="Favor CORRECTNESS\nShut down > wrong result" shape=box style=filled fillcolor=lightcoral];
-    consumer [label="Consumer app?\n(games, word processors)" shape=diamond];
-    robustness [label="Favor ROBUSTNESS\nKeep running > perfect" shape=box style=filled fillcolor=lightgreen];
-    analyze [label="ANALYZE DOMAIN\n(see guidance below)" shape=box style=filled fillcolor=lightyellow];
+## Barricade design
 
-    START -> safety;
-    safety -> correctness [label="yes"];
-    safety -> consumer [label="no"];
-    consumer -> robustness [label="yes"];
-    consumer -> analyze [label="no"];
-}
-```
+1. Identify external interfaces (user input, files, network, APIs, inter-service calls).
+2. Place validation at the barricade boundary — all external data checked here.
+3. Inside the barricade, use assertions for internal bugs (data assumed validated).
+4. Strategy: external boundary = error handling; internal = assertions.
 
-**Domain Analysis Guidance** (for "Analyze domain" path):
+Class-level barricade: public methods validate and sanitize; private methods within that class may assume safe data.
 
-| Domain Type | Lean Toward | Key Question |
-|-------------|-------------|--------------|
-| Enterprise/B2B | Correctness | "Would wrong data cause business decisions based on false info?" |
-| SaaS platforms | Balanced | "What's the blast radius of a wrong answer vs unavailability?" |
-| Internal tools | Robustness | "Is user technical enough to recover from a crash?" |
-| Data pipelines | Correctness | "Does downstream processing assume data integrity?" |
-| Real-time systems | Context-dependent | "Is stale data better or worse than no data?" |
+## Error-handling strategy options
 
-### Keep Debug Code in Production?
+Choose one and apply it consistently — error handling is an architectural decision.
 
-```dot
-digraph debug_code_production {
-    rankdir=TB;
+| Strategy | Use for |
+|---|---|
+| Return neutral value | Display defaults, non-critical config |
+| Substitute next valid data | Streaming/sensor data with redundancy |
+| Return previous answer | Display refresh, non-critical caching (never financial data) |
+| Substitute closest legal value | Input clamping, slider bounds |
+| Log warning and continue | Non-critical degradation, feature flags |
+| Return error code | APIs with status conventions, C-style interfaces |
+| Centralized error handler | Consistent logging, monitoring integration |
+| Display error message | User-facing apps (don't leak security info) |
+| Shut down gracefully | Safety-critical, data-corrupting errors |
 
-    START [label="Should this debug\ncode stay in production?" shape=doublecircle];
-    important [label="Checks important errors?\n(calculations, data integrity)" shape=diamond];
-    keep1 [label="KEEP" shape=box style=filled fillcolor=lightgreen];
-    crash [label="Causes hard crash?\n(no save opportunity)" shape=diamond];
-    remove1 [label="REMOVE" shape=box style=filled fillcolor=lightcoral];
-    diagnose [label="Helps remote diagnosis?\n(logging, state dumps)" shape=diamond];
-    keep2 [label="KEEP as silent log" shape=box style=filled fillcolor=lightgreen];
-    remove2 [label="REMOVE or make\nunobtrusive" shape=box style=filled fillcolor=lightyellow];
+## Modern error propagation
 
-    START -> important;
-    important -> keep1 [label="yes"];
-    important -> crash [label="no"];
-    crash -> remove1 [label="yes"];
-    crash -> diagnose [label="no"];
-    diagnose -> keep2 [label="yes"];
-    diagnose -> remove2 [label="no"];
-}
-```
+Synchronous exception propagation assumes a synchronous call stack; these patterns need explicit handling:
 
-## Decision Framework: Assertions vs Error Handling
+- **async/await** — an unhandled rejection crashes Node; wrap awaited calls and re-throw domain-level exceptions.
+- **Callbacks** — errors don't propagate; use the error-first `callback(error, result)` pattern or wrap in promises.
+- **`Promise.all`** — first rejection loses other results; use `allSettled` and decide fail-entirely vs partial.
+- **Event handlers / React** — synchronous throws are silently swallowed; log explicitly and use error boundaries for render errors.
 
-| Condition Type | Use Assertion | Use Error Handling | Guidance |
-|----------------|---------------|-------------------|----------|
-| Should never occur (bug) | Yes | No | Assert documents the impossibility |
-| Can occur at runtime | No | Yes | Handle gracefully |
-| External input | No | Yes | Always validate external data |
-| Internal interface (same module) | Yes | No | Assert for contract violations |
-| Internal interface (cross-module) | Yes | Yes, if crossing trust boundary | Validate at module boundaries |
-| Precondition violation | Yes | Yes, if public API | Public APIs need graceful errors |
-| Security-critical | Both | Both | Defense in depth |
-| Highly robust systems | Both | Both | Belt and suspenders |
+## Offensive programming (development builds)
 
-## Barricade Design (p.203-204)
+Make errors loud during development so they're found early; make them unobtrusive with graceful recovery in production. Techniques: make asserts abort, fill allocated memory and freed objects with junk, fail hard on default/else clauses, email error logs to yourself.
 
-**MUST be performed in order:**
+## Evidence
 
-1. **Identify** external interfaces (user input, files, network, APIs, inter-service calls)
-2. **Place** validation at barricade boundary - all external data checked here
-3. **Inside** barricade: use assertions for internal bugs (data assumed validated)
-4. **Strategy:** External = error handling; Internal = assertions
-
-**Class-level barricade:** Public methods validate and sanitize; private methods within that class can assume data is safe.
-
-**Critical caveat:** "Trust inside barricade" means reduced redundant validation, NOT zero validation. For security-critical paths (auth, crypto, PII), validate again even inside the barricade. Bugs in barricade validation happen.
-
-## Async and Modern Patterns
-
-Traditional exception propagation assumes synchronous call stacks. Modern patterns need different approaches:
-
-### Promises/Async-Await
-```javascript
-// BAD: Unhandled rejection crashes Node.js
-async function fetchUser(id) {
-  const response = await fetch(`/api/users/${id}`); // Can reject
-  return response.json();
-}
-
-// GOOD: Explicit error handling
-async function fetchUser(id) {
-  try {
-    const response = await fetch(`/api/users/${id}`);
-    if (!response.ok) {
-      throw new UserNotFoundError(id); // Domain-level exception
-    }
-    return response.json();
-  } catch (e) {
-    if (e instanceof UserNotFoundError) throw e;
-    throw new UserServiceError('Failed to fetch user', { cause: e });
-  }
-}
-```
-
-### Callbacks
-- Errors don't propagate through callbacks - must be explicitly passed
-- Use error-first callback pattern: `callback(error, result)`
-- Wrap callback APIs in promises for better error handling
-
-### Promise.all() Error Aggregation
-```javascript
-// BAD: First rejection loses other results
-const results = await Promise.all(promises);
-
-// GOOD: Collect all results including failures
-const results = await Promise.allSettled(promises);
-const failures = results.filter(r => r.status === 'rejected');
-if (failures.length > 0) {
-  logErrors(failures);
-  // Decide: fail entirely or continue with partial results?
-}
-```
-
-### Event Handlers / React Error Boundaries
-- Synchronous exceptions in event handlers don't crash the app but ARE silently swallowed
-- Use React Error Boundaries to catch rendering errors
-- Log errors in event handlers explicitly
-
-## Offensive Programming (p.206)
-
-Make errors painful during development so they're found and fixed:
-
-| Technique | Purpose |
-|-----------|---------|
-| **Make asserts abort** | Don't let programmers bypass known problems |
-| **Fill allocated memory** | Detect memory allocation errors immediately |
-| **Fill files/streams completely** | Flush out file-format errors early |
-| **Default/else clauses fail hard** | Impossible to overlook unexpected cases |
-| **Fill objects with junk before deletion** | Detect use-after-free immediately |
-| **Email error logs to yourself** | Get notified of errors in the field |
-
-**Paradox:** During development, make errors noticeable and obnoxious. During production, make errors unobtrusive with graceful recovery.
-
-## Production Transition (p.209-210)
-
-| Debug Code Type | Action | Rationale |
-|-----------------|--------|-----------|
-| Checks important errors (calculations, data) | **KEEP** | Tax calculation errors matter; messy screens don't |
-| Checks trivial errors (screen updates) | **REMOVE** or log silently | Penalty is cosmetic only |
-| Causes hard crashes | **REMOVE** | Users need chance to save work |
-| Enables graceful crash with diagnostics | **KEEP** | Mars Pathfinder diagnosed issues remotely |
-| Logging for tech support | **KEEP** | Convert assertions from halt to log |
-| Exposes info to attackers | **REMOVE** | Error messages shouldn't help attackers |
-
-## Evidence Summary
-
-| Claim | Source | Application |
-|-------|--------|-------------|
-| "Garbage in, garbage out" is obsolete | McConnell p.188 | Production software must validate or reject |
-| Assertions especially useful in large/complex programs | McConnell p.189 | More code = more interface mismatches to catch |
-| Error handling is architectural decision | McConnell p.197 | Decide at architecture level, enforce consistently |
-| Trade speed for debugging aids | McConnell p.205 | Development builds can be slow if they catch bugs |
-| Exceptions weaken encapsulation | McConnell p.198 | Callers must know what exceptions called code throws |
-| Dead program does less damage than crippled one | Hunt & Thomas | Fail fast, fail loud during development |
-| Mars Pathfinder used debug code in production | McConnell p.209 | JPL diagnosed and fixed remotely using left-in debug aids |
-| **Bugs cost 100x more to fix in production** | IBM Systems Sciences Institute | Validates investment in early defensive programming |
-| **15-50% of development time spent on debugging** | McConnell, citing multiple studies | Defensive programming reduces this significantly |
-| **Mars Climate Orbiter lost due to unit mismatch** | NASA 1999 | 9 months of success doesn't mean code is safe |
-
-## Error-Handling Strategy Options (p.194-197)
-
-1. **Return neutral value** - Use for: display defaults, non-critical config
-2. **Substitute next valid data** - Use for: streaming data, sensor readings with redundancy
-3. **Return same answer as previous** - Use for: display refresh, non-critical caching (NOT financial data)
-4. **Substitute closest legal value** - Use for: input clamping, slider bounds
-5. **Log warning and continue** - Use for: non-critical degradation, feature flags
-6. **Return error code** - Use for: APIs with status conventions, C-style interfaces
-7. **Call centralized error handler** - Use for: consistent logging, monitoring integration
-8. **Display error message** - Use for: user-facing apps (but don't leak security info)
-9. **Shut down gracefully** - Use for: safety-critical, data-corrupting errors
-
-**Strategy selection is an architectural decision - be consistent throughout.**
-
-| Application Type | Favor | Avoid |
-|------------------|-------|-------|
-| Safety-critical (medical, aviation) | Shut down | Return guessed value |
-| Consumer apps (games, word processors) | Keep running | Crash without save |
-| Financial/audit | Fail with clear error | Silent substitution |
-| Data pipelines | Fail and retry OR quarantine | Silent data loss |
-| Real-time systems | Degrade gracefully | Hard crash |
-
-
----
+- "Garbage in, garbage out" is obsolete — production software must validate or reject [McConnell p.188].
+- Error handling is an architectural decision, enforced consistently [McConnell p.197].
+- Bugs cost ~100x more to fix in production than at design time [IBM Systems Sciences Institute].
+- Mars Climate Orbiter was lost to a unit mismatch [NASA 1999] — nine months of success does not mean code is safe.
 
 ## Chain
 
 | After | Next |
-|-------|------|
-| Validation complete | cc-control-flow-quality (CHECKER) |
+|---|---|
+| Validation complete | `Read(${CLAUDE_PLUGIN_ROOT}/skills/cc-control-flow-quality/SKILL.md)` |

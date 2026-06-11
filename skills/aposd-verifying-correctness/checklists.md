@@ -8,10 +8,10 @@ Source: A Philosophy of Software Design (Ousterhout) + verification practices
 
 **Detect:** Were requirements stated? (explicit list, user request, spec)
 
-- [ ] RC-1: "Did I list each requirement explicitly?"
-- [ ] RC-2: "For each requirement: can I point to code that implements it?"
-- [ ] RC-3: "Any requirement without code?" → **Not done**
-- [ ] RC-4: "Any code without requirement?" → Scope creep or missing requirement
+- [ ] RC-1: Every requirement is explicitly listed
+- [ ] RC-2: Each listed requirement has a corresponding code location identified
+- [ ] RC-3: No requirement exists without corresponding code → if so, Not done
+- [ ] RC-4: No code exists without a corresponding requirement → if so, scope creep or missing requirement
 
 **Red flag:** "I think I covered everything" without explicit mapping
 
@@ -21,10 +21,10 @@ Source: A Philosophy of Software Design (Ousterhout) + verification practices
 
 **Detect:** Multiple threads/processes, async/await, shared mutable state, web handlers, queue workers?
 
-- [ ] CS-1: "Did I identify all shared mutable state?"
-- [ ] CS-2: "Is each access point protected (lock, atomic, queue, immutable)?"
-- [ ] CS-3: "Are there no time-of-check to time-of-use (TOCTOU) gaps?"
-- [ ] CS-4: "Is lock ordering consistent (if multiple locks)?"
+- [ ] CS-1: All shared mutable state identified
+- [ ] CS-2: Each access point is protected (lock, atomic, queue, or immutable)
+- [ ] CS-3: No time-of-check to time-of-use (TOCTOU) gaps
+- [ ] CS-4: Lock ordering is consistent across all paths (if multiple locks)
 
 **Red flag:** "It's probably fine" or "Python GIL handles it"
 
@@ -84,17 +84,5 @@ Source: A Philosophy of Software Design (Ousterhout) + verification practices
 
 **Red flag:** "It's internal only" (internals get exposed)
 
----
-
-## Quick Verification Summary
-
-- [ ] QV-1: "Requirements were stated?" → Each mapped to code
-- [ ] QV-2: "Shared state exists?" → All access protected
-- [ ] QV-3: "Operations can fail?" → All failures handled
-- [ ] QV-4: "Resources acquired?" → All released (including on errors)
-- [ ] QV-5: "Variable-size input?" → Edge cases handled
-- [ ] QV-6: "Untrusted input?" → Input validated
 
 ---
-
-Total items: 35

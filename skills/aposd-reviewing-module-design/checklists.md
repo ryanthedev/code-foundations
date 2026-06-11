@@ -51,21 +51,6 @@ Source: A Philosophy of Software Design (Ousterhout), Chapters 2, 4, 5, 7, 9
 
 ---
 
-## Quick Reference: Red Flags
-
-- [ ] MD-S: "Shallow Module" - Interface as complex as implementation
-- [ ] MD-C: "Classitis" - Many small classes, little functionality each
-- [ ] IH-1: "Information Leakage" - Same knowledge in multiple modules
-- [ ] IH-2: "Temporal Decomposition" - Structure follows execution order
-- [ ] LA-1: "Pass-Through Method" - Method just delegates to another with same API
-- [ ] TA-1: "Conjoined Methods" - Methods only understandable together
-- [ ] TA-2: "Special-General Mixture" - General mechanism has use-case code
-- [ ] TA-3: "Code Repetition" - Same code appears multiple places
-- [ ] TA-4: "Shallow Split" - Method split resulted in interface equal to implementation
-- [ ] SF-1: "Silent Failure" - Module swallows errors, returns defaults, or hides failure states from callers — operations can fail without the caller knowing
-
----
-
 ## Together/Apart Decision Procedure
 
 - [ ] TAD-1: "Do pieces share information?" → Should probably be together
@@ -104,5 +89,3 @@ Source: A Philosophy of Software Design (Ousterhout), Chapters 2, 4, 5, 7, 9
 - [ ] PC-3: "Simple Interface vs Configurability" → Real systems need configuration; penalize only unnecessary complexity
 
 ---
-
-Total items: 37

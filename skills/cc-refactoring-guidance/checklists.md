@@ -32,7 +32,7 @@ Source: Code Complete 2nd Edition, Chapter 24
 ## Code Smell Detection (pp. 564-569)
 
 - [ ] CS-1: "Has duplicated code been detected and flagged for extraction?" → Red flag: copy-paste inheritance
-- [ ] CS-2: "Is any routine too long to be easily readable?" (Good: < 50 lines, Bad: > 200 lines)
+- [ ] CS-2: "Is any routine too long to be easily readable?" (100-200 lines acceptable per cc-foundations.md; flag > 200 lines)
 - [ ] CS-3: "Is any loop too long or too deeply nested?" (Good: 1-2 levels, Bad: 4+ levels)
 - [ ] CS-4: "Does any class have poor cohesion?" → Red flag: classes doing unrelated things
 - [ ] CS-5: "Does any interface fail to provide consistent level of abstraction?" (Good: all high-level or all low-level, Bad: mixed)
@@ -68,5 +68,3 @@ Source: Code Complete 2nd Edition, Chapter 24
 - [ ] RF-10: "Tramp data chains?" - Parameters passed through multiple layers → Use object context or remove middle layers
 
 ---
-
-Total items: 40

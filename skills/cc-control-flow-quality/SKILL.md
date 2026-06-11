@@ -1,367 +1,160 @@
 ---
 name: cc-control-flow-quality
-description: "Use when code has deep nesting (3+ levels), complex conditionals, loop design questions, high cyclomatic complexity (McCabe >10), or callback hell. Symptoms: arrow-shaped code, repeated conditions, confusing loop exits, lengthy if-else chains"
+description: "Audits and restructures control flow using Code Complete's nesting, cyclomatic complexity, loop design, guard-clause, and boolean simplification rules. Covers deep nesting, loop exit design, index naming, and callback chains."
+disable-model-invocation: true
 ---
 
-# Skill: cc-control-flow-quality
+# cc-control-flow-quality
 
-## STOP - Never Skip (even under time pressure)
-
-- Check nesting depth before adding levels (max 3)
-- Verify loop exit conditions are reachable
-- Name loop indexes meaningfully in nested loops
-- McCabe complexity >10 = redesign required
-
----
-
-## Quick Reference
+## Thresholds
 
 | Threshold | Value | Source |
-|-----------|-------|--------|
-| Max nesting depth | 3 levels | Chomsky, Weinberg via Yourdon 1986a |
-| McCabe complexity | >10 decision points = redesign | McCabe 1976 |
-| Else clause consideration | 50-80% of ifs need else | Elshoff 1976 |
+|---|---|---|
+| Max nesting depth | 3 levels | Yourdon 1986a |
+| McCabe complexity | >10 decision points → redesign | McCabe 1976 |
+| Else-clause consideration | 50–80% of ifs need an else | Elshoff 1976 |
 | Loop-with-exit comprehension | 25% better than top/bottom test | Soloway 1983 |
-| Mental entity limit | 5-9 items | Miller 1956 |
+| Mental entity limit | 5–9 items | Miller 1956 |
 
-**Key Principles:**
-- Use `true`/`false` not `0`/`1` for booleans
-- Use `for` when iteration count is known, `while` when unknown, `foreach` for collections
-- Test at beginning (may not execute) vs end (executes at least once)
-- Put nominal case in `if`, error case in `else` (exception: guard clauses invert this intentionally—see below)
-- Fully parenthesize complex boolean expressions
+Shared numeric thresholds and the cohesion/coupling vocabulary: `Read(${CLAUDE_PLUGIN_ROOT}/references/cc-foundations.md)`.
 
-**NEVER Skip (even under time pressure):**
-- Check nesting depth before adding levels
-- Verify loop exit conditions are reachable
-- Name loop indexes meaningfully in nested loops
+The full audit checklists (conditionals, structure, loops, tables): `Read(${CLAUDE_SKILL_DIR}/checklists/conditionals-and-structure.md)` and `Read(${CLAUDE_SKILL_DIR}/checklists/loops-and-advanced.md)`.
 
-## Core Patterns
+**Principles:**
+- Use `true`/`false`, not `0`/`1`, for booleans.
+- `for`/`foreach` when the iteration count is known; `while` when not.
+- Test at the beginning (may not execute) vs the end (executes at least once).
+- Put the nominal case in `if`, the error case in `else` — except guard clauses, which invert this intentionally.
+- Fully parenthesize complex boolean expressions.
 
-### Deep Nesting → Guard Clauses
+## Core patterns
 
-**Reconciling with "nominal in if":** Guard clauses are an *exception pattern* where error/invalid cases exit early at the top of a function. This contradicts the general "nominal in if" rule *intentionally*—the goal is to get preconditions out of the way so the nominal path flows without nesting. Use guard clauses at function entry; use "nominal in if" for conditionals within the function body.
+### Deep nesting → guard clauses
+
+Guard clauses are an exception pattern: error/invalid cases exit early at the top so the nominal path flows without nesting. Use them at function entry; use "nominal in if" for conditionals within the body.
 
 ```cpp
-// BEFORE: Arrow-shaped code (4 levels) [ANTI-PATTERN]
+// BEFORE: arrow-shaped (4 levels), nominal case buried
 if (file.validName()) {
     if (file.open()) {
         if (encryptionKey.valid()) {
-            if (file.decrypt(encryptionKey)) {
-                // lots of code (nominal case buried)
-            }
+            if (file.decrypt(encryptionKey)) { /* lots of code */ }
         }
     }
 }
 
-// AFTER: Guard clauses flatten structure
+// AFTER: guard clauses flatten it
 if (!file.validName()) return;
 if (!file.open()) return;
 if (!encryptionKey.valid()) return;
 if (!file.decrypt(encryptionKey)) return;
-
 // lots of code (nominal case at top level)
 ```
 
-### Complex Boolean → Intermediate Variables
-```cpp
-// BEFORE: Monstrous test [ANTI-PATTERN]
-if (inputStatus == SUCCESS && printerReady && !printerBusy &&
-    paperAvailable && paperLevel > MIN_PAPER &&
-    documentValid && !documentEmpty && documentSize < MAX_SIZE) {
-    print();
-}
+### Complex boolean → named intermediate variables
 
-// AFTER: Named intermediate booleans
+```cpp
 bool printerCanPrint = printerReady && !printerBusy &&
                        paperAvailable && paperLevel > MIN_PAPER;
 bool documentCanBePrinted = documentValid && !documentEmpty &&
                             documentSize < MAX_SIZE;
-
-if (inputStatus == SUCCESS && printerCanPrint && documentCanBePrinted) {
-    print();
-}
+if (inputStatus == SUCCESS && printerCanPrint && documentCanBePrinted) { print(); }
 ```
 
-### Meaningless Loop Indexes → Descriptive Names
+### Meaningless loop indexes → descriptive names
+
 ```java
-// BEFORE: Impossible to verify correct array access [ANTI-PATTERN]
-for (int i = 0; i < numPayCodes; i++) {
-    for (int j = 0; j < 12; j++) {
-        for (int k = 0; k < numDivisions; k++) {
-            sum = sum + transaction[j][i][k];  // Is this right? Who knows!
-        }
-    }
-}
-
-// AFTER: Self-documenting and verifiable
-for (int payCodeIdx = 0; payCodeIdx < numPayCodes; payCodeIdx++) {
-    for (int month = 0; month < 12; month++) {
-        for (int divisionIdx = 0; divisionIdx < numDivisions; divisionIdx++) {
-            sum = sum + transaction[month][payCodeIdx][divisionIdx];
-        }
-    }
-}
+// BEFORE: transaction[j][i][k] — is this right? who knows
+// AFTER: self-documenting and verifiable
+for (int payCodeIdx = 0; payCodeIdx < numPayCodes; payCodeIdx++)
+    for (int month = 0; month < 12; month++)
+        for (int divisionIdx = 0; divisionIdx < numDivisions; divisionIdx++)
+            sum += transaction[month][payCodeIdx][divisionIdx];
 ```
 
-### Single-Use Test → Named Boolean Function
-```cpp
-// BEFORE: Complex inline test obscures main flow
-if (((('a' <= inputChar) && (inputChar <= 'z')) ||
-     (('A' <= inputChar) && (inputChar <= 'Z'))) &&
-    (inputChar != 'X') && (inputChar != 'x')) {
-    processLetter(inputChar);
-}
+### Single-use test → named boolean function
 
-// AFTER: Named function (even for single use!)
-// "Putting a test into a well-named function improves readability,
-//  and that's a sufficient reason to do it." [KEY POINT p.433]
+Putting a test into a well-named function improves readability, and that alone justifies it — even for a single use [p.433].
+
+```cpp
 bool isProcessableLetter(char c) {
-    bool isLetter = (('a' <= c) && (c <= 'z')) ||
-                    (('A' <= c) && (c <= 'Z'));
+    bool isLetter = (('a' <= c) && (c <= 'z')) || (('A' <= c) && (c <= 'Z'));
     bool isExcluded = (c == 'X') || (c == 'x');
     return isLetter && !isExcluded;
 }
-
-if (isProcessableLetter(inputChar)) {
-    processLetter(inputChar);
-}
+if (isProcessableLetter(inputChar)) { processLetter(inputChar); }
 ```
 
-### Number-Line Ordering for Comparisons
+### Number-line ordering and zero comparisons
+
 ```cpp
-// Range checks: order smallest → variable → largest
-if (MIN_VALUE <= count && count <= MAX_VALUE)  // count is between
+if (MIN_VALUE <= count && count <= MAX_VALUE)  // in-range: variable between bounds
+if (count < MIN_VALUE || MAX_VALUE < count)    // out-of-range: variable on the outside
 
-// Out-of-range: variable on outside
-if (count < MIN_VALUE || MAX_VALUE < count)    // count is outside
-
-// This visual mapping aids comprehension [KEY POINT p.440]
+while (!done)                  // boolean: compare implicitly
+while (balance != 0)           // numeric: compare explicitly
+while (*charPtr != '\0')       // character: compare to the terminator
+while (bufferPtr != NULL)      // pointer: compare to NULL
 ```
 
-### Type-Appropriate Zero Comparisons
+### Loop-with-exit avoids duplication
+
 ```cpp
-// Boolean: compare implicitly
-while (!done)                    // not: while (done == false)
-
-// Numeric: compare explicitly
-while (balance != 0)             // not: while (balance)
-
-// Character (C): compare to null terminator explicitly
-while (*charPtr != '\0')         // not: while (*charPtr)
-
-// Pointer: compare to NULL explicitly
-while (bufferPtr != NULL)        // not: while (bufferPtr)
-```
-
-### Loop-With-Exit Avoiding Duplication
-```cpp
-// BEFORE: Duplicated code that will break under maintenance [ANTI-PATTERN]
-GetNextRating(&ratingIncrement);
-rating = rating + ratingIncrement;
-while ((score < targetScore) && (ratingIncrement != 0)) {
-    GetNextScore(&scoreIncrement);
-    score = score + scoreIncrement;
-    GetNextRating(&ratingIncrement);      // Duplicated!
-    rating = rating + ratingIncrement;    // Duplicated!
-}
-
-// AFTER: Loop-with-exit eliminates duplication
+// AFTER: while(true) + break eliminates the duplicated read at top and bottom
 while (true) {
     GetNextRating(&ratingIncrement);
-    rating = rating + ratingIncrement;
-    if (!((score < targetScore) && (ratingIncrement != 0))) {
-        break;
-    }
+    rating += ratingIncrement;
+    if (!((score < targetScore) && (ratingIncrement != 0))) break;
     GetNextScore(&scoreIncrement);
-    score = score + scoreIncrement;
-}
-// Students scored 25% higher on comprehension with this pattern [Soloway 1983]
-```
-
-## Decision Guidance
-
-### Loop Selection
-```
-1. Is iteration count known ahead of time?
-   YES → Use `for` or `foreach`
-   NO  → Use `while`
-
-2. Must body execute at least once?
-   YES → Use loop with test at END (`do-while`) or MIDDLE
-   NO  → Use loop with test at BEGINNING (`while`)
-
-3. Simple iteration through container?
-   YES → Use `foreach` (eliminates housekeeping arithmetic errors)
-   NO  → Use appropriate `for` or `while`
-
-4. Need to exit from middle of loop?
-   YES → Consider loop-with-exit (`while(true)` + `break`)
-   NO  → Standard loop structure
-```
-
-### Nesting Reduction Techniques (by invasiveness, not strict priority)
-
-These techniques are ordered from least to most invasive changes—**not** a strict "try #1 before #2" sequence. Choose based on what fits the problem:
-
-1. **Guard clauses** - Exit early on error conditions (least invasive; see Core Patterns)
-2. **Extract to routine** - Move nested code into well-named function
-3. **Combine conditions** - Merge nested ifs into single compound test
-4. **Convert to case/switch** - When testing same variable repeatedly
-5. **Use polymorphism** - Replace type-checking conditionals with dispatch
-6. **Table-driven methods** - When logic maps data to outcomes (most architectural)
-
-**Note:** #5 and #6 are context-dependent, not ranked. Tables can be simpler than polymorphism (see "The fact that a design uses inheritance and polymorphism doesn't make it a good design" [p.423]).
-
-### When to Use Table-Driven Methods
-Consider tables instead of logic when:
-- Writing 4th+ branch in if-else chain for same classification
-- Creating subclass just to change a data value
-- Format/rules change frequently without code changes desired
-- Same lookup calculation duplicated in multiple places
-
-**"The fact that a design uses inheritance and polymorphism doesn't make it a good design."** [p.423]
-
-### Table Access Method Selection
-```
-1. Can data key directly into table? (e.g., month 1-12, char code 0-255)
-   YES → Direct Access
-   NO  → Continue
-
-2. Is keyspace large/sparse but entries few? (e.g., 100 items with 4-digit part numbers)
-   YES → Indexed Access (index table + main table)
-   NO  → Continue
-
-3. Are entries valid for ranges, not distinct points? (e.g., grade thresholds)
-   YES → Stair-Step Access (loop through range boundaries)
-   NO  → Reconsider if table-driven is appropriate
-```
-
-### Table-Driven Example: Message Processing
-```cpp
-// BEFORE: 20 routines, one per message type [ANTI-PATTERN]
-void processMessage(Message& msg) {
-    if (msg.type == CYCLIC_REDUNDANCY_CHECK) {
-        processCRC(msg);
-    } else if (msg.type == BUOY_TEMPERATURE) {
-        processBuoyTemp(msg);
-    } else if (msg.type == SONOBUOY_PING) {
-        processSonobuoyPing(msg);
-    }
-    // ... 17 more branches
-}
-
-// AFTER: One generic routine + table definition [p.418-420]
-// Table describes message format; routine interprets any message
-struct FieldDef { FieldType type; string name; };
-struct MessageDef { string name; vector<FieldDef> fields; };
-
-map<MessageType, MessageDef> messageTable = {
-    {BUOY_TEMPERATURE, {"Buoy Temperature", {
-        {FLOAT, "Average Temperature"},
-        {FLOAT, "Temperature Range"},
-        {INT, "Number of Samples"},
-        {STRING, "Location"},
-        {TIME, "Time of Measurement"}
-    }}}
-    // New message types = new table entries, zero code changes
-};
-
-void processMessage(Message& msg) {
-    auto& def = messageTable[msg.type];
-    for (auto& field : def.fields) {
-        readAndPrint(field, msg);  // One routine handles all types
-    }
+    score += scoreIncrement;
 }
 ```
 
-### McCabe Complexity Counting [p.458]
-```
-How to count decision points in a routine:
+## Decision guidance
 
-1. Start with 1 for the straight path through the routine
-2. Add 1 for each: if, while, repeat, for, and, or
-3. Add 1 for each case in a case/switch statement
+### Loop selection
 
-Interpretation:
-  0-5   → Routine is probably fine
-  6-10  → Start thinking about simplification
-  10-20 → Strong case needed to keep as-is; review for extraction
-  20+   → Mandatory refactor (no exceptions)
-```
+1. Iteration count known ahead of time? → `for`/`foreach`, else `while`.
+2. Must the body execute at least once? → test at END (`do-while`)/MIDDLE, else test at BEGINNING.
+3. Simple iteration through a container? → `foreach` (eliminates housekeeping arithmetic errors).
+4. Need to exit from the middle? → loop-with-exit (`while(true)` + `break`).
 
-**Exception criteria for 10-20 range:**
-A routine may legitimately exceed 10 ONLY when ALL of:
-1. It's a flat dispatch (switch/case with no nesting within cases)
-2. Each case is ≤3 lines (ideally just a function call)
-3. Cases are exhaustive and unlikely to grow unboundedly
-4. Cognitive complexity is low despite high McCabe count
+### Nesting reduction (least to most invasive — choose by fit, not strict order)
 
-**NOT a valid exception:** "It's just a big if-else chain" or "The complexity is inherent."
+1. Guard clauses — exit early on error conditions.
+2. Extract nested code into a well-named routine.
+3. Combine nested ifs into a single compound test.
+4. Convert to case/switch when testing the same variable repeatedly.
+5. Polymorphism — replace type-checking conditionals with dispatch.
+6. Table-driven methods — when logic maps data to outcomes.
 
-## Emergency Minimum (Crisis Mode)
+#5 and #6 are context-dependent, not ranked: tables can be simpler than polymorphism. "The fact that a design uses inheritance and polymorphism doesn't make it a good design" [p.423].
 
-When production is down and you must fix immediately, you still MUST:
+### Table-driven methods
 
-1. **Check nesting depth** - Don't add a 4th level to fix a 3-level problem
-2. **Verify loop exits** - Ensure your fix doesn't create infinite loops
-3. **Name any new variables meaningfully** - `tempFix` guarantees confusion later
-4. **Document WHY** - A one-line comment explaining the crisis fix
+Consider a table instead of branching logic when: writing the 4th+ branch in an if-else chain for the same classification; creating a subclass just to change a data value; rules change often without wanting code changes; or the same lookup is duplicated in several places.
 
-**After crisis resolved:** Return within 24 hours to apply full control flow review. Crisis fixes that "work" often hide deeper issues.
+Access method: direct (data keys straight into the table, e.g. month 1–12) → indexed (large/sparse keyspace, few entries) → stair-step (entries valid for ranges, e.g. grade thresholds).
 
-## Modern Patterns (Beyond Code Complete)
+### McCabe complexity
 
-These patterns weren't covered in Code Complete (2004) but follow the same principles:
+Count: start at 1, add 1 per `if`/`while`/`for`/`and`/`or` and per case branch.
 
-### Async/Await (Promise Chains)
-```javascript
-// BEFORE: Callback hell (deep nesting equivalent)
-getData(url, (data) => {
-    process(data, (result) => {
-        save(result, (saved) => {
-            notify(saved, () => { /* ... */ });
-        });
-    });
-});
+| Count | Verdict |
+|---|---|
+| 0–5 | Probably fine |
+| 6–10 | Start simplifying |
+| 10–20 | Strong justification needed; review for extraction |
+| 20+ | Mandatory refactor |
 
-// AFTER: Flattened with async/await
-const data = await getData(url);
-const result = await process(data);
-const saved = await save(result);
-await notify(saved);
-```
-Same principle as guard clauses: flatten the structure.
+A routine in the 10–20 range is acceptable only when all of: it's a flat dispatch (switch/case, no nesting within cases); each case is ≤3 lines (ideally a single call); cases are exhaustive and unlikely to grow unboundedly; and cognitive complexity is low. Inherent-complexity or "just a big if-else chain" do not qualify — extract instead.
 
-### Pattern Matching (Rust, C#, etc.)
-```rust
-// Pattern matching can exceed McCabe threshold but remain clear
-// because it's flat dispatch with exhaustiveness checking
-match status {
-    Status::Pending => handle_pending(),
-    Status::Active => handle_active(),
-    Status::Suspended => handle_suspended(),
-    Status::Closed => handle_closed(),
-}
-```
-This is the "valid exception" for McCabe—flat dispatch with ≤3 lines per case.
+## Modern equivalents
 
-### Functional Pipelines
-```javascript
-// Functional pipelines replace explicit loops
-const result = items
-    .filter(item => item.active)
-    .map(item => transform(item))
-    .reduce((acc, item) => acc + item.value, 0);
-```
-Prefer over explicit loops when: operations are independent, no early exit needed, and pipeline reads clearly.
-
-
----
+The same flatten-the-structure principle applies beyond Code Complete's era: async/await replaces callback nesting, and exhaustiveness-checked pattern matching is the valid high-McCabe flat dispatch.
 
 ## Chain
 
 | After | Next |
-|-------|------|
-| Control flow verified | code-clarity-and-docs (CHECKER) |
-
+|---|---|
+| Control flow verified | `Read(${CLAUDE_PLUGIN_ROOT}/skills/code-clarity-and-docs/SKILL.md)` |

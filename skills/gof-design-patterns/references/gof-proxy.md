@@ -1,7 +1,7 @@
 ---
 name: gof-proxy
 classification: Structural / Object
-description: Use when you need to control access to an object—whether for lazy loading expensive resources, remote communication, access control, or smart reference counting; Symptoms: direct object creation is costly or constrained, clients need transparent access to remote or protected objects, resource management requires additional actions on access
+description: "Use when you need to control access to an object—whether for lazy loading expensive resources, remote communication, access control, or smart reference counting; Symptoms: direct object creation is costly or constrained, clients need transparent access to remote or protected objects, resource management requires additional actions on access"
 ---
 
 # PROXY
@@ -331,6 +331,3 @@ public class CachingUserServiceProxy implements UserService {
 - Subject interface too unstable for parallel maintenance
 - Clients need to distinguish proxy from real object
 
-## CSO KEYWORDS
-
-proxy, surrogate, placeholder, virtual proxy, remote proxy, protection proxy, smart reference, lazy loading, access control, copy-on-write, reference counting, level of indirection, deferred instantiation, structural pattern, object composition, interface substitution, transparent access, resource optimization

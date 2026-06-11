@@ -284,6 +284,3 @@ ACTION: Consider using Visitor pattern to separate interpretation logic from gra
 COUNTER-INDICATOR: Only one interpretation needed; grammar classes change more often than interpretations
 ```
 
-## CSO KEYWORDS
-
-interpreter, grammar, abstract syntax tree, AST, parse tree, expression evaluation, domain-specific language, DSL, terminal expression, nonterminal expression, recursive descent, BNF, language processing, regular expression, pattern matching, rule engine, specification pattern, expression tree, context, evaluate, boolean expression, arithmetic expression, query builder, validation rules, business rules, template engine

@@ -85,6 +85,3 @@ ACTION: Create a Memento class that only the Originator can fully access; have O
 COUNTER-INDICATOR: State is trivially small, inverse operations are reliable, or memento creation would be too expensive for the use case
 ```
 
-## CSO KEYWORDS
-
-memento, token, undo, redo, checkpoint, snapshot, state restoration, encapsulation, originator, caretaker, rollback, history, save state, restore state, internal state, state management, undo mechanism, constraint solver, time travel, versioning, state snapshot, opaque object

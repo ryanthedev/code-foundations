@@ -94,6 +94,3 @@ ACTION: Define Visitor interface with visit method per element type; elements im
 COUNTER-INDICATOR: Element hierarchy changes frequently; only a few simple operations needed; strong encapsulation required
 ```
 
-## CSO KEYWORDS
-
-visitor, double dispatch, accept, visit, object structure, traversal, operations on hierarchy, AST, abstract syntax tree, separate algorithm from structure, accumulate state, type-specific operations, composite traversal, interpreter, element visitor, node visitor, multiple operations, stable hierarchy, behavioral pattern

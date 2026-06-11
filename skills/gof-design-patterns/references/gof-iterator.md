@@ -114,6 +114,3 @@ ACTION: Use abstract Aggregate with CreateIterator factory method; clients progr
 COUNTER-INDICATOR: Aggregate implementation is stable and won't change
 ```
 
-## CSO KEYWORDS
-
-iterator, cursor, traversal, aggregate, collection, sequential access, external iterator, internal iterator, polymorphic iteration, CreateIterator, factory method, IsDone, CurrentItem, First, Next, robust iterator, null iterator, filtering iterator, tree traversal, composite traversal, iterable, generator, yield, for-of, enumerate, stream

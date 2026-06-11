@@ -100,6 +100,3 @@ ACTION: Encapsulate requests as Command objects with Execute (and optionally Une
 COUNTER-INDICATOR: When direct method calls suffice, operations are trivial, or the overhead of command objects is not justified by flexibility needs
 ```
 
-## CSO KEYWORDS
-
-command, action, transaction, request encapsulation, undo, redo, history list, execute, unexecute, invoker, receiver, callback replacement, queue requests, log requests, macro command, composite command, undoable operations, decouple invocation, parameterize actions, first-class request, command history, reversible operations, transaction modeling, menu actions, button actions, event sourcing, CQRS, task queue, job queue, redux actions, dispatch

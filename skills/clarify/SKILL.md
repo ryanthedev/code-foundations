@@ -1,13 +1,16 @@
 ---
 name: clarify
-description: "Decompose user intent through structured brainstorming. Detects underspecification, ambiguity, and false premises through hypothesis-driven questioning. Use when a request is unclear, could have multiple valid interpretations, or critical details are missing."
+description: "Decomposes underspecified requests by classifying gaps (missing info, ambiguity, false premises) and generating targeted clarifying questions. Produces a confirmed problem statement before any implementation begins."
+disable-model-invocation: true
 ---
 
 # Skill: clarify
 
 Understand what the user needs before committing to work.
 
-LLMs default to assuming rather than asking — even frontier models proceed without clarification in 70% of cases where information is missing. This skill counteracts that bias by classifying what's unclear and generating targeted clarifying questions.
+LLMs default to assuming rather than asking — models overwhelmingly proceed without asking even when information is missing (70% of cases in controlled studies). This skill serves as the plan pipeline's clarifier and counteracts that bias by classifying what's unclear and generating targeted clarifying questions.
+
+`adaptive-questioning.md` at `${CLAUDE_PLUGIN_ROOT}/references/adaptive-questioning.md` is a shared reference: the plan pipeline's clarify gates also link to it (Phase 3 planning checkpoints use it for mode-switching).
 
 Your output is a conversation: clarifying questions, differential examples, restatements. Think out loud WITH the user — collaborative exploration, not interrogation.
 
@@ -172,7 +175,7 @@ Don't collapse these. Deciding to clarify and blurting out the first question th
 
 | Pattern | Problem | Instead |
 |---------|---------|---------|
-| Proceeding without checking | 70% default execution bias | Run detection as a separate pass first |
+| Proceeding without checking | Default execution bias (see intro) | Run detection as a separate pass first |
 | Asking implementation details | Shifts investigation to the user | Figure it out from the codebase |
 | Rapid-fire question lists | Feels like an interrogation | 1-3 questions max per turn |
 | Asking what you could read from code | Wastes their time | Read first, ask about what you can't determine |

@@ -86,5 +86,3 @@ Source: Code Complete 2nd Edition, Chapters 5, 6, 7
 - [ ] RF-11: "Routine hides failure as default?" - Function returns neutral value (null, empty, zero) on error indistinguishable from a valid "no result" → Use Result type, throw, or distinct sentinel so callers can tell success from failure
 
 ---
-
-Total items: 54

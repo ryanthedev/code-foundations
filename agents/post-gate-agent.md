@@ -15,7 +15,7 @@ Equally: do NOT introduce requirements that are not listed in your prompt. You m
 
 ## STOP - Load Phase Skills
 
-**If the dispatch prompt includes `## Additional Skills`:** execute EVERY `Skill()` and `Read()` line in that section before reviewing. Skills add domain-specific checklists on top of this protocol — apply them during Step 4 and note them in the review output.
+**If the dispatch prompt includes `## Additional Skills`:** execute EVERY `Read()` line in that section before reviewing. Skills add domain-specific checklists on top of this protocol — apply them during Step 4 and note them in the review output.
 
 **If there is no `## Additional Skills` section:** this protocol is sufficient. Do not load skills on your own initiative.
 
@@ -38,14 +38,16 @@ Equally: do NOT introduce requirements that are not listed in your prompt. You m
 
 When you need to run multiple bash commands (tests, typecheck, lint), write them to a single scratch script instead of running separate Bash calls. This avoids repeated permission prompts.
 
+**Use the scratch path the dispatch prompt supplies** (the prompt's "How to run the suite" names it — `scratch.sh` for a single review, `scratch-K.sh` for security-sensitive sample K). Parallel review samples each get a distinct path so they never collide; never hard-code `scratch.sh` when the prompt gives a sample path.
+
 ```bash
-# Write once, run many times
-Write(.code-foundations/build/scratch.sh)  # your commands here
-Bash(bash .code-foundations/build/scratch.sh)
+# Write once, run many times — [scratch path from the dispatch prompt]
+Write(.code-foundations/build/[scratch path from prompt])  # your commands here
+Bash(bash .code-foundations/build/[scratch path from prompt])
 
 # Iterate by editing the script and re-running
-Edit(.code-foundations/build/scratch.sh)   # fix/add commands
-Bash(bash .code-foundations/build/scratch.sh)
+Edit(.code-foundations/build/[scratch path from prompt])   # fix/add commands
+Bash(bash .code-foundations/build/[scratch path from prompt])
 ```
 
 ---
@@ -79,7 +81,11 @@ PASS requires the TRACE to hold and a passing test (or observed behavior) from S
 
 ### Step 2 — Test-DW Coverage
 
-Every DW item has corresponding test(s) that ran in Step 0 (test names reference DW-IDs, e.g. `test_DW_1_1_creates_user`). **A DW item with no test coverage → FAIL.** Verify coverage matches the dispatch prompt's Test Coverage level.
+Every DW item must be *covered* by execution evidence from Step 0. Coverage means one of:
+- **an automated test** that ran in Step 0 (test names reference DW-IDs, e.g. `test_DW_1_1_creates_user`) — the default and preferred form; or
+- **recorded observed behavior** — but ONLY for a DW item that no automated test can exercise (e.g. a desk-checkable spec assertion). Record what you ran/walked and what you observed.
+
+**A DW item with neither an automated test nor recorded observed behavior → FAIL.** Prefer the automated test; observed behavior is the fallback for non-testable items, not a way around writing a test for a testable one. Verify coverage matches the dispatch prompt's Test Coverage level.
 
 ### Step 3 — Dead Code
 
@@ -97,17 +103,17 @@ To FAIL a dimension you must demonstrate the defect — a TRACE that produces th
 
 Do NOT FAIL for:
 - requirements you inferred that are not in the DW list
-- edge cases the DW items don't cover
+- edge cases that are NOT listed in the prompt's `## Edge cases` section (prompt-listed edge cases DO have standing — see below)
 - stylistic or "could be better" design opinions
 - missing defensive code no requirement asked for
 
-A FAIL must name an executable failure: **(a)** a DW item with no execution evidence, **(b)** a test that fails when run, or **(c)** a defect demonstrated via TRACE. Design/clarity observations go under **Notes (non-blocking)**.
+A FAIL must name an executable failure: **(a)** a DW item with no execution evidence, **(b)** a test that fails when run, **(c)** a defect demonstrated via TRACE, or **(d)** a prompt-listed edge case the implementation does not handle. Design/clarity observations and *unlisted* edge cases go under **Notes (non-blocking)**.
 
 ---
 
 ## Output
 
-Write review to: `.code-foundations/build/<plan-name>-phase-N-review.md`
+Write review to the path the dispatch prompt's `## Output` section supplies — `.code-foundations/build/<plan-name>-phase-N-review.md` for a single review, or `.code-foundations/build/<plan-name>-phase-N-review-sample-K.md` for security-sensitive sample K. Never hard-code the single-review path when the prompt gives a sample path.
 
 ```markdown
 # Review: Phase N - [name]
@@ -162,17 +168,10 @@ VERDICT:  PASS
 ### Verdict Rules
 
 - ANY DW item without execution evidence → FAIL
-- ANY DW item without test coverage → FAIL
+- ANY DW item with neither an automated test nor recorded observed behavior (per Step 2) → FAIL
 - ANY test that fails when run → FAIL
 - ANY correctness defect demonstrated via TRACE or a test → FAIL
+- ANY edge case listed in the prompt's `## Edge cases` section left unhandled → FAIL (unlisted edge cases are Notes, never FAIL)
 - Everything else → PASS (with Notes)
 
-### Self-Check Before Returning Verdict
-
-STOP. Before writing the verdict, verify:
-- [ ] Every DW item from the dispatch prompt is in Requirement Fulfillment (compare counts)
-- [ ] Every PASS verdict cites execution evidence from Step 0, not "implemented"
-- [ ] No FAIL cites an unlisted requirement, uncovered edge case, or style preference
-- [ ] Verdict matches the rules above (not your gut feeling)
-
-**Return:** `POST-GATE [PASS|FAIL]. Review written to .code-foundations/build/<plan-name>-phase-N-review.md`
+**Return:** `POST-GATE [PASS|FAIL]. Review written to [the review path from the dispatch prompt's ## Output section].`

@@ -1,7 +1,7 @@
 ---
 name: gof-prototype
 classification: Creational / Object
-description: Use when classes to instantiate are specified at run-time or to avoid parallel factory hierarchies; Symptoms: excessive subclassing for object creation, class explosion from factory hierarchies, need to configure objects dynamically by copying pre-configured instances
+description: "Use when classes to instantiate are specified at run-time or to avoid parallel factory hierarchies; Symptoms: excessive subclassing for object creation, class explosion from factory hierarchies, need to configure objects dynamically by copying pre-configured instances"
 ---
 
 # PROTOTYPE
@@ -235,22 +235,3 @@ public record ImmutableConfig(String name, Map<String, String> settings) {
 - Prototype management overhead exceeds benefits
 - Clone semantics are unclear for the domain
 
-## CSO KEYWORDS
-
-- prototype pattern
-- clone method
-- object cloning
-- deep copy vs shallow copy
-- prototype registry
-- prototype manager
-- runtime object creation
-- dynamic instantiation
-- copy constructor
-- creational pattern
-- avoid factory subclassing
-- prototype-based creation
-- cloneable interface
-- object copying
-- pre-configured instances
-- prototype scope (Spring)
-- structuredClone (JavaScript)

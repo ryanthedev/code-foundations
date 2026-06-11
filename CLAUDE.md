@@ -20,10 +20,10 @@ Code-foundations is a Claude Code plugin providing software engineering skills b
 
 ### Directory Structure
 
-- `skills/` - Individual skill definitions (SKILL.md + checklists.md)
+- `skills/` - Individual skill definitions (SKILL.md; checklists.md where build's checklist-resolution step consumes it)
 - `commands/` - User-invocable commands (slash commands)
 - `agents/` - Agent templates (build-agent, post-gate-agent)
-- `references/` - Shared reference materials
+- `references/` - Shared reference materials (cc-foundations.md, skill-catalog.md, dispatch-templates.md, etc.)
 - `docs/` - Case study examples
 
 ### Development Workflows
@@ -57,11 +57,14 @@ Three-stage pattern for feature development:
         ↓ (when requirements are clear)
 
 /code-foundations:plan .code-foundations/research/<file>.md
+  → $ARGUMENTS: if a research-doc path is given, Read it and seed the problem statement
   → Codebase scan (shared step, all tracks)
-  → Clarify intent (shared step, all tracks)
+  → Clarify intent (shared step, all tracks — gaps only if research doc provided)
   → Problem statement confirmed (shared step, all tracks)
   → [Quick: plan → check → present]
   → [Standard/Full: classify → explore → detail → save → check → confirm]
+  → DECOMPOSE reads references/skill-catalog.md to match skills per phase
+  → SAVE emits per-phase **Gate:** field (Full | Standard | Minimal)
   → Save to .code-foundations/plans/YYYY-MM-DD-<topic>.md
   → User confirms
 
@@ -70,7 +73,7 @@ Three-stage pattern for feature development:
 /code-foundations:build .code-foundations/plans/<plan>.md
   → Feature branch required
   → Execute phases with quality gates
-  → Model auto-detected per phase (haiku/sonnet/opus)
+  → Model assigned per phase in plan (sonnet/opus)
   → Per-phase commits after REVIEW passes (or BUILD completes for standard/minimal gate)
   → Final verification + report
 ```
@@ -85,30 +88,45 @@ Three-stage pattern for feature development:
 
 **Quality Gates (per phase during /code-foundations:build):**
 ```
-BUILD:   baseline discipline (DW→test traceability, TDD red-green, anchoring, scope clamp) + [plan Skills]
+BUILD:   baseline discipline (DW→test traceability, TDD red-green, anchoring, scope clamp)
+         Skills listed in the phase are Read()-injected into the BUILD agent prompt — not
+         auto-triggered. The agent reads SKILL.md content directly via Read() calls.
          (discovery + design → TDD implementation in one agent)
-REVIEW:  debiased review protocol (execute-first, per-DW evidence + trace, anti-overcorrection) + [plan Skills]
-         (Full gate only — standard/minimal use tests as gate;
+REVIEW:  debiased review protocol (execute-first, per-DW evidence + trace, anti-overcorrection)
+         (Full gate only — standard/minimal use tests as the gate;
           Security-sensitive phases get 3-sample majority-vote REVIEW)
-VERIFY:  performance-optimization + cc-refactoring-guidance + build + tests + lint
 COMMIT:  Orchestrator commits directly after gates pass
 ```
 
-Gates load ONLY per-phase skills — there is no always-on skill set. Each agent definition carries its own protocol and works with zero skills assigned. The REVIEW dispatch is deliberately stripped of intent-framing (no plan context, no progress narrative, no discovery file) — the reviewer is an independent critic.
+**Gate policy:** each phase in the plan carries a `**Gate:**` field (Full | Standard | Minimal).
+When absent, build falls back to risk rules: security/auth/payment → Full; multi-file with new
+seams → Full; docs/config-only → Minimal; else Standard. Full = BUILD + REVIEW + COMMIT.
+Standard = BUILD + COMMIT. Minimal = BUILD (no discovery) + COMMIT.
 
-`[plan Skills]` = skills matched per phase at plan's DECOMPOSE step, loaded during DETAIL (they inform constraints, edge cases, and done-when items), validated at SAVE, then re-validated/resolved during build's SETUP skill resolution task.
+Skills are **internal** (all 19 carry `disable-model-invocation: true`): they do not appear in
+the model's skill listing and cannot be auto-triggered. They are slash-invocable by users and
+injected into agent prompts via `Read(${CLAUDE_PLUGIN_ROOT}/skills/<name>/SKILL.md)` calls.
+Plan DECOMPOSE matches skills per phase by reading `references/skill-catalog.md`.
 
-Models are assigned during plan's SAVE step. Building's SETUP runs a one-time skill resolution task that validates assignments, fills gaps, and updates the plan before creating phase tasks (skills affect gate policy). Cannot proceed to next phase until current phase passes all gates including REVIEW PASS (Full gate).
+The REVIEW dispatch is deliberately stripped of intent-framing (no plan context, no progress
+narrative, no discovery file) — the reviewer is an independent critic.
+
+Models are assigned per phase at plan's SAVE step. Cannot proceed to next phase until current
+phase passes all gates including REVIEW PASS (Full gate).
 
 ## Skill File Structure
 
 ```
 skills/<skill-name>/
-├── SKILL.md         # Main skill definition with YAML frontmatter
-├── checklists.md    # Detailed checklists
-├── hard-data.md     # Research/data backing the skill
-└── language-notes.md # Language-specific guidance (optional)
+├── SKILL.md         # Main skill definition with YAML frontmatter (required)
+└── checklists.md    # Checklists loaded by build's checklist-resolution step (where present)
 ```
+
+Some skills have a `references/` subdirectory (e.g. `gof-design-patterns/references/` for the
+23 pattern files; `code-standards/references/` for section-templates.md). Every bundled file
+must be linked from SKILL.md or it is a dead orphan. The `hard-data.md` and `language-notes.md`
+patterns are not standard — they were removed during the 2026-06 audit (orphan files with
+proven drift).
 
 ## Key Concepts
 
@@ -122,11 +140,12 @@ skills/<skill-name>/
 - Coupling (minimized dependencies)
 - Parameters ≤7, Inheritance depth < 3
 
-**CC Skills (13 total):**
-All CC skills reference `references/cc-foundations.md` for shared vocabulary (cohesion spectrum, coupling criteria, key metrics).
+**CC Skills (7 total):** cc-control-flow-quality, cc-debugging, cc-defensive-programming,
+cc-pseudocode-programming, cc-quality-practices, cc-refactoring-guidance, cc-routine-and-class-design.
+All 7 CC skills reference `references/cc-foundations.md` for shared vocabulary (cohesion spectrum,
+coupling criteria, key metrics, routine-length thresholds).
 
-Additional skills:
-- `cc-debugging` - Scientific debugging (Chapter 23): STABILIZE → LOCATE → HYPOTHESIZE → EXPERIMENT → FIX → TEST → SEARCH
+- `cc-debugging` — scientific debugging: STABILIZE → LOCATE → HYPOTHESIZE → EXPERIMENT → FIX → TEST → SEARCH
 
 ## Publishing
 

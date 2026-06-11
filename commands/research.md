@@ -2,7 +2,7 @@
 description: "Extract and document what the user wants — even when they don't know yet. Use before plan, or standalone when exploring an idea."
 ---
 
-# Skill: research
+# Command: research
 
 Help the user figure out what they want and get it written down. They might arrive with a vague vision, a half-formed idea, or just a problem they feel. Your job is facilitation — ask the right questions, reflect back what you hear, and progressively clarify until the idea is concrete and documented.
 

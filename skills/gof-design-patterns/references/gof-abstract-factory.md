@@ -1,7 +1,7 @@
 ---
 name: gof-abstract-factory
 classification: Creational / Object
-description: Use when system needs platform/family independence for object creation; Symptoms: scattered concrete class instantiation, inconsistent product mixing, hard-coded class names throughout codebase
+description: "Use when system needs platform/family independence for object creation; Symptoms: scattered concrete class instantiation, inconsistent product mixing, hard-coded class names throughout codebase"
 ---
 
 # ABSTRACT FACTORY
@@ -300,19 +300,3 @@ public class UserRepository {
 - The system is simple and unlikely to require platform/variant abstraction
 - Adding new product types is more common than adding new product families
 
-## CSO KEYWORDS
-
-- product family
-- platform independence
-- kit
-- widget factory
-- look and feel
-- cross-platform
-- theme switching
-- database abstraction
-- UI component library
-- dependency injection
-- configuration-based instantiation
-- encapsulated instantiation
-- family consistency
-- variant isolation

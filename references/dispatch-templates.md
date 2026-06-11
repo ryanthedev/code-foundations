@@ -19,7 +19,7 @@ Keeping these here instead of inline in `build.md`:
 **Substitution rules (orchestrator):**
 - `[bracketed]` placeholders → phase-specific values. Each placeholder names its source (plan section, agent report, project config); conditional blocks (`[if plan phase has ...]`) are emitted only when the condition holds, with items pasted verbatim.
 - `${CLAUDE_PLUGIN_ROOT}` → the absolute plugin root. This file is read at runtime, so the variable is NOT auto-substituted — replace it with the real path (you know it: it's the directory you read this template from, minus `/references/dispatch-templates.md`).
-- `## Additional Skills` blocks: for EACH skill assigned to the phase, emit its `Skill()` line, then one `Read()` line per checklist file (paths resolved once during SETUP's Skill Resolution — a skill resolves to its single `checklists.md`, every `.md` under its `checklists/` directory, or nothing; skills with no checklist files get only their `Skill()` line). Never emit a bare "load the skill" instruction when checklist files exist for that skill.
+- `## Additional Skills` blocks: for EACH skill assigned to the phase, emit a `Read(${CLAUDE_PLUGIN_ROOT}/skills/<name>/SKILL.md)` line, then one `Read()` line per checklist file (paths resolved once during SETUP's Skill Resolution — a skill resolves to its single `checklists.md`, every `.md` under its `checklists/` directory, or nothing; skills with no checklist files get only their SKILL.md `Read()` line). Skills load via `Read()` of their SKILL.md, never the Skill tool — Skill-tool invocation is model invocation, which is disabled plugin-wide. Never emit a bare "load the skill" instruction when checklist files exist for that skill.
 - **Skills propagate BUILD → REVIEW:** if the BUILD agent's `### Skills Loaded` output reports skills beyond the plan's assignment, add those (with their checklist Read() lines) to the REVIEW dispatch's `## Additional Skills` block too. The reviewer needs the same skill context to verify against.
 - Test/typecheck/lint command placeholders → resolve from project config (package.json scripts, Makefile, Cargo.toml, etc.) — exact runnable commands, not descriptions.
 
@@ -64,10 +64,10 @@ Agent tool:
 
     [if plan phase has **Skills:** field, include:]
     ## Additional Skills
-    Execute EVERY line below, in order, BEFORE starting work:
-    - Skill(code-foundations:[skill-from-plan])
+    Execute EVERY Read() line below, in order, BEFORE starting work:
+    - Read(${CLAUDE_PLUGIN_ROOT}/skills/[skill-from-plan]/SKILL.md)
     - Read([resolved checklist path for that skill])
-    [repeat Skill()+Read() pair(s) for each assigned skill]
+    [repeat the SKILL.md + checklist Read() lines for each assigned skill]
 
     [if plan has Assumptions with "Verify Before Phase: N", include:]
     ## Assumption Verification
@@ -109,13 +109,23 @@ Agent tool:
 
     [if plan phase has **Skills:** field, include:]
     ## Additional Skills
-    Execute EVERY line below, in order, BEFORE starting work:
-    - Skill(code-foundations:[skill-from-plan])
+    Execute EVERY Read() line below, in order, BEFORE starting work:
+    - Read(${CLAUDE_PLUGIN_ROOT}/skills/[skill-from-plan]/SKILL.md)
     - Read([resolved checklist path for that skill])
-    [repeat Skill()+Read() pair(s) for each assigned skill]
+    [repeat the SKILL.md + checklist Read() lines for each assigned skill]
 
     ## Phase N: [name]
     [paste the full phase description from the plan]
+
+    ## Done-When Items (DW-IDs)
+    These are the acceptance criteria from the plan. Each DW item must
+    have corresponding test(s) (e.g., `test_DW_1_1_creates_user`).
+    Any DW item without a test is a visible gap.
+    If any item cannot be met, return UPDATE_PLAN.
+    [paste ALL DW items from the plan phase, verbatim:]
+    - [ ] DW-N.1: [done-when item 1]
+    - [ ] DW-N.2: [done-when item 2]
+    - [ ] DW-N.X: [done-when item N...]
 
     ## Inputs
     - Plan file: .code-foundations/plans/<plan-name>.md
@@ -128,12 +138,14 @@ Agent tool:
 
 Use for **Full gate** REVIEW sub-phases. Always uses `code-foundations:post-gate-agent`.
 
-**Debiasing rules (do not violate):** the reviewer must receive NO intent-framing. Do NOT include the plan's Context/problem statement, progress summaries ("Completed Phase…"), the discovery file, or any account of what the build agent did or intended. Requirements + files + commands only. If the phase is marked `**Security-sensitive:** yes` in the plan, dispatch THREE independent copies of this prompt (separate Agent calls) and take the majority verdict.
+**Debiasing rules (do not violate):** the reviewer must receive NO intent-framing. Do NOT include the plan's Context/problem statement, progress summaries ("Completed Phase…"), the discovery file, or any account of what the build agent did or intended. Requirements + files + commands only.
+
+**Security-sensitive (3-sample):** if the phase is marked `**Security-sensitive:** yes` in the plan, dispatch THREE independent copies of this prompt (separate Agent calls) and take the majority verdict. The copies are identical EXCEPT for the per-sample paths: substitute `K`=1,2,3 so each sample's review path is `<plan-name>-phase-N-review-sample-K.md` and its scratch path is `scratch-K.sh`. Without this the three samples race and overwrite a single review/scratch file. For a non-sampled (single) review, drop the `-sample-K`/`-K` suffixes (review → `<plan-name>-phase-N-review.md`, scratch → `scratch.sh`).
 
 ```
 Agent tool:
 - subagent_type: "code-foundations:post-gate-agent"
-- model: [from plan's **Model:** field, or omit if not set]
+- model: [resolved REVIEW model per the orchestrator's Model Resolution — the phase's BUILD model downgraded one tier; omit if the plan sets no **Model:**]
 - description: "REVIEW Phase N"
 - prompt: |
     Independently verify the implementation in the files below against the
@@ -156,8 +168,9 @@ Agent tool:
 
     [if plan phase has **Edge cases:**, include:]
     ## Edge cases — verify handling
-    These are explicit plan requirements, same standing as the DW items above.
-    Verify the implementation handles each; an unhandled case is a finding.
+    These are explicit plan requirements with the same verdict standing as the
+    DW items above: an unhandled case listed here is a FAIL, not a Note.
+    Verify the implementation handles each.
     [paste the phase's Edge cases verbatim]
 
     ## Test Coverage Level
@@ -168,6 +181,9 @@ Agent tool:
 
     ## How to run the suite
     [exact test command + typecheck/lint commands for this project]
+    Write your commands to this scratch script and run it (parameterized so
+    parallel samples never collide): [scratch path — `scratch.sh`, or
+    `scratch-K.sh` for security-sensitive sample K]
 
     [ONLY if this phase consumes an interface from a prior phase — neutral
     wording, no "completed/done/working" language:]
@@ -177,13 +193,15 @@ Agent tool:
 
     [if plan phase has **Skills:** field OR BUILD agent reported additional skills, include:]
     ## Additional Skills
-    Execute EVERY line below BEFORE reviewing:
-    - Skill(code-foundations:[skill-from-plan])
+    Execute EVERY Read() line below BEFORE reviewing:
+    - Read(${CLAUDE_PLUGIN_ROOT}/skills/[skill-from-plan]/SKILL.md)
     - Read([resolved checklist path for that skill])
     [repeat for each skill; also include skills from BUILD's "Skills Loaded" output not already listed]
 
     ## Output
-    Write review to: .code-foundations/build/<plan-name>-phase-N-review.md
+    Write review to: [review path — `.code-foundations/build/<plan-name>-phase-N-review.md`,
+    or `.code-foundations/build/<plan-name>-phase-N-review-sample-K.md` for
+    security-sensitive sample K]
 ```
 
 ---

@@ -1,6 +1,7 @@
 ---
 name: welc-legacy-code
-description: "Use when facing untested legacy code, test harness problems, dependency issues, or time pressure. Triggers on: legacy code, no tests, can't test, afraid to change, need to modify untested code."
+description: "Safely modifies untested legacy code by getting it under test first: characterization tests, seam identification, sprout/wrap techniques, and pinch-point testing before any production changes."
+disable-model-invocation: true
 ---
 
 # Working Effectively with Legacy Code
@@ -169,5 +170,5 @@ Can you test the new code in isolation?
 
 | After | Next |
 |-------|------|
-| Code under test | cc-refactoring-guidance (safe refactoring process) |
+| Code under test | `Read(${CLAUDE_PLUGIN_ROOT}/skills/cc-refactoring-guidance/SKILL.md)` (safe refactoring process) |
 | Dependencies broken | Continue with Legacy Code Change Algorithm step 4-5 |

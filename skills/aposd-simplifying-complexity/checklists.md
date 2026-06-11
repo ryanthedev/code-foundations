@@ -76,14 +76,11 @@ Source: A Philosophy of Software Design (Ousterhout), Chapters 8, 10, 18
 
 ## Transformation Checklist (Mandatory Gate)
 
-- [ ] TC-1: "Did I walk through EACH level of hierarchy for EACH error condition?"
-- [ ] TC-2: "Did I document why earlier levels were rejected (if applicable)?"
-- [ ] TC-3: "Did I verify validation gates passed for each technique applied?"
-- [ ] TC-4: "Is complexity moved to fewer places (not just relocated)?"
-- [ ] TC-5: "Are interfaces simpler than before?"
-- [ ] TC-6: "Do callers do less work than before?"
-- [ ] TC-7: "Is error handling consolidated or eliminated?"
-- [ ] TC-8: "Does reader need less context to understand?"
+- [ ] TC-4: Complexity moved to fewer places (not just relocated)?
+- [ ] TC-5: Interfaces simpler than before?
+- [ ] TC-6: Callers do less work than before?
+- [ ] TC-7: Error handling consolidated or eliminated?
+- [ ] TC-8: Reader needs less context to understand?
 
 ---
 
@@ -98,5 +95,3 @@ Source: A Philosophy of Software Design (Ousterhout), Chapters 8, 10, 18
 - [ ] RF-7: "Error masked without observability?" - Applying Mask or Define-out but no logging, metrics, or alternate signal when the error actually occurs → Every masked error needs an observability escape hatch (log, metric, health check) so operators can detect when masking hides a real problem
 
 ---
-
-Total items: 45

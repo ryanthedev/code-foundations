@@ -4,15 +4,87 @@ Sources: A Philosophy of Software Design (Ch. 20), Code Complete 2nd Ed. (Ch. 25
 
 ---
 
+## Expensive Operations Reference
+
+| Operation | Cost | Context |
+|-----------|------|---------|
+| Network (datacenter) | 10-50 us | Tens of thousands of instructions |
+| Network (wide-area) | 10-100 ms | Millions of instructions |
+| Disk I/O | 5-10 ms | Millions of instructions |
+| Flash storage | 10-100 us | Thousands of instructions |
+| Dynamic memory allocation | Significant | malloc/new, freeing, GC overhead |
+| Cache miss | Few hundred cycles | Often determines overall performance |
+| I/O vs memory | ~1000x difference | Batch I/O, avoid I/O in tight loops |
+| Interpreted vs compiled | >100x slower | PHP/Python vs C++ |
+
+---
+
+## Code Tuning Patterns (empirical data — only after profiling confirms <4% hot path)
+
+### Sentinel Value in Search Loop (23-65% faster)
+```java
+// BEFORE: Compound test every iteration
+found = false; i = 0;
+while (!found && i < count) {
+    if (item[i] == target) found = true;
+    i++;
+}
+
+// AFTER: Single test per iteration
+item[count] = target;  // sentinel
+i = 0;
+while (item[i] != target) { i++; }
+if (i < count) { /* found at position i */ }
+```
+
+### Loop Unswitching (19-28% faster)
+```java
+// BEFORE: Testing invariant condition every iteration
+for (i = 0; i < count; i++) {
+    if (type == TYPE_A) { processTypeA(item[i]); }
+    else { processTypeB(item[i]); }
+}
+
+// AFTER: Test once outside loop
+if (type == TYPE_A) {
+    for (i = 0; i < count; i++) { processTypeA(item[i]); }
+} else {
+    for (i = 0; i < count; i++) { processTypeB(item[i]); }
+}
+```
+
+### Strength Reduction (90-99.9% faster)
+```java
+// BEFORE: Expensive operation
+if (Math.sqrt(x) < Math.sqrt(y)) { ... }
+
+// AFTER: Algebraically equivalent (when x,y >= 0)
+if (x < y) { ... }
+```
+
+### Page Fault Loop Ordering (up to 1000x faster)
+```java
+// BEFORE: Column-major access causes page faults
+for (column = 0; column < MAX_COLUMNS; column++)
+    for (row = 0; row < MAX_ROWS; row++)
+        table[row][column] = BlankTableElement();
+
+// AFTER: Row-major access, sequential memory
+for (row = 0; row < MAX_ROWS; row++)
+    for (column = 0; column < MAX_COLUMNS; column++)
+        table[row][column] = BlankTableElement();
+```
+
+---
+
 ## Gate: Measurement First (MANDATORY)
 
-- [ ] M-1: "Is the program correct and complete before optimizing?"
-- [ ] M-2: "Did I MEASURE existing system behavior (not just 'user said it's slow')?"
-- [ ] M-3: "Did I IDENTIFY where the system spends most time (specific locations)?"
-- [ ] M-4: "Did I ESTABLISH a baseline for comparison?"
-- [ ] M-5: "Do I have actual profiling data (timing, call counts, memory usage)?"
-- [ ] M-6: "Did I run multiple times to account for variance?"
-- [ ] M-7: "Did I identify WHICH dimension is the problem (throughput, latency, memory, CPU)?"
+- [ ] M-1: Program is correct and complete before optimizing
+- [ ] M-2: Profiling data (timing, call counts, memory usage) captured and on-hand — not just "user said it's slow"
+- [ ] M-3: Specific hotspot location identified (not just "it's slow")
+- [ ] M-4: Baseline established for before/after comparison
+- [ ] M-5: Multiple runs taken to account for variance
+- [ ] M-6: Problem dimension identified: throughput, latency, memory, or CPU
 
 ---
 
@@ -41,13 +113,13 @@ Sources: A Philosophy of Software Design (Ch. 20), Code Complete 2nd Ed. (Ch. 25
 
 ## Critical Path Redesign (APOSD Stage 3)
 
-- [ ] CR-1: "What is the smallest amount of code for the common case?"
-- [ ] CR-2: "Did I disregard existing code structure entirely?"
-- [ ] CR-3: "Did I ignore special cases in current code?"
-- [ ] CR-4: "Did I consider only data needed for critical path?"
-- [ ] CR-5: "Did I choose the most convenient data structure?"
-- [ ] CR-6: "Did I define 'the ideal' (simplest and fastest with complete redesign freedom)?"
-- [ ] CR-7: "Did I design the rest of the class around these critical paths?"
+- [ ] CR-1: Smallest amount of code for the common case identified
+- [ ] CR-2: Existing code structure set aside (redesign from scratch, not patch)
+- [ ] CR-3: Special cases from current code excluded from the critical path analysis
+- [ ] CR-4: Only data needed for critical path included
+- [ ] CR-5: Most convenient data structure chosen for the critical path
+- [ ] CR-6: "The ideal" defined (simplest and fastest with complete redesign freedom)
+- [ ] CR-7: Rest of class designed around these critical paths
 
 ---
 
@@ -62,11 +134,11 @@ Sources: A Philosophy of Software Design (Ch. 20), Code Complete 2nd Ed. (Ch. 25
 
 ## Code Tuning Procedure
 
-- [ ] TP-1: "Did I save a working version before tuning?"
-- [ ] TP-2: "Am I making only ONE change at a time?"
-- [ ] TP-3: "Did I measure the effect of this specific change?"
-- [ ] TP-4: "Did I back out changes that didn't produce measurable improvement?"
-- [ ] TP-5: "Did I try more than one approach for each bottleneck (iterated)?"
+- [ ] TP-1: Working version saved before tuning
+- [ ] TP-2: Exactly one change made (multiple changes = unmeasurable cause)
+- [ ] TP-3: Effect of this specific change measured
+- [ ] TP-4: Changes that didn't produce measurable improvement backed out
+- [ ] TP-5: More than one approach tried for each bottleneck (iterated)
 
 ---
 
@@ -101,10 +173,10 @@ Sources: A Philosophy of Software Design (Ch. 20), Code Complete 2nd Ed. (Ch. 25
 
 ## After Making Changes
 
-- [ ] AM-1: "Did I RE-MEASURE to verify measurable performance difference?"
-- [ ] AM-2: "Did changes provide significant speedup (with data)?" -> Keep
-- [ ] AM-3: "Did changes make system simpler AND at least as fast?" -> Keep
-- [ ] AM-4: "Neither speedup nor simpler?" -> BACK THEM OUT
+- [ ] AM-1: Re-measured — measurable performance difference confirmed
+- [ ] AM-2: Changes provide significant speedup (with data) → Keep
+- [ ] AM-3: Changes make system simpler AND at least as fast → Keep
+- [ ] AM-4: Neither speedup nor simpler → Back out
 
 ---
 
@@ -123,5 +195,3 @@ Sources: A Philosophy of Software Design (Ch. 20), Code Complete 2nd Ed. (Ch. 25
 - [ ] RF-11: "Compiler can do it better?" Trust modern compilers for simple transforms
 
 ---
-
-Total items: 67

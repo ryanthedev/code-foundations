@@ -1,7 +1,7 @@
 ---
 name: gof-builder
 classification: Creational / Object
-description: Use when constructing complex objects step-by-step with varying representations; Symptoms: telescoping constructors, multiple configuration options, need to create different representations from same construction process
+description: "Use when constructing complex objects step-by-step with varying representations; Symptoms: telescoping constructors, multiple configuration options, need to create different representations from same construction process"
 ---
 
 ## INTENT
@@ -295,25 +295,3 @@ public class ApiService {
 - When Abstract Factory is more appropriate (families of related objects)
 - When immutable objects with all-args constructor suffice
 
-## CSO KEYWORDS
-
-- telescoping constructor
-- fluent interface
-- fluent builder
-- step-by-step construction
-- complex object construction
-- construction algorithm
-- director pattern
-- builder interface
-- product assembly
-- object configuration
-- immutable object builder
-- request builder
-- query builder
-- form builder
-- document builder
-- configuration builder
-- DSL builder
-- method chaining
-- incremental construction
-- representation independence

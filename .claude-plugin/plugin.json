@@ -1,7 +1,7 @@
 {
   "name": "code-foundations",
-  "version": "4.17.0",
-  "description": "Software engineering skills from Code Complete and A Philosophy of Software Design. 20 skills across 2 agents (build, post-gate). Research → plan → build workflow with adaptive gates (BUILD, REVIEW, commit).",
+  "version": "5.0.0",
+  "description": "19 software engineering skills from Code Complete, APOSD, GoF, and Clean Architecture. Skills are internal (slash-invocable; injected via Read() — not auto-triggered). Research → plan → build workflow with Gate-field adaptive gates (Full | Standard | Minimal) and per-phase orchestrated commits.",
   "author": {
     "name": "ryanthedev"
   },

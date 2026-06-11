@@ -85,6 +85,3 @@ ACTION: Define a Handler interface with a handleRequest method and successor lin
 COUNTER-INDICATOR: When every request MUST be handled (no fallthrough acceptable); when you need to know exactly which handler processed the request; when simple conditionals or Strategy pattern would be clearer
 ```
 
-## CSO KEYWORDS
-
-chain of responsibility, handler chain, request forwarding, implicit receiver, middleware, event bubbling, event propagation, successor pattern, request pipeline, filter chain, interceptor, decoupled handlers, pass-through, responsibility chain, handler interface, dynamic dispatch, context-sensitive handling, hierarchical requests
