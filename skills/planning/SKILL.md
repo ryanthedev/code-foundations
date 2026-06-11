@@ -108,11 +108,10 @@ Approaches must be **structurally different** (different technology, pattern, or
 
 ### Recommendation + Decision Gate
 
-After presenting the approach table, **name a recommendation with 1-sentence rationale** — not neutral presentation. The user wants an opinion, then picks.
+Print the approach table in conversation, then **name a recommendation with 1-sentence rationale** — not neutral presentation. The user wants an opinion, then picks.
 
 **MUST use `AskUserQuestion`** with options:
-- Each approach from the table (A, B, C...) as a selectable option
-- "Elaborate on one" — expand trade-offs before choosing
+- Each approach from the table (A, B, C...) as a selectable option — **`preview` REQUIRED on each**: that approach's trade-offs, best-when, and research source as markdown. The preview pane is the guaranteed-visible surface; the user compares approaches side-by-side there even if the table print was skipped.
 - "Different direction" — none of the above fits
 
 **Hard gate: Cannot proceed to DETAIL until the user picks an approach via `AskUserQuestion`.** Writing "Going with X" and moving on is a violation — the user must answer. No silent defaults, no "I'll flag it at confirm."
@@ -161,19 +160,32 @@ Before accepting each phase: Is it needed for success criteria? Could we ship wi
 
 Phase counts: Medium 3-5, Complex 5-7. Prefer fewer. Express independent phases as DAG -- don't artificially linearize.
 
-### Write the Skeleton to the File
-
-Create the plan file now (see Step 7 schema): header + Context + Constraints + Chosen Approach, then one header per phase carrying name, goal, Depends on / Unlocks, Produces, Skills, Difficulty. The file is built **progressively** across DECOMPOSE -> DETAIL -> CROSS-CUT -> SAVE — recoverable if interrupted. Do not commit it.
-
 ### Skeleton Checkpoint
 
-**Render the skeleton in conversation first** — the user reviews what you print, not the file. The Write tool result is collapsed in the UI, and the AskUserQuestion dialog can't carry a multi-phase summary. Output markdown: one line per phase (name, goal, difficulty) plus the DAG edges and each Produces seam.
+Catching a wrong decomposition here is far cheaper than after the bodies are written. The user can only review what the dialog itself shows them — Write tool results render collapsed, and conversation prose is routinely skipped under tool-chaining. **The skeleton travels INSIDE the `AskUserQuestion` call, in the `preview` field.** Do NOT write the plan file first; the file is written after approval.
 
-**Then `AskUserQuestion`** — "Does the N-phase decomposition look right?" Options:
-- "Looks right" -- proceed to DETAIL
-- "Adjust" -- user names what's off; revise the skeleton and re-present
+`AskUserQuestion` — "Does the N-phase decomposition look right? Review the skeleton in the preview." Options — **the `preview` field on BOTH options is REQUIRED and carries the identical full skeleton**:
 
-Lightweight react-or-pass. Catching a wrong decomposition here is far cheaper than after the bodies are written.
+- "Looks right" — description: "Write the skeleton to the plan file and proceed to detailing each phase." — `preview`: the skeleton
+- "Adjust" — description: "Name what's off — phase boundaries, ordering, scope, or missing work." — `preview`: the skeleton
+
+An option without the skeleton preview asks the user to confirm something they cannot see — the question is invalid without it. On "Adjust": revise, re-ask with the updated skeleton in the previews.
+
+Preview content shape (markdown):
+
+```markdown
+## Skeleton: N phases
+1. **[Name]** — [one-line goal] (LOW/MED/HIGH)
+   produces: [seam] → Phase 2
+2. ...
+DAG: 1 → 2 → {3, 4} → 5
+```
+
+Printing the skeleton in conversation before the call is good practice too — but the preview is the mandatory channel, not the print.
+
+### Write the Skeleton to the File
+
+After "Looks right": create the plan file (see Step 7 schema): header + Context + Constraints + Chosen Approach, then one header per phase carrying name, goal, Depends on / Unlocks, Produces, Skills, Difficulty. The file is built **progressively** across DECOMPOSE -> DETAIL -> CROSS-CUT -> SAVE — recoverable if interrupted. Do not commit it.
 
 ---
 
@@ -387,11 +399,13 @@ After return: PASS -> proceed. FINDINGS -> fix issues, then proceed.
 
 ## Step 9: CONFIRM
 
-**Present to user:** phases, goals, skill assignments, constraint coverage, test coverage level (chosen at CROSS-CUT), review results. Render this as markdown in the conversation BEFORE any `AskUserQuestion` — the question dialog can't carry the summary, and the user won't open the saved file.
+**Present to user:** phases, goals, skill assignments, constraint coverage, test coverage level (chosen at CROSS-CUT), review results. Print this summary as markdown in conversation, then `AskUserQuestion` with options carrying it — **`preview` REQUIRED on both** (the identical summary), so the user can review the plan inside the dialog even if the print was skipped. The user won't open the saved file, and Write/Edit tool results render collapsed.
 
-**Simple:** "Does this look right? Anything to add or change?"
+Summary content: phases with goals, constraint -> phase mapping, review results, remaining questions.
 
-**Medium/Complex:** Structured summary with phases, constraint -> phase mapping, review results, remaining questions.
+Question: "Does this look right? Anything to add or change?" Options:
+- "Approve" — `preview`: the plan summary
+- "Request changes" — `preview`: the plan summary
 
 **Question style:** See [adaptive-questioning.md](${CLAUDE_PLUGIN_ROOT}/references/adaptive-questioning.md). If the user has been terse during planning, present the plan with assumptions stated rather than asking open-ended "thoughts?"
 
