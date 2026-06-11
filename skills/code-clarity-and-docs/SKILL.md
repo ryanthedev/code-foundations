@@ -30,7 +30,7 @@ For new classes/methods, write comments BEFORE implementation:
 
 **Applies to:** writing from scratch, copy-paste-modify, extending functions (>5 lines), interface-changing refactors, prototype-to-production, test methods, non-trivial lambdas.
 
-**Exempt (but document why):** one-liner utilities with precise names, trivial getters/setters, character-level bug fixes, temp debug code (mark `// TEMP:`).
+**Exempt:** one-liner utilities with precise names, trivial getters/setters, character-level bug fixes, temp debug code (mark `// TEMP:`).
 
 ---
 
@@ -70,7 +70,7 @@ For new classes/methods, write comments BEFORE implementation:
 | Repeat the code | `i++ // increment i` | Zero value |
 | State the obvious | `// loop through users` | Noise |
 | Stale comment | Comment says X, code does Y | Dangerous |
-| TODO forever | `// TODO: fix this` from 2019 | Clutter |
+| TODO forever | `// TODO: fix this` (no owner, no date) | Clutter |
 | Commented-out code | Dead code as comment | Confusion |
 
 ### Patterns That Add Value
@@ -173,20 +173,7 @@ For each variable, answer in the comment:
 
 ## AI Documentation Audit
 
-Check all AI config files that exist in the project:
-
-| File | Tool |
-|------|------|
-| `CLAUDE.md` | Claude Code |
-| `.cursorrules` / `.cursorignore` | Cursor |
-| `.github/copilot-instructions.md` | GitHub Copilot |
-| `AGENTS.md` | Copilot Workspace |
-| `.windsurfrules` | Windsurf |
-| `.aider.conf.yml` | Aider |
-| `.continue/config.json` | Continue.dev |
-| `.clinerules` | Cline |
-| `.roomodes` | Roo Code |
-| `CONVENTIONS.md` | Various |
+Check any AI config files that exist in the project (`CLAUDE.md`, `AGENTS.md`, editor rule files such as `.cursorrules`, `.windsurfrules`, `.clinerules`, `.roomodes`, and similar):
 
 - [ ] AI docs reflect current architecture?
 - [ ] Agent/skill descriptions accurate?
@@ -214,9 +201,13 @@ Check all AI config files that exist in the project:
 
 ---
 
+Detailed checklists for code review: `Read(${CLAUDE_SKILL_DIR}/checklists.md)`
+
+---
+
 ## Chain
 
 | After | Next |
 |-------|------|
-| Comments/naming done | code-clarity-and-docs (CHECKER) |
+| Code written or changed | Audit using this skill + `${CLAUDE_SKILL_DIR}/checklists.md` |
 | Docs verified | Done (pre-commit gate) |

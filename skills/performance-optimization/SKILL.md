@@ -32,28 +32,7 @@ This skill covers single-threaded, single-process code tuning for general-purpos
 
 ## The Simplicity-Performance Relationship
 
-| Myth | Reality |
-|------|---------|
-| "Performance requires complexity" | Simpler code usually runs faster |
-| "Clean design sacrifices speed" | Clean design and high performance are compatible |
-| "Optimization means adding code" | Optimization often means removing code |
-
-Why: fewer special cases = less code to check, deep classes = more work per call with fewer layer crossings, complicated code does extraneous or redundant work.
-
----
-
-## Expensive Operations Reference
-
-| Operation | Cost | Context |
-|-----------|------|---------|
-| Network (datacenter) | 10-50 us | Tens of thousands of instructions |
-| Network (wide-area) | 10-100 ms | Millions of instructions |
-| Disk I/O | 5-10 ms | Millions of instructions |
-| Flash storage | 10-100 us | Thousands of instructions |
-| Dynamic memory allocation | Significant | malloc/new, freeing, GC overhead |
-| Cache miss | Few hundred cycles | Often determines overall performance |
-| I/O vs memory | ~1000x difference | Batch I/O, avoid I/O in tight loops |
-| Interpreted vs compiled | >100x slower | PHP/Python vs C++ |
+Simpler code usually runs faster. Fewer special cases = less code to check; deep modules = more work per call with fewer layer crossings; complicated code does extraneous or redundant work.
 
 ---
 
@@ -173,75 +152,11 @@ Only reached after completing the 7-step decision tree.
 
 ---
 
-## Core Patterns (with empirical data)
-
-**PREREQUISITE:** Only apply after profiling confirms the code is in the <4% hot path.
-
-### Sentinel Value in Search Loop (23-65% faster)
-```java
-// BEFORE: Compound test every iteration
-found = false; i = 0;
-while (!found && i < count) {
-    if (item[i] == target) found = true;
-    i++;
-}
-
-// AFTER: Single test per iteration
-item[count] = target;  // sentinel
-i = 0;
-while (item[i] != target) { i++; }
-if (i < count) { /* found at position i */ }
-```
-
-### Loop Unswitching (19-28% faster)
-```java
-// BEFORE: Testing invariant condition every iteration
-for (i = 0; i < count; i++) {
-    if (type == TYPE_A) { processTypeA(item[i]); }
-    else { processTypeB(item[i]); }
-}
-
-// AFTER: Test once outside loop
-if (type == TYPE_A) {
-    for (i = 0; i < count; i++) { processTypeA(item[i]); }
-} else {
-    for (i = 0; i < count; i++) { processTypeB(item[i]); }
-}
-```
-
-### Strength Reduction (90-99.9% faster)
-```java
-// BEFORE: Expensive operation
-if (Math.sqrt(x) < Math.sqrt(y)) { ... }
-
-// AFTER: Algebraically equivalent (when x,y >= 0)
-if (x < y) { ... }
-```
-
-### Page Fault Loop Ordering (up to 1000x faster)
-```java
-// BEFORE: Column-major access causes page faults
-for (column = 0; column < MAX_COLUMNS; column++)
-    for (row = 0; row < MAX_ROWS; row++)
-        table[row][column] = BlankTableElement();
-
-// AFTER: Row-major access, sequential memory
-for (row = 0; row < MAX_ROWS; row++)
-    for (column = 0; column < MAX_COLUMNS; column++)
-        table[row][column] = BlankTableElement();
-```
-
----
-
 ## After Making Changes
 
-```
-1. RE-MEASURE to verify measurable performance difference
-2. EVALUATE the tradeoff:
-   - Significant speedup (with data)? -> Keep
-   - Simpler AND at least as fast? -> Keep
-   - Neither? -> BACK THEM OUT
-```
+Checklist and code examples: `Read(${CLAUDE_SKILL_DIR}/checklists.md)`
+
+Re-measure before keeping any change. Keep only if: significant speedup (with data), OR simpler AND at least as fast. Otherwise back it out.
 
 ---
 
@@ -267,24 +182,11 @@ for (row = 0; row < MAX_ROWS; row++)
 | Compiler optimization gains | 40-59% improvement possible | CC p.596 |
 | I/O vs memory | ~1000x difference | CC p.591 |
 
-```
-PRIORITY ORDER:
-1. Correct first
-2. Measure (MANDATORY GATE)
-3. Relax requirements
-4. Design/architecture fix (cache, algorithm, bypass layers)
-5. Critical path redesign (minimum code for common case)
-6. Compiler flags
-7. Code tuning (save -> one change -> measure -> keep/revert)
-
-Never skip steps. Never assume.
-```
-
 ---
 
 ## Checker
 
-Checklist: **[checklists.md](${CLAUDE_PLUGIN_ROOT}/skills/performance-optimization/checklists.md)**
+Checklist: `Read(${CLAUDE_SKILL_DIR}/checklists.md)`
 
 Output Format:
   | Item | Status | Evidence | Location |

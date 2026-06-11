@@ -6,13 +6,11 @@ disable-model-invocation: true
 
 # Skill: aposd-simplifying-complexity
 
-## STOP - Error Reduction Hierarchy
+## Error Reduction Hierarchy
 
-**Walk through each level of hierarchy for EACH error condition.** The best way to deal with exceptions is to define errors out of existence.
+The best way to deal with exceptions is to define errors out of existence.
 
 **Priority order:** Define out → Mask → Aggregate → Crash (app-level only)
-
-**Do NOT present simplified code until the Transformation Checklist is complete.**
 
 ---
 
@@ -144,9 +142,9 @@ If a code reviewer says your code is not obvious, **it is not obvious**—regard
 
 ---
 
-## Mandatory Output: Show Your Work
+## Output Gate
 
-**Before presenting simplified code, output a technique analysis table:**
+Before presenting simplified code, produce a technique analysis table — this is the evidence that the hierarchy was applied:
 
 ```
 | Error Condition | Technique | Gate Check | Reasoning |
@@ -154,22 +152,16 @@ If a code reviewer says your code is not obvious, **it is not obvious**—regard
 | [each error]    | [1-4]     | [PASS/FAIL]| [why]     |
 ```
 
-This prevents claiming hierarchy application without evidence.
+Proceed only when the following are true:
 
----
+- Technique analysis table present for each error condition
+- Complexity moved to fewer places (not just relocated)
+- Interfaces are simpler than before
+- Callers do less work than before
+- Error handling is consolidated or eliminated
+- Reader needs less context to understand
 
-## Transformation Checklist (Mandatory Gate)
-
-**Do NOT present simplified code until ALL boxes are checked:**
-
-- [ ] Walked through EACH level of hierarchy for EACH error condition
-- [ ] Documented why earlier levels were rejected (if applicable)
-- [ ] Verified validation gates passed for each technique applied
-- [ ] Complexity moved to fewer places (not just relocated)
-- [ ] Interfaces are simpler than before
-- [ ] Callers do less work than before
-- [ ] Error handling is consolidated or eliminated
-- [ ] Reader needs less context to understand
+If a criterion legitimately cannot be satisfied, present the code with the failed criterion and reason stated.
 
 ---
 
@@ -196,29 +188,11 @@ This prevents claiming hierarchy application without evidence.
 | **Over-defensive code** | Checks for impossible conditions | Define errors out |
 | **Generic containers** | `Pair<X,Y>` obscures meaning | Create named structure |
 | **Comment-dependent understanding** | Code unreadable without comments | Refactor for obviousness |
+| **Masked error without observability** | Applying Mask or Define-out but no logging, metrics, or alternate signal when the error actually occurs | Every masked error needs an observability escape hatch (log, metric, health check) so operators can detect when masking hides a real problem |
 
 ---
 
-## Quick Reference
-
-```
-SIMPLIFICATION PRIORITY ORDER:
-
-1. Can I ELIMINATE this complexity entirely?
-   → Redefine semantics, remove special cases
-
-2. Can I CONSOLIDATE this complexity?
-   → Pull down into one module, aggregate handlers
-
-3. Can I HIDE this complexity?
-   → Mask in implementation, use defaults
-
-4. Can I CLARIFY this complexity?
-   → Better names, strategic comments, meet conventions
-
-Do NOT just move complexity around—reduce it.
-```
-
+Detailed checklists: `Read(${CLAUDE_SKILL_DIR}/checklists.md)`
 
 ---
 
@@ -226,4 +200,4 @@ Do NOT just move complexity around—reduce it.
 
 | After | Next |
 |-------|------|
-| Simplification done | Verify interface simplified |
+| Simplification done | `Read(${CLAUDE_PLUGIN_ROOT}/skills/aposd-verifying-correctness/SKILL.md)` — verify interface simplified |

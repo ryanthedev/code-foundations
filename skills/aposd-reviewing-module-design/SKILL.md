@@ -45,6 +45,7 @@ Use this systematic checklist when reviewing code:
 | **Temporal Decomposition** | Structure mirrors execution order rather than knowledge | Medium |
 | **Back-Door Leakage** | Shared knowledge not visible in interfaces but both depend on it | High |
 | **Overexposure** | Common use forces learning rare features | Medium |
+| **Silent Failure** | Module swallows errors, returns defaults, or hides failure states from callers | High |
 
 ### 4. Layer Abstraction (Ch7)
 
@@ -64,22 +65,6 @@ Use this systematic checklist when reviewing code:
 | **Special-General Mixture** | General mechanism contains use-case specific code | High |
 | **Code Repetition** | Same code appears in multiple places | Medium |
 | **Shallow Split** | Method split resulted in interface ≈ implementation | Medium |
-
----
-
-## Red Flags Quick Reference
-
-| Red Flag | Source | One-Line Detection |
-|----------|--------|-------------------|
-| Shallow Module | Ch4 | Interface as complex as implementation |
-| Classitis | Ch4 | Many small classes, little functionality each |
-| Information Leakage | Ch5 | Same knowledge in multiple modules |
-| Temporal Decomposition | Ch5 | Structure follows execution order |
-| Pass-Through Method | Ch7 | Method just delegates to another with same API |
-| Conjoined Methods | Ch9 | Methods only understandable together |
-| Special-General Mixture | Ch9 | General mechanism has use-case code |
-| Code Repetition | Ch9 | Same code appears multiple places |
-| Shallow Split | Ch9 | Method split resulted in interface ≈ implementation |
 
 ---
 
@@ -181,42 +166,7 @@ Ask before concluding:
 
 ---
 
-## Common Evaluation Mistakes
-
-| Mistake | Reality |
-|---------|---------|
-| "It's long, so it's complex" | Length ≠ complexity. Depth matters more. |
-| "Small classes are better" | Small classes are often shallow. Deep > small. |
-| "More methods = better API" | Fewer powerful methods beat many limited ones. |
-| "Separation is always good" | Subdivision has complexity costs. Sometimes combine. |
-| "Code reuse requires extraction" | Only extract if snippet is long AND signature is simple. |
-| "This is clearly good/bad" | Always run the systematic checklist. |
-| "Standard pattern = automatically good" | Patterns can be misapplied. Require specific evidence. |
-
----
-
-## Quick Reference
-
-```
-SYSTEMATIC REVIEW CHECKLIST:
-
-1. SYMPTOMS - Change amplification? Cognitive load? Unknown unknowns?
-2. DEPTH - Interface simpler than implementation?
-3. HIDING - Same knowledge in multiple modules?
-4. LAYERS - Pass-through methods? Abstraction changes per layer?
-5. STRUCTURE - Conjoined methods? Special-general mixture?
-
-BEFORE FLAGGING:
-- Steel-man check: Could this be intentional?
-- Validate: Can caller use without knowing implementation?
-
-OUTPUT:
-- Critical (must fix)
-- Moderate (should fix)
-- Observations (consider)
-- Positive patterns
-```
-
+Detailed per-dimension checklists: `Read(${CLAUDE_SKILL_DIR}/checklists.md)`
 
 ---
 
@@ -224,5 +174,6 @@ OUTPUT:
 
 | After | Next |
 |-------|------|
-| Issues found | Fix or flag for /code-foundations:plan |
+| Issues found, transformation needed | `Read(${CLAUDE_PLUGIN_ROOT}/skills/aposd-simplifying-complexity/SKILL.md)` (transformation vs assessment) |
+| Issues found, plan needed | Flag for /code-foundations:plan |
 | No issues | Done |

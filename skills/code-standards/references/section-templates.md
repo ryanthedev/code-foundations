@@ -1,5 +1,21 @@
 # Section Templates
 
+## Contents
+
+1. [Structural and quality rules](#structural-rule)
+2. [1. Forbidden Patterns](#1-forbidden-patterns)
+3. [2. Code Examples](#2-code-examples)
+4. [3. Error Handling](#3-error-handling)
+5. [4. Imports & Dependency Direction](#4-imports--dependency-direction)
+6. [5. Testing Patterns](#5-testing-patterns)
+7. [6. Naming Conventions](#6-naming-conventions)
+8. [7. File Organization](#7-file-organization)
+9. [8. Technology Decisions](#8-technology-decisions)
+10. [9. Exemplar Files](#9-exemplar-files)
+11. [Format Rules](#format-rules)
+
+---
+
 Detailed format for each section in `docs/code-standards.md`. Every section follows the same structure:
 
 ```
@@ -300,4 +316,4 @@ The bad example restates what the LLM can see from imports. Zero information gai
 4. **Extract from actual code.** Don't invent idealized examples. Use real file paths and line numbers where possible.
 5. **Only non-obvious conventions.** If it's what any competent developer in that language would do by default, leave it out.
 6. **Show wrong AND right.** Anti-pattern + correction pairs anchor conventions more reliably than positive examples alone.
-7. **Keep it short.** Aim for 150-250 lines total. Over 300 means you're including filler.
+7. **Keep it short.** Aim for under 300 lines. Trim filler aggressively.

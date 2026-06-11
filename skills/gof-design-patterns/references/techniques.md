@@ -160,23 +160,6 @@ Patterns that deal with object communication and responsibility.
 
 ## 7. Pattern Selection Guide
 
-### By Symptom
-
-| Symptom | Pattern to Consider |
-|---------|---------------------|
-| Switch/if-else chains on type | Strategy, State, Visitor |
-| Switch/if-else on object state | State |
-| Telescoping constructors | Builder |
-| Subclass explosion | Decorator, Strategy, Bridge |
-| Scattered concrete class instantiation | Factory Method, Abstract Factory |
-| Hard-coded class names | Factory Method, Prototype |
-| Tight coupling to subsystem | Facade |
-| Many-to-many object relationships | Mediator |
-| Manual state propagation | Observer |
-| Duplicated algorithm structure | Template Method |
-| Large conditional for request handling | Chain of Responsibility |
-| High memory from many objects | Flyweight |
-
 ### By Design Goal
 
 | Goal | Pattern |

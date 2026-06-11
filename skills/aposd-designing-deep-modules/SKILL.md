@@ -26,8 +26,6 @@ BEFORE implementing any module:
 7. IMPLEMENT - Only then write the code
 ```
 
-**Time bound:** Smaller modules: 1-2 hours. Larger modules: scale proportionally. This is design time, not implementation time.
-
 **If none attractive:** Use identified problems to drive a new iteration of step 2.
 
 ---
@@ -97,30 +95,7 @@ When embedding functionality in a module:
 | **Temporal Decomposition** | Structure mirrors execution order | Structure by knowledge encapsulation |
 | **False Abstraction** | Interface hides info caller actually needs | Expose necessary information |
 | **Granularity Mismatch** | Caller must do work that belongs in module | Move logic into module |
-
----
-
-## Process Integrity Checks
-
-Before finalizing your design choice, verify:
-
-- [ ] I wrote out alternatives BEFORE evaluating them (not just "thought through" them)
-- [ ] My comparison has at least one criterion where my preferred option loses
-- [ ] If I chose a hybrid, I stated what I'm sacrificing from each parent approach
-- [ ] Someone could reasonably disagree with my choice based on the same comparison
-
-**If user expresses impatience:** Acknowledge it, but complete the process. Say: "I hear the urgency - this comparison takes 2 minutes and helps avoid rework."
-
----
-
-## Emergency Bypass Criteria
-
-Skip the normal workflow ONLY when ALL of these conditions are true:
-
-1. Production is down RIGHT NOW (not "might break soon")
-2. Users are actively impacted, security breach in progress, OR data loss occurring
-3. The fix is minimal (rollback or single-line change)
-4. You commit to returning for proper implementation within 24 hours
+| **Silent Failure** | Module handles errors internally but gives callers no way to know something went wrong (no error return, no observable state change, no logging) | Errors are implementation details that can be hidden; failures are not — surface failure states even when hiding the mechanism |
 
 ---
 
@@ -160,4 +135,4 @@ Rationale: [Why this wins, what's sacrificed]
 
 | After | Next |
 |-------|------|
-| Design chosen | cc-pseudocode-programming |
+| Design chosen | `Read(${CLAUDE_PLUGIN_ROOT}/skills/cc-pseudocode-programming/SKILL.md)` |

@@ -67,6 +67,7 @@ For each dimension: detect if it applies, then verify.
 - [ ] No bare `except:` or `except Exception: pass`
 - [ ] Error messages actionable (what failed, why, how to fix)
 - [ ] Partial failures handled (rollback, cleanup, consistent state)
+- [ ] No error path silently continues as if nothing happened (catch-log-continue, default returns on failure, swallowed callbacks all create silent failures — each error path either surfaces to the caller or is observable via logs/metrics/alerts)
 
 **Red flag:** "Errors are rare" or "caller handles it" without checking caller
 
@@ -130,18 +131,7 @@ For each dimension: detect if it applies, then verify.
 
 ---
 
-## Quick Checklist (Minimum)
-
-Before "done", answer YES to all that apply:
-
-| Dimension | Detection Trigger | Verified? |
-|-----------|-------------------|-----------|
-| Requirements | Requirements were stated | [ ] Each mapped to code |
-| Concurrency | Shared state exists | [ ] All access protected |
-| Errors | Operations can fail | [ ] All failures handled |
-| Resources | Resources acquired | [ ] All released (incl. errors) |
-| Boundaries | Variable-size input | [ ] Edge cases handled |
-| Security | Untrusted input | [ ] Input validated |
+Detailed per-dimension checklists: `Read(${CLAUDE_SKILL_DIR}/checklists.md)`
 
 ---
 

@@ -37,6 +37,8 @@ git rev-list <base-commit>..HEAD --count
 | 1–20 | **Update** — spot-check recent diffs (`git diff <base-commit>..HEAD`), update changed sections only |
 | 21+ | **Generate** — full re-scan, regenerate entire file |
 
+**If file exists but has no `<!-- base-commit: ... -->` header**, the sha is unknown, or the repo is not a git repo: treat as **Generate**.
+
 **If file missing**, proceed to full **Generate**.
 
 ### 3. Scan
@@ -57,7 +59,7 @@ Search the codebase for conventions. Adapt searches to what the project actually
 | Technology Decisions | Package files, config files, framework imports |
 | Exemplar Files | Well-structured files that demonstrate multiple conventions |
 
-**Time budget:** 30 seconds of searching, not 5 minutes. Scan breadth over depth — sample across the codebase rather than exhaustively cataloging one directory.
+**Scan breadth over depth** — sample across the codebase rather than exhaustively cataloging one directory.
 
 **For Update mode:** Only search sections where recent diffs show changes to relevant patterns.
 
@@ -112,7 +114,7 @@ Nine sections. Contrastive sections (DO/DON'T) come first — they resist confir
 8. **Technology Decisions** — Non-obvious choices and constraints only
 9. **Exemplar Files** — Pointers to "gold standard" files for common tasks
 
-See `${CLAUDE_PLUGIN_ROOT}/skills/code-standards/references/section-templates.md` for detailed format per section.
+See the templates file for detailed format per section.
 
 ---
 

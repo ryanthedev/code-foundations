@@ -67,41 +67,17 @@ Nothing in an inner circle can know anything about an outer circle. Business rul
 
 ## Separate Business Rules from Infrastructure
 
+Pattern: interface defined in the business layer (where it's used), implemented in the infrastructure layer (dependency inversion).
+
 ```java
-// 1. Interface defined in business layer (where it's USED, not implemented)
-public interface OrderRepository {
-    Order findById(String id);
-    void save(Order order);
-}
+// Business layer — interface lives here, no infrastructure imports
+public interface OrderRepository { Order findById(String id); void save(Order order); }
 
-// 2. Entity with Critical Business Rules (pure, no dependencies)
-public class Order {
-    private Money total;
-    public Money calculateDiscount() {
-        if (total.isGreaterThan(1000))
-            return total.multiply(0.1);
-        return Money.ZERO;
-    }
-}
-
-// 3. Use Case orchestrates (does NOT contain business rules)
-public class ProcessOrderUseCase {
-    private OrderRepository repository;
-    public OrderResponse execute(OrderRequest request) {
-        Order order = repository.findById(request.orderId);
-        Money discount = order.calculateDiscount();
-        order.applyDiscount(discount);
-        repository.save(order);
-        return new OrderResponse(order.getId(), order.getTotal());
-    }
-}
-
-// 4. Infrastructure implements interface (dependency inverted)
-public class SqlOrderRepository implements OrderRepository {
-    public Order findById(String id) { /* SQL */ }
-    public void save(Order order) { /* SQL */ }
-}
+// Infrastructure layer — concrete class implements the business interface
+public class SqlOrderRepository implements OrderRepository { /* SQL */ }
 ```
+
+The Use Case depends on `OrderRepository` (abstraction). The infrastructure layer depends on `OrderRepository` too — arrows point inward.
 
 ---
 
@@ -110,7 +86,7 @@ public class SqlOrderRepository implements OrderRepository {
 When applying to an existing system:
 
 ### Phase 1: Identify
-- [ ] Map actors (who requests changes?) → find SRP violations
+- [ ] Map actors (who requests changes?) → list per-actor responsibilities
 - [ ] Identify Critical Business Rules (what makes/saves money?) → Entities
 - [ ] List application workflows → Use Cases
 - [ ] Find technical dependencies (DB, UI, frameworks) → Details to isolate
@@ -121,13 +97,15 @@ When applying to an existing system:
 - [ ] Are changes proportional to scope, not shape?
 
 ### Phase 3: Verify
-- [ ] SRP: Classes serving multiple actors?
-- [ ] OCP: Simple extensions require modifying existing code?
-- [ ] DIP: Business logic importing concrete infrastructure?
+- [ ] SRP: Each class is responsible to exactly one actor?
+- [ ] OCP: Simple extensions do NOT require modifying existing code?
+- [ ] DIP: Business logic imports only abstractions (no concrete infrastructure)?
 
 ---
 
 ## Boundary Violation Detection
+
+Adapt paths to your project's directory structure.
 
 ```bash
 # Framework coupling in business logic
@@ -137,8 +115,8 @@ grep -r "import.*sql\|import.*mongoose\|import.*prisma" src/entities/
 # ORM annotations in domain
 grep -r "@Entity\|@Table\|@Column" src/domain/
 
-# Type checking instead of polymorphism
-grep -r "instanceof\|getType()\|typeof.*===" src/
+# Type checking instead of polymorphism (scope to domain dirs, not all of src/)
+grep -r "instanceof\|getType()\|typeof.*===" src/domain/ src/entities/
 ```
 
 ---

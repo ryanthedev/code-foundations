@@ -310,3 +310,10 @@ Summary: All 19 skills carry disable-model-invocation: true (slash-invocable, ne
 - [x] Committed
 Commit: a88ddd1
 Summary: plan.md accepts $ARGUMENTS research-doc paths (seed + clarify-gaps, missing-path fallback) with argument-hint; plan SAVE and Quick track emit per-phase **Gate:** matching build.md's contract byte-for-byte; DECOMPOSE matching reads references/skill-catalog.md via braced Read(); seam divergences closed (clarify cap single-homed in plan.md, tie-breakers scoped, Step-1 gate order-satisfiable, Simple-demotion path, pre-gate terminology gone, schema fork sync-noted); zero Skill() calls remain in plan-side files. Note: BUILD agent falsely claimed docs/code-standards.md absent — content unaffected (verified by REVIEW), but flagged for the Phase 7 regression sweep.
+
+### Phase 5: Skill bodies — CC family (Gate: Full)
+- [x] BUILD: Discovery + design + TDD implementation complete
+- [x] REVIEW: Verification passed (7/7 DW; eval evidence verified on disk)
+- [x] Committed
+Commit: 3911d2c
+Summary: CC family conforms to the welc standard — cc-debugging's STABILIZE/SEARCH are artifact-checkable preconditions and its pressure eval passes COMPLIANT 6/6 ×2 (fixture re-authored to inject the skill, mirroring the production Read()-injection path; eval runs under .skill-audit/cc-debugging/workspace/iteration-4/); debug.md is an 18-line wrapper; 12 orphan files deleted, 5 checklists linked; banned constructs, duplicate STOP blocks, and the 8-param contradiction removed; thresholds reconciled to cc-foundations.md with Read() pointers in all CC SKILL.mds (-3,739 lines net). Live runtime confirmation: domain skills no longer appear in the session skill listing; commands remain visible.

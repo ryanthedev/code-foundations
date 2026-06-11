@@ -4,14 +4,13 @@ Sources: A Philosophy of Software Design (Ousterhout), Chapters 12-15, 18; Code 
 
 ---
 
-## Comments-First Workflow
+## New Code Documentation
 
-- [ ] CF-1: "Did I write class interface comment BEFORE implementation?"
-- [ ] CF-2: "Did I write interface comments for public methods (signatures + comments, empty bodies)?"
-- [ ] CF-3: "Did I iterate on comments until structure feels right?"
-- [ ] CF-4: "Did I write instance variable declarations with comments?"
-- [ ] CF-5: "For new methods discovered during implementation: did I comment before body?"
-- [ ] CF-6: "For new variables: did I comment at same time as declaration?"
+- [ ] CF-1: Every new class in the diff has an interface comment describing the abstraction it provides
+- [ ] CF-2: Every new public method in the diff has an interface comment (what it does, not how)
+- [ ] CF-4: Every new instance variable in the diff has a comment (units, bounds, null meaning, ownership, invariants)
+- [ ] CF-5: Every new method added during implementation has a comment
+- [ ] CF-6: Every new non-obvious variable has a comment at declaration
 
 ---
 
@@ -87,10 +86,10 @@ Sources: A Philosophy of Software Design (Ousterhout), Chapters 12-15, 18; Code 
 
 ## Pre-Commit Documentation Check
 
-- [ ] PC-1: "Did I update comments for changed code?"
-- [ ] PC-2: "Do new functions have doc comments?"
-- [ ] PC-3: "Is README still accurate if behavior changed?"
-- [ ] PC-4: "Did I update changelog for user-facing changes?"
+- [ ] PC-1: All changed code has current comments (no stale comment contradicts the new behavior)
+- [ ] PC-2: Every new public function in the diff has a doc comment
+- [ ] PC-3: README accurately describes current behavior (if behavior changed, README updated)
+- [ ] PC-4: Changelog has an entry for any user-facing change
 
 ---
 
@@ -106,12 +105,12 @@ Sources: A Philosophy of Software Design (Ousterhout), Chapters 12-15, 18; Code 
 
 ## Changelog Review
 
-- [ ] CL-1: "Did I bump version number if needed?"
-- [ ] CL-2: "Are breaking changes highlighted with examples?"
-- [ ] CL-3: "Are new features described with usage examples?"
-- [ ] CL-4: "Are bug fixes listed with issue references?"
-- [ ] CL-5: "Did I include migration steps for breaking changes?"
-- [ ] CL-6: "Is changelog entry under correct version header?"
+- [ ] CL-1: Version number bumped if release warranted
+- [ ] CL-2: Breaking changes highlighted with examples
+- [ ] CL-3: New features described with usage examples
+- [ ] CL-4: Bug fixes listed with issue references
+- [ ] CL-5: Migration steps included for any breaking changes
+- [ ] CL-6: Changelog entry is under the correct version header
 
 ---
 
