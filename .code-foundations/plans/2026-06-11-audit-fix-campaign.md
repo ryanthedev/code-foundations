@@ -317,3 +317,10 @@ Summary: plan.md accepts $ARGUMENTS research-doc paths (seed + clarify-gaps, mis
 - [x] Committed
 Commit: 3911d2c
 Summary: CC family conforms to the welc standard — cc-debugging's STABILIZE/SEARCH are artifact-checkable preconditions and its pressure eval passes COMPLIANT 6/6 ×2 (fixture re-authored to inject the skill, mirroring the production Read()-injection path; eval runs under .skill-audit/cc-debugging/workspace/iteration-4/); debug.md is an 18-line wrapper; 12 orphan files deleted, 5 checklists linked; banned constructs, duplicate STOP blocks, and the 8-param contradiction removed; thresholds reconciled to cc-foundations.md with Read() pointers in all CC SKILL.mds (-3,739 lines net). Live runtime confirmation: domain skills no longer appear in the session skill listing; commands remain visible.
+
+### Phase 6: Skill bodies — APOSD, CA, GoF, misc (Gate: Full)
+- [x] BUILD: Discovery + design + TDD implementation complete (fix re-dispatch for one residual duplicate)
+- [x] REVIEW: fail→pass (2 attempts — residual Red Flags Quick Reference duplicate in aposd-reviewing, fixed and re-verified)
+- [x] Committed
+Commit: e4eb20a
+Summary: Remaining 10 skills conform to the welc standard — drift items RF-8/SF-1/RF-7/EH-5 folded into their SKILL.mds (single encoding per fact), discipline-theater and Myth/Reality constructs gone, gof's 3 real orphans deleted (foundations.md trimmed; pattern-file convention routing untouched), perf-opt single workflow statement with examples in linked checklist, ca polarity unified, code-standards base-commit failure path added, clarify shared-reference documented. validate_skill zero errors ×10.
