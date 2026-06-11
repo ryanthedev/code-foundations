@@ -303,3 +303,10 @@ Summary: Build pipeline is internally consistent — gate policy resolves from t
 - [x] Committed
 Commit: feaf4c7
 Summary: All 19 skills carry disable-model-invocation: true (slash-invocable, never auto-triggered, descriptions out of model context); descriptions are lean ≤2-sentence capability statements; references/skill-catalog.md (19 entries, family-grouped, with disambiguation notes) is now the single home for when-to-match knowledge — Phase 3 must wire plan DECOMPOSE matching to read it. Validator zero errors ×19.
+
+### Phase 3: Plan pipeline repair (Gate: Full)
+- [x] BUILD: Discovery + design + TDD implementation complete
+- [x] REVIEW: Verification passed (8/8 DW + edge cases)
+- [x] Committed
+Commit: a88ddd1
+Summary: plan.md accepts $ARGUMENTS research-doc paths (seed + clarify-gaps, missing-path fallback) with argument-hint; plan SAVE and Quick track emit per-phase **Gate:** matching build.md's contract byte-for-byte; DECOMPOSE matching reads references/skill-catalog.md via braced Read(); seam divergences closed (clarify cap single-homed in plan.md, tie-breakers scoped, Step-1 gate order-satisfiable, Simple-demotion path, pre-gate terminology gone, schema fork sync-noted); zero Skill() calls remain in plan-side files. Note: BUILD agent falsely claimed docs/code-standards.md absent — content unaffected (verified by REVIEW), but flagged for the Phase 7 regression sweep.

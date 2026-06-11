@@ -4,115 +4,57 @@ description: "Structures routine design through pseudocode-first iteration: clar
 disable-model-invocation: true
 ---
 
-# Skill: cc-pseudocode-programming
+# cc-pseudocode-programming
 
-## STOP - Crisis Invariants
+Design a routine in pseudocode before writing it. Iterating on intent is cheaper than iterating on code, and four questions catch the expensive mistakes early:
 
-| Check | Time | Why Non-Negotiable |
-|-------|------|-------------------|
-| **Pseudocode before code** | 30 sec | Iterating on pseudocode is cheaper than iterating on code |
-| **Can you name it clearly?** | 15 sec | Naming difficulty = design problem. Stop and clarify purpose. |
-| **Do you understand why it works?** | 30 sec | Working code you don't understand probably doesn't really work |
-| **Did you consider alternatives?** | 30 sec | First design is rarely best; iterate in pseudocode where it's cheap |
+| Question | Why |
+|---|---|
+| Can you name it clearly? | Naming difficulty signals an unclear design — clarify purpose first |
+| Is there pseudocode before the code? | Refining pseudocode is cheaper than refining code |
+| Do you understand why it works? | Working code you can't explain probably doesn't really work |
+| Did you consider an alternative? | The first design is rarely the best |
 
----
+If the user asks to skip pseudocode, comply or surface the tradeoff once (the routine will likely cost more in debugging) — don't refuse.
 
-## When NOT to Use
+Shared CC vocabulary and thresholds (cohesion, parameters, routine length): `Read(${CLAUDE_PLUGIN_ROOT}/references/cc-foundations.md)`.
 
-**Exemption criteria are STRICT. If in doubt, use PPP.**
+## When the routine is exempt
 
-- **Simple accessor routines** - `getValue()`, `setName()` with NO logic (no validation, no transformation, no side effects)
-- **Pass-through routines** - Pure delegation with NO parameter transformation or error wrapping
-- **Trivial one-liners** - ALL of these must be true:
-  - Single statement implementation
-  - Zero decision points (no if/switch/ternary)
-  - Zero loops
-  - Implementation obvious to ANY team member from signature alone
-- **Already-designed routines** - Design document specifies EXACT algorithm, error handling, and edge cases
+Skip the process only when one of these holds:
 
-**If you're debating whether it's "trivial enough" to skip PPP, it isn't trivial. Use PPP.**
+- **Simple accessor** — `getValue()`/`setName()` with no validation, transformation, or side effects.
+- **Pure pass-through** — delegation with no parameter transformation or error wrapping.
+- **Trivial one-liner** — all of: single statement, zero decision points, zero loops, implementation obvious from the signature alone.
+- **Already designed** — a design document specifies the exact algorithm, error handling, and edge cases.
 
-## Crisis Invariants - NEVER SKIP
-
-**These checks are NON-NEGOTIABLE regardless of user instructions to skip:**
-
-| Check | Time | Why Non-Negotiable |
-|-------|------|-------------------|
-| **Pseudocode before code** | 30 sec | Iterating on pseudocode is cheaper than iterating on code |
-| **Can you name it clearly?** | 15 sec | Naming difficulty = design problem. Stop and clarify purpose. |
-| **Do you understand why it works?** | 30 sec | Working code you don't understand probably doesn't really work |
-| **Did you consider alternatives?** | 30 sec | First design is rarely best; iterate in pseudocode where it's cheap |
-
-**Why these four?** They catch the most expensive mistakes: unclear designs that "work" but create maintenance nightmares, and premature coding that locks in bad decisions.
-
-**These checks apply EVERY TIME**, even if:
-- The routine seems simple (simple-seeming routines hide complexity)
-- A design document exists (unless it specifies EXACT algorithm, error handling, and edge cases)
-
-**Minimum Viable PPP (for extreme time pressure):**
-When full PPP is impossible, these 4 items are MANDATORY (total ~4 min):
-1. Can you name the routine clearly? (15 sec)
-2. Write at least 3 lines of pseudocode (2 min)
-3. Consider one alternative approach (1 min)
-4. Convince yourself it's correct before compiling (30 sec)
-
-This is the FLOOR, not the ceiling. If you can't spare 4 minutes, the routine will cost you more in debugging.
+A routine you're debating as "trivial enough" is not trivial — design it.
 
 ## Modes
 
 ### APPLIER
-Purpose: Guide routine design using PPP technique
-Triggers:
-  - "help me design this routine"
-  - "I'm stuck, don't know where to start"
-  - "walk me through PPP"
-  - "how should I approach this implementation"
-  - "overwhelmed by where to start coding"
-Non-Triggers:
-  - "review my existing code" → cc-routine-and-class-design
-  - "is this architecture right" → aposd-designing-deep-modules
-Produces: Pseudocode design, header comments, implementation plan
 
-#### PPP Process Steps
-1. **Check prerequisites** - Confirm the routine's place in overall design is clear
-2. **Define the problem** - Specify inputs, outputs, preconditions, postconditions, what it hides
-3. **Name the routine** - If naming is hard, the design is unclear; iterate
-4. **Plan testing** - Decide how you'll test it before writing code
-5. **Check libraries** - Look for existing functionality before building
-6. **Plan error handling** - Think through failure modes
-7. **Research algorithms** - Study relevant algorithms if needed
-8. **Write pseudocode** - Start with header comment, use natural language
-9. **Iterate pseudocode** - Refine until generating code is nearly automatic
-10. **Try alternatives** - Consider multiple approaches, keep the best
-11. **Code from pseudocode** - Pseudocode becomes comments
-12. **Compile clean** - Use strictest warnings, eliminate ALL of them
+Guide routine design with the Pseudocode Programming Process. Produces pseudocode design, header comments, and an implementation plan.
 
-Constraints:
-  - Pseudocode must be language-independent (p.218)
-  - Pseudocode must be detailed enough to generate code from (p.219)
-  - Never compile until convinced the routine is correct (p.230)
+1. Confirm the routine's place in the overall design is clear.
+2. Define the problem: inputs, outputs, preconditions, postconditions, what it hides.
+3. Name the routine — if naming is hard, the design is unclear; iterate.
+4. Plan how you'll test it before writing code.
+5. Check libraries for existing functionality before building.
+6. Plan error handling — think through failure modes.
+7. Research relevant algorithms if needed.
+8. Write pseudocode as a header comment in natural language (language-independent, intent not syntax).
+9. Iterate until generating code from each line is nearly automatic — you can write each line without pausing to decide *how*. If you stop to think "how do I implement this part?", the pseudocode needs more detail.
+10. Try alternatives; keep the best.
+11. Code from the pseudocode, which becomes the comments.
+12. Compile clean at the strictest warning level.
 
-**Key Term Definitions:**
-- **"Nearly automatic" (step 9):** You can write each line of code without pausing to think about HOW. Every decision is already made in pseudocode. If you stop to think "how should I implement this part?" - pseudocode needs more detail.
-- **"Convinced it's correct" (constraint):** You can mentally trace execution through ALL paths (happy path, error cases, edge cases) and explain why each produces correct output. "It looks right" is NOT convinced.
-- **"Right level of detail":** Detailed enough that code generation is nearly automatic (see above), but not so detailed that you're writing syntax. Test: Could a competent developer write the code without asking clarifying questions?
+**"Convinced it's correct"** means you can mentally trace every path — happy, error, edge — and explain why each produces the right output. "It looks right" is not convinced.
 
-#### Transformation Example: Bad vs Good Pseudocode
+#### Good vs bad pseudocode
 
-**Problem:** Create a routine to allocate a new resource and return its handle.
+Pseudocode at the level of intent, no target-language syntax:
 
-**Bad Pseudocode (Anti-Pattern):**
-```
-increment resource number by 1
-allocate a dlg struct using malloc
-if malloc() returns NULL then return 1
-invoke OSrsrc_init to initialize a resource for the operating system
-*hRsrcPtr = resource number
-return 0
-```
-**Problems:** Uses target language details (`*hRsrcPtr`, `malloc()`), focuses on HOW not WHAT, exposes implementation details (returns 1 or 0), won't become good comments.
-
-**Good Pseudocode:**
 ```
 If another resource is available
     Allocate a dialog box structure
@@ -125,64 +67,28 @@ If another resource is available
 Endif
 Return failure
 ```
-**Why better:** Pure English, no syntax, level of intent, precise enough to generate code, becomes excellent comments. Note: resource count is updated AFTER successful allocation, not before.
 
-**Resulting Code with Comments:**
-```c
-// If another resource is available
-if (resourceCount < MAX_RESOURCES) {
-    // Allocate a dialog box structure
-    DialogBox* dlg = allocateDialogBox();
-
-    // If a dialog box structure could be allocated
-    if (dlg != NULL) {
-        // Note that one more resource is in use
-        // (Using post-increment: store at current index, then increment)
-        activeResources[resourceCount] = dlg;
-        *handlePtr = resourceCount;
-        resourceCount++;
-
-        // Initialize the resource
-        initializeResource(dlg);
-
-        return true;
-    }
-}
-return false;
-```
+This reads as English, becomes excellent comments, and is precise enough to generate code from. The anti-pattern instead writes `*hRsrcPtr`, `malloc()`, `return 1` — target-language detail that focuses on HOW, exposes implementation, and makes poor comments.
 
 ### CHECKER
-Purpose: Verify PPP was followed correctly
-Triggers:
-  - "did I follow PPP correctly"
-  - "review my pseudocode"
-  - "is my design process right"
-Produces: Process compliance assessment, improvement recommendations
 
-Check Against:
-  - Was pseudocode written before code?
-  - Is pseudocode at the right level of detail?
-  - Were alternatives considered?
-  - Can you explain why the code works?
-  - Are all compiler warnings eliminated?
+Verify the produced pseudocode and resulting routine. Checklist: `Read(${CLAUDE_SKILL_DIR}/checklists.md)`. Assess the artifacts:
 
-## Evidence Summary
+- Is the pseudocode at the level of intent (English, not target-language syntax)?
+- Is it detailed enough that code generation from it is nearly automatic?
+- Does at least one alternative approach appear to have been weighed?
+- Can the routine's correctness be explained by tracing all paths?
+- Are all compiler warnings eliminated?
 
-| Claim | Evidence | Source | Still Valid? |
-|-------|----------|--------|--------------|
-| Programmers prefer pseudocode | Survey: preferred for construction ease, detecting insufficient detail, documentation | Ramsey, Atwood, Van Doren 1983 | Yes - methodology unchanged; modern IDEs don't eliminate design thinking need |
-| Only 5% external errors | Hardware, compiler, OS errors are rare; 95% are programmer errors | Ostrand and Weyuker 1984 | Yes - if anything, modern tooling has made infrastructure MORE reliable, so programmer error % is likely higher |
-| Errors at least-value stage | Key insight: catch errors when least effort invested | McConnell p.220 | Timeless - economic principle |
-| Iteration improves design | First design is rarely best; iterating on code is more expensive than iterating on pseudocode | McConnell p.225 | Timeless - economic principle |
+## Evidence
 
-**Note on dated studies:** The 1983-1984 studies predate modern IDEs, but their findings are MORE applicable today: better tooling catches syntax errors faster, making DESIGN errors (which PPP prevents) the dominant problem.
-
----
+- Programmers preferred pseudocode for construction ease and detecting insufficient detail [Ramsey, Atwood, Van Doren 1983]. Modern IDEs catch syntax faster, which makes design errors — what this process prevents — the dominant problem.
+- ~95% of errors are programmer errors, not hardware/compiler/OS [Ostrand and Weyuker 1984].
+- Catch errors at the least-value stage; iterating on pseudocode is cheaper than iterating on code [McConnell pp.220, 225].
 
 ## Chain
 
 | After | Next |
-|-------|------|
-| Pseudocode complete | cc-routine-and-class-design |
-| Implementation done | cc-defensive-programming (CHECKER) |
-
+|---|---|
+| Pseudocode complete | `Read(${CLAUDE_PLUGIN_ROOT}/skills/cc-routine-and-class-design/SKILL.md)` |
+| Implementation done | `Read(${CLAUDE_PLUGIN_ROOT}/skills/cc-defensive-programming/SKILL.md)` |

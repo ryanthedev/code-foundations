@@ -39,7 +39,7 @@ Use when: Debugging and need systematic approaches
 
 ### Time Management
 
-- [ ] FD-18: "Have you set a maximum time for quick debugging?" → Red flag: 2+ hours on trial-and-error (switch to brute-force)
+- [ ] FD-18: "Have you set a maximum time for quick debugging?" (15-30 min, then switch to brute-force) → Red flag: trial-and-error past the limit
 
 ---
 
@@ -187,5 +187,5 @@ Use when: Evaluating your overall debugging practice
 - [ ] RF-6: "Trial-and-error debugging?" - Superstitious code changes → Use scientific method (hypothesize → experiment → verify)
 - [ ] RF-7: "No verification after fix?" - ~50% of fixes wrong first time → Always verify fix is correct
 - [ ] RF-8: "Ignoring compiler warnings?" - Missing early defect detection → Enable pickiest warnings and fix ALL
-- [ ] RF-9: "Debugging 2+ hours without progress?" - Stuck on inefficient approach → Switch to brute-force techniques
+- [ ] RF-9: "Past the 15-30 min quick-debugging limit without progress?" - Stuck on inefficient approach → Switch to brute-force techniques
 - [ ] RF-10: "No unit tests for defects?" - Regression risk → Add test that exposes defect before fixing
