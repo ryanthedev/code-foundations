@@ -1,8 +1,9 @@
 # Plan: Audit Fix Campaign — code-foundations v4.17.0 → v5.0.0
 **Created:** 2026-06-11
-**Status:** in-progress
+**Status:** complete
 **Started:** 2026-06-11
-**Current Phase:** 1
+**Completed:** 2026-06-11
+**Duration:** single session, 7 phases
 **Complexity:** complex
 **Workspace:** branch: feature/audit-fix-campaign (baseline 9798c47)
 ---
@@ -324,3 +325,10 @@ Summary: CC family conforms to the welc standard — cc-debugging's STABILIZE/SE
 - [x] Committed
 Commit: e4eb20a
 Summary: Remaining 10 skills conform to the welc standard — drift items RF-8/SF-1/RF-7/EH-5 folded into their SKILL.mds (single encoding per fact), discipline-theater and Myth/Reality constructs gone, gof's 3 real orphans deleted (foundations.md trimmed; pattern-file convention routing untouched), perf-opt single workflow statement with examples in linked checklist, ca polarity unified, code-standards base-commit failure path added, clarify shared-reference documented. validate_skill zero errors ×10.
+
+### Phase 7: Verify and publish (Gate: Full)
+- [x] BUILD: Verification sweep + docs truth pass complete
+- [x] REVIEW: fail→pass (2 attempts — orchestrator spot-check caught a CLAUDE.md Minimal-gate misstatement haiku review had passed; fixed + sonnet re-verified)
+- [x] Committed
+Commit: 873bc1b
+Summary: Full re-audit green — validator zero errors ×19 with per-warning justifications, cc-debugging COMPLIANT 6/6 ×2, welc non-regressed (run-2 graded 6/6; run-1 artifact trail), all regression greps zero-hit, all braced Read targets resolve; CLAUDE.md truth-passed against build.md/plan.md; plugin.json at 5.0.0. Outstanding manual item: slash-invoke an internalized skill after the next plugin reload (cannot be tested mid-session).
