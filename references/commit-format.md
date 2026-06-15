@@ -36,7 +36,7 @@ Append to the plan file's `## Execution Log`:
 
 ```markdown
 ### Phase N: [Name] (Gate: [Full/Standard/Minimal])
-- [x] BUILD: Discovery + design + TDD implementation complete
+- [x] BUILD: Discovery + design + implementation (stub → implement → validate) complete
 - [x] REVIEW: Verification passed [or "SKIPPED — tests are gate" or "Covered by catch-up review"]
 - [x] Committed
 Commit: [hash]

@@ -1,5 +1,5 @@
 ---
-description: "Execute an approved plan through gated phases (BUILD → REVIEW → commit) with subagent dispatch. Use when a plan exists in .code-foundations/plans/ and the user wants it implemented — phased TDD execution, per-phase quality gates, orchestrator commits, and a final trust report."
+description: "Execute an approved plan through gated phases (BUILD → REVIEW → commit) with subagent dispatch. Use when a plan exists in .code-foundations/plans/ and the user wants it implemented — phased implementation, per-phase quality gates, orchestrator commits, and a final trust report."
 ---
 
 # Command: build
@@ -128,7 +128,7 @@ Skill presence does NOT affect the gate — every phase carries skills (see Skil
 
 For each phase N (using its resolved gate level and model):
 
-- **Full gate — 2 tasks:** `Phase N.1: BUILD - [phase name]` (description: "Discovery + design + TDD. Model: [from plan or default].") and `Phase N.2: REVIEW - [phase name]` (description: "Post-gate review. Model: [REVIEW model]. Must return PASS."), N.2 blockedBy N.1.
+- **Full gate — 2 tasks:** `Phase N.1: BUILD - [phase name]` (description: "Discovery + design + implementation. Model: [from plan or default].") and `Phase N.2: REVIEW - [phase name]` (description: "Post-gate review. Model: [REVIEW model]. Must return PASS."), N.2 blockedBy N.1.
 - **Standard/Minimal gate — 1 task:** `Phase N.1: BUILD - [phase name]` (Minimal description notes "Implement from plan description (minimal gate)").
 - **Chaining:** next phase's first task blockedBy this phase's last task.
 - **Catch-up review tasks are NOT created upfront** — they are inserted dynamically when the catch-up trigger fires.
@@ -180,11 +180,11 @@ All tasks were created in SETUP. Execute them in order. For each task:
 7. Proceed to next task
 ```
 
-### Sub-Phase N.1: BUILD (Discovery + Design + TDD)
+### Sub-Phase N.1: BUILD (Discovery + Design + Implementation)
 
 ## STOP. YOU CANNOT EXPLORE CODE, WRITE TESTS, OR IMPLEMENT DIRECTLY.
 
-TaskUpdate → in_progress, then dispatch the build agent. It combines discovery, design, and TDD implementation in one pass.
+TaskUpdate → in_progress, then dispatch the build agent. It combines discovery, design, and implementation (stub → implement → validate) in one pass.
 
 **Dispatch templates live in `${CLAUDE_PLUGIN_ROOT}/references/dispatch-templates.md`.** Read the file once per build (the Substitution rules at the top govern all placeholders), then substitute per phase:
 

@@ -27,7 +27,7 @@ Keeping these here instead of inline in `build.md`:
 
 ## § FULL_BUILD
 
-Use for **Full gate** and **Standard gate** phases. The build agent runs discovery + design + TDD in one pass.
+Use for **Full gate** and **Standard gate** phases. The build agent runs discovery + design + implementation in one pass.
 
 ```
 Agent tool:
@@ -37,7 +37,7 @@ Agent tool:
 - prompt: |
     Build Phase N of the build plan. This is a two-part task:
     1. Discovery + Design — scope the phase work, identify gaps vs plan, make design decisions, map DW items to test cases
-    2. TDD Implementation — write failing tests from DW items, then implement to make them pass (red-green cycle)
+    2. Implementation — stub the interface, implement it, then write tests that validate each DW item (all tests must pass)
 
     Write discovery file before implementing.
 
@@ -88,7 +88,7 @@ Agent tool:
 
 ## § MINIMAL_BUILD
 
-Use for **Minimal gate** phases. Skips discovery — implements directly from plan description using TDD.
+Use for **Minimal gate** phases. Skips discovery — implements directly from plan description: stub, implement, then validate with tests.
 
 ```
 Agent tool:
@@ -98,7 +98,8 @@ Agent tool:
 - prompt: |
     Build Phase N of the build plan. This phase uses minimal gate
     policy — skip discovery, implement directly from the plan
-    description using TDD (write tests from DW items, then implement).
+    description: stub the interface, implement it, then write tests
+    that validate each DW item (all tests must pass).
 
     ## Plan Context
     [paste the Context section from the plan file]

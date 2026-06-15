@@ -1,0 +1,3 @@
+config,eval,run,impl_found,tests_found,n_agent_tests,agent_tests_pass,hidden_dw,hidden_offdw,mutation_killed,mutation_total,mutation_score
+old_skill,01-duration,build-doctrine-workspace/iteration-1/01-duration/old_skill/run-1,True,True,3,True,6/6,2/5,19,19,1.0
+with_skill,01-duration,build-doctrine-workspace/iteration-1/01-duration/with_skill/run-1,True,True,13,True,6/6,2/5,16,16,1.0

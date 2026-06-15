@@ -90,7 +90,7 @@ User: "/code-foundations:build .code-foundations/plans/2026-01-30-notifications.
 
   FOR EACH PHASE:
   ┌────────────────────────────────────────────────────────────┐
-  │  BUILD        Build-agent: discovery + design + TDD       │
+  │  BUILD        Build-agent: discovery + design + implement │
   │       ⛔ Loads pre-gate + implement standards              │
   ├────────────────────────────────────────────────────────────┤
   │  REVIEW       Post-gate-agent checks quality (Full gate)   │
@@ -104,7 +104,7 @@ User: "/code-foundations:build .code-foundations/plans/2026-01-30-notifications.
 
 | Phase | Guidance | What Gets Enforced |
 |-------|----------|-------------------|
-| BUILD | Baseline discipline (agent definition) + per-phase skills | DW→test traceability, TDD red-green, test anchoring, scope clamp, plus assigned skill checklists |
+| BUILD | Baseline discipline (agent definition) + per-phase skills | DW→test traceability, stub → implement → validate, test anchoring, scope clamp, plus assigned skill checklists |
 | REVIEW | Debiased review protocol (agent definition) + per-phase skills | Execute-first verification, per-requirement evidence + trace, anti-overcorrection verdict |
 | VERIFY | `performance-optimization`, `cc-refactoring-guidance` | Performance regressions, refactoring opportunities, build + tests + lint |
 

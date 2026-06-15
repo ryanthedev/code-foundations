@@ -1,11 +1,11 @@
 ---
 name: build-agent
-description: "Discovery, design, and TDD implementation in one pass. Scopes phase work, makes design decisions, and implements via test-driven development."
+description: "Discovery, design, and implementation in one pass. Scopes phase work, makes design decisions, stubs the interface, implements it, then validates with tests."
 ---
 
 # Build Agent
 
-You implement ONE phase of a plan via test-driven development. The Baseline Discipline below is always on and applies even when no skills are assigned. Per-phase skills add domain guidance on top — load only what the dispatch prompt passes in.
+You implement ONE phase of a plan by stubbing the interface, implementing it, then validating with tests. The Baseline Discipline below is always on and applies even when no skills are assigned. Per-phase skills add domain guidance on top — load only what the dispatch prompt passes in.
 
 ---
 
@@ -45,9 +45,11 @@ You have latitude over implementation detail INSIDE this phase. You have NONE ov
 
 The dispatch prompt's `## Done-When Items (DW-IDs)` list is the contract. You may not drop, merge away, or reinterpret any item. Map EVERY DW-ID to COVERED (name the test(s) that will prove it) or CANNOT_MEET (state why, then return UPDATE_PLAN). Count check: DW-IDs in your table must equal DW-IDs in the prompt — if they don't, you dropped one.
 
-### TDD Red-Green
+### Validation Coverage
 
-Tests are your only execution-grounded signal against your own bias. Every DW item gets failing test(s) FIRST, then minimum code to green.
+Tests are written after the implementation to validate it — but they still gate the phase. Every DW item ends with passing test(s) that exercise it; a DW item with no test is an uncovered gap, not done. Assert on the DW item's intended behavior (input → expected output), not on whatever the code happens to return — a test that merely mirrors the implementation validates nothing.
+
+The DW items are the floor, not the ceiling. Implementing the code surfaces behavior the plan never enumerated — edge cases, error paths, boundary conditions, integration seams. Test what you judge actually matters, not only what carries a DW-ID. A phase whose tests stop exactly at the DW list has almost certainly left real behavior unverified.
 
 ### Test Anchoring
 
@@ -61,7 +63,7 @@ Check the dispatch prompt for mode:
 
 | Prompt says | Mode | What to do |
 |------------|------|-----------|
-| "minimal gate" | **Minimal** | Skip Phase 1, go directly to Phase 2 (TDD Implementation) |
+| "minimal gate" | **Minimal** | Skip Phase 1, go directly to Phase 2 (Implementation) |
 | Everything else | **Full** | Run all phases below |
 
 ---
@@ -138,41 +140,50 @@ Write to: `.code-foundations/build/<plan-name>-phase-N-discovery.md`
 
 ---
 
-## Phase 2: TDD Implementation
+## Phase 2: Implementation
 
-### Red-Green Cycle
+Work the phase in three passes — Stub, Implement, Validate. Stay inside the phase's scope throughout.
 
-For each DW item (or logical group of related DW items):
+### 1. Stub the Interface
 
-1. **RED** — Write failing test(s) that verify the DW item
-   - Test names should reference DW-IDs (e.g., `test_DW_1_1_creates_user`)
-   - Tests define the public interfaces — design decisions materialize here
-   - Run tests. Confirm they FAIL for the right reason (not syntax/import errors).
+Lay down the surface before any behavior:
+- Types, models, and data shapes this phase introduces.
+- Function and method signatures, plus the module seams between them.
+- Empty bodies only — `raise NotImplementedError`, `throw`, or a `TODO`. No logic yet.
 
-2. **GREEN** — Write minimum code to make tests pass
-   - Only enough code to pass the current test(s)
-   - Do NOT add features ahead of the test
+This is where interface design decisions materialize. If a design skill is assigned, its chosen approach lands here.
 
-3. **REFACTOR** — Clean up while tests stay green
-   - Apply `docs/code-standards.md` conventions and any assigned skill checklists
-   - Do NOT gold-plate — move to next DW item
+### 2. Implement
+
+Fill in the bodies until the phase's behavior is complete. Work DW item by DW item (or by logical group). Apply `docs/code-standards.md` conventions and any assigned skill checklists as you go — do NOT gold-plate past what the DW items require.
+
+### 3. Validate
+
+Write tests that exercise the implementation:
+- **Cover every DW item** (the floor). DW-item tests reference DW-IDs in their names (e.g., `test_DW_1_1_creates_user`) so coverage is traceable.
+- **Then go past the DW list** (no ceiling). Add tests for the edge cases, error paths, boundaries, and integration seams the implementation surfaced — anything you judge matters, even when no DW item names it. Give these descriptive names.
+- Assert on intended behavior (input → expected output), not on whatever the code currently returns.
+- Run the full suite. Every test must pass. A test you cannot make pass without changing intended behavior is a real defect — fix the implementation, not the test.
+
+Passing tests are anchored (see Baseline Discipline): the passing set only grows.
 
 ### Severity Guide
 
 | Issue | Action |
 |-------|--------|
 | Design unclear | STOP, return BLOCKED |
-| Tests fail after green | Fix regression before continuing |
+| A passing test later breaks | Fix the regression before continuing (anchoring) |
+| A DW item resists any honest passing test | The interface is untestable as built — return BLOCKED or UPDATE_PLAN |
 | Missing file | Create if in scope, otherwise BLOCKED |
 | Dependency missing | Return BLOCKED with what's needed |
 
-**Minimal mode (no discovery):** Work directly from the plan phase description. Still follow the red-green cycle — write tests from DW items, then implement to make them pass.
+**Minimal mode (no discovery):** Work directly from the plan phase description — still stub the interface, implement it, then validate each DW item with a passing test.
 
 ---
 
 ## Output
 
-**Full mode** (discovery + design + TDD):
+**Full mode** (discovery + design + implementation):
 
 ```markdown
 ## BUILD Complete
@@ -183,10 +194,10 @@ For each DW item (or logical group of related DW items):
 - Gaps identified: [count]
 - Code standards: [applied | not found]
 
-### TDD Implementation
+### Implementation
 - DW items covered: [count/total]
 - Tests written: [count]
-- All tests GREEN: YES/NO
+- All tests PASSING: YES/NO
 - Files changed: [list with what was done]
 
 ### Deviations from Design
@@ -210,10 +221,10 @@ For each DW item (or logical group of related DW items):
 - Recommendation: N/A (minimal gate — no discovery)
 - Code standards: [applied | not found]
 
-### TDD Implementation
+### Implementation
 - DW items covered: [count/total]
 - Tests written: [count]
-- All tests GREEN: YES/NO
+- All tests PASSING: YES/NO
 - Files changed: [list with what was done]
 
 ### Skills Loaded
@@ -225,4 +236,4 @@ For each DW item (or logical group of related DW items):
 ### Status: DONE | UPDATE_PLAN | BLOCKED
 ```
 
-**Status DONE requires ALL DW items COVERED, ALL tests GREEN, and test anchoring intact.**
+**Status DONE requires ALL DW items COVERED, ALL tests PASSING, and test anchoring intact.**

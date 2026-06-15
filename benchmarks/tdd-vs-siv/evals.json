@@ -1,0 +1,59 @@
+{
+  "skill_name": "build-doctrine",
+  "evals": [
+    {
+      "id": "01-duration",
+      "prompt": "Implement this task in Python, applying the build-doctrine skill.\n\n# Task: parse_duration\n\nA module `duration.py` exposing one function:\n\n    def parse_duration(s: str) -> int:\n        \"\"\"Parse a duration string like \"1h30m\" into a total number of seconds.\"\"\"\n\nUnits: `h` (hours), `m` (minutes), `s` (seconds).\n\n## Done-When items\n- DW-1.1: A string of unit-tagged numbers parses to the summed total in seconds. \"1h30m\" -> 5400, \"45s\" -> 45, \"2h\" -> 7200.\n- DW-1.2: A bare number with no unit is invalid -> raise ValueError. \"90\" -> ValueError.\n- DW-1.3: An empty string is invalid -> raise ValueError. \"\" -> ValueError.\n\n## Output paths\n- Implementation: outputs/duration.py\n- Tests: outputs/test_duration.py (pytest)\n\nRun your tests and make sure they pass before finishing.",
+      "expected_output": "A correct parse_duration plus a passing pytest suite.",
+      "expectations": [
+        "Created outputs/duration.py with a parse_duration function that sums unit-tagged components",
+        "Created outputs/test_duration.py with passing pytest tests"
+      ],
+      "checks": [
+        { "kind": "artifact_exists", "path": "outputs/duration.py" },
+        { "kind": "artifact_exists", "path": "outputs/test_duration.py" }
+      ]
+    },
+    {
+      "id": "02-rpn",
+      "prompt": "Implement this task in Python, applying the build-doctrine skill.\n\n# Task: evaluate (Reverse Polish Notation)\n\nA module `rpn.py` exposing one function:\n\n    def evaluate(expr: str) -> float:\n        \"\"\"Evaluate a space-separated RPN expression of integers.\"\"\"\n\nOperators: + - * /\n\n## Done-When items\n- DW-2.1: A well-formed RPN expression evaluates to its result. evaluate(\"3 4 +\") -> 7. The four operators + - * / are supported.\n- DW-2.2: An expression with too few operands for an operator raises ValueError. evaluate(\"3 +\") -> ValueError.\n- DW-2.3: An unknown token raises ValueError. evaluate(\"3 4 %\") -> ValueError.\n\n## Output paths\n- Implementation: outputs/rpn.py\n- Tests: outputs/test_rpn.py (pytest)\n\nRun your tests and make sure they pass before finishing.",
+      "expected_output": "A correct RPN evaluator plus a passing pytest suite.",
+      "expectations": [
+        "Created outputs/rpn.py with an evaluate function supporting + - * /",
+        "Created outputs/test_rpn.py with passing pytest tests"
+      ],
+      "checks": [
+        { "kind": "artifact_exists", "path": "outputs/rpn.py" },
+        { "kind": "artifact_exists", "path": "outputs/test_rpn.py" }
+      ]
+    },
+    {
+      "id": "03-inventory",
+      "prompt": "Implement this task in Python, applying the build-doctrine skill. This MODIFIES an existing file.\n\n# Task: add per-item discounts to Inventory\n\nThe file `inventory.py` is provided in your working directory with a class Inventory exposing add_item(name, price, qty), remove_item(name), and total_value().\n\n## Done-When items\n- DW-3.1: add_item gains an optional `discount` parameter, a fraction in [0,1] defaulting to 0. total_value applies it per item: a $10 item with qty 2 and discount=0.1 contributes 10*2*(1-0.1) = 18.0.\n- DW-3.2: total_value sums discounted value across all items. Items (\"a\",10,2,discount=0.1) and (\"b\",5,4,discount=0) -> total_value() == 38.0.\n\nThe existing length/remove behavior must keep working.\n\n## Output paths\n- Implementation: outputs/inventory.py (full modified module)\n- Tests: outputs/test_inventory.py (pytest)\n\nRun your tests and make sure they pass before finishing.",
+      "expected_output": "Inventory with working per-item discounts plus a passing pytest suite.",
+      "expectations": [
+        "Created outputs/inventory.py adding an optional discount parameter applied in total_value",
+        "Created outputs/test_inventory.py with passing pytest tests"
+      ],
+      "checks": [
+        { "kind": "artifact_exists", "path": "outputs/inventory.py" },
+        { "kind": "artifact_exists", "path": "outputs/test_inventory.py" }
+      ],
+      "files": ["tasks/03-inventory/starter/inventory.py"]
+    },
+    {
+      "id": "04-password",
+      "prompt": "Implement this task in Python, applying the build-doctrine skill. This MODIFIES an existing file.\n\n# Task: extend password validation\n\nThe file `password.py` is provided in your working directory with `def validate(pw: str) -> bool` that currently only enforces a minimum length of 8.\n\n## Done-When items\n- DW-4.1: A valid password must contain at least one digit. validate(\"Password\") -> False; validate(\"Password1\") -> True.\n- DW-4.2: A valid password must contain at least one uppercase letter. validate(\"password1\") -> False; validate(\"Password1\") -> True.\n\nThe existing 8-character minimum still applies.\n\n## Output paths\n- Implementation: outputs/password.py (full modified module)\n- Tests: outputs/test_password.py (pytest)\n\nRun your tests and make sure they pass before finishing.",
+      "expected_output": "validate enforcing length + digit + uppercase plus a passing pytest suite.",
+      "expectations": [
+        "Created outputs/password.py requiring length>=8 AND a digit AND an uppercase letter",
+        "Created outputs/test_password.py with passing pytest tests"
+      ],
+      "checks": [
+        { "kind": "artifact_exists", "path": "outputs/password.py" },
+        { "kind": "artifact_exists", "path": "outputs/password.py" }
+      ],
+      "files": ["tasks/04-password/starter/password.py"]
+    }
+  ]
+}
