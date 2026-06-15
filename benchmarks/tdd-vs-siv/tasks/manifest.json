@@ -1,0 +1,26 @@
+{
+  "01-duration": {
+    "kind": "greenfield",
+    "impl": "duration.py",
+    "tests": "test_duration.py",
+    "hidden": "tasks/01-duration/hidden/test_hidden.py"
+  },
+  "02-rpn": {
+    "kind": "greenfield",
+    "impl": "rpn.py",
+    "tests": "test_rpn.py",
+    "hidden": "tasks/02-rpn/hidden/test_hidden.py"
+  },
+  "03-inventory": {
+    "kind": "modify",
+    "impl": "inventory.py",
+    "tests": "test_inventory.py",
+    "hidden": "tasks/03-inventory/hidden/test_hidden.py"
+  },
+  "04-password": {
+    "kind": "modify",
+    "impl": "password.py",
+    "tests": "test_password.py",
+    "hidden": "tasks/04-password/hidden/test_hidden.py"
+  }
+}

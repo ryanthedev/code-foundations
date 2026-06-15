@@ -3,3 +3,8 @@ __pycache__/
 *.pyo
 .claude/
 .skill-audit/
+
+# benchmark artifacts (heavy / generated) — source + results CSVs are kept
+benchmarks/tdd-vs-siv/.venv/
+benchmarks/tdd-vs-siv/build-doctrine-workspace/
+benchmarks/tdd-vs-siv/harness/_smoke/results.csv

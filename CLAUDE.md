@@ -88,10 +88,10 @@ Three-stage pattern for feature development:
 
 **Quality Gates (per phase during /code-foundations:build):**
 ```
-BUILD:   baseline discipline (DW→test traceability, TDD red-green, anchoring, scope clamp)
+BUILD:   baseline discipline (DW→test traceability, stub → implement → validate, anchoring, scope clamp)
          Skills listed in the phase are Read()-injected into the BUILD agent prompt — not
          auto-triggered. The agent reads SKILL.md content directly via Read() calls.
-         (discovery + design → TDD implementation in one agent)
+         (discovery + design → implementation: stub → implement → validate, in one agent)
 REVIEW:  debiased review protocol (execute-first, per-DW evidence + trace, anti-overcorrection)
          (Full gate only — standard/minimal use tests as the gate;
           Security-sensitive phases get 3-sample majority-vote REVIEW)

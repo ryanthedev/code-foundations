@@ -1,0 +1,6 @@
+config,eval,run,impl_found,tests_found,n_agent_tests,agent_tests_pass,hidden_dw,hidden_offdw,mutation_killed,mutation_total,mutation_score
+old_skill,03-inventory,build-doctrine-workspace/iteration-3/03-inventory/old_skill/run-1,True,True,10,True,2/2,5/5,5,5,1.0
+old_skill,03-inventory,build-doctrine-workspace/iteration-3/03-inventory/old_skill/run-2,True,True,10,True,2/2,5/5,5,5,1.0
+old_skill,03-inventory,build-doctrine-workspace/iteration-3/03-inventory/old_skill/run-3,True,True,15,True,2/2,5/5,5,5,1.0
+old_skill,03-inventory,build-doctrine-workspace/iteration-3/03-inventory/old_skill/run-4,True,True,12,True,2/2,5/5,5,5,1.0
+old_skill,03-inventory,build-doctrine-workspace/iteration-3/03-inventory/old_skill/run-5,True,True,8,True,2/2,5/5,5,5,1.0

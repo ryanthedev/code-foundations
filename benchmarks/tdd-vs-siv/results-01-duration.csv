@@ -1,0 +1,11 @@
+config,eval,run,impl_found,tests_found,n_agent_tests,agent_tests_pass,hidden_dw,hidden_offdw,mutation_killed,mutation_total,mutation_score
+old_skill,01-duration,build-doctrine-workspace/iteration-2/01-duration/old_skill/run-1,True,True,3,True,6/6,3/5,7,7,1.0
+old_skill,01-duration,build-doctrine-workspace/iteration-2/01-duration/old_skill/run-2,True,True,3,True,6/6,3/5,6,7,0.857
+old_skill,01-duration,build-doctrine-workspace/iteration-2/01-duration/old_skill/run-3,True,True,3,True,6/6,3/5,6,6,1.0
+old_skill,01-duration,build-doctrine-workspace/iteration-2/01-duration/old_skill/run-4,True,True,3,True,6/6,3/5,5,5,1.0
+old_skill,01-duration,build-doctrine-workspace/iteration-2/01-duration/old_skill/run-5,True,True,3,True,6/6,3/5,6,7,0.857
+with_skill,01-duration,build-doctrine-workspace/iteration-2/01-duration/with_skill/run-1,True,True,13,True,6/6,3/5,7,7,1.0
+with_skill,01-duration,build-doctrine-workspace/iteration-2/01-duration/with_skill/run-2,True,True,13,True,6/6,3/5,7,7,1.0
+with_skill,01-duration,build-doctrine-workspace/iteration-2/01-duration/with_skill/run-3,True,True,12,True,6/6,3/5,4,4,1.0
+with_skill,01-duration,build-doctrine-workspace/iteration-2/01-duration/with_skill/run-4,True,True,13,True,6/6,2/5,19,19,1.0
+with_skill,01-duration,build-doctrine-workspace/iteration-2/01-duration/with_skill/run-5,True,True,14,True,6/6,2/5,16,16,1.0
