@@ -330,3 +330,10 @@ Summary: Built `run_build.py` — drives the REAL gated `/build` headlessly via 
 - [x] Committed
 Commit: 5a274a0
 Summary: Added the quality scorers under `benchmarks/concise-doctrine/`: `score_static.py` (radon LOC/cyclomatic/fn-len/count), `score_correctness.py` (adapts tdd-vs-siv mutation+hidden-suite logic to this manifest; gates mutation on a green suite first), `score_rubric.py` (fresh-context isolated-subprocess rubric judge + blind A/B with arm labels hidden), and `score_all.py` (full per-run row schema for ok+partial runs). **New dependency: `radon`** (installed in `.venv`; record in any offline-run setup). 46 tests pass (1 live rubric gated off), 93 total no regressions. Phase 5 consumes `score_all.py` over the matrix.
+
+### Phase 5: Run the matrix + analyze + report (Gate: Standard)
+- [x] BUILD: Discovery + design + implementation complete
+- [x] REVIEW: SKIPPED — tests are gate (Standard)
+- [x] Committed
+Commit: 66a5f99
+Summary: Built `run_matrix.py` — detached-safe, idempotent orchestrator for the full-build A/B. Iterates arms×tasks×models×N, calls the runner then `score_all.py`, aggregates medians per arm×model cell, computes deltas, runs the correctness+mutation guardrail, and renders `REPORT.md` ending in `VERDICT: GO|NO-GO` per the pre-registered rule. Honest accounting (partial/unscorable/all-partial flagged). CLI `--dry-run`/`--score-only`/`--report-only`. 47 tests (canned-row aggregation/verdict + mocked-runner full-grid); 140 total, no regressions. `--dry-run` confirms the full matrix = 120 cells. **The live 120-build matrix is a DETACHED follow-up — not executed in-session.** Phase 6 is gated on the verdict it produces.
