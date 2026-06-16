@@ -1,0 +1,14 @@
+{
+  "task": "01-duration",
+  "arm": "baseline",
+  "model": "sonnet",
+  "run": 1,
+  "status": "ok",
+  "exit": 0,
+  "turns": 41,
+  "cost_usd": 1.2838131,
+  "stop_reason": "end_turn",
+  "terminal_reason": "completed",
+  "impl_found": true,
+  "tests_found": true
+}
