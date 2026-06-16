@@ -302,4 +302,10 @@ The benchmark mirrors ponytail's *form* (tasks × arms × runs, medians, BRAG-st
 ---
 
 ## Execution Log
-_To be filled during /code-foundations:build_
+
+### Phase 1: Tasks-as-plans + hidden ground truth (Gate: Standard)
+- [x] BUILD: Discovery + design + implementation complete
+- [x] REVIEW: SKIPPED — tests are gate (Standard)
+- [x] Committed
+Commit: add154d
+Summary: Built `benchmarks/concise-doctrine/tasks/` — 6 build-ready tasks (4 tdd-vs-siv ported to one-phase `plan.md` + hidden suites; 2 new greenfield: `05-rate-limiter`, `06-csv-stats`) with a validated `manifest.json` (adds a `plan` field). New tasks carry non-saturated mutation surfaces (thin DW-only 0.8/0.75 vs thorough 1.0). 49/49 phase-1 validation tests pass. The suite is ready for the runner (Phase 3) to drive `/build` against; each task's hidden suite is offline ground truth.
