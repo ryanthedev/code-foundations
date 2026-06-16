@@ -1,9 +1,9 @@
 # Plan: Concise-Code Doctrine + Quality Benchmark (full-build A/B)
 
 **Created:** 2026-06-16
-**Status:** in-progress
+**Status:** in-progress (harness Phases 1-5 complete + committed; Phase 6 GATED on the detached matrix verdict)
 **Started:** 2026-06-16
-**Current Phase:** 1
+**Current Phase:** 6 — blocked pending `benchmarks/concise-doctrine/REPORT.md` from the detached full-matrix run
 **Complexity:** complex
 
 ---
@@ -337,3 +337,7 @@ Summary: Added the quality scorers under `benchmarks/concise-doctrine/`: `score_
 - [x] Committed
 Commit: 66a5f99
 Summary: Built `run_matrix.py` — detached-safe, idempotent orchestrator for the full-build A/B. Iterates arms×tasks×models×N, calls the runner then `score_all.py`, aggregates medians per arm×model cell, computes deltas, runs the correctness+mutation guardrail, and renders `REPORT.md` ending in `VERDICT: GO|NO-GO` per the pre-registered rule. Honest accounting (partial/unscorable/all-partial flagged). CLI `--dry-run`/`--score-only`/`--report-only`. 47 tests (canned-row aggregation/verdict + mocked-runner full-grid); 140 total, no regressions. `--dry-run` confirms the full matrix = 120 cells. **The live 120-build matrix is a DETACHED follow-up — not executed in-session.** Phase 6 is gated on the verdict it produces.
+
+### Phase 5 — live A/B slice validation + rubric-plumbing fix
+- A real 2-build slice (`01-duration` × {baseline,concise} × sonnet × 1) ran end-to-end (both `ok`; baseline $0.94 / concise $1.06): runner → scorers → guardrail → `REPORT.md` + `VERDICT` all produced correctly. Pipeline validated on live data. Sample kept at `benchmarks/concise-doctrine/REPORT.slice-sample.md`. Slice numbers (N=1, trivial task, NOT a real verdict): loc 19=19, cc 4=4, fn_len +1, mutation 1.0=1.0, correctness 6/6=6/6 → `NO-GO` (no conciseness headroom on a tiny task; rubric absent).
+- **Defect surfaced & fixed:** `run_matrix.py` never passed `run_rubric=True` to `score_one_run`, so the rubric judge (the verdict rule's readability half) was never invoked in a matrix run. Fixed: added `--rubric` flag + `MatrixSpec.run_rubric`, threaded into both call sites + injectable `judge_fn`; 10 new tests (199 total pass). **The full matrix MUST be run with `--rubric` for a rule-valid verdict.** Bulk `results/` is gitignored.

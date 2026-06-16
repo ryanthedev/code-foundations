@@ -828,3 +828,293 @@ class TestOffDW:
         verdict, rationale = compute_verdict(medians, deltas, passed, ("sonnet",))
         assert verdict == "NO-GO"
         assert "readability" in rationale.lower() or "rubric" in rationale.lower()
+
+
+# --------------------------------------------------------------------------- #
+# DW-A: --rubric flag threads run_rubric into both score_one_run call sites    #
+# --------------------------------------------------------------------------- #
+
+class TestDWARubricFlag:
+    """Tests for the --rubric amendment (Phase 5 amendment, DW-A.1 / DW-A.2 / DW-A.3)."""
+
+    # ------------------------------------------------------------------ #
+    # DW-A.1: with --rubric, both call sites receive run_rubric=True and  #
+    #         rubric_score is populated when a judge_fn is injected        #
+    # ------------------------------------------------------------------ #
+
+    def test_DW_A_1_spec_run_rubric_true_when_flag_set(self, tmp_path):
+        """MatrixSpec.build(run_rubric=True) stores run_rubric=True on the spec."""
+        spec = MatrixSpec.build(
+            n_runs=1,
+            out_root=tmp_path,
+            tasks=("01-duration",),
+            arms=("baseline",),
+            models=("sonnet",),
+            run_rubric=True,
+        )
+        assert spec.run_rubric is True
+
+    def test_DW_A_1_score_one_run_called_with_run_rubric_true(self, tmp_path):
+        """With run_rubric=True on the spec, score_one_run is called with run_rubric=True."""
+        from unittest.mock import patch, call as mcall
+        spec = MatrixSpec.build(
+            n_runs=1,
+            out_root=tmp_path / "out",
+            tasks=("01-duration",),
+            arms=("baseline",),
+            models=("sonnet",),
+            run_rubric=True,
+        )
+
+        captured_kwargs: list[dict] = []
+
+        def fake_score_one_run(run_dir, out_root, **kwargs):
+            captured_kwargs.append(kwargs)
+            return _make_row("01-duration", "baseline", "sonnet", 1, out_root=out_root)
+
+        def fake_cell_fn(task, arm, model, run_n, spec_):
+            # Directly invoke run_and_score_cell internals by calling score_one_run
+            # via the patch, to verify the kwarg threading.
+            from run_matrix import score_only_cell as _soc  # noqa: PLC0415
+            from run_matrix import cell_run_dir as _crd      # noqa: PLC0415
+            rd = _crd(task, arm, model, run_n, spec_.out_root)
+            rd.mkdir(parents=True, exist_ok=True)
+            (rd / "meta.json").write_text(json.dumps({
+                "task": task, "arm": arm, "model": model, "run": run_n, "status": "ok",
+            }))
+            with patch("run_matrix.score_one_run", side_effect=fake_score_one_run):
+                return _soc(task, arm, model, run_n, spec_)
+
+        orchestrate(spec, cell_fn=fake_cell_fn)
+
+        assert len(captured_kwargs) == 1
+        assert captured_kwargs[0].get("run_rubric") is True
+
+    def test_DW_A_1_rubric_score_populated_via_judge_fn(self, tmp_path):
+        """Injecting a judge_fn with run_rubric=True causes rubric_score to be set."""
+        import json as _json
+        from score_all import score_one_run as real_score_one_run  # noqa: PLC0415
+        from score_static import static_metrics  # noqa: PLC0415
+
+        # Build a minimal run dir that score_one_run can parse.
+        run_dir = tmp_path / "01-duration" / "baseline" / "sonnet" / "run-1"
+        out_dir = run_dir / "outputs"
+        out_dir.mkdir(parents=True)
+
+        # Write a minimal meta.json.
+        (run_dir / "meta.json").write_text(_json.dumps({
+            "task": "01-duration",
+            "arm": "baseline",
+            "model": "sonnet",
+            "run": 1,
+            "status": "ok",
+        }))
+
+        # Write a trivial impl file matching the manifest spec for 01-duration.
+        from score_correctness import MANIFEST_PATH  # noqa: PLC0415
+        manifest = _json.loads(MANIFEST_PATH.read_text())
+        impl_file = out_dir / manifest["01-duration"]["impl"]
+        impl_file.write_text("def duration(h, m, s):\n    return h*3600+m*60+s\n")
+
+        # Fake judge that returns a fixed JSON rubric response.
+        def fake_judge(impl_text: str) -> str:
+            return _json.dumps({"score": 0.77, "rationale": "looks fine"})
+
+        row = real_score_one_run(run_dir, tmp_path, run_rubric=True, judge_fn=fake_judge)
+        assert row["rubric_score"] == 0.77, (
+            f"Expected rubric_score=0.77, got {row['rubric_score']!r}"
+        )
+
+    def test_DW_A_1_both_call_sites_pass_run_rubric(self, tmp_path):
+        """Both run_and_score_cell and score_only_cell pass spec.run_rubric to score_one_run."""
+        from unittest.mock import patch, MagicMock  # noqa: PLC0415
+
+        spec = MatrixSpec.build(
+            n_runs=1,
+            out_root=tmp_path / "out",
+            tasks=("01-duration",),
+            arms=("baseline",),
+            models=("sonnet",),
+            run_rubric=True,
+        )
+
+        fake_row = _make_row("01-duration", "baseline", "sonnet", 1, out_root=spec.out_root)
+        calls: list[dict] = []
+
+        def capturing_score_one_run(run_dir, out_root, **kwargs):
+            calls.append(kwargs)
+            return fake_row
+
+        # Test score_only_cell path: create a run dir so it doesn't bail early.
+        from run_matrix import score_only_cell as _soc, cell_run_dir as _crd  # noqa: PLC0415
+        rd = _crd("01-duration", "baseline", "sonnet", 1, spec.out_root)
+        rd.mkdir(parents=True, exist_ok=True)
+        (rd / "meta.json").write_text(json.dumps({
+            "task": "01-duration", "arm": "baseline", "model": "sonnet",
+            "run": 1, "status": "ok",
+        }))
+
+        with patch("run_matrix.score_one_run", side_effect=capturing_score_one_run):
+            _soc("01-duration", "baseline", "sonnet", 1, spec)
+
+        assert len(calls) == 1
+        assert calls[0].get("run_rubric") is True, (
+            f"score_only_cell must pass run_rubric=True; got kwargs={calls[0]}"
+        )
+
+        # Test run_and_score_cell path: mock rb.execute to return the run dir.
+        calls.clear()
+        from run_matrix import run_and_score_cell as _rac  # noqa: PLC0415
+        with patch("run_matrix.rb.execute", return_value=rd), \
+             patch("run_matrix.score_one_run", side_effect=capturing_score_one_run):
+            _rac("01-duration", "baseline", "sonnet", 1, spec)
+
+        assert len(calls) == 1
+        assert calls[0].get("run_rubric") is True, (
+            f"run_and_score_cell must pass run_rubric=True; got kwargs={calls[0]}"
+        )
+
+    # ------------------------------------------------------------------ #
+    # DW-A.2: without --rubric, run_rubric=False, no judge invoked         #
+    # ------------------------------------------------------------------ #
+
+    def test_DW_A_2_spec_run_rubric_false_by_default(self, tmp_path):
+        """MatrixSpec.build without run_rubric=True stores run_rubric=False."""
+        spec = MatrixSpec.build(
+            n_runs=1,
+            out_root=tmp_path,
+            tasks=("01-duration",),
+            arms=("baseline",),
+            models=("sonnet",),
+        )
+        assert spec.run_rubric is False
+
+    def test_DW_A_2_no_rubric_score_one_run_called_with_false(self, tmp_path):
+        """Without run_rubric, score_one_run receives run_rubric=False."""
+        from unittest.mock import patch  # noqa: PLC0415
+
+        spec = MatrixSpec.build(
+            n_runs=1,
+            out_root=tmp_path / "out",
+            tasks=("01-duration",),
+            arms=("baseline",),
+            models=("sonnet",),
+            # run_rubric omitted → defaults to False
+        )
+
+        fake_row = _make_row("01-duration", "baseline", "sonnet", 1, out_root=spec.out_root)
+        calls: list[dict] = []
+
+        def capturing_score_one_run(run_dir, out_root, **kwargs):
+            calls.append(kwargs)
+            return fake_row
+
+        from run_matrix import score_only_cell as _soc, cell_run_dir as _crd  # noqa: PLC0415
+        rd = _crd("01-duration", "baseline", "sonnet", 1, spec.out_root)
+        rd.mkdir(parents=True, exist_ok=True)
+        (rd / "meta.json").write_text(json.dumps({
+            "task": "01-duration", "arm": "baseline", "model": "sonnet",
+            "run": 1, "status": "ok",
+        }))
+
+        with patch("run_matrix.score_one_run", side_effect=capturing_score_one_run):
+            _soc("01-duration", "baseline", "sonnet", 1, spec)
+
+        assert len(calls) == 1
+        assert calls[0].get("run_rubric") is False, (
+            f"Without --rubric, run_rubric must be False; got kwargs={calls[0]}"
+        )
+
+    def test_DW_A_2_rubric_score_empty_without_flag(self, tmp_path):
+        """Without run_rubric, rubric_score stays None (no LLM judge invoked)."""
+        import json as _json  # noqa: PLC0415
+        from score_all import score_one_run as real_score_one_run  # noqa: PLC0415
+        from score_correctness import MANIFEST_PATH  # noqa: PLC0415
+
+        run_dir = tmp_path / "01-duration" / "baseline" / "sonnet" / "run-1"
+        out_dir = run_dir / "outputs"
+        out_dir.mkdir(parents=True)
+        (run_dir / "meta.json").write_text(_json.dumps({
+            "task": "01-duration", "arm": "baseline", "model": "sonnet",
+            "run": 1, "status": "ok",
+        }))
+        manifest = _json.loads(MANIFEST_PATH.read_text())
+        impl_file = out_dir / manifest["01-duration"]["impl"]
+        impl_file.write_text("def duration(h, m, s):\n    return h*3600+m*60+s\n")
+
+        judge_called: list[bool] = []
+
+        def sentinel_judge(impl_text: str) -> str:
+            judge_called.append(True)
+            return _json.dumps({"score": 0.99, "rationale": "should not be called"})
+
+        # run_rubric=False (default): judge must NOT be invoked.
+        row = real_score_one_run(run_dir, tmp_path, run_rubric=False, judge_fn=sentinel_judge)
+        assert row["rubric_score"] is None, (
+            f"rubric_score should be None when run_rubric=False, got {row['rubric_score']!r}"
+        )
+        assert judge_called == [], "judge_fn must not be called when run_rubric=False"
+
+    # ------------------------------------------------------------------ #
+    # DW-A.3: existing Phase-5 tests still pass (regression guard)        #
+    # ------------------------------------------------------------------ #
+
+    def test_DW_A_3_existing_spec_build_unchanged(self, tmp_path):
+        """MatrixSpec.build without run_rubric kwarg works exactly as before."""
+        spec = _spec(tmp_path)
+        # All original fields still accessible.
+        assert spec.tasks
+        assert spec.arms
+        assert spec.models
+        assert spec.n_runs == 2
+        assert spec.out_root is not None
+        assert spec.results_dir is not None
+        # New field has safe default.
+        assert spec.run_rubric is False
+
+    def test_DW_A_3_cli_no_rubric_flag_parses(self, tmp_path):
+        """CLI without --rubric passes run_rubric=False to MatrixSpec.build (backward compat)."""
+        from run_matrix import _cli  # noqa: PLC0415
+        from unittest.mock import patch  # noqa: PLC0415
+
+        spec_kwargs: list[dict] = []
+
+        original_build = MatrixSpec.build
+
+        def capturing_build(n_runs, out_root, **kwargs):
+            spec_kwargs.append(kwargs)
+            return original_build(n_runs, out_root, **kwargs)
+
+        # --dry-run returns 0 cleanly; orchestrate is mocked so nothing runs.
+        with patch("run_matrix.MatrixSpec.build", side_effect=capturing_build), \
+             patch("run_matrix.orchestrate", return_value=[]):
+            rc = _cli(["--n-runs", "1", "--out", str(tmp_path), "--dry-run"])
+
+        assert rc == 0
+        assert len(spec_kwargs) == 1, f"MatrixSpec.build should be called once, got {spec_kwargs!r}"
+        assert spec_kwargs[0].get("run_rubric") is False, (
+            f"Without --rubric, run_rubric must be False; got {spec_kwargs[0]!r}"
+        )
+
+    def test_DW_A_3_cli_rubric_flag_sets_run_rubric_true(self, tmp_path):
+        """CLI with --rubric passes run_rubric=True to MatrixSpec.build."""
+        from run_matrix import _cli  # noqa: PLC0415
+        from unittest.mock import patch  # noqa: PLC0415
+
+        spec_kwargs: list[dict] = []
+
+        original_build = MatrixSpec.build
+
+        def capturing_build(n_runs, out_root, **kwargs):
+            spec_kwargs.append(kwargs)
+            return original_build(n_runs, out_root, **kwargs)
+
+        with patch("run_matrix.MatrixSpec.build", side_effect=capturing_build), \
+             patch("run_matrix.orchestrate", return_value=[]):
+            rc = _cli(["--n-runs", "1", "--out", str(tmp_path), "--dry-run", "--rubric"])
+
+        assert rc == 0
+        assert len(spec_kwargs) == 1, f"MatrixSpec.build should be called once, got {spec_kwargs!r}"
+        assert spec_kwargs[0].get("run_rubric") is True, (
+            f"--rubric must set run_rubric=True; got {spec_kwargs[0]!r}"
+        )

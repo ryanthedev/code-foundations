@@ -15,6 +15,11 @@ Setup (Python 3.12, detached run):
     uv pip install --python .venv/bin/python pytest radon
     .venv/bin/python run_matrix.py --n-runs 5 --out results/
 
+NOTE: Run with --rubric to enable the rubric (LLM readability) judge.  The
+pre-registered verdict rule requires the readability dimension (rubric_score)
+to produce a rule-valid GO/NO-GO verdict.  Without --rubric, rubric_score is
+empty and the readability half of the verdict rule cannot be evaluated.
+
 Dependencies: run_build (Phase 3), score_all (Phase 4), arms/swap (Phase 2).
 
 CLI:
@@ -24,6 +29,7 @@ CLI:
                   [--models <model>...]      # default: sonnet opus
                   [--dry-run]               # print cells, don't execute
                   [--score-only]            # re-score existing run dirs, no builds
+                  [--rubric]                # enable rubric judge (LLM cost; required for rule-valid verdict)
 """
 from __future__ import annotations
 
@@ -32,7 +38,7 @@ import csv
 import itertools
 import json
 import sys
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable, Iterator
 
@@ -42,6 +48,7 @@ if str(HERE) not in sys.path:
 
 import run_build as rb  # noqa: E402
 from score_all import score_one_run, ROW_FIELDS  # noqa: E402
+from score_rubric import _judge_subprocess  # noqa: E402
 from arms import swap  # noqa: E402
 
 # Default matrix dimensions (the full 2×6×2×N experiment).
@@ -66,6 +73,7 @@ class MatrixSpec:
     n_runs: int
     out_root: Path          # where run dirs land (passed to run_build.execute)
     results_dir: Path       # where CSV files are written
+    run_rubric: bool = False  # enable rubric judge (LLM cost; off by default)
 
     @staticmethod
     def build(
@@ -75,10 +83,18 @@ class MatrixSpec:
         tasks: tuple[str, ...] | None = None,
         arms: tuple[str, ...] | None = None,
         models: tuple[str, ...] | None = None,
+        run_rubric: bool = False,
     ) -> "MatrixSpec":
         """Construct a MatrixSpec, defaulting missing dimensions.
 
         Validates arm names against swap.valid_arms() and n_runs > 0 at entry.
+
+        Parameters
+        ----------
+        run_rubric: whether to invoke the rubric (LLM readability) judge for
+            each cell.  Off by default to avoid LLM cost.  Required for a
+            rule-valid verdict (the readability dimension of the pre-registered
+            rule requires rubric_score to be populated).
         """
         if n_runs < 1:
             raise ValueError(f"n_runs must be >= 1, got {n_runs}")
@@ -105,6 +121,7 @@ class MatrixSpec:
             n_runs=n_runs,
             out_root=root,
             results_dir=root / "results",
+            run_rubric=run_rubric,
         )
 
 
@@ -144,6 +161,8 @@ def run_and_score_cell(
     model: str,
     run_n: int,
     spec: MatrixSpec,
+    *,
+    judge_fn: Callable[[str], str] | None = None,
 ) -> dict:
     """Execute one cell: build → score → return a full-schema row dict.
 
@@ -152,6 +171,12 @@ def run_and_score_cell(
 
     On any exception from the runner or scorer, returns an 'unscorable' row rather
     than crashing the orchestrator — one bad cell must not abort the matrix.
+
+    Parameters
+    ----------
+    judge_fn: injectable seam for mocking the rubric subprocess in tests.
+        Passed through to score_one_run only when spec.run_rubric is True.
+        Defaults to None, which makes score_one_run use the real subprocess judge.
     """
     rspec = rb.RunSpec.validated(
         task=task, arm=arm, model=model, run=run_n,
@@ -164,8 +189,11 @@ def run_and_score_cell(
         print(f"  RUNNER ERROR {task}/{arm}/{model}/run-{run_n}: {exc}", file=sys.stderr)
         return _unscorable_row(task, arm, model, run_n, spec.out_root)
 
+    score_kwargs: dict = {"run_rubric": spec.run_rubric}
+    if judge_fn is not None:
+        score_kwargs["judge_fn"] = judge_fn
     try:
-        row = score_one_run(rd, spec.out_root)
+        row = score_one_run(rd, spec.out_root, **score_kwargs)
     except Exception as exc:  # noqa: BLE001
         # Scorer failed: record unscorable but keep whatever the runner wrote.
         print(f"  SCORER ERROR {task}/{arm}/{model}/run-{run_n}: {exc}", file=sys.stderr)
@@ -180,16 +208,27 @@ def score_only_cell(
     model: str,
     run_n: int,
     spec: MatrixSpec,
+    *,
+    judge_fn: Callable[[str], str] | None = None,
 ) -> dict:
     """Score an already-executed cell without running the build.
 
     Used with --score-only to re-score existing run dirs.
+
+    Parameters
+    ----------
+    judge_fn: injectable seam for mocking the rubric subprocess in tests.
+        Passed through to score_one_run only when spec.run_rubric is True.
+        Defaults to None, which makes score_one_run use the real subprocess judge.
     """
     rd = cell_run_dir(task, arm, model, run_n, spec.out_root)
     if not rd.is_dir():
         return _unscorable_row(task, arm, model, run_n, spec.out_root)
+    score_kwargs: dict = {"run_rubric": spec.run_rubric}
+    if judge_fn is not None:
+        score_kwargs["judge_fn"] = judge_fn
     try:
-        return score_one_run(rd, spec.out_root)
+        return score_one_run(rd, spec.out_root, **score_kwargs)
     except Exception as exc:  # noqa: BLE001
         print(f"  SCORER ERROR {task}/{arm}/{model}/run-{run_n}: {exc}", file=sys.stderr)
         return _unscorable_row(task, arm, model, run_n, spec.out_root)
@@ -722,6 +761,12 @@ def _cli(argv: list[str] | None = None) -> int:
                     help="re-score existing run dirs without building")
     ap.add_argument("--report-only", action="store_true",
                     help="generate REPORT.md from existing CSV, no builds")
+    ap.add_argument("--rubric", action="store_true", default=False,
+                    help=(
+                        "enable rubric (LLM readability) judge per cell (costs money). "
+                        "Required for a rule-valid verdict — the pre-registered rule needs "
+                        "rubric_score to evaluate the readability dimension."
+                    ))
     args = ap.parse_args(argv)
 
     out_root = Path(args.out)
@@ -734,6 +779,7 @@ def _cli(argv: list[str] | None = None) -> int:
             tasks=tuple(args.tasks) if args.tasks else None,
             arms=tuple(args.arms) if args.arms else None,
             models=tuple(args.models) if args.models else None,
+            run_rubric=args.rubric,
         )
     except ValueError as exc:
         ap.error(str(exc))

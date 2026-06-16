@@ -8,3 +8,6 @@ __pycache__/
 benchmarks/tdd-vs-siv/.venv/
 benchmarks/tdd-vs-siv/build-doctrine-workspace/
 benchmarks/tdd-vs-siv/harness/_smoke/results.csv
+
+# concise-doctrine generated matrix runs (heavy) — REPORT.slice-sample.md is kept
+benchmarks/concise-doctrine/results/
