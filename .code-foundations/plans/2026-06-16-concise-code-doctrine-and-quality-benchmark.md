@@ -323,3 +323,10 @@ Summary: Authored the benchmark's two arms under `benchmarks/concise-doctrine/ar
 - [x] Committed
 Commit: 062dba8
 Summary: Built `run_build.py` — drives the REAL gated `/build` headlessly via `claude -p` with the arm's `build-agent` variant injected through a per-run `--plugin-dir` sandbox (feasibility live-probed; snapshot-skill fallback NOT needed). `RunSpec` config object; provision/invoke/capture cohesive routines behind one mockable subprocess seam; status ok|partial|fail with partial artifacts retained; real `agents/build-agent.md` byte-unchanged on every path. 22 mocked unit tests (arm/failure/isolation). **Live cost datum: one greenfield build = 41 turns, $1.28, ~status ok** → full matrix (120 builds) ≈ $150+/24-30h, hence Phase 5 runs DETACHED/OFFLINE. DW-3.1 greenfield proven live (`_live-smoke/`); modify-task live run folded into Phase 5. Follow-up: dead `or True` assert at `test_phase3.py:277` (no coverage gap).
+
+### Phase 4: Scoring extensions (Gate: Full)
+- [x] BUILD: Discovery + design + implementation complete
+- [x] REVIEW: PASS (haiku) — all 4 DW; guardrail integrity confirmed (red suite → "n/a (suite not green)", never 1.0)
+- [x] Committed
+Commit: 5a274a0
+Summary: Added the quality scorers under `benchmarks/concise-doctrine/`: `score_static.py` (radon LOC/cyclomatic/fn-len/count), `score_correctness.py` (adapts tdd-vs-siv mutation+hidden-suite logic to this manifest; gates mutation on a green suite first), `score_rubric.py` (fresh-context isolated-subprocess rubric judge + blind A/B with arm labels hidden), and `score_all.py` (full per-run row schema for ok+partial runs). **New dependency: `radon`** (installed in `.venv`; record in any offline-run setup). 46 tests pass (1 live rubric gated off), 93 total no regressions. Phase 5 consumes `score_all.py` over the matrix.
