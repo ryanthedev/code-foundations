@@ -316,3 +316,10 @@ Summary: Built `benchmarks/concise-doctrine/tasks/` — 6 build-ready tasks (4 t
 - [x] Committed
 Commit: eeee961
 Summary: Authored the benchmark's two arms under `benchmarks/concise-doctrine/arms/`: `build-agent.baseline.md` (byte-verbatim copy of the production agent) and `build-agent.concise.md` (baseline + a `### Concise Implementation` subsection + a one-line Phase-1 built-in/concise check — the only deltas, 0 removed lines). Wording governs implementation only, no aposd, explicitly non-contradicting Validation Coverage / Scope Latitude. `arms/swap.py` exposes `set_arm(arm, target)` + `arm_session()` with entry validation, atomic `os.replace`, and try/finally baseline-restore. The `### Concise Implementation` heading is the arm marker Phase 3 (DW-3.2) asserts on. Runner (Phase 3) consumes `set_arm`/the two variants.
+
+### Phase 3: Headless build-runner (Gate: Full)
+- [x] BUILD: Discovery + design + implementation complete
+- [x] REVIEW: PASS (sonnet, re-dispatched once after a transient API socket drop) — all 4 DW verified
+- [x] Committed
+Commit: 062dba8
+Summary: Built `run_build.py` — drives the REAL gated `/build` headlessly via `claude -p` with the arm's `build-agent` variant injected through a per-run `--plugin-dir` sandbox (feasibility live-probed; snapshot-skill fallback NOT needed). `RunSpec` config object; provision/invoke/capture cohesive routines behind one mockable subprocess seam; status ok|partial|fail with partial artifacts retained; real `agents/build-agent.md` byte-unchanged on every path. 22 mocked unit tests (arm/failure/isolation). **Live cost datum: one greenfield build = 41 turns, $1.28, ~status ok** → full matrix (120 builds) ≈ $150+/24-30h, hence Phase 5 runs DETACHED/OFFLINE. DW-3.1 greenfield proven live (`_live-smoke/`); modify-task live run folded into Phase 5. Follow-up: dead `or True` assert at `test_phase3.py:277` (no coverage gap).
