@@ -1,6 +1,6 @@
 ---
 name: cc-debugging
-description: "Applies Code Complete's scientific debugging method: STABILIZE → LOCATE → HYPOTHESIZE → EXPERIMENT → FIX → TEST → SEARCH. For active bug investigation, not QA process design or test coverage planning."
+description: "Applies Code Complete's scientific debugging method: STABILIZE → LOCATE → HYPOTHESIZE → EXPERIMENT → FIX → TEST → SEARCH. For active bug investigation, not QA process design or test coverage planning (use cc-quality-practices)."
 user-invocable: false
 ---
 
@@ -109,5 +109,5 @@ Explain the problem out loud, to a person or a rubber duck. Articulation frequen
 | After | Next |
 |---|---|
 | Root cause found | Fix + add regression test (Steps 6–7 above) |
-| Defect is in untested legacy code | `Read(${CLAUDE_PLUGIN_ROOT}/skills/welc-legacy-code/SKILL.md)` — get it under test first |
-| Fix requires structural refactoring | `Read(${CLAUDE_PLUGIN_ROOT}/skills/cc-refactoring-guidance/SKILL.md)` |
+| Defect is in untested legacy code | `Skill(code-foundations:welc-legacy-code)` — get it under test first |
+| Fix requires structural refactoring | `Skill(code-foundations:cc-refactoring-guidance)` |

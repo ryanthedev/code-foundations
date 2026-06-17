@@ -157,4 +157,4 @@ The same flatten-the-structure principle applies beyond Code Complete's era: asy
 
 | After | Next |
 |---|---|
-| Control flow verified | `Read(${CLAUDE_PLUGIN_ROOT}/skills/code-clarity-and-docs/SKILL.md)` |
+| Control flow verified | `Skill(code-foundations:code-clarity-and-docs)` |

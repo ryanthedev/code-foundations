@@ -200,4 +200,4 @@ Detailed checklists: `Read(${CLAUDE_SKILL_DIR}/checklists.md)`
 
 | After | Next |
 |-------|------|
-| Simplification done | `Read(${CLAUDE_PLUGIN_ROOT}/skills/aposd-verifying-correctness/SKILL.md)` — verify interface simplified |
+| Simplification done | `Skill(code-foundations:aposd-verifying-correctness)` — verify interface simplified |

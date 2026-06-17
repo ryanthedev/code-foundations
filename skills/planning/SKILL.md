@@ -81,7 +81,7 @@ State explicitly: "This is a **[Medium/Complex]** task. [1-sentence justificatio
 
 ### Load Design Vocabulary
 
-`Read(${CLAUDE_PLUGIN_ROOT}/skills/ca-architecture-boundaries/SKILL.md)` — system-level vocabulary (boundaries, dependency direction, SRP-by-actor) for generating structurally different approaches here and shaping phase seams at DECOMPOSE. Module-level design skills (e.g. aposd-designing-deep-modules) are NOT loaded here — they get matched per phase at DECOMPOSE and loaded during DETAIL.
+`Skill(code-foundations:ca-architecture-boundaries)` — system-level vocabulary (boundaries, dependency direction, SRP-by-actor) for generating structurally different approaches here and shaping phase seams at DECOMPOSE. Module-level design skills (e.g. aposd-designing-deep-modules) are NOT loaded here — they get matched per phase at DECOMPOSE and loaded during DETAIL.
 
 ### Research (Medium/Complex)
 
@@ -146,7 +146,7 @@ For each phase, write only:
 
 Skills are matched HERE so DETAIL can load them while writing phase bodies — a phase body written without domain knowledge is the planner guessing.
 
-1. Match against your **available-skills register** — every skill whose description is in context. That now includes the 19 internal code-foundations skills (`user-invocable: false`: model-discoverable, hidden from the slash menu) AND skills from other installed plugins (e.g. skill-craft, mcp-builder, security-guidance). Then `Read(${CLAUDE_PLUGIN_ROOT}/references/skill-catalog.md)` for the richer when-to-match detail and sibling-disambiguation notes on the internal 19. The register tells you *which* skills exist; the catalog is the tie-breaker for the internal siblings.
+1. Match against your **available-skills register** — every skill whose description is in context. That includes the 19 internal code-foundations skills (`user-invocable: false`: model-discoverable, hidden from the slash menu) AND skills from other installed plugins (e.g. skill-craft, mcp-builder, security-guidance). Each description carries its own when-to-match and sibling-disambiguation (the "not for X (use Y)" clauses) — match on the descriptions directly.
 2. For each phase, compare the phase's goal against every candidate skill's when-to-match conditions (register descriptions for external skills; catalog entries plus their disambiguation notes for the internal sibling pairs)
 3. Assign skills whose triggers match the phase work. Most phases match 1-3 skills.
 4. Exclude workflow commands (plan, build, debug, research, code-standards, clarify)
@@ -262,7 +262,7 @@ Derive the whole-plan sections now that every phase body exists — they fall ou
 
 ### Test Plan
 
-Load `Read(${CLAUDE_PLUGIN_ROOT}/skills/cc-quality-practices/SKILL.md)` + `Read(${CLAUDE_PLUGIN_ROOT}/skills/cc-quality-practices/checklists/qa-and-testing.md)` (skip if already loaded). Apply its Test Case Generation to derive test items, to the chosen coverage level:
+Load `Skill(code-foundations:cc-quality-practices)` (skip if already loaded; it self-loads its checklists). Apply its Test Case Generation to derive test items, to the chosen coverage level:
 
 - **Per-DW:** one test item per done-when item across all phases (Unit + Integration + Manual)
 - **Boundary:** below / at / above each boundary named in the phases' Edge cases
@@ -323,7 +323,7 @@ Skill presence does NOT decide the gate — every phase carries skills, so skill
 Skills were matched at DECOMPOSE and refined during DETAIL. Validate the final set:
 
 1. Every phase has `**Skills:**` populated — `none -- [reason]` valid, omission NOT valid
-2. Every skill name matches a real available skill — an internal one (in `Read(${CLAUDE_PLUGIN_ROOT}/references/skill-catalog.md)`) or an external skill present in your available-skills register (reject typos/nonexistent names)
+2. Every skill name matches a real available skill present in your available-skills register — internal (code-foundations) or external (another plugin) (reject typos/nonexistent names)
 3. No workflow commands (plan, build, debug, research, code-standards, clarify)
 4. Code-writing phases with `none` justify why no skill's triggers match — on any gap, re-run the DECOMPOSE matching procedure for that phase
 
@@ -398,7 +398,7 @@ Checklist:
   user-observable output exists, high-uncertainty phases early
 - Tests: test plan covers every DW item; boundary + dirty tests derived from phase Edge cases
 - Skills: every phase has Skills field (not omitted), skills match work type,
-  each skill name matches a real available skill — internal (references/skill-catalog.md) or external (the available-skills register) (reject typos/nonexistent names),
+  each skill name matches a real available skill in the available-skills register — internal or external (reject typos/nonexistent names),
   code-writing phases with `none` justify why no skill's triggers match
 - Gates: every phase has a Gate field populated (Full/Standard/Minimal), matching its risk
   (Full for security/auth/payment or new cross-phase seams; Minimal for docs/config-only; Standard otherwise)

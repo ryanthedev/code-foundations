@@ -170,5 +170,5 @@ Can you test the new code in isolation?
 
 | After | Next |
 |-------|------|
-| Code under test | `Read(${CLAUDE_PLUGIN_ROOT}/skills/cc-refactoring-guidance/SKILL.md)` (safe refactoring process) |
+| Code under test | `Skill(code-foundations:cc-refactoring-guidance)` (safe refactoring process) |
 | Dependencies broken | Continue with Legacy Code Change Algorithm step 4-5 |

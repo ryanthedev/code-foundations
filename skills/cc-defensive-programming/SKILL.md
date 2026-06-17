@@ -119,4 +119,4 @@ Make errors loud during development so they're found early; make them unobtrusiv
 
 | After | Next |
 |---|---|
-| Validation complete | `Read(${CLAUDE_PLUGIN_ROOT}/skills/cc-control-flow-quality/SKILL.md)` |
+| Validation complete | `Skill(code-foundations:cc-control-flow-quality)` |

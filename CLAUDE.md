@@ -23,7 +23,7 @@ Code-foundations is a Claude Code plugin providing software engineering skills b
 - `skills/` - Individual skill definitions (SKILL.md; checklists.md where build's checklist-resolution step consumes it)
 - `commands/` - User-invocable commands (slash commands)
 - `agents/` - Agent templates (build-agent, post-gate-agent)
-- `references/` - Shared reference materials (cc-foundations.md, skill-catalog.md, dispatch-templates.md, etc.)
+- `references/` - Shared reference materials (cc-foundations.md, dispatch-templates.md, etc.)
 - `docs/` - Case study examples
 
 ### Development Workflows
@@ -63,7 +63,7 @@ Three-stage pattern for feature development:
   → Problem statement confirmed (shared step, all tracks)
   → [Quick: plan → check → present]
   → [Standard/Full: classify → explore → detail → save → check → confirm]
-  → DECOMPOSE matches skills per phase against the available-skills register (internal + external), using references/skill-catalog.md for richer internal when-to-match detail
+  → DECOMPOSE matches skills per phase against the available-skills register (internal + external), reading each skill's description
   → SAVE emits per-phase **Gate:** field (Full | Standard | Minimal)
   → Save to .code-foundations/plans/YYYY-MM-DD-<topic>.md
   → User confirms
@@ -107,8 +107,9 @@ Standard = BUILD + COMMIT. Minimal = BUILD (no discovery) + COMMIT.
 Skills are **workflow-internal** (18 carry `user-invocable: false`; `planning` additionally keeps
 `disable-model-invocation: true` so the model can't run the planning pipeline ad-hoc). They are
 hidden from the user's slash menu but ARE in the model's skill register — model-discoverable and
-invocable. Plan/build discover them (alongside external plugin skills) via the register;
-`references/skill-catalog.md` adds richer when-to-match detail for the internal 19. Build (and the
+invocable. Plan/build discover them (alongside external plugin skills) via the register — each
+skill's description carries its own when-to-match and sibling-disambiguation (the "not for X (use
+Y)" clauses), so matching is done on the descriptions directly. Build (and the
 planner's DETAIL step) load each assigned skill via the Skill tool — `Skill(code-foundations:<name>)`
 for this plugin's own, `Skill(<plugin>:<name>)` for any other plugin's — and each skill self-loads
 its checklists. A subagent doesn't inherit the register, but an explicit `Skill(...)` line in its

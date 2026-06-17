@@ -90,5 +90,5 @@ Verify the produced pseudocode and resulting routine. Checklist: `Read(${CLAUDE_
 
 | After | Next |
 |---|---|
-| Pseudocode complete | `Read(${CLAUDE_PLUGIN_ROOT}/skills/cc-routine-and-class-design/SKILL.md)` |
-| Implementation done | `Read(${CLAUDE_PLUGIN_ROOT}/skills/cc-defensive-programming/SKILL.md)` |
+| Pseudocode complete | `Skill(code-foundations:cc-routine-and-class-design)` |
+| Implementation done | `Skill(code-foundations:cc-defensive-programming)` |

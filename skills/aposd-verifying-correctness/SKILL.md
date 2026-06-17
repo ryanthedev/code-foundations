@@ -1,6 +1,6 @@
 ---
 name: aposd-verifying-correctness
-description: "Verifies implementation completeness across functional correctness, error handling, concurrency, and security dimensions using APOSD's post-implementation checklist. Run after a coding task is nominally complete."
+description: "Verifies implementation completeness across functional correctness, error handling, concurrency, and security dimensions using APOSD's post-implementation checklist. Run after a coding task is nominally complete, not during active bug investigation (use cc-debugging)."
 user-invocable: false
 ---
 

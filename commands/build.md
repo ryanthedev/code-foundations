@@ -240,8 +240,8 @@ When a BUILD or REVIEW task returns FAIL, **read `${CLAUDE_PLUGIN_ROOT}/referenc
 
 ### Load Skills
 
-1. `Read(${CLAUDE_PLUGIN_ROOT}/skills/performance-optimization/SKILL.md)` — catch obvious performance regressions (O(n²), N+1 queries, unnecessary allocations)
-2. `Read(${CLAUDE_PLUGIN_ROOT}/skills/cc-refactoring-guidance/SKILL.md)` — identify refactoring opportunities introduced during implementation
+1. `Skill(code-foundations:performance-optimization)` — catch obvious performance regressions (O(n²), N+1 queries, unnecessary allocations)
+2. `Skill(code-foundations:cc-refactoring-guidance)` — identify refactoring opportunities introduced during implementation
 
 ### Test Coverage Check
 
