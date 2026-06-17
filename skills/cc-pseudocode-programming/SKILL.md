@@ -1,7 +1,7 @@
 ---
 name: cc-pseudocode-programming
 description: "Structures routine design through pseudocode-first iteration: clarifies naming and purpose before any code, catches design flaws cheaply, and prevents compile-debug loops on poorly understood routines."
-disable-model-invocation: true
+user-invocable: false
 ---
 
 # cc-pseudocode-programming

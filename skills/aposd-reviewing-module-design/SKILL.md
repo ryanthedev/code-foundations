@@ -1,7 +1,7 @@
 ---
 name: aposd-reviewing-module-design
 description: "Assesses existing module and interface design for complexity symptoms: information leakage, shallow interfaces, pass-through layers, and unknown unknowns. Produces a structured assessment — not transformations."
-disable-model-invocation: true
+user-invocable: false
 ---
 
 # Skill: aposd-reviewing-module-design

@@ -1,6 +1,6 @@
 {
   "name": "code-foundations",
-  "version": "5.1.0",
+  "version": "5.2.0",
   "description": "19 software engineering skills from Code Complete, APOSD, GoF, and Clean Architecture. Skills are internal (slash-invocable; injected via Read() — not auto-triggered). Research → plan → build workflow with Gate-field adaptive gates (Full | Standard | Minimal) and per-phase orchestrated commits.",
   "author": {
     "name": "ryanthedev"

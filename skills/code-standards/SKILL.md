@@ -1,7 +1,7 @@
 ---
 name: code-standards
 description: "Generates or updates docs/code-standards.md by scanning the codebase for actual conventions. Produces an example-rich standards file optimized for LLM consumers, grounded in the project's real patterns."
-disable-model-invocation: true
+user-invocable: false
 ---
 
 # Skill: code-standards

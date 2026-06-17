@@ -146,8 +146,8 @@ For each phase, write only:
 
 Skills are matched HERE so DETAIL can load them while writing phase bodies — a phase body written without domain knowledge is the planner guessing.
 
-1. `Read(${CLAUDE_PLUGIN_ROOT}/references/skill-catalog.md)` — the single source of when-to-match knowledge for all 19 skills. Do NOT scan the system-reminder listing for descriptions; it no longer carries them.
-2. For each phase, compare the phase's goal against every catalog entry's when-to-match conditions (including its disambiguation notes for sibling pairs)
+1. Match against your **available-skills register** — every skill whose description is in context. That now includes the 19 internal code-foundations skills (`user-invocable: false`: model-discoverable, hidden from the slash menu) AND skills from other installed plugins (e.g. skill-craft, mcp-builder, security-guidance). Then `Read(${CLAUDE_PLUGIN_ROOT}/references/skill-catalog.md)` for the richer when-to-match detail and sibling-disambiguation notes on the internal 19. The register tells you *which* skills exist; the catalog is the tie-breaker for the internal siblings.
+2. For each phase, compare the phase's goal against every candidate skill's when-to-match conditions (register descriptions for external skills; catalog entries plus their disambiguation notes for the internal sibling pairs)
 3. Assign skills whose triggers match the phase work. Most phases match 1-3 skills.
 4. Exclude workflow commands (plan, build, debug, research, code-standards, clarify)
 5. Write `**Skills:**` on every skeleton header — `none -- [reason]` valid, omission NOT valid
@@ -201,7 +201,7 @@ For each phase task, in DAG order:
 
 > Phase N: [name]. Consumes: [upstream Produces, or "nothing -- entry phase"]. Must produce: [this phase's Produces]. Difficulty: [X].
 
-**2. Load the phase's skills** (matched at DECOMPOSE). For each skill not already loaded this conversation: `Read(${CLAUDE_PLUGIN_ROOT}/skills/<name>/SKILL.md)` + Read its checklist(s). Skills load once — later phases reuse them. Apply them while writing Constraints, Edge cases, and Done-when. If the work reveals a skill the skeleton missed, add it to the field.
+**2. Load the phase's skills** (matched at DECOMPOSE). For each skill not already loaded this conversation, invoke it with the Skill tool — `Skill(code-foundations:<name>)` for this plugin's own skills, `Skill(<plugin>:<name>)` for external ones; each self-loads its own checklists. Skills load once — later phases reuse them. Apply them while writing Constraints, Edge cases, and Done-when. If the work reveals a skill the skeleton missed, add it to the field.
 
 **3. Write the body** using the phase template below.
 
@@ -323,7 +323,7 @@ Skill presence does NOT decide the gate — every phase carries skills, so skill
 Skills were matched at DECOMPOSE and refined during DETAIL. Validate the final set:
 
 1. Every phase has `**Skills:**` populated — `none -- [reason]` valid, omission NOT valid
-2. Every skill name matches an available skill — check against `Read(${CLAUDE_PLUGIN_ROOT}/references/skill-catalog.md)` (the 19-skill roster), not the system-reminder (reject typos/nonexistent names)
+2. Every skill name matches a real available skill — an internal one (in `Read(${CLAUDE_PLUGIN_ROOT}/references/skill-catalog.md)`) or an external skill present in your available-skills register (reject typos/nonexistent names)
 3. No workflow commands (plan, build, debug, research, code-standards, clarify)
 4. Code-writing phases with `none` justify why no skill's triggers match — on any gap, re-run the DECOMPOSE matching procedure for that phase
 
@@ -398,7 +398,7 @@ Checklist:
   user-observable output exists, high-uncertainty phases early
 - Tests: test plan covers every DW item; boundary + dirty tests derived from phase Edge cases
 - Skills: every phase has Skills field (not omitted), skills match work type,
-  each skill name matches an available skill in references/skill-catalog.md (reject typos/nonexistent names),
+  each skill name matches a real available skill — internal (references/skill-catalog.md) or external (the available-skills register) (reject typos/nonexistent names),
   code-writing phases with `none` justify why no skill's triggers match
 - Gates: every phase has a Gate field populated (Full/Standard/Minimal), matching its risk
   (Full for security/auth/payment or new cross-phase seams; Minimal for docs/config-only; Standard otherwise)

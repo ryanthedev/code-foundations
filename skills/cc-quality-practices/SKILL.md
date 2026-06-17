@@ -1,7 +1,7 @@
 ---
 name: cc-quality-practices
 description: "Applies Code Complete's QA process design: selects defect-detection techniques by phase, sizes the test suite, and designs review and inspection processes. For QA planning and process design, not active bug investigation."
-disable-model-invocation: true
+user-invocable: false
 ---
 
 # cc-quality-practices

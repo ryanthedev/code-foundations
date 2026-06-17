@@ -1,7 +1,7 @@
 ---
 name: cc-refactoring-guidance
 description: "Guides safe refactoring using Code Complete's fix-first-then-refactor discipline: decides between refactor, rewrite, and fix-first; enforces separate commits; applies small-change rigor to high-error-rate one-liners."
-disable-model-invocation: true
+user-invocable: false
 ---
 
 # cc-refactoring-guidance

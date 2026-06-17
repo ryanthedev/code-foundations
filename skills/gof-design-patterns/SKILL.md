@@ -1,7 +1,7 @@
 ---
 name: gof-design-patterns
 description: "Provides all 23 Gang of Four patterns as a decision guide: maps code symptoms to patterns, then loads the structural recipe for the selected pattern."
-disable-model-invocation: true
+user-invocable: false
 ---
 
 # Skill: gof-design-patterns

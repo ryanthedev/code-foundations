@@ -1,9 +1,12 @@
 # Skill Catalog
 
-This file is the single source of when-to-match knowledge for all 19 code-foundations skills.
-The plan command's DECOMPOSE step reads this file to assign skills to phases; it does NOT use
-the system-reminder skill listing. One entry per skill: `code-foundations:<name> — <when to match>`.
-Disambiguation notes distinguish sibling pairs that share surface keywords.
+This file carries richer when-to-match detail for the 19 internal code-foundations skills than
+their one-line descriptions can. The plan/build skill-discovery steps match phase goals against
+the **available-skills register** (all skills in context — the internal 19, now `user-invocable:
+false` so model-discoverable but hidden from the slash menu, plus any external plugin skills);
+this file is the tie-breaker that disambiguates the internal sibling pairs. It is NOT the source
+of *which* skills exist — the register is. One entry per skill: `code-foundations:<name> — <when
+to match>`. Disambiguation notes distinguish sibling pairs that share surface keywords.
 
 ---
 

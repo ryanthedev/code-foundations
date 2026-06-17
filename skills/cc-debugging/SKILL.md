@@ -1,7 +1,7 @@
 ---
 name: cc-debugging
 description: "Applies Code Complete's scientific debugging method: STABILIZE → LOCATE → HYPOTHESIZE → EXPERIMENT → FIX → TEST → SEARCH. For active bug investigation, not QA process design or test coverage planning."
-disable-model-invocation: true
+user-invocable: false
 ---
 
 # cc-debugging

@@ -1,7 +1,7 @@
 ---
 name: welc-legacy-code
 description: "Safely modifies untested legacy code by getting it under test first: characterization tests, seam identification, sprout/wrap techniques, and pinch-point testing before any production changes."
-disable-model-invocation: true
+user-invocable: false
 ---
 
 # Working Effectively with Legacy Code

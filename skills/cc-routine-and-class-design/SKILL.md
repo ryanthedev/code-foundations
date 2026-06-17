@@ -1,7 +1,7 @@
 ---
 name: cc-routine-and-class-design
 description: "Applies Code Complete's routine and class design rules at the routine level: cohesion classification, parameter-count thresholds, LSP inheritance verification, and containment-vs-inheritance decision. For routine and class scope, not system architecture."
-disable-model-invocation: true
+user-invocable: false
 ---
 
 # cc-routine-and-class-design

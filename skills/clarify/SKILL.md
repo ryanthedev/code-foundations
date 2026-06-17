@@ -1,7 +1,7 @@
 ---
 name: clarify
 description: "Decomposes underspecified requests by classifying gaps (missing info, ambiguity, false premises) and generating targeted clarifying questions. Produces a confirmed problem statement before any implementation begins."
-disable-model-invocation: true
+user-invocable: false
 ---
 
 # Skill: clarify

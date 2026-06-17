@@ -1,7 +1,7 @@
 ---
 name: cc-control-flow-quality
 description: "Audits and restructures control flow using Code Complete's nesting, cyclomatic complexity, loop design, guard-clause, and boolean simplification rules. Covers deep nesting, loop exit design, index naming, and callback chains."
-disable-model-invocation: true
+user-invocable: false
 ---
 
 # cc-control-flow-quality

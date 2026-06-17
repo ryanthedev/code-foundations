@@ -1,7 +1,7 @@
 ---
 name: cc-defensive-programming
 description: "Applies Code Complete's defensive programming rules: barricade design, assertion vs error-handling selection, input validation policy, and correctness-vs-robustness strategy for the current context."
-disable-model-invocation: true
+user-invocable: false
 ---
 
 # cc-defensive-programming

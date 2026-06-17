@@ -68,11 +68,11 @@ Corrections → update and re-confirm. If the response raises new open questions
 
 **Problem statement confirmed → decompose → detail → cross-cut → save → check → present → go.** Even Quick is staged, just compressed — don't write all phase bodies in one shot.
 
-1. **Decompose (skeleton).** For each of the 1-2 phases write only: name, one-line goal, matched skills (compare the phase goal against the when-to-match entries in `Read(${CLAUDE_PLUGIN_ROOT}/references/skill-catalog.md)` — NOT the system-reminder, whose listing no longer carries descriptions; `none -- [reason]` valid; exclude workflow commands), difficulty. If there are 2 phases, add `**Depends on:**` and `**Produces:**` (what phase 1 hands phase 2). Write this skeleton to the plan file.
+1. **Decompose (skeleton).** For each of the 1-2 phases write only: name, one-line goal, matched skills (compare the phase goal against your available-skills register — the internal 19 plus any external plugin skills now in context — and use `Read(${CLAUDE_PLUGIN_ROOT}/references/skill-catalog.md)` for richer when-to-match detail on the internal siblings; `none -- [reason]` valid; exclude workflow commands), difficulty. If there are 2 phases, add `**Depends on:**` and `**Produces:**` (what phase 1 hands phase 2). Write this skeleton to the plan file.
 
 2. **Skeleton checkpoint.** If 2 phases: `AskUserQuestion` — "Does the split look right? Review it in the preview." Options "Looks right" / "Adjust", **`preview` REQUIRED on both**: the identical split as markdown (each phase's name + goal, and the Produces handoff between them). The preview is the only guaranteed-visible surface — bare labels ask the user to confirm something they cannot see. If 1 phase: skip — nothing to decompose.
 
-3. **Detail each phase**, in order, one short pass each. Start with a one-line reframe — `Phase N: [name]. Consumes: [upstream Produces, or "nothing"]. Must produce: [Produces]. Difficulty: X.` — then load the phase's matched skills if not already loaded (`Read(${CLAUDE_PLUGIN_ROOT}/skills/<name>/SKILL.md)` + its checklist `Read()`; they inform Edge cases and Done-when), and fill the body in place using this template:
+3. **Detail each phase**, in order, one short pass each. Start with a one-line reframe — `Phase N: [name]. Consumes: [upstream Produces, or "nothing"]. Must produce: [Produces]. Difficulty: X.` — then load the phase's matched skills if not already loaded (`Skill(code-foundations:<name>)` for this plugin's own, `Skill(<plugin>:<name>)` for external ones — each self-loads its checklists; they inform Edge cases and Done-when), and fill the body in place using this template:
 
    ```markdown
    ### Phase N: [Name]

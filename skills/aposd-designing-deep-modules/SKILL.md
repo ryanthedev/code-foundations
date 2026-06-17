@@ -1,7 +1,7 @@
 ---
 name: aposd-designing-deep-modules
 description: "Guides module and API design using APOSD principles: generates multiple design alternatives, compares them on information hiding and interface depth, and produces a documented design decision."
-disable-model-invocation: true
+user-invocable: false
 ---
 
 # Skill: aposd-designing-deep-modules

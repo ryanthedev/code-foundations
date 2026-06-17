@@ -63,7 +63,7 @@ Three-stage pattern for feature development:
   → Problem statement confirmed (shared step, all tracks)
   → [Quick: plan → check → present]
   → [Standard/Full: classify → explore → detail → save → check → confirm]
-  → DECOMPOSE reads references/skill-catalog.md to match skills per phase
+  → DECOMPOSE matches skills per phase against the available-skills register (internal + external), using references/skill-catalog.md for richer internal when-to-match detail
   → SAVE emits per-phase **Gate:** field (Full | Standard | Minimal)
   → Save to .code-foundations/plans/YYYY-MM-DD-<topic>.md
   → User confirms
@@ -89,8 +89,9 @@ Three-stage pattern for feature development:
 **Quality Gates (per phase during /code-foundations:build):**
 ```
 BUILD:   baseline discipline (DW→test traceability, stub → implement → validate, anchoring, scope clamp)
-         Skills listed in the phase are Read()-injected into the BUILD agent prompt — not
-         auto-triggered. The agent reads SKILL.md content directly via Read() calls.
+         Skills listed in the phase are invoked via the Skill tool in the BUILD agent's
+         dispatch prompt (Skill(code-foundations:<name>) / Skill(<plugin>:<name>)); each
+         skill self-loads its own checklists.
          (discovery + design → implementation: stub → implement → validate, in one agent)
 REVIEW:  debiased review protocol (execute-first, per-DW evidence + trace, anti-overcorrection)
          (Full gate only — standard/minimal use tests as the gate;
@@ -103,10 +104,15 @@ When absent, build falls back to risk rules: security/auth/payment → Full; mul
 seams → Full; docs/config-only → Minimal; else Standard. Full = BUILD + REVIEW + COMMIT.
 Standard = BUILD + COMMIT. Minimal = BUILD (no discovery) + COMMIT.
 
-Skills are **internal** (all 19 carry `disable-model-invocation: true`): they do not appear in
-the model's skill listing and cannot be auto-triggered. They are slash-invocable by users and
-injected into agent prompts via `Read(${CLAUDE_PLUGIN_ROOT}/skills/<name>/SKILL.md)` calls.
-Plan DECOMPOSE matches skills per phase by reading `references/skill-catalog.md`.
+Skills are **workflow-internal** (18 carry `user-invocable: false`; `planning` additionally keeps
+`disable-model-invocation: true` so the model can't run the planning pipeline ad-hoc). They are
+hidden from the user's slash menu but ARE in the model's skill register — model-discoverable and
+invocable. Plan/build discover them (alongside external plugin skills) via the register;
+`references/skill-catalog.md` adds richer when-to-match detail for the internal 19. Build (and the
+planner's DETAIL step) load each assigned skill via the Skill tool — `Skill(code-foundations:<name>)`
+for this plugin's own, `Skill(<plugin>:<name>)` for any other plugin's — and each skill self-loads
+its checklists. A subagent doesn't inherit the register, but an explicit `Skill(...)` line in its
+dispatch prompt invokes the skill regardless.
 
 The REVIEW dispatch is deliberately stripped of intent-framing (no plan context, no progress
 narrative, no discovery file) — the reviewer is an independent critic.

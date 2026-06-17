@@ -1,7 +1,7 @@
 ---
 name: aposd-simplifying-complexity
 description: "Transforms complex code by applying APOSD's pull-complexity-downward principle: resolves error hierarchies, collapses configuration, and moves caller-side logic into modules. Produces edited code, not just assessment."
-disable-model-invocation: true
+user-invocable: false
 ---
 
 # Skill: aposd-simplifying-complexity

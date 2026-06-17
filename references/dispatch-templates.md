@@ -19,7 +19,7 @@ Keeping these here instead of inline in `build.md`:
 **Substitution rules (orchestrator):**
 - `[bracketed]` placeholders → phase-specific values. Each placeholder names its source (plan section, agent report, project config); conditional blocks (`[if plan phase has ...]`) are emitted only when the condition holds, with items pasted verbatim.
 - `${CLAUDE_PLUGIN_ROOT}` → the absolute plugin root. This file is read at runtime, so the variable is NOT auto-substituted — replace it with the real path (you know it: it's the directory you read this template from, minus `/references/dispatch-templates.md`).
-- `## Additional Skills` blocks: for EACH skill assigned to the phase, emit a `Read(${CLAUDE_PLUGIN_ROOT}/skills/<name>/SKILL.md)` line, then one `Read()` line per checklist file (paths resolved once during SETUP's Skill Resolution — a skill resolves to its single `checklists.md`, every `.md` under its `checklists/` directory, or nothing; skills with no checklist files get only their SKILL.md `Read()` line). Skills load via `Read()` of their SKILL.md, never the Skill tool — Skill-tool invocation is model invocation, which is disabled plugin-wide. Never emit a bare "load the skill" instruction when checklist files exist for that skill.
+- `## Additional Skills` blocks: for EACH skill assigned to the phase, emit one `Skill(<plugin:name>)` line — this plugin's own skills as `Skill(code-foundations:<name>)`, skills from other installed plugins as `Skill(<plugin>:<name>)`. All assigned skills are real, model-invocable skills; the build subagent invokes them via the Skill tool (an explicit `Skill(...)` line in the dispatch prompt invokes the skill even though subagents don't inherit the register). The Skill tool loads the SKILL.md body, and each skill self-loads its own checklists via `${CLAUDE_SKILL_DIR}` once invoked — so emit NO separate checklist `Read()` lines. Do not Read-inject SKILL.md text; that was the old workaround for non-invocable skills.
 - **Skills propagate BUILD → REVIEW:** if the BUILD agent's `### Skills Loaded` output reports skills beyond the plan's assignment, add those (with their checklist Read() lines) to the REVIEW dispatch's `## Additional Skills` block too. The reviewer needs the same skill context to verify against.
 - Test/typecheck/lint command placeholders → resolve from project config (package.json scripts, Makefile, Cargo.toml, etc.) — exact runnable commands, not descriptions.
 
@@ -64,10 +64,9 @@ Agent tool:
 
     [if plan phase has **Skills:** field, include:]
     ## Additional Skills
-    Execute EVERY Read() line below, in order, BEFORE starting work:
-    - Read(${CLAUDE_PLUGIN_ROOT}/skills/[skill-from-plan]/SKILL.md)
-    - Read([resolved checklist path for that skill])
-    [repeat the SKILL.md + checklist Read() lines for each assigned skill]
+    Invoke EVERY Skill() below, in order, BEFORE starting work:
+    - Skill([plugin:name from plan -- this plugin's own skills as code-foundations:<name>])
+    [repeat the Skill() line for each assigned skill; each self-loads its own checklists]
 
     [if plan has Assumptions with "Verify Before Phase: N", include:]
     ## Assumption Verification
@@ -110,10 +109,9 @@ Agent tool:
 
     [if plan phase has **Skills:** field, include:]
     ## Additional Skills
-    Execute EVERY Read() line below, in order, BEFORE starting work:
-    - Read(${CLAUDE_PLUGIN_ROOT}/skills/[skill-from-plan]/SKILL.md)
-    - Read([resolved checklist path for that skill])
-    [repeat the SKILL.md + checklist Read() lines for each assigned skill]
+    Invoke EVERY Skill() below, in order, BEFORE starting work:
+    - Skill([plugin:name from plan -- this plugin's own skills as code-foundations:<name>])
+    [repeat the Skill() line for each assigned skill; each self-loads its own checklists]
 
     ## Phase N: [name]
     [paste the full phase description from the plan]
@@ -194,10 +192,9 @@ Agent tool:
 
     [if plan phase has **Skills:** field OR BUILD agent reported additional skills, include:]
     ## Additional Skills
-    Execute EVERY Read() line below BEFORE reviewing:
-    - Read(${CLAUDE_PLUGIN_ROOT}/skills/[skill-from-plan]/SKILL.md)
-    - Read([resolved checklist path for that skill])
-    [repeat for each skill; also include skills from BUILD's "Skills Loaded" output not already listed]
+    Invoke EVERY Skill() below BEFORE reviewing:
+    - Skill([plugin:name from plan -- this plugin's own skills as code-foundations:<name>])
+    [repeat the Skill() line for each skill; also include skills from BUILD's "Skills Loaded" output not already listed]
 
     ## Output
     Write review to: [review path — `.code-foundations/build/<plan-name>-phase-N-review.md`,
