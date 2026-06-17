@@ -9,7 +9,7 @@ Production down or a bug to chase? First two minutes: (1) can you reproduce it �
 
 For the full method — the STABILIZE → LOCATE → HYPOTHESIZE → EXPERIMENT → FIX → TEST → SEARCH steps, their gate preconditions (run the failing repro before editing; search for sibling defects before declaring done), the common-defect quick check, and the checklists:
 
-`Read(${CLAUDE_PLUGIN_ROOT}/skills/cc-debugging/SKILL.md)`
+`Skill(code-foundations:cc-debugging)`
 
 Before forming a hypothesis, check whether this bug or its pattern has been fixed before in this codebase: `Read(${CLAUDE_PLUGIN_ROOT}/references/pattern-reuse-gate.md)`.
 

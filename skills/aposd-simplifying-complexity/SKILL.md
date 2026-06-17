@@ -1,7 +1,7 @@
 ---
 name: aposd-simplifying-complexity
 description: "Transforms complex code by applying APOSD's pull-complexity-downward principle: resolves error hierarchies, collapses configuration, and moves caller-side logic into modules. Produces edited code, not just assessment."
-disable-model-invocation: true
+user-invocable: false
 ---
 
 # Skill: aposd-simplifying-complexity
@@ -200,4 +200,4 @@ Detailed checklists: `Read(${CLAUDE_SKILL_DIR}/checklists.md)`
 
 | After | Next |
 |-------|------|
-| Simplification done | `Read(${CLAUDE_PLUGIN_ROOT}/skills/aposd-verifying-correctness/SKILL.md)` — verify interface simplified |
+| Simplification done | `Skill(code-foundations:aposd-verifying-correctness)` — verify interface simplified |

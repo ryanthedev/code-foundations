@@ -1,7 +1,7 @@
 ---
 name: performance-optimization
 description: "Applies measure-first performance optimization: profiles to find hot spots, applies algorithm and data-structure improvements before micro-optimizations, and validates each change prevents regression."
-disable-model-invocation: true
+user-invocable: false
 ---
 
 # Skill: performance-optimization

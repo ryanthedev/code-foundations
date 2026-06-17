@@ -1,7 +1,7 @@
 ---
 name: cc-routine-and-class-design
-description: "Applies Code Complete's routine and class design rules at the routine level: cohesion classification, parameter-count thresholds, LSP inheritance verification, and containment-vs-inheritance decision. For routine and class scope, not system architecture."
-disable-model-invocation: true
+description: "Applies Code Complete's routine and class design rules at the routine level: cohesion classification, parameter-count thresholds, LSP inheritance verification, and containment-vs-inheritance decision. For routine and class scope, not system architecture (use ca-architecture-boundaries)."
+user-invocable: false
 ---
 
 # cc-routine-and-class-design
@@ -131,4 +131,4 @@ This is maintenance data, not shipping data: the gap appears during modification
 
 | After | Next |
 |---|---|
-| Design verified | `Read(${CLAUDE_PLUGIN_ROOT}/skills/cc-defensive-programming/SKILL.md)` |
+| Design verified | `Skill(code-foundations:cc-defensive-programming)` |

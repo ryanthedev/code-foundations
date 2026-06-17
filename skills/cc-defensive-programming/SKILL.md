@@ -1,7 +1,7 @@
 ---
 name: cc-defensive-programming
 description: "Applies Code Complete's defensive programming rules: barricade design, assertion vs error-handling selection, input validation policy, and correctness-vs-robustness strategy for the current context."
-disable-model-invocation: true
+user-invocable: false
 ---
 
 # cc-defensive-programming
@@ -119,4 +119,4 @@ Make errors loud during development so they're found early; make them unobtrusiv
 
 | After | Next |
 |---|---|
-| Validation complete | `Read(${CLAUDE_PLUGIN_ROOT}/skills/cc-control-flow-quality/SKILL.md)` |
+| Validation complete | `Skill(code-foundations:cc-control-flow-quality)` |

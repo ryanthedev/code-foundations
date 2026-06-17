@@ -1,7 +1,7 @@
 ---
 name: aposd-designing-deep-modules
-description: "Guides module and API design using APOSD principles: generates multiple design alternatives, compares them on information hiding and interface depth, and produces a documented design decision."
-disable-model-invocation: true
+description: "Guides module and API design using APOSD principles: generates multiple design alternatives, compares them on information hiding and interface depth, and produces a documented design decision. For creating new module/API design; not for assessing existing designs (use aposd-reviewing-module-design) or routine-level design (use cc-routine-and-class-design)."
+user-invocable: false
 ---
 
 # Skill: aposd-designing-deep-modules
@@ -135,4 +135,4 @@ Rationale: [Why this wins, what's sacrificed]
 
 | After | Next |
 |-------|------|
-| Design chosen | `Read(${CLAUDE_PLUGIN_ROOT}/skills/cc-pseudocode-programming/SKILL.md)` |
+| Design chosen | `Skill(code-foundations:cc-pseudocode-programming)` |

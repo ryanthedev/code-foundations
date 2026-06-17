@@ -1,14 +1,14 @@
 ---
 name: cc-quality-practices
-description: "Applies Code Complete's QA process design: selects defect-detection techniques by phase, sizes the test suite, and designs review and inspection processes. For QA planning and process design, not active bug investigation."
-disable-model-invocation: true
+description: "Applies Code Complete's QA process design: selects defect-detection techniques by phase, sizes the test suite, and designs review and inspection processes. For QA planning and process design, not active bug investigation (use cc-debugging)."
+user-invocable: false
 ---
 
 # cc-quality-practices
 
 Improving quality reduces development cost. No single defect-detection technique exceeds ~75% effectiveness, so combine techniques — combining nearly doubles detection rates. Mature suites run about 5 dirty tests (error paths, bad data, edge cases) for every 1 clean test (happy path).
 
-For active bug diagnosis (an actual failing test or repro to chase down), hand off: `Read(${CLAUDE_PLUGIN_ROOT}/skills/cc-debugging/SKILL.md)`. This skill is for QA planning and process design.
+For active bug diagnosis (an actual failing test or repro to chase down), hand off: `Skill(code-foundations:cc-debugging)`. This skill is for QA planning and process design.
 
 Shared CC vocabulary and thresholds (cohesion spectrum, coupling, key metrics): `Read(${CLAUDE_PLUGIN_ROOT}/references/cc-foundations.md)`.
 
@@ -77,6 +77,6 @@ Inspection roles and meeting mechanics apply when designing a review process for
 
 | After | Next |
 |---|---|
-| Defect to fix found | `Read(${CLAUDE_PLUGIN_ROOT}/skills/cc-refactoring-guidance/SKILL.md)` |
-| Design issues found | `Read(${CLAUDE_PLUGIN_ROOT}/skills/cc-routine-and-class-design/SKILL.md)` |
-| Active bug to diagnose | `Read(${CLAUDE_PLUGIN_ROOT}/skills/cc-debugging/SKILL.md)` |
+| Defect to fix found | `Skill(code-foundations:cc-refactoring-guidance)` |
+| Design issues found | `Skill(code-foundations:cc-routine-and-class-design)` |
+| Active bug to diagnose | `Skill(code-foundations:cc-debugging)` |

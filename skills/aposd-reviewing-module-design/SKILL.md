@@ -1,7 +1,7 @@
 ---
 name: aposd-reviewing-module-design
-description: "Assesses existing module and interface design for complexity symptoms: information leakage, shallow interfaces, pass-through layers, and unknown unknowns. Produces a structured assessment — not transformations."
-disable-model-invocation: true
+description: "Assesses existing module and interface design for complexity symptoms: information leakage, shallow interfaces, pass-through layers, and unknown unknowns. Produces a structured assessment — not transformations (use aposd-simplifying-complexity to edit) and not new-design generation (use aposd-designing-deep-modules)."
+user-invocable: false
 ---
 
 # Skill: aposd-reviewing-module-design
@@ -174,6 +174,6 @@ Detailed per-dimension checklists: `Read(${CLAUDE_SKILL_DIR}/checklists.md)`
 
 | After | Next |
 |-------|------|
-| Issues found, transformation needed | `Read(${CLAUDE_PLUGIN_ROOT}/skills/aposd-simplifying-complexity/SKILL.md)` (transformation vs assessment) |
+| Issues found, transformation needed | `Skill(code-foundations:aposd-simplifying-complexity)` (transformation vs assessment) |
 | Issues found, plan needed | Flag for /code-foundations:plan |
 | No issues | Done |

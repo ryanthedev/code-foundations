@@ -66,23 +66,18 @@ Set in the plan file: `**Status:** in-progress`, `**Started:** YYYY-MM-DD HH:MM`
 
 ### Skill Resolution (One-Time Task)
 
-Before creating phase tasks, resolve skills for all phases. Skills do NOT affect gate policy — every phase carries at least one skill, so skill presence cannot discriminate gate level (gate is keyed off the plan's `**Gate:**` field or risk fallback). Resolving skills first still matters: dispatch prompts need the resolved checklist paths.
+Before creating phase tasks, resolve skills for all phases. Skills do NOT affect gate policy — every phase carries at least one skill, so skill presence cannot discriminate gate level (gate is keyed off the plan's `**Gate:**` field or risk fallback). Resolving skills first still matters: every phase needs a validated, invocable skill set before dispatch.
 
 1. `TaskCreate(subject: "SETUP: Skill Resolution", description: "Validate and resolve skill assignments for all phases.")`
-2. Scan system-reminder for all available skills — read every skill's description and trigger conditions. Exclude workflow commands (plan, build, debug, research, code-standards, clarify).
+2. Scan your available-skills register — every skill in context: the internal code-foundations skills (now `user-invocable: false`, so model-discoverable) plus any external plugin skills. Read each candidate's description and trigger conditions. Exclude workflow commands (plan, build, debug, research, code-standards, clarify).
 3. For each phase, check the plan's `**Skills:**` field:
-   - **Specific skills listed** → validate each exists in available skills. If a skill name doesn't match any available skill, STOP and ask the user before proceeding.
+   - **Specific skills listed** → validate each is a real available skill (internal or external). If a name doesn't match any available skill, STOP and ask the user before proceeding.
    - **`none -- [reason]`** → compare phase goal and scope against every available skill's description. If a skill's triggers match the phase work, add it. Every phase MUST have at least one skill — skills exist for code, documentation, design, and more.
    - **Field missing** → flag as plan defect. Add skills by matching phase goal/scope against available skill descriptions.
-4. **Resolve checklist paths** for every assigned skill in one pass — use `find`, NOT shell globs (zsh aborts the whole command on an unmatched glob):
-   ```bash
-   find ${CLAUDE_PLUGIN_ROOT}/skills/<name-1> ${CLAUDE_PLUGIN_ROOT}/skills/<name-2> ... \( -name 'checklists.md' -o -path '*/checklists/*.md' \)
-   ```
-   A skill resolves to its single `checklists.md`, every `.md` under its `checklists/` directory, or nothing — some skills have no checklist files; those get only their SKILL.md `Read()` line in dispatch prompts. Record the resolved path(s) per skill — dispatch prompts emit them as explicit `Read()` lines.
-5. Update the plan file's `**Skills:**` fields with resolved assignments.
-6. `TaskUpdate(status: "completed")`
+4. Update the plan file's `**Skills:**` fields with the validated set, each recorded by its **invocable name**: internal skills may stay bare (`cc-debugging`) or qualified (`code-foundations:cc-debugging`); external skills MUST keep their plugin prefix (`oberskills:skill-craft`). Dispatch emits one `Skill(<plugin:name>)` per skill (bare internal names get the `code-foundations:` prefix), and each skill self-loads its own checklists when invoked — so there are no checklist paths to resolve here.
+5. `TaskUpdate(status: "completed")`
 
-**CRITICAL: Re-read the plan file after Skill Resolution completes.** The plan was modified in step 5. All subsequent steps (gate policy detection, phase task creation, dispatch) MUST use the updated plan state — not the version from LOAD.
+**CRITICAL: Re-read the plan file after Skill Resolution completes.** The plan was modified in step 4. All subsequent steps (gate policy detection, phase task creation, dispatch) MUST use the updated plan state — not the version from LOAD.
 
 ### Model Resolution
 
@@ -245,8 +240,8 @@ When a BUILD or REVIEW task returns FAIL, **read `${CLAUDE_PLUGIN_ROOT}/referenc
 
 ### Load Skills
 
-1. `Read(${CLAUDE_PLUGIN_ROOT}/skills/performance-optimization/SKILL.md)` — catch obvious performance regressions (O(n²), N+1 queries, unnecessary allocations)
-2. `Read(${CLAUDE_PLUGIN_ROOT}/skills/cc-refactoring-guidance/SKILL.md)` — identify refactoring opportunities introduced during implementation
+1. `Skill(code-foundations:performance-optimization)` — catch obvious performance regressions (O(n²), N+1 queries, unnecessary allocations)
+2. `Skill(code-foundations:cc-refactoring-guidance)` — identify refactoring opportunities introduced during implementation
 
 ### Test Coverage Check
 

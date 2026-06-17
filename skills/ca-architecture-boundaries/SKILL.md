@@ -1,7 +1,7 @@
 ---
 name: ca-architecture-boundaries
-description: "Applies Clean Architecture's dependency-direction and SRP-by-actor rules to system-level boundary design: separates business logic from infrastructure, identifies actor-coupling risks, and enforces inward-pointing dependency arrows."
-disable-model-invocation: true
+description: "Applies Clean Architecture's dependency-direction and SRP-by-actor rules to system-level boundary design: separates business logic from infrastructure, identifies actor-coupling risks, and enforces inward-pointing dependency arrows. For system scope (multiple components, layers, or services), not routine or module scope (use cc-routine-and-class-design)."
+user-invocable: false
 ---
 
 # Architecture Boundaries (Clean Architecture)

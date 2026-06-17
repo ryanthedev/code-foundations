@@ -1,7 +1,7 @@
 ---
 name: code-clarity-and-docs
 description: "Audits and improves code clarity and documentation using APOSD's obviousness rules: naming quality, comment accuracy, AI-facing doc completeness, and the comments-first workflow for new code."
-disable-model-invocation: true
+user-invocable: false
 ---
 
 # Code Clarity and Documentation

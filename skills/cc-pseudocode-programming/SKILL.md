@@ -1,7 +1,7 @@
 ---
 name: cc-pseudocode-programming
 description: "Structures routine design through pseudocode-first iteration: clarifies naming and purpose before any code, catches design flaws cheaply, and prevents compile-debug loops on poorly understood routines."
-disable-model-invocation: true
+user-invocable: false
 ---
 
 # cc-pseudocode-programming
@@ -90,5 +90,5 @@ Verify the produced pseudocode and resulting routine. Checklist: `Read(${CLAUDE_
 
 | After | Next |
 |---|---|
-| Pseudocode complete | `Read(${CLAUDE_PLUGIN_ROOT}/skills/cc-routine-and-class-design/SKILL.md)` |
-| Implementation done | `Read(${CLAUDE_PLUGIN_ROOT}/skills/cc-defensive-programming/SKILL.md)` |
+| Pseudocode complete | `Skill(code-foundations:cc-routine-and-class-design)` |
+| Implementation done | `Skill(code-foundations:cc-defensive-programming)` |

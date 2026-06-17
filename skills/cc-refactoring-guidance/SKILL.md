@@ -1,7 +1,7 @@
 ---
 name: cc-refactoring-guidance
 description: "Guides safe refactoring using Code Complete's fix-first-then-refactor discipline: decides between refactor, rewrite, and fix-first; enforces separate commits; applies small-change rigor to high-error-rate one-liners."
-disable-model-invocation: true
+user-invocable: false
 ---
 
 # cc-refactoring-guidance
@@ -63,7 +63,7 @@ When production is down: fix only — no refactoring or cleanup — deploy, then
 If tests fail after a refactoring: don't debug extensively — back out the change, take a smaller step, and reconsider whether you understood the code.
 
 **When prerequisites are missing:**
-- No automated tests → `Read(${CLAUDE_PLUGIN_ROOT}/skills/welc-legacy-code/SKILL.md)` and write characterization tests first; if impossible, document expected behavior, write a manual test script, and increase review rigor.
+- No automated tests → `Skill(code-foundations:welc-legacy-code)` and write characterization tests first; if impossible, document expected behavior, write a manual test script, and increase review rigor.
 - No version control → back up files before starting; set up VCS first if at all possible.
 - No reviewer → systematic checklist-based self-review, smaller changes, more commits and tests to compensate.
 
@@ -87,6 +87,6 @@ Fixing a violation post-commit still costs less than the bugs it would otherwise
 
 | After | Next |
 |---|---|
-| Refactoring complete | `Read(${CLAUDE_PLUGIN_ROOT}/skills/cc-control-flow-quality/SKILL.md)` |
-| Structure changed | `Read(${CLAUDE_PLUGIN_ROOT}/skills/cc-routine-and-class-design/SKILL.md)` |
-| Reviewing a refactoring | `Read(${CLAUDE_PLUGIN_ROOT}/skills/aposd-reviewing-module-design/SKILL.md)` |
+| Refactoring complete | `Skill(code-foundations:cc-control-flow-quality)` |
+| Structure changed | `Skill(code-foundations:cc-routine-and-class-design)` |
+| Reviewing a refactoring | `Skill(code-foundations:aposd-reviewing-module-design)` |
