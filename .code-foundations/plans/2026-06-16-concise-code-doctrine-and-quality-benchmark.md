@@ -1,9 +1,10 @@
 # Plan: Concise-Code Doctrine + Quality Benchmark (full-build A/B)
 
 **Created:** 2026-06-16
-**Status:** in-progress (harness Phases 1-5 complete + committed; Phase 6 GATED on the detached matrix verdict)
+**Status:** complete
 **Started:** 2026-06-16
-**Current Phase:** 6 — blocked pending `benchmarks/concise-doctrine/REPORT.md` from the detached full-matrix run
+**Completed:** 2026-06-17
+**Current Phase:** 6/6 done — doctrine landed on a verified GO
 **Complexity:** complex
 
 ---
@@ -341,3 +342,15 @@ Summary: Built `run_matrix.py` — detached-safe, idempotent orchestrator for th
 ### Phase 5 — live A/B slice validation + rubric-plumbing fix
 - A real 2-build slice (`01-duration` × {baseline,concise} × sonnet × 1) ran end-to-end (both `ok`; baseline $0.94 / concise $1.06): runner → scorers → guardrail → `REPORT.md` + `VERDICT` all produced correctly. Pipeline validated on live data. Sample kept at `benchmarks/concise-doctrine/REPORT.slice-sample.md`. Slice numbers (N=1, trivial task, NOT a real verdict): loc 19=19, cc 4=4, fn_len +1, mutation 1.0=1.0, correctness 6/6=6/6 → `NO-GO` (no conciseness headroom on a tiny task; rubric absent).
 - **Defect surfaced & fixed:** `run_matrix.py` never passed `run_rubric=True` to `score_one_run`, so the rubric judge (the verdict rule's readability half) was never invoked in a matrix run. Fixed: added `--rubric` flag + `MatrixSpec.run_rubric`, threaded into both call sites + injectable `judge_fn`; 10 new tests (199 total pass). **The full matrix MUST be run with `--rubric` for a rule-valid verdict.** Bulk `results/` is gitignored.
+
+### FULL MATRIX RESULT (detached run, 2026-06-17) — VERDICT: GO
+- Ran the full 120-cell matrix with `--rubric`: 2 arms × 6 tasks × {sonnet,opus} × 5. Completed in ~9h, **$171.60 build cost** (subscription usage, per owner). 119/120 ok; 1 anomalous early-exit (`04-password/concise/opus/run-4`, 6-turn `stop_sequence`, no output) → that cell-group still had 4/5 good runs; medians unaffected.
+- **Medians:** LOC sonnet 27→**19** (−8), opus 32→**22** (−10); fn_len_max sonnet 15→**9**; cc opus 5→**4**. **Correctness (hidden_dw) = 1.000 across ALL 120 runs, both arms** (verified on raw CSV, not just the `—` median). Mutation tied (~0.98). Rubric 0.92→0.925 (equal-or-better). Off-spec-edge robustness dipped ~1-2pp for concise (0.90→0.88) — within the 0.05 noise band, not a regression.
+- Guardrail PASS. `VERDICT: GO` — concise doctrine reduces code ~30% at zero correctness/mutation cost and equal-or-better readability. Evidence committed: `REPORT.full-run.md`, `RESULTS.full-run.csv`.
+
+### Phase 6: Conditional integration into build-agent.md (Gate: Full)
+- [x] BUILD: landed the validated concise paragraph into `agents/build-agent.md`
+- [x] REVIEW: PASS (haiku) — only-additive, byte-aligned with the validated concise arm, all 4 existing Baseline Discipline rules intact, no aposd, implementation-only scoping
+- [x] Committed
+Commit: (see git log)
+Summary: On the verified GO, inserted the `### Concise Implementation` subsection under `Baseline Discipline (always on)` + a one-line built-in/concise check in Phase 1, byte-identical to the benchmarked `concise` arm. Production build agent now carries the doctrine the benchmark proved out. Optional follow-up: backfill the 1 failed run for a cosmetic 30/30 (verdict unaffected).
