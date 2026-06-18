@@ -2,7 +2,7 @@
 
 **AI that codes like a senior engineer.** Checklists, quality gates, and verification built into every workflow.
 
-> **Experimental** - This plugin is under active development. We are fine-tuning subagent orchestration to ensure reliable skill loading and phase execution. We will add GitHub releases once the plugin stabilizes.
+> **Active development** - Installed via the marketplace below (currently v5.3.0); no tagged GitHub releases yet. The build workflow and skills are benchmark-validated, but subagent orchestration is still being tuned — expect changes.
 
 ---
 
@@ -74,7 +74,7 @@ User: "/code-foundations:plan add user notifications"
   └─ Handoff to /code-foundations:build
 ```
 
-**Skills loaded:** `aposd-designing-deep-modules`, `aposd-reviewing-module-design`
+**Skills loaded:** `ca-architecture-boundaries` (system-level boundaries, for shaping approaches and phase seams). Module-level design skills (`aposd-designing-deep-modules`, etc.) are matched per phase and loaded during DETAIL, not here.
 
 **Task tracking:** Creates progress tasks at startup so you can see where plan is in its flow.
 

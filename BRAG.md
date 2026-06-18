@@ -1,6 +1,6 @@
 # code-foundations
 
-**A 42,000-line knowledge system that teaches AI agents how to write software like a senior engineer — then verifies they did.**
+**A ~18,000-line knowledge system that teaches AI agents how to write software like a senior engineer — then verifies they did.**
 
 ## The Problem
 
