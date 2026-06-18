@@ -1,0 +1,44 @@
+{
+  "01-duration": {
+    "kind": "greenfield",
+    "impl": "duration.py",
+    "tests": "test_duration.py",
+    "hidden": "tasks/01-duration/hidden/test_hidden.py",
+    "plan": "tasks/01-duration/plan.md"
+  },
+  "02-rpn": {
+    "kind": "greenfield",
+    "impl": "rpn.py",
+    "tests": "test_rpn.py",
+    "hidden": "tasks/02-rpn/hidden/test_hidden.py",
+    "plan": "tasks/02-rpn/plan.md"
+  },
+  "03-inventory": {
+    "kind": "modify",
+    "impl": "inventory.py",
+    "tests": "test_inventory.py",
+    "hidden": "tasks/03-inventory/hidden/test_hidden.py",
+    "plan": "tasks/03-inventory/plan.md"
+  },
+  "04-password": {
+    "kind": "modify",
+    "impl": "password.py",
+    "tests": "test_password.py",
+    "hidden": "tasks/04-password/hidden/test_hidden.py",
+    "plan": "tasks/04-password/plan.md"
+  },
+  "05-rate-limiter": {
+    "kind": "greenfield",
+    "impl": "rate_limiter.py",
+    "tests": "test_rate_limiter.py",
+    "hidden": "tasks/05-rate-limiter/hidden/test_hidden.py",
+    "plan": "tasks/05-rate-limiter/plan.md"
+  },
+  "06-csv-stats": {
+    "kind": "greenfield",
+    "impl": "csv_stats.py",
+    "tests": "test_csv_stats.py",
+    "hidden": "tasks/06-csv-stats/hidden/test_hidden.py",
+    "plan": "tasks/06-csv-stats/plan.md"
+  }
+}

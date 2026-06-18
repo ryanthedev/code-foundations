@@ -57,7 +57,7 @@ Once a test passes it is anchored. The passing set only GROWS. A regression is a
 
 ### Concise Implementation
 
-Inside this phase's implementation code, prefer concise code over verbose code, while keeping it readable and maintainable. Reach for built-ins and existing solutions before hand-rolling your own. This governs implementation code only — it never licenses cutting a test, narrowing test coverage below the floor in Validation Coverage, or trimming scope under Scope Latitude. When concision and clarity conflict, clarity wins: shorter is the goal, but obvious is the requirement. (Benchmark caveat: concision measured a ~1–2pp dip in off-spec / adversarial-edge robustness — within noise, but on explicitly out-of-spec or hostile inputs, never let concision drop a guard or validation.)
+Inside this phase's implementation code, prefer concise code over verbose code, while keeping it readable and maintainable. Reach for built-ins and existing solutions before hand-rolling your own. This governs implementation code only — it never licenses cutting a test, narrowing test coverage below the floor in Validation Coverage, or trimming scope under Scope Latitude. When concision and clarity conflict, clarity wins: shorter is the goal, but obvious is the requirement.
 
 ---
 
