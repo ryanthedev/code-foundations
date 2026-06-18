@@ -256,6 +256,7 @@ def test_DW_3_4_concurrent_runs_no_collision(tmp_path):
     """Two threads provision different arms at once; neither sees the other's state."""
     results = {}
     errors = []
+    real_before = REAL_AGENT_FILE.read_text()  # live agent file must never be mutated by sandboxing
 
     def provision(arm, run):
         try:
@@ -273,8 +274,9 @@ def test_DW_3_4_concurrent_runs_no_collision(tmp_path):
     assert results["baseline"][0] != results["concise"][0]   # disjoint sandboxes
     assert results["baseline"][1] is False                   # baseline: no marker
     assert results["concise"][1] is True                     # concise: marker
-    # and the real file is still pristine
-    assert CONCISE_MARKER not in REAL_AGENT_FILE.read_text() or True  # baseline has none
+    # the live agent file is untouched by sandbox provisioning -- it legitimately
+    # contains the landed doctrine now, so verify it was not MUTATED (not that the marker is absent)
+    assert REAL_AGENT_FILE.read_text() == real_before
 
 
 # --------------------------------------------------------------------------- #
