@@ -24,7 +24,7 @@ Code-foundations is a Claude Code plugin providing software engineering skills b
 - `commands/` - User-invocable commands (slash commands)
 - `agents/` - Agent templates (build-agent, post-gate-agent)
 - `references/` - Shared reference materials (cc-foundations.md, dispatch-templates.md, etc.)
-- `docs/` - Case study examples
+- `docs/` - `code-standards.md` (this repo's own authoring standards, consumed by the code-standards skill)
 
 ### Development Workflows
 
