@@ -74,7 +74,7 @@ Three-stage pattern for feature development:
   → Feature branch required
   → Execute phases with quality gates
   → Model assigned per phase in plan (sonnet/opus)
-  → Per-phase commits after REVIEW passes (or BUILD completes for standard/minimal gate)
+  → Per-phase commits after REVIEW passes (or BUILD completes for minimal gate)
   → Final verification + report
 ```
 
@@ -94,15 +94,17 @@ BUILD:   baseline discipline (DW→test traceability, stub → implement → val
          skill self-loads its own checklists.
          (discovery + design → implementation: stub → implement → validate, in one agent)
 REVIEW:  debiased review protocol (execute-first, per-DW evidence + trace, anti-overcorrection)
-         (Full gate only — standard/minimal use tests as the gate;
-          Security-sensitive phases get 3-sample majority-vote REVIEW)
+         (Full and Standard gates — only Minimal skips REVIEW and rides on tests;
+          Full adds catch-up anchoring; security-sensitive phases get 3-sample majority-vote REVIEW)
 COMMIT:  Orchestrator commits directly after gates pass
 ```
 
 **Gate policy:** each phase in the plan carries a `**Gate:**` field (Full | Standard | Minimal).
 When absent, build falls back to risk rules: security/auth/payment → Full; multi-file with new
-seams → Full; docs/config-only → Minimal; else Standard. Full = BUILD + REVIEW + COMMIT.
-Standard = BUILD + COMMIT. Minimal = BUILD (no discovery) + COMMIT.
+seams → Full; docs/config-only → Minimal; else Standard. Full = BUILD + REVIEW + COMMIT
+(heavyweight: catch-up anchoring, home of security 3-sample). Standard = BUILD + REVIEW
+(single-sample) + COMMIT. Minimal = BUILD (no discovery) + COMMIT — the only tier without
+REVIEW; tests are its gate.
 
 Skills are **workflow-internal** (18 carry `user-invocable: false`; `planning` additionally keeps
 `disable-model-invocation: true` so the model can't run the planning pipeline ad-hoc). They are

@@ -8,7 +8,7 @@ Subagent dispatch prompts used by the orchestrator (`commands/build.md`) when di
 |---------|----------|
 | `§ FULL_BUILD` | Full and Standard gate BUILD sub-phases |
 | `§ MINIMAL_BUILD` | Minimal gate BUILD sub-phases (no discovery) |
-| `§ REVIEW` | Full gate REVIEW sub-phases (post-gate-agent) |
+| `§ REVIEW` | Full and Standard gate REVIEW sub-phases (post-gate-agent) |
 | `§ CATCHUP_REVIEW` | Batch review inserted before a Full phase when 2+ phases have run since the last REVIEW |
 
 Keeping these here instead of inline in `build.md`:
@@ -135,7 +135,7 @@ Agent tool:
 
 ## § REVIEW
 
-Use for **Full gate** REVIEW sub-phases. Always uses `code-foundations:post-gate-agent`.
+Use for **Full and Standard gate** REVIEW sub-phases. Always uses `code-foundations:post-gate-agent`.
 
 **Debiasing rules (do not violate):** the reviewer must receive NO intent-framing. Do NOT include the plan's Context/problem statement, progress summaries ("Completed Phase…"), the discovery file, or any account of what the build agent did or intended. Requirements + files + commands only.
 
@@ -206,7 +206,7 @@ Agent tool:
 
 ## § CATCHUP_REVIEW
 
-Inserted dynamically before a Full gate phase when 2+ phases have run since the last REVIEW. Batches verification across accumulated Standard/Minimal phases. Same debiasing rules as § REVIEW: no plan Context, no progress narrative, no discovery files.
+Inserted dynamically before a Full gate phase when 2+ phases have run since the last REVIEW. Batches verification across accumulated Minimal phases — the only tier without per-phase REVIEW. Same debiasing rules as § REVIEW: no plan Context, no progress narrative, no discovery files.
 
 **Model:** use the upcoming Full phase's resolved REVIEW model (its BUILD model downgraded one tier per the orchestrator's Model Resolution). If that phase has no `**Model:**` set, omit the model parameter.
 
