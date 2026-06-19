@@ -13,8 +13,8 @@ description: "Execute an approved plan through gated phases (BUILD → REVIEW �
 - **Worktree isolation** — never build on main/master; multi-phase commits there have no rollback
 - **Load plan before coding** — no plan = no checklist = forgotten tasks
 - **One section at a time** — parallel sections cause merge conflicts and lost context
-- **BUILD before REVIEW** (Full gate only) — Standard/Minimal gates have no REVIEW; Minimal additionally skips discovery
-- **Verification before commit, per gate policy** — Full: REVIEW must PASS; Standard/Minimal: tests are the gate
+- **BUILD before REVIEW** (Full and Standard gates) — REVIEW runs on every phase except Minimal; Minimal skips both REVIEW and discovery
+- **Verification before commit, per gate policy** — Full/Standard: REVIEW must PASS; Minimal: tests are the gate
 - **Independent verification on complex work only** — self-review is blind, but over-verifying trivial work injects noise
 - **Mark complete only when gates pass** — premature completion ships unverified work
 - **Update the execution log** — it debugs failed builds and anchors later phases
@@ -93,14 +93,14 @@ If the plan specifies a model, downgrade REVIEW one tier (prover-verifier asymme
 
 ### Gate Policy Detection
 
-Determine the gate level for each phase. This controls which sub-phases run. Non-uniform verification beats uniform: heavy gates on risky work, tests-as-gate on the rest.
+Determine the gate level for each phase. This controls which sub-phases run. REVIEW runs on every phase except Minimal — tests passing is not sufficient grounds to skip it, because tests don't catch missed edge cases, gaps, or gotchas; REVIEW does. Rigor is non-uniform: Full adds the heavyweight extras (catch-up anchoring, security 3-sample) on top of REVIEW; Standard runs a single-sample REVIEW; only trivial Minimal work rides on tests alone.
 
 | Level | Sub-Phases | When |
 |---|---|---|
-| **Full** | BUILD → REVIEW → commit | High-risk work where errors cascade |
-| **Standard** | BUILD → commit | Medium work; tests are the verification gate |
-| **Minimal** | BUILD (minimal) → commit | Trivial work; tests are the gate, no design phase needed |
-| **Catch-up** | Batch REVIEW inserted before next Full phase | Prevents drift across accumulated ungated phases |
+| **Full** | BUILD → REVIEW → commit | High-risk work where errors cascade; the heavyweight tier — adds catch-up anchoring and is the home of security 3-sample REVIEW |
+| **Standard** | BUILD → REVIEW → commit | Medium work; a single-sample REVIEW still runs — tests alone don't surface missed edge cases or gaps |
+| **Minimal** | BUILD (minimal) → commit | Trivial docs/config work only; tests are the gate, no REVIEW, no design phase |
+| **Catch-up** | Batch REVIEW inserted before next Full phase | Prevents drift across accumulated Minimal phases (the only un-reviewed tier) |
 
 **Resolution order** (first match wins):
 
@@ -123,8 +123,8 @@ Skill presence does NOT affect the gate — every phase carries skills (see Skil
 
 For each phase N (using its resolved gate level and model):
 
-- **Full gate — 2 tasks:** `Phase N.1: BUILD - [phase name]` (description: "Discovery + design + implementation. Model: [from plan or default].") and `Phase N.2: REVIEW - [phase name]` (description: "Post-gate review. Model: [REVIEW model]. Must return PASS."), N.2 blockedBy N.1.
-- **Standard/Minimal gate — 1 task:** `Phase N.1: BUILD - [phase name]` (Minimal description notes "Implement from plan description (minimal gate)").
+- **Full / Standard gate — 2 tasks:** `Phase N.1: BUILD - [phase name]` (description: "Discovery + design + implementation. Model: [from plan or default].") and `Phase N.2: REVIEW - [phase name]` (description: "Post-gate review. Model: [REVIEW model]. Must return PASS."), N.2 blockedBy N.1.
+- **Minimal gate — 1 task:** `Phase N.1: BUILD - [phase name]` (description notes "Implement from plan description (minimal gate)").
 - **Chaining:** next phase's first task blockedBy this phase's last task.
 - **Catch-up review tasks are NOT created upfront** — they are inserted dynamically when the catch-up trigger fires.
 - **Orchestrator handles commits directly** after each phase's last task completes — no commit tasks.
@@ -171,7 +171,7 @@ All tasks were created in SETUP. Execute them in order. For each task:
 4. Wait for completion
 5. If result is FAIL → do NOT mark completed → Gate Failure Protocol
 6. If success → TaskUpdate(task_id, status: "completed")
-   → If this is the phase's last task (REVIEW for Full, BUILD for Standard/Minimal): commit
+   → If this is the phase's last task (REVIEW for Full/Standard, BUILD for Minimal): commit
 7. Proceed to next task
 ```
 
@@ -186,7 +186,7 @@ TaskUpdate → in_progress, then dispatch the build agent. It combines discovery
 | Gate | Template | Discovery file |
 |------|----------|----------------|
 | Full | `§ FULL_BUILD` | Yes — `.code-foundations/build/<plan-name>-phase-N-discovery.md` |
-| Standard | `§ FULL_BUILD` | Yes — same template, gate differs at REVIEW |
+| Standard | `§ FULL_BUILD` | Yes — same template; both Full and Standard proceed to REVIEW |
 | Minimal | `§ MINIMAL_BUILD` | No |
 
 **After BUILD returns:**
@@ -195,8 +195,8 @@ TaskUpdate → in_progress, then dispatch the build agent. It combines discovery
 3. If UPDATE_PLAN → pause and ask user
 4. If BLOCKED → do NOT mark completed → debug and re-dispatch or escalate
 5. If DONE → TaskUpdate → completed
-6. If Standard/Minimal gate → commit now (see Commit After Phase)
-7. If Full gate → proceed to REVIEW
+6. If Minimal gate → commit now (see Commit After Phase)
+7. If Full or Standard gate → proceed to REVIEW
 
 ### Sub-Phase N.2: REVIEW (Post-Gate)
 
@@ -206,7 +206,7 @@ TaskUpdate → in_progress, then dispatch `code-foundations:post-gate-agent` wit
 
 **The reviewer is a debiased independent critic — give it NO intent-framing.** Do NOT include the plan's Context, any Progress block, the discovery file, or any account of what the BUILD agent did or intended — intent-framing collapses defect detection. Requirements + files + commands only (the template enforces this).
 
-**Security-sensitive phases** (`**Security-sensitive:** yes` in the plan): dispatch THREE independent REVIEW agents (separate Agent calls — independence is the point). The prompts are identical EXCEPT for the per-sample paths: substitute `K`=1,2,3 into the `§ REVIEW` review-path and scratch-path placeholders so each sample writes a distinct `<plan>-phase-N-review-sample-K.md` and `scratch-K.sh` (otherwise the samples race and overwrite each other). Take the majority verdict; all three sample files are the record.
+**Security-sensitive phases** (`**Security-sensitive:** yes` in the plan): dispatch THREE independent REVIEW agents (separate Agent calls — independence is the point). The prompts are identical EXCEPT for the per-sample paths: substitute `K`=1,2,3 into the `§ REVIEW` review-path and scratch-path placeholders so each sample writes a distinct `<plan>-phase-N-review-sample-K.md` and `scratch-K.sh` (otherwise the samples race and overwrite each other). Take the majority verdict; all three sample files are the record. On a majority PASS, the phase commit records `Review: pass (3-sample)` (not plain `pass`) so the heavier verification is auditable in the trailer history.
 
 **After REVIEW:**
 1. Read the review file
@@ -215,7 +215,7 @@ TaskUpdate → in_progress, then dispatch `code-foundations:post-gate-agent` wit
 
 ### Catch-Up REVIEW (inserted dynamically)
 
-**Trigger:** before any Full gate phase's BUILD, check: have 2+ phases run since the last REVIEW? If yes, insert a catch-up review first using `§ CATCHUP_REVIEW` (model rule is in the template header). This prevents drift across accumulated Standard/Minimal phases without per-phase overhead.
+**Trigger:** before any Full gate phase's BUILD, check: have 2+ phases run since the last REVIEW? If yes, insert a catch-up review first using `§ CATCHUP_REVIEW` (model rule is in the template header). This prevents drift across accumulated Minimal phases — the only tier without per-phase REVIEW — without extra overhead.
 
 - PASS → proceed to the Full phase's BUILD
 - FAIL → Gate Failure Protocol before proceeding

@@ -17,7 +17,7 @@ Plan: .code-foundations/plans/[plan-file].md
 AI-Model: [model used]
 AI-Epistemic-Status: [tested|assumed|provisional]
 Gate-Policy: [Full|Standard|Minimal]
-Review: [pass|fail->pass (N attempts)|skipped (Standard/Minimal)|catch-up (batch)]"
+Review: [pass|pass (3-sample)|fail->pass (N attempts)|skipped (Minimal)|catch-up (batch)]"
 ```
 
 ## Message Rules
@@ -37,7 +37,7 @@ Append to the plan file's `## Execution Log`:
 ```markdown
 ### Phase N: [Name] (Gate: [Full/Standard/Minimal])
 - [x] BUILD: Discovery + design + implementation (stub → implement → validate) complete
-- [x] REVIEW: Verification passed [or "SKIPPED — tests are gate" or "Covered by catch-up review"]
+- [x] REVIEW: Verification passed [or "SKIPPED — Minimal gate (tests are gate)" or "Covered by catch-up review"]
 - [x] Committed
 Commit: [hash]
 Summary: [1 sentence — what this phase delivered and what state it left the codebase in]
