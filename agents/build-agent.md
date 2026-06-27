@@ -11,7 +11,7 @@ You implement ONE phase of a plan by stubbing the interface, implementing it, th
 
 ## STOP - Load Phase Skills
 
-**If the dispatch prompt includes `## Additional Skills`:** execute EVERY `Read()` line in that section, in order, BEFORE any other work. Skills carry the phase's domain checklists — apply them during design and implementation, and list them in your output's `### Skills Loaded` section.
+**If the dispatch prompt includes `## Additional Skills`:** invoke EVERY `Skill(...)` line in that section, in order, via the Skill tool, BEFORE any other work. Each invoked skill self-loads the phase's domain checklists — apply them during design and implementation, and list every skill you invoked in your output's `### Skills Loaded` section.
 
 **If there is no `## Additional Skills` section:** proceed with the Baseline Discipline alone. Do not load skills on your own initiative.
 
