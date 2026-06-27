@@ -192,11 +192,17 @@ def provision_sandbox(spec: RunSpec, repo_root: Path = REPO_ROOT) -> Sandbox:
             shutil.copy2(src, plugin_dir / part)
     agent_file = plugin_dir / "agents" / "build-agent.md"
     swap.set_arm(spec.arm, agent_file)  # arm variant -> sandbox agent file only
+    # For checklist-delivery arms (read/skill), the REVIEW agent must honor the
+    # same mechanism so the gate stays symmetric. No-op for baseline/concise.
+    swap.set_review_arm(spec.arm, plugin_dir / "agents" / "post-gate-agent.md")
 
     # 2. Seed the working tree: modify tasks start from starter/; greenfield empty.
+    #    A task may name an explicit "starter" path in the manifest (e.g. a *-skills
+    #    variant reusing a base task's starter); otherwise default to its own dir.
     work = root / "work"
     work.mkdir()
-    starter = HERE / "tasks" / spec.task / "starter"
+    starter_rel = spec_entry.get("starter", f"tasks/{spec.task}/starter")
+    starter = HERE / starter_rel
     if spec_entry["kind"] == "modify" and starter.is_dir():
         for item in starter.iterdir():
             dest = work / item.name

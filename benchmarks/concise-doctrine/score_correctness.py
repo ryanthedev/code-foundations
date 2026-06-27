@@ -75,6 +75,25 @@ def _count_test_functions(test_src: str) -> int:
     return len(re.findall(r"^\s*def test_", test_src, re.M))
 
 
+def _normalize_imports(test_src: str) -> str:
+    """Strip the `outputs.` package prefix from a copied agent test suite.
+
+    Build agents write tests that import the module under its sandbox layout
+    (`from outputs.rpn import ...`, `import outputs.rpn`). The scorer runs the
+    suite from a FLAT temp dir (`work/rpn.py`), where no `outputs` package
+    exists — so those imports raise ModuleNotFoundError and the suite reads as
+    "not green", silently voiding the mutation score even when the code is
+    correct. Rewriting `outputs.<mod>` -> `<mod>` (and `from outputs import
+    <mod>` -> `import <mod>`) makes the import resolve against the flat layout.
+    Idempotent: a test that already imports flat is unchanged.
+    """
+    # `from outputs import rpn` -> `import rpn`
+    src = re.sub(r"\bfrom\s+outputs\s+import\s+", "import ", test_src)
+    # `from outputs.rpn import x` -> `from rpn import x`; `outputs.rpn.f` -> `rpn.f`
+    src = re.sub(r"\boutputs\.", "", src)
+    return src
+
+
 def score_run(run_dir: Path, task: str, manifest: dict, hidden_root: Path) -> dict:
     """Grade one run: agent suite + hidden suite + mutation score.
 
@@ -114,9 +133,12 @@ def score_run(run_dir: Path, task: str, manifest: dict, hidden_root: Path) -> di
         work = Path(_d)
         shutil.copy(impl_path, work / spec["impl"])
 
-        # 1. Agent suite against agent code (sanity check).
+        # 1. Agent suite against agent code (sanity check). Normalize the test's
+        #    `outputs.` import prefix to the flat work-dir layout (see
+        #    _normalize_imports) so a sandbox-style import doesn't read as a red
+        #    suite. The normalized file is what mutation (step 3) runs too.
         if tests_path.exists():
-            shutil.copy(tests_path, work / spec["tests"])
+            (work / spec["tests"]).write_text(_normalize_imports(tests_path.read_text()))
             p, t = _run_pytest(work, spec["tests"])
             row["agent_tests_pass"] = (t > 0 and p == t)
 
