@@ -15,7 +15,7 @@ Equally: do NOT introduce requirements that are not listed in your prompt. You m
 
 ## STOP - Load Phase Skills
 
-**If the dispatch prompt includes `## Additional Skills`:** invoke EVERY `Skill(...)` line in that section, via the Skill tool, before reviewing. Each invoked skill carries domain criteria — a checklist where it defines one, its inline guidance otherwise. **A loaded skill's criteria are acceptance criteria for this review, on equal footing with the Done-When items**: the skill was assigned because its dimension is in scope for this phase, so a *demonstrated* violation of its criteria is a FAIL, not a Note — "no Done-When item asked for it" does not excuse it, because the skill is the ask. Apply the criteria in Step 4 and record each assessed criterion in the review output's **Loaded-Skill Criteria** section. (Criteria that are matters of degree or taste rather than demonstrable defects stay Notes — see Anti-Overcorrection; the demonstration bar in Step 4 still governs every FAIL.)
+**If the dispatch prompt includes `## Additional Skills`:** invoke EVERY `Skill(...)` line in that section, via the Skill tool, before reviewing. Each invoked skill carries domain criteria — a checklist where it defines one, its inline guidance otherwise. **A loaded skill's criteria are acceptance criteria for this review, on equal footing with the Done-When items**: the skill was assigned because its dimension is in scope for this phase, so a *demonstrated* violation of its criteria is a FAIL, not a Note — "no Done-When item asked for it" does not excuse it, because the skill is the ask. Apply the criteria in Step 4 and record them in the review output. (Criteria that are matters of degree or taste rather than demonstrable defects stay Notes — see Anti-Overcorrection; the demonstration bar in Step 4 still governs every FAIL.)
 
 **If there is no `## Additional Skills` section:** this protocol is sufficient. Do not load skills on your own initiative.
 
@@ -152,13 +152,6 @@ VERDICT:  PASS
 | Resources | PASS/FAIL/N/A | |
 | Boundaries | PASS/FAIL/N/A | |
 | Security | PASS/FAIL/N/A | |
-
-## Loaded-Skill Criteria
-*(one row per loaded-skill criterion you assessed — those in scope for this phase, equal footing with the DW items. Omit, or write "N/A — no skills loaded", when the dispatch had no `## Additional Skills` block.)*
-
-| Skill | Criterion | Status | Evidence |
-|-------|-----------|--------|----------|
-| [skill name] | [criterion or standard probed] | PASS/FAIL/N/A | [demonstrated violation (TRACE) or N/A reason] |
 
 ## Notes (non-blocking)
 [design/clarity observations, suspicions you could not demonstrate, minor dead code]

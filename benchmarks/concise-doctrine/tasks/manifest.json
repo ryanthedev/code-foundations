@@ -40,5 +40,269 @@
     "tests": "test_csv_stats.py",
     "hidden": "tasks/06-csv-stats/hidden/test_hidden.py",
     "plan": "tasks/06-csv-stats/plan.md"
+  },
+  "02-rpn-skills": {
+    "kind": "greenfield",
+    "impl": "rpn.py",
+    "tests": "test_rpn.py",
+    "hidden": "tasks/02-rpn/hidden/test_hidden.py",
+    "plan": "tasks/02-rpn/plan.skills.md"
+  },
+  "04-password-skills": {
+    "kind": "modify",
+    "impl": "password.py",
+    "tests": "test_password.py",
+    "hidden": "tasks/04-password/hidden/test_hidden.py",
+    "plan": "tasks/04-password/plan.skills.md",
+    "starter": "tasks/04-password/starter"
+  },
+  "05-rate-limiter-skills": {
+    "kind": "greenfield",
+    "impl": "rate_limiter.py",
+    "tests": "test_rate_limiter.py",
+    "hidden": "tasks/05-rate-limiter/hidden/test_hidden.py",
+    "plan": "tasks/05-rate-limiter/plan.skills.md"
+  },
+  "adh-def-with": {
+    "kind": "modify",
+    "impl": "password.py",
+    "tests": "test_password.py",
+    "hidden": "tasks/04-password/hidden/test_hidden.py",
+    "plan": "tasks/04-password/plan.def.md",
+    "starter": "tasks/04-password/starter",
+    "skill": "cc-defensive-programming"
+  },
+  "adh-def-none": {
+    "kind": "modify",
+    "impl": "password.py",
+    "tests": "test_password.py",
+    "hidden": "tasks/04-password/hidden/test_hidden.py",
+    "plan": "tasks/04-password/plan.none.md",
+    "starter": "tasks/04-password/starter",
+    "skill": "cc-defensive-programming"
+  },
+  "adh-cf-with": {
+    "kind": "greenfield",
+    "impl": "rpn.py",
+    "tests": "test_rpn.py",
+    "hidden": "tasks/02-rpn/hidden/test_hidden.py",
+    "plan": "tasks/02-rpn/plan.cf.md",
+    "skill": "cc-control-flow-quality"
+  },
+  "adh-cf-none": {
+    "kind": "greenfield",
+    "impl": "rpn.py",
+    "tests": "test_rpn.py",
+    "hidden": "tasks/02-rpn/hidden/test_hidden.py",
+    "plan": "tasks/02-rpn/plan.none.md",
+    "skill": "cc-control-flow-quality"
+  },
+  "adh-clarity-with": {
+    "kind": "greenfield",
+    "impl": "rate_limiter.py",
+    "tests": "test_rate_limiter.py",
+    "hidden": "tasks/05-rate-limiter/hidden/test_hidden.py",
+    "plan": "tasks/05-rate-limiter/plan.clarity.md",
+    "skill": "code-clarity-and-docs"
+  },
+  "adh-clarity-none": {
+    "kind": "greenfield",
+    "impl": "rate_limiter.py",
+    "tests": "test_rate_limiter.py",
+    "hidden": "tasks/05-rate-limiter/hidden/test_hidden.py",
+    "plan": "tasks/05-rate-limiter/plan.none.md",
+    "skill": "code-clarity-and-docs"
+  },
+  "adh-verify-with": {
+    "kind": "greenfield",
+    "impl": "rpn.py",
+    "tests": "test_rpn.py",
+    "hidden": "tasks/02-rpn/hidden/test_hidden.py",
+    "plan": "tasks/02-rpn/plan.verify.md",
+    "skill": "aposd-verifying-correctness"
+  },
+  "adh-pseudo-with": {
+    "kind": "greenfield",
+    "impl": "rpn.py",
+    "tests": "test_rpn.py",
+    "hidden": "tasks/02-rpn/hidden/test_hidden.py",
+    "plan": "tasks/02-rpn/plan.pseudo.md",
+    "skill": "cc-pseudocode-programming"
+  },
+  "adh-qa-with": {
+    "kind": "greenfield",
+    "impl": "rpn.py",
+    "tests": "test_rpn.py",
+    "hidden": "tasks/02-rpn/hidden/test_hidden.py",
+    "plan": "tasks/02-rpn/plan.qa.md",
+    "skill": "cc-quality-practices"
+  },
+  "adh-routine-with": {
+    "kind": "greenfield",
+    "impl": "rate_limiter.py",
+    "tests": "test_rate_limiter.py",
+    "hidden": "tasks/05-rate-limiter/hidden/test_hidden.py",
+    "plan": "tasks/05-rate-limiter/plan.routine.md",
+    "skill": "cc-routine-and-class-design"
+  },
+  "adh-deepmod-with": {
+    "kind": "greenfield",
+    "impl": "rate_limiter.py",
+    "tests": "test_rate_limiter.py",
+    "hidden": "tasks/05-rate-limiter/hidden/test_hidden.py",
+    "plan": "tasks/05-rate-limiter/plan.deepmod.md",
+    "skill": "aposd-designing-deep-modules"
+  },
+  "adh-simplify-with": {
+    "kind": "modify",
+    "impl": "shipping.py",
+    "tests": "test_shipping.py",
+    "hidden": "tasks/08-refactor/hidden/test_hidden.py",
+    "starter": "tasks/08-refactor/starter",
+    "plan": "tasks/08-refactor/plan.simplify.md",
+    "skill": "aposd-simplifying-complexity"
+  },
+  "adh-refactor-with": {
+    "kind": "modify",
+    "impl": "shipping.py",
+    "tests": "test_shipping.py",
+    "hidden": "tasks/08-refactor/hidden/test_hidden.py",
+    "starter": "tasks/08-refactor/starter",
+    "plan": "tasks/08-refactor/plan.refactor.md",
+    "skill": "cc-refactoring-guidance"
+  },
+  "adh-welc-with": {
+    "kind": "modify",
+    "impl": "shipping.py",
+    "tests": "test_shipping.py",
+    "hidden": "tasks/08-refactor/hidden/test_hidden.py",
+    "starter": "tasks/08-refactor/starter",
+    "plan": "tasks/08-refactor/plan.welc.md",
+    "skill": "welc-legacy-code"
+  },
+  "adh-perf-with": {
+    "kind": "modify",
+    "impl": "shipping.py",
+    "tests": "test_shipping.py",
+    "hidden": "tasks/08-refactor/hidden/test_hidden.py",
+    "starter": "tasks/08-refactor/starter",
+    "plan": "tasks/08-refactor/plan.perf.md",
+    "skill": "performance-optimization"
+  },
+  "adh-review-with": {
+    "kind": "modify",
+    "impl": "shipping.py",
+    "tests": "test_shipping.py",
+    "hidden": "tasks/08-refactor/hidden/test_hidden.py",
+    "starter": "tasks/08-refactor/starter",
+    "plan": "tasks/08-refactor/plan.review.md",
+    "skill": "aposd-reviewing-module-design"
+  },
+  "adh-refactor-none": {
+    "kind": "modify",
+    "impl": "shipping.py",
+    "tests": "test_shipping.py",
+    "hidden": "tasks/08-refactor/hidden/test_hidden.py",
+    "starter": "tasks/08-refactor/starter",
+    "plan": "tasks/08-refactor/plan.none.md",
+    "skill": "aposd-simplifying-complexity"
+  },
+  "gap-tpms-none": {
+    "kind": "modify",
+    "impl": "tire_pressure_monitoring.py",
+    "tests": "test_tire_pressure_monitoring.py",
+    "hidden": "tasks/09-tpms/hidden/test_hidden.py",
+    "starter": "tasks/09-tpms/starter",
+    "plan": "tasks/09-tpms/plan.none.md",
+    "skill": "welc-legacy-code"
+  },
+  "gap-theatrical-none": {
+    "kind": "modify",
+    "impl": "statement.py",
+    "tests": "test_statement.py",
+    "hidden": "tasks/10-theatrical/hidden/test_hidden.py",
+    "starter": "tasks/10-theatrical/starter",
+    "plan": "tasks/10-theatrical/plan.none.md",
+    "skill": "aposd-simplifying-complexity"
+  },
+  "gap-counter-none": {
+    "kind": "greenfield",
+    "impl": "counter.py",
+    "tests": "test_counter.py",
+    "hidden": "tasks/11-counter/hidden/test_hidden.py",
+    "plan": "tasks/11-counter/plan.none.md",
+    "skill": "cc-defensive-programming"
+  },
+  "gap-pairsum-none": {
+    "kind": "greenfield",
+    "impl": "pairsum.py",
+    "tests": "test_pairsum.py",
+    "hidden": "tasks/12-pairsum/hidden/test_hidden.py",
+    "plan": "tasks/12-pairsum/plan.none.md",
+    "skill": "performance-optimization"
+  },
+  "sec-sqli-none": {
+    "kind": "greenfield",
+    "impl": "user_lookup.py",
+    "tests": "test_user_lookup.py",
+    "hidden": "tasks/13-sqli/hidden/test_hidden.py",
+    "plan": "tasks/13-sqli/plan.none.md",
+    "skill": "cc-defensive-programming"
+  },
+  "sec-path-none": {
+    "kind": "greenfield",
+    "impl": "doc_reader.py",
+    "tests": "test_doc_reader.py",
+    "hidden": "tasks/14-path/hidden/test_hidden.py",
+    "plan": "tasks/14-path/plan.none.md",
+    "skill": "cc-defensive-programming"
+  },
+  "sec-cmd-none": {
+    "kind": "greenfield",
+    "impl": "line_counter.py",
+    "tests": "test_line_counter.py",
+    "hidden": "tasks/15-cmd/hidden/test_hidden.py",
+    "plan": "tasks/15-cmd/plan.none.md",
+    "skill": "cc-defensive-programming"
+  },
+  "sec-path-def": {
+    "kind": "greenfield",
+    "impl": "doc_reader.py",
+    "tests": "test_doc_reader.py",
+    "hidden": "tasks/14-path/hidden/test_hidden.py",
+    "plan": "tasks/14-path/plan.def.md",
+    "skill": "cc-defensive-programming"
+  },
+  "sec-path-verify": {
+    "kind": "greenfield",
+    "impl": "doc_reader.py",
+    "tests": "test_doc_reader.py",
+    "hidden": "tasks/14-path/hidden/test_hidden.py",
+    "plan": "tasks/14-path/plan.verify.md",
+    "skill": "aposd-verifying-correctness"
+  },
+  "secstd-path-none": {
+    "kind": "greenfield",
+    "impl": "doc_reader.py",
+    "tests": "test_doc_reader.py",
+    "hidden": "tasks/14-path/hidden/test_hidden.py",
+    "plan": "tasks/14-path/plan.none.standard.md",
+    "skill": "aposd-verifying-correctness"
+  },
+  "secstd-path-verify": {
+    "kind": "greenfield",
+    "impl": "doc_reader.py",
+    "tests": "test_doc_reader.py",
+    "hidden": "tasks/14-path/hidden/test_hidden.py",
+    "plan": "tasks/14-path/plan.verify.standard.md",
+    "skill": "aposd-verifying-correctness"
+  },
+  "reg-rpn-routine": {
+    "kind": "greenfield",
+    "impl": "rpn.py",
+    "tests": "test_rpn.py",
+    "hidden": "tasks/02-rpn/hidden/test_hidden.py",
+    "plan": "tasks/02-rpn/plan.routine.standard.md",
+    "skill": "cc-routine-and-class-design"
   }
 }

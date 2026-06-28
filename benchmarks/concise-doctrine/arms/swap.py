@@ -20,13 +20,43 @@ from typing import Iterator, Literal
 # Directory holding the arm variant files (this file's own directory).
 ARMS_DIR = Path(__file__).resolve().parent
 
-Arm = Literal["baseline", "concise"]
+Arm = Literal["baseline", "concise", "read", "skill"]
 
 # The only valid arm names, each mapped to its variant filename. Membership in this
 # dict is the single source of truth for input validation.
+#
+# baseline/concise — the concise-code-doctrine A/B (the build-agent body varies).
+# read/skill — the checklist-delivery A/B: bodies are byte-identical to production
+#   EXCEPT the "STOP - Load Phase Skills" section. `read` Read()s each skill's
+#   SKILL.md + checklists.md; `skill` invokes the Skill tool (self-loads checklists).
+#   Same dispatch, same content — only the delivery mechanism differs.
 _ARM_FILES: dict[str, str] = {
     "baseline": "build-agent.baseline.md",
     "concise": "build-agent.concise.md",
+    "read": "build-agent.read.md",
+    "skill": "build-agent.skill.md",
+    # secfix reuses the skill build agent — only the REVIEW agent differs, so the
+    # A/B isolates the review-side security-FAIL change (see _ARM_REVIEW_FILES).
+    "secfix": "build-agent.skill.md",
+    # prod = current production agents verbatim (build + the EDITED review), for
+    # the end-to-end sanity check of the shipped post-gate-agent change.
+    "prod": "build-agent.prod.md",
+}
+
+# REVIEW-agent variants. Only the read/skill (checklist-delivery) arms vary the
+# REVIEW agent — the gate must honor the SAME delivery mechanism as the build so
+# the comparison stays symmetric (REVIEW-driven fixes can't differ by mechanism).
+# Arms absent here (baseline/concise) leave the sandbox's production
+# post-gate-agent.md untouched.
+_ARM_REVIEW_FILES: dict[str, str] = {
+    "read": "post-gate-agent.read.md",
+    "skill": "post-gate-agent.skill.md",
+    # secfix: the proposed review-side fix — demonstrated security exploits always
+    # FAIL (proactive sink probing; carved out of anti-overcorrection).
+    "secfix": "post-gate-agent.secfix.md",
+    # prod: the EDITED production review agent (skill-criteria-as-acceptance +
+    # defect-search framing), for the end-to-end sanity check.
+    "prod": "post-gate-agent.prod.md",
 }
 
 
@@ -62,6 +92,28 @@ def set_arm(arm: str, target: str | os.PathLike[str]) -> Path:
     either the old content or the full new content — never a truncated file.
     """
     source = variant_path(arm)  # validates arm before any write
+    target_path = Path(target)
+    target_path.parent.mkdir(parents=True, exist_ok=True)
+    _atomic_write(target_path, source.read_bytes())
+    return target_path
+
+
+def set_review_arm(arm: str, target: str | os.PathLike[str]) -> Path | None:
+    """Point `target` (the sandbox post-gate-agent.md) at the arm's REVIEW variant.
+
+    Returns the target path if the arm has a REVIEW variant (read/skill), or None
+    if it does not (baseline/concise) — in which case the sandbox's production
+    post-gate-agent.md is left untouched. Validates `arm` against the build-arm
+    allowlist first, so an unknown arm raises rather than silently no-op'ing.
+    """
+    if arm not in _ARM_FILES:
+        raise ValueError(f"unknown arm {arm!r}; expected one of {valid_arms()}")
+    variant = _ARM_REVIEW_FILES.get(arm)
+    if variant is None:
+        return None
+    source = ARMS_DIR / variant
+    if not source.is_file():
+        raise FileNotFoundError(f"review arm variant file missing: {source}")
     target_path = Path(target)
     target_path.parent.mkdir(parents=True, exist_ok=True)
     _atomic_write(target_path, source.read_bytes())

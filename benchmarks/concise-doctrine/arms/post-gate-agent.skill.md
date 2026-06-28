@@ -15,7 +15,9 @@ Equally: do NOT introduce requirements that are not listed in your prompt. You m
 
 ## STOP - Load Phase Skills
 
-**If the dispatch prompt includes `## Additional Skills`:** invoke EVERY `Skill(...)` line in that section, via the Skill tool, before reviewing. Each invoked skill carries domain criteria — a checklist where it defines one, its inline guidance otherwise. **A loaded skill's criteria are acceptance criteria for this review, on equal footing with the Done-When items**: the skill was assigned because its dimension is in scope for this phase, so a *demonstrated* violation of its criteria is a FAIL, not a Note — "no Done-When item asked for it" does not excuse it, because the skill is the ask. Apply the criteria in Step 4 and record each assessed criterion in the review output's **Loaded-Skill Criteria** section. (Criteria that are matters of degree or taste rather than demonstrable defects stay Notes — see Anti-Overcorrection; the demonstration bar in Step 4 still governs every FAIL.)
+<!-- ARM: skill-load (REVIEW). Mirrors the build arm: skills arrive as Skill() lines and are invoked via the Skill tool. -->
+
+**If the dispatch prompt includes `## Additional Skills`:** invoke EVERY `Skill(...)` line in that section, via the Skill tool, before reviewing. Each invoked skill self-loads its domain-specific checklists on top of this protocol — apply them during Step 4 and note them in the review output.
 
 **If there is no `## Additional Skills` section:** this protocol is sufficient. Do not load skills on your own initiative.
 
@@ -93,11 +95,11 @@ Scan implementation files for unused imports, unreachable code, debug statements
 
 ### Step 4 — Correctness Dimensions (execution-grounded)
 
-Work each applicable dimension — and each criterion of a loaded skill — as a **search for the case that breaks it**, not a confirmation that it looks handled. Passing tests cover the cases the author thought of, not the one they missed, so "the tests are green" is no evidence here. For each, take the most adversarial input the dimension or skill criterion names, and trace it line by line through the actual code; it is satisfied only when you have traced that case and shown the code handles it. Mark a dimension N/A with a reason only when it genuinely cannot apply.
+For each dimension: detect if it applies, verify if YES, mark N/A with reason if NO.
 
-Dimensions: **Concurrency** (shared state, async, web handlers, background tasks), **Error Handling** (I/O, external calls, parsing, user input), **Resources** (file handles, connections, locks, caches, threads), **Boundaries** (collections, strings, numerics, optionals), **Security** (untrusted input). A loaded skill adds its own criteria here — the skill names what to probe in its domain; your job is to find the case it catches that the code does not.
+Dimensions: **Concurrency** (shared state, async, web handlers, background tasks), **Error Handling** (I/O, external calls, parsing, user input), **Resources** (file handles, connections, locks, caches, threads), **Boundaries** (collections, strings, numerics, optionals), **Security** (untrusted input).
 
-To FAIL a dimension (or a loaded skill's criterion) you must demonstrate the defect — a TRACE that produces the wrong result, or a test you wrote and ran that fails. A demonstrated violation → FAIL; an undemonstrated "could be hardened" or a matter of degree → non-blocking note.
+To FAIL a dimension you must demonstrate the defect — a TRACE that produces the wrong result, or a test you wrote and ran that fails. Suspicion is a non-blocking note, not a FAIL.
 
 ### Anti-Overcorrection Rules
 
@@ -105,9 +107,9 @@ Do NOT FAIL for:
 - requirements you inferred that are not in the DW list
 - edge cases that are NOT listed in the prompt's `## Edge cases` section (prompt-listed edge cases DO have standing — see below)
 - stylistic or "could be better" design opinions
-- missing defensive code no requirement asked for — **unless it violates a loaded skill's criterion** (the skill is the requirement; this exclusion covers only undemonstrated "could add validation" suggestions, never a demonstrated violation of a loaded skill's criteria)
+- missing defensive code no requirement asked for
 
-A FAIL must name an executable failure: **(a)** a DW item with no execution evidence, **(b)** a test that fails when run, **(c)** a defect demonstrated via TRACE, **(d)** a prompt-listed edge case the implementation does not handle, or **(e)** a demonstrated violation of a loaded skill's criterion. Design/clarity observations and *unlisted* edge cases go under **Notes (non-blocking)**.
+A FAIL must name an executable failure: **(a)** a DW item with no execution evidence, **(b)** a test that fails when run, **(c)** a defect demonstrated via TRACE, or **(d)** a prompt-listed edge case the implementation does not handle. Design/clarity observations and *unlisted* edge cases go under **Notes (non-blocking)**.
 
 ---
 
@@ -153,13 +155,6 @@ VERDICT:  PASS
 | Boundaries | PASS/FAIL/N/A | |
 | Security | PASS/FAIL/N/A | |
 
-## Loaded-Skill Criteria
-*(one row per loaded-skill criterion you assessed — those in scope for this phase, equal footing with the DW items. Omit, or write "N/A — no skills loaded", when the dispatch had no `## Additional Skills` block.)*
-
-| Skill | Criterion | Status | Evidence |
-|-------|-----------|--------|----------|
-| [skill name] | [criterion or standard probed] | PASS/FAIL/N/A | [demonstrated violation (TRACE) or N/A reason] |
-
 ## Notes (non-blocking)
 [design/clarity observations, suspicions you could not demonstrate, minor dead code]
 
@@ -178,7 +173,6 @@ VERDICT:  PASS
 - ANY DW item with neither an automated test nor recorded observed behavior (per Step 2) → FAIL
 - ANY test that fails when run → FAIL
 - ANY correctness defect demonstrated via TRACE or a test → FAIL
-- ANY demonstrated violation of a loaded skill's criterion → FAIL, even if no Done-When item named it
 - ANY edge case listed in the prompt's `## Edge cases` section left unhandled → FAIL (unlisted edge cases are Notes, never FAIL)
 - Everything else → PASS (with Notes)
 

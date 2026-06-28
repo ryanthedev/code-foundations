@@ -11,3 +11,8 @@ benchmarks/tdd-vs-siv/harness/_smoke/results.csv
 
 # concise-doctrine generated matrix runs (heavy) — REPORT.slice-sample.md is kept
 benchmarks/concise-doctrine/results/
+# per-experiment run outputs (heavy / regenerable) — harness, tasks, arms, top-level REPORT*.md kept
+benchmarks/concise-doctrine/results-*/
+# venv + live build transcripts (heavy / transient) — harness, tasks, reports, result CSVs kept
+benchmarks/concise-doctrine/.venv/
+benchmarks/concise-doctrine/_live-smoke/

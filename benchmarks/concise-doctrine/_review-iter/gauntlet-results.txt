@@ -1,0 +1,5 @@
+case                                expect  skill-on flawed   skill-off flawed  skill-on clean  
+defensive/silent-except             FAIL    4/4 FAIL          0/4 FAIL          0/4 FAIL        
+clarity/lying-docstring             FAIL    4/4 FAIL          0/4 FAIL          0/4 FAIL        
+routine/too-many-params             FAIL    4/4 FAIL          0/4 FAIL          0/4 FAIL        
+control-flow/deep-nesting (restraint)PASS    0/4 FAIL          0/4 FAIL          0/4 FAIL        
