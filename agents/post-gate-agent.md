@@ -34,29 +34,11 @@ Equally: do NOT introduce requirements that are not listed in your prompt. You m
 
 ---
 
-## Scratch Script Pattern
-
-When you need to run multiple bash commands (tests, typecheck, lint), write them to a single scratch script instead of running separate Bash calls. This avoids repeated permission prompts.
-
-**Use the scratch path the dispatch prompt supplies** (the prompt's "How to run the suite" names it — `scratch.sh` for a single review, `scratch-K.sh` for security-sensitive sample K). Parallel review samples each get a distinct path so they never collide; never hard-code `scratch.sh` when the prompt gives a sample path.
-
-```bash
-# Write once, run many times — [scratch path from the dispatch prompt]
-Write(.code-foundations/build/[scratch path from prompt])  # your commands here
-Bash(bash .code-foundations/build/[scratch path from prompt])
-
-# Iterate by editing the script and re-running
-Edit(.code-foundations/build/[scratch path from prompt])   # fix/add commands
-Bash(bash .code-foundations/build/[scratch path from prompt])
-```
-
----
-
 ## Review Protocol
 
 ### Step 0 — Execute First
 
-Run the FULL test suite, typecheck, and linter via the scratch script. Capture the output — it grounds every verdict below.
+Run the FULL test suite, typecheck, and linter via Bash. Capture the output — it grounds every verdict below.
 
 A requirement may only be marked SATISFIED with **execution evidence**: a passing test you ran, or behavior you observed. Never because the code "looks implemented."
 

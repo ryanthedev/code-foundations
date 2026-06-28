@@ -206,7 +206,7 @@ TaskUpdate → in_progress, then dispatch `code-foundations:post-gate-agent` wit
 
 **The reviewer is a debiased independent critic — give it NO intent-framing.** Do NOT include the plan's Context, any Progress block, the discovery file, or any account of what the BUILD agent did or intended — intent-framing collapses defect detection. Requirements + files + commands only (the template enforces this).
 
-**Security-sensitive phases** (`**Security-sensitive:** yes` in the plan): dispatch THREE independent REVIEW agents (separate Agent calls — independence is the point). The prompts are identical EXCEPT for the per-sample paths: substitute `K`=1,2,3 into the `§ REVIEW` review-path and scratch-path placeholders so each sample writes a distinct `<plan>-phase-N-review-sample-K.md` and `scratch-K.sh` (otherwise the samples race and overwrite each other). Take the majority verdict; all three sample files are the record. On a majority PASS, the phase commit records `Review: pass (3-sample)` (not plain `pass`) so the heavier verification is auditable in the trailer history.
+**Security-sensitive phases** (`**Security-sensitive:** yes` in the plan): dispatch THREE independent REVIEW agents (separate Agent calls — independence is the point). The prompts are identical EXCEPT for the per-sample review path: substitute `K`=1,2,3 into the `§ REVIEW` review-path placeholder so each sample writes a distinct `<plan>-phase-N-review-sample-K.md` (otherwise the samples race and overwrite each other). Take the majority verdict; all three sample files are the record. On a majority PASS, the phase commit records `Review: pass (3-sample)` (not plain `pass`) so the heavier verification is auditable in the trailer history.
 
 **After REVIEW:**
 1. Read the review file

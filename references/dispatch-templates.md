@@ -139,7 +139,7 @@ Use for **Full and Standard gate** REVIEW sub-phases. Always uses `code-foundati
 
 **Debiasing rules (do not violate):** the reviewer must receive NO intent-framing. Do NOT include the plan's Context/problem statement, progress summaries ("Completed Phase…"), the discovery file, or any account of what the build agent did or intended. Requirements + files + commands only.
 
-**Security-sensitive (3-sample):** if the phase is marked `**Security-sensitive:** yes` in the plan, dispatch THREE independent copies of this prompt (separate Agent calls) and take the majority verdict. The copies are identical EXCEPT for the per-sample paths: substitute `K`=1,2,3 so each sample's review path is `<plan-name>-phase-N-review-sample-K.md` and its scratch path is `scratch-K.sh`. Without this the three samples race and overwrite a single review/scratch file. For a non-sampled (single) review, drop the `-sample-K`/`-K` suffixes (review → `<plan-name>-phase-N-review.md`, scratch → `scratch.sh`).
+**Security-sensitive (3-sample):** if the phase is marked `**Security-sensitive:** yes` in the plan, dispatch THREE independent copies of this prompt (separate Agent calls) and take the majority verdict. The copies are identical EXCEPT for the per-sample review path: substitute `K`=1,2,3 so each sample's review path is `<plan-name>-phase-N-review-sample-K.md`. Without this the three samples race and overwrite a single review file. For a non-sampled (single) review, drop the `-sample-K` suffix (review → `<plan-name>-phase-N-review.md`).
 
 ```
 Agent tool:
@@ -180,9 +180,7 @@ Agent tool:
 
     ## How to run the suite
     [exact test command + typecheck/lint commands for this project]
-    Write your commands to this scratch script and run it (parameterized so
-    parallel samples never collide): [scratch path — `scratch.sh`, or
-    `scratch-K.sh` for security-sensitive sample K]
+    Run these directly via Bash and capture the output.
 
     [ONLY if this phase consumes an interface from a prior phase — neutral
     wording, no "completed/done/working" language:]
