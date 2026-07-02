@@ -6,6 +6,17 @@ Used by `clarify` and any plan gate that asks the user a question (`AskUserQuest
 
 ---
 
+## Channel Selection: Dialog vs Conversation
+
+Pick the channel by what the user must *see* to answer:
+
+- **`AskUserQuestion`** — decisive choices with 2-4 short, self-contained options (auth method, library, approach A/B). The option labels and descriptions carry everything needed to choose.
+- **Conversation markdown, free-form reply** — anything the user must review before answering: plan summaries, phase skeletons, problem statements, approach comparisons, any multi-section artifact. Dialog previews truncate multi-phase content, so a checkpoint carried in a dialog asks the user to confirm something they cannot fully see. Render the artifact as the turn's **final message** (no tool calls after it) and ask the question in the same message; the user answers in their own words.
+
+Never split one checkpoint across both channels — a dialog after a rendered artifact re-introduces the risk that the render gets skipped and the dialog becomes the only (truncated) surface.
+
+---
+
 ## Two Modes
 
 **Exploratory (default).** Open-ended questions targeting the axis of disagreement between hypotheses. The user provides the answer.
@@ -37,6 +48,7 @@ Confirmatory mode still works inside the structured tool — encode your assumpt
 - Make your recommended option the first or clearly-labeled choice: `"Use JWT (my recommendation — codebase is stateless)"`
 - Keep the other real options selectable so the user can override without typing.
 - Keep an "Elaborate" / "Different direction" escape hatch when stakes are high.
+- Hold to 2-4 options. Needing more than 4 usually means the question is really a content review — move it to conversation (Channel Selection above).
 
 This preserves the gate (user still answers) while collapsing the cognitive load.
 

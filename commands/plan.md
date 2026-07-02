@@ -9,7 +9,7 @@ The plan is a contract between plan and build. It specifies WHAT and WHY at the 
 
 ---
 
-## STOP - Read the Input First
+## Read the Input First
 
 `$ARGUMENTS` is either a **research-doc path** or a **feature description**:
 
@@ -22,9 +22,9 @@ A research doc carries confirmed intent — do not re-derive it from scratch. Sk
 
 ---
 
-## STOP - Quick Classification First
+## Quick Classification
 
-Before anything else, read the request (from `$ARGUMENTS` or the seeded research doc) and make an instant complexity call:
+Read the request (from `$ARGUMENTS` or the seeded research doc) and make an instant complexity call before any other work — the track determines everything downstream:
 
 | Signal in user's request | Track |
 |---|---|
@@ -58,7 +58,7 @@ After scanning and clarifying, write:
 - **Constraints:** non-negotiable boundaries
 - **Success criteria:** how we know it's done
 
-Confirm via `AskUserQuestion`: "Does this capture what you want?"
+Render the statement as markdown in conversation and end the turn asking "Does this capture what you want?" — the user replies in their own words. Content confirmations happen in conversation, not in a dialog: the conversation is the only surface that renders the full statement (dialog previews truncate, and the user can't correct nuance through option buttons).
 
 Corrections → update and re-confirm. If the response raises new open questions, re-enter clarify (step 2) on the new gaps before proceeding. This becomes the plan's `## Context` section. **No plan writing begins until the problem statement is confirmed.**
 
@@ -68,16 +68,19 @@ Corrections → update and re-confirm. If the response raises new open questions
 
 **Problem statement confirmed → decompose → detail → cross-cut → save → check → present → go.** Even Quick is staged, just compressed — don't write all phase bodies in one shot.
 
-1. **Decompose (skeleton).** For each of the 1-2 phases write only: name, one-line goal, matched skills (compare the phase goal against your available-skills register — the internal 19 plus any external plugin skills now in context; each description carries its own when-to-match and sibling-disambiguation (the "not for X (use Y)" clauses); `none -- [reason]` valid; exclude workflow commands), difficulty. If there are 2 phases, add `**Depends on:**` and `**Produces:**` (what phase 1 hands phase 2). Write this skeleton to the plan file.
+1. **Decompose (skeleton).** For each of the 1-2 phases write only: name, one-line goal, matched skills (compare the phase goal against your available-skills register — the internal 19 plus any external plugin skills now in context; each description carries its own when-to-match and sibling-disambiguation (the "not for X (use Y)" clauses); `none -- [reason]` valid; exclude workflow commands), difficulty. Every phase gets `**Depends on:**` (`none` or `Phase N`); with 2 phases, add `**Produces:**` (what phase 1 hands phase 2). Hold the skeleton in conversation — the file is written in step 3 after the split is confirmed.
 
-2. **Skeleton checkpoint.** If 2 phases: `AskUserQuestion` — "Does the split look right? Review it in the preview." Options "Looks right" / "Adjust", **`preview` REQUIRED on both**: the identical split as markdown (each phase's name + goal, and the Produces handoff between them). The preview is the only guaranteed-visible surface — bare labels ask the user to confirm something they cannot see. If 1 phase: skip — nothing to decompose.
+2. **Skeleton checkpoint.** If 2 phases: render the split as markdown in conversation (each phase's name + goal, the Produces handoff, and the dependency between them) and end the turn asking "Does the split look right?" — the user replies free-form. The skeleton must be the final message of that turn, with no tool calls after it: the conversation is the only surface that renders it in full, and nothing is written to disk yet, so there is nothing to chain into. If 1 phase: skip — nothing to decompose.
 
 3. **Detail each phase**, in order, one short pass each. Start with a one-line reframe — `Phase N: [name]. Consumes: [upstream Produces, or "nothing"]. Must produce: [Produces]. Difficulty: X.` — then load the phase's matched skills if not already loaded (`Skill(code-foundations:<name>)` for this plugin's own, `Skill(<plugin>:<name>)` for external ones — each self-loads its checklists; they inform Edge cases and Done-when), and fill the body in place using this template:
 
    ```markdown
    ### Phase N: [Name]
    **Skills:** [matched skills, or `none -- [reason]`]
+   **Model:** [fable | sonnet | haiku]
    **Gate:** [Full | Standard | Minimal]
+   **Depends on:** [none | Phase N]
+   **File scope:** [globs the phase may touch, e.g. src/auth/**, tests/auth/** -- omit only if unknowable]
 
    **Goal:** [One sentence]
 
@@ -95,16 +98,20 @@ Corrections → update and re-confirm. If the response raises new open questions
 
    **Assign `**Gate:**` per phase** — build consumes this field verbatim (see `commands/build.md` resolution order). Mirror its risk rules: **Full** for security/auth/payment work or a multi-file change introducing new cross-phase seams; **Minimal** for a docs-only or config-only change; **Standard** otherwise. Even a Quick 1-2 phase plan sets the field — absent it, build falls back to risk inference, but the planner has the risk context in hand now, so decide it here.
 
+   **Assign `**Model:**` per phase** — **sonnet** is the default (Sonnet 5: fast, cheap, handles well-specified implementation work); **haiku** for purely mechanical phases (config edits, renames, doc moves); **fable** for judgment-heavy phases (novel architecture, security-sensitive design, cross-cutting refactors). **opus** stays a valid override — use it when fable is unavailable or when the user asks for it. Build resolves the REVIEW model by downgrading one tier (fable→sonnet, opus→sonnet, sonnet→haiku).
+
+   **`**Depends on:**` and `**File scope:**`** feed build's wave derivation: phases with no dependency between them and disjoint file scopes run their BUILD agents in parallel. A phase without `File scope` never runs in parallel — omitting it is the opt-out.
+
 4. **Cross-cut.** Derive the test plan from the done-when items, plus at least one dirty test (error path or boundary from Edge cases) per code-touching phase; record the test coverage level (ask user or default to 100%).
 
 5. **Finalize the file.** The plan was built progressively across steps 1-4; ensure it matches the schema. **Do NOT commit it.**
 
-   This is the **full plan-file schema minus the Medium/Complex-only sections** (Chosen Approach, Rejected Approaches, Assumptions, Decision Log). The canonical schema lives in `Skill: planning` Step 7 — **keep this Quick variant in sync with it.** Each phase body carries `**Gate:**` (see step 3's assignment rule).
+   This is the **full plan-file schema minus the Medium/Complex-only sections** (Chosen Approach, Rejected Approaches, Assumptions, Decision Log). The canonical schema lives in `Skill: planning` Step 7 — **keep this Quick variant in sync with it.** Each phase body carries `**Model:**`, `**Gate:**`, `**Depends on:**`, and `**File scope:**` (see step 3's assignment rules).
 
    ```markdown
    # Plan: [Topic]
    **Created:** YYYY-MM-DD
-   **Status:** ready
+   **Status:** draft
    **Complexity:** simple
    ---
    ## Context
@@ -113,7 +120,7 @@ Corrections → update and re-confirm. If the response raises new open questions
    - [constraints from shared step 3]
    ---
    ## Implementation Phases
-   [phase bodies from step 3 -- each carries **Gate:**]
+   [phase bodies from step 3 -- each carries **Model:**, **Gate:**, **Depends on:**, **File scope:**]
    ---
    ## Test Coverage
    **Level:** [from step 4]
@@ -127,10 +134,10 @@ Corrections → update and re-confirm. If the response raises new open questions
    _To be filled during /code-foundations:build_
    ```
 
-6. **Check** — dispatch a sonnet subagent to review the saved plan with fresh eyes:
+6. **Check** — dispatch a fable subagent to review the saved plan with fresh eyes (the plan is the highest-leverage artifact in the pipeline; one fable pass here is cheap insurance):
 
    ```
-   Agent: sonnet, "Review plan"
+   Agent: fable, "Review plan"
    Prompt: Review .code-foundations/plans/<plan>.md for structural issues.
 
    Checklist:
@@ -140,16 +147,22 @@ Corrections → update and re-confirm. If the response raises new open questions
      code seams in Produces stated as contracts (signature/type/route)
    - Tests: test plan covers DW items + at least one dirty test per code-touching phase
    - Skills: every phase has Skills field, skills match work type, skills actually available
+   - Model: every phase has a **Model:** field (fable/sonnet/haiku) matching its difficulty
    - Gate: every phase has a **Gate:** field (Full/Standard/Minimal) matching its risk
+   - Dependencies: every phase has **Depends on:** and referenced phases exist; a phase
+     consuming another's Produces depends on it; phases declared independent have
+     disjoint **File scope:** globs
 
    Output: PASS or FINDINGS with specific fix recommendations.
    ```
 
    PASS -> proceed. FINDINGS -> fix; **structural fixes (phase boundaries, DW set, Produces seams) -> re-run CHECK**; minor fixes -> proceed.
 
-7. **Present and ask.** Print the plan summary as markdown in conversation — phases with goals, done-when items, test coverage — then `AskUserQuestion`: "Build it, adjust it, or tell me what to do?" **`preview` REQUIRED on every option**: the identical plan summary, so the user can review it inside the dialog even if the print was skipped. The collapsed Write output doesn't count as presentation.
+7. **Present and ask.** End the turn with the full plan summary rendered as markdown in conversation — every phase with its goal, model, gate, dependencies, done-when items, and the test coverage — closing with "Build it, adjust it, or tell me what to do?" The user replies in their own words. The summary must be the turn's **final message, with no tool calls after it**: the conversation is the only surface that renders a multi-phase plan in full (dialog previews truncate it, and the collapsed Write output doesn't count as presentation). Parse the reply — "build it" and equivalents proceed; anything else is an adjustment or a question, handle it and re-present.
 
-8. **If build:** Suggest default thinking effort, run `/code-foundations:build .code-foundations/plans/<plan>.md`.
+   **On confirmation, flip `**Status:** draft` → `**Status:** ready` in the plan file.** Build refuses to execute a plan whose Status isn't `ready`, so the confirmed presentation is a structural gate, not a convention — a plan the user never saw cannot build.
+
+8. **If build:** Suggest the user drop thinking effort to **low** for the build run (the plan carries the reasoning; orchestration is dispatch work), then run `/code-foundations:build .code-foundations/plans/<plan>.md`.
 
 That's it. No EXPLORE, no multi-step planning pipeline. Quick track stays compressed — the staging is lightweight at 1-2 phases — and should take under 3 minutes from invocation to handoff.
 

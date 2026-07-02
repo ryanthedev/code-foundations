@@ -15,10 +15,10 @@ How `/code-foundations:plan` and `/code-foundations:build` chain together. Refer
 [Standard/Full pipeline (skill: planning), staged in place:                (Medium/Complex)
    Discover → Classify → Explore → Decompose → Detail → Cross-cut → Save → Check → Confirm → Handoff]
   ↓
-[Each phase gets **Model:**, **Gate:**, **Skills:** — Gate drives build's gate policy]
-[Save to .code-foundations/plans/YYYY-MM-DD-topic.md]
+[Each phase gets **Model:**, **Gate:**, **Skills:**, **Depends on:**, **File scope:** — Gate drives build's gate policy, Depends on + File scope drive wave derivation]
+[Save to .code-foundations/plans/YYYY-MM-DD-topic.md — Status: draft until the user confirms the presented plan, then ready]
   ↓
-[Set thinking effort to default — plan has the reasoning, orchestration doesn't need max effort]
+[Drop thinking effort for the build run — the plan carries the reasoning (low for all-serial plans, default when the plan declares waves)]
   ↓
 /code-foundations:build .code-foundations/plans/YYYY-MM-DD-topic.md
   ↓
@@ -52,29 +52,45 @@ Claude Instance 1                        Claude Instance 2
 
 ---
 
-## Plan File Model Override Syntax
+## Intra-Build Waves
 
-Plans can optionally specify model per phase:
+Parallelism also exists *within* one build: phases with no dependency between them, disjoint `**File scope:**` globs, and Standard/Minimal gates run their BUILD agents concurrently in separate phase worktrees, integrated sequentially by the orchestrator (cherry-pick, plan-order commits). The planner opts a phase in by giving it `File scope`; build derives the waves — see `commands/build.md` Wave Derivation. This composes with inter-build parallelism above: waves inside each instance, instances across plan files.
+
+---
+
+## Plan File Model Syntax
+
+Every phase carries a `**Model:**` field. The ladder: **fable** (judgment-heavy: novel architecture, security-sensitive design, cross-cutting refactors) → **sonnet** (the default — Sonnet 5 handles well-specified implementation fast and cheap) → **haiku** (mechanical: config edits, renames, doc moves). **opus** stays a valid override for when fable is unavailable or the user asks for it.
 
 ```markdown
 ### Phase 1: Simple Config
+**Model:** haiku
 - [ ] Update config file
 
 ### Phase 2: Complex Engine
-**Model:** opus
+**Model:** fable
 - [ ] Build query parser
 - [ ] Implement optimizer
 ```
 
-If `**Model:**` is omitted, auto-detection applies (see Model Resolution + Gate Policy Detection in `commands/build.md`).
+`**Model:**` is required on every phase — there are no legacy plans; build stops and asks for a re-plan when the field is missing. REVIEW runs one tier below BUILD (fable→sonnet, opus→sonnet, sonnet→haiku, haiku floor) — prover-verifier asymmetry, intentional. The one deliberate exception: security-sensitive REVIEW samples run on **fable** regardless of the BUILD model — for security, verification rigor beats cost asymmetry.
+
+Model facts worth knowing when assigning:
+
+- **Fable 5** — strongest judgment; give it intent ("why") framing in dispatch prompts; its failure mode is over-elaboration, not laziness, so pair with a brevity nudge on long tasks.
+- **Sonnet 5** — new tokenizer (~1.0–1.35× the tokens of Sonnet 4.6 for the same input); adaptive thinking on by default; excellent default builder.
+- **Opus 4.8** — literal instruction follower: state scope explicitly ("apply to every section, not just the first").
+- **Haiku 4.5** — needs explicit, self-contained prompts; anchor output formats with an example.
 
 ---
 
-## Thinking Effort for Building
+## Thinking Effort Doctrine
 
-Set thinking effort to **default** before build. The plan already contains the strategic reasoning — max effort during orchestration is wasted overhead. The subagents do the heavy thinking in their own contexts. Default effort on the orchestrator saves tokens without losing quality.
+Effort follows where the reasoning lives:
 
-- Planning: **max** effort
-- Building/execution: **default** effort
+- **Planning: high.** The plan is the highest-leverage artifact — decomposition, seam contracts, and gate/model assignment are judgment work. This is where deep thinking pays.
+- **Building: low for all-serial plans, default when the plan declares waves.** The plan already contains the strategic reasoning; serial orchestration is dispatch work. Wave builds keep default effort because the orchestrator retains real judgment (integration failures, wave-failure handling). The subagents think in their own contexts either way — orchestrator effort doesn't cascade to them.
+
+In dispatch prompts, steer per-agent depth with the wording-sensitive phrases: encourage with "This task involves multi-step reasoning. Think carefully before responding."; suppress with "Answer directly without deliberating." — not with hand-written step plans.
 
 Worktree provides filesystem isolation from other builds.
