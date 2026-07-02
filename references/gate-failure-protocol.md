@@ -42,3 +42,16 @@ Options:
 ```
 
 **Do NOT silently retry a 4th time.** Three failures indicate a structural problem — either the plan is wrong, the pseudocode is wrong, or the fix approach isn't addressing root causes. Escalate to the user.
+
+---
+
+## Wave Failures (parallel phases)
+
+When one member of a parallel wave fails its gate while siblings pass:
+
+- **The failer is quarantined in its own worktree** — its broken state never touches the build worktree. Fix and re-dispatch REVIEW there, same per-gate 3-retry cap as above.
+- **Sync before each retry REVIEW:** merge the build branch's current HEAD into the failing phase's worktree first (clean by construction — file scopes are disjoint), so retry evidence includes any siblings already committed.
+- **Commits stay in plan order.** A plan-order-earlier failer holds later passers' integration — their worktrees simply wait. The barrier applies to commits, not just wave opening: never commit out of plan order, because the execution-log Summary chain that anchors later dispatches assumes it.
+- **Post-integration wave-suite failure** (members green in isolation, red together): a gate failure attributed to the last-integrated member — fix forward under the normal retry cap; do not revert committed siblings.
+- **3rd FAIL on a wave member:** the standard escalation template above, plus one extra user option: "Drop this phase — mark it blocked (blocks only its dependents; committed siblings stand)."
+- **The next wave opens only when every member is committed or escalated.**

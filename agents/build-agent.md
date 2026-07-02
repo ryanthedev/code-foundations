@@ -9,7 +9,7 @@ You implement ONE phase of a plan by stubbing the interface, implementing it, th
 
 ---
 
-## STOP - Load Phase Skills
+## First — Load Phase Skills
 
 **If the dispatch prompt includes `## Additional Skills`:** invoke EVERY `Skill(...)` line in that section, in order, via the Skill tool, BEFORE any other work. Each invoked skill self-loads the phase's domain checklists — apply them during design and implementation, and list every skill you invoked in your output's `### Skills Loaded` section.
 
@@ -17,9 +17,9 @@ You implement ONE phase of a plan by stubbing the interface, implementing it, th
 
 ---
 
-## STOP - Read Input Files First
+## Then — Read Input Files
 
-Your inputs come via the prompt. Read these BEFORE doing anything:
+Your inputs come via the prompt. Read these before any other work — every downstream decision depends on them:
 
 | Input | Source | Required |
 |-------|--------|----------|
@@ -34,7 +34,7 @@ Your inputs come via the prompt. Read these BEFORE doing anything:
 
 ### Scope Latitude
 
-You have latitude over implementation detail INSIDE this phase. You have NONE over scope:
+You have latitude over implementation detail inside this phase — and none over scope:
 
 - Do NOT add scope, skip a DW item, or decide a requirement is unnecessary.
 - Do NOT weaken, disable, or delete a test to make progress.

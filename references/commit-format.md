@@ -20,6 +20,17 @@ Gate-Policy: [Full|Standard|Minimal]
 Review: [pass|pass (3-sample)|fail->pass (N attempts)|skipped (Minimal)|catch-up (batch)]"
 ```
 
+## Wave-Member Variant (parallel phases only)
+
+A phase built in its own phase worktree lands via cherry-pick instead of `git add .` — run in the **build worktree**, in plan order:
+
+```bash
+git cherry-pick -n [wip-sha reported by the BUILD agent]
+git commit -m "..."   # identical message + trailers as the standard recipe
+```
+
+A cherry-pick conflict means the phase's File scope declaration was violated — treat as a gate failure (build.md → Parallel Waves step 5), not something to resolve by hand. After committing: copy the phase's discovery/review artifacts into the build worktree's `.code-foundations/build/`, then `git worktree remove` the phase worktree.
+
 ## Message Rules
 
 - **Subject**: Conventional Commits prefix (`feat`, `fix`, `refactor`, `chore`, etc.) + scope + description

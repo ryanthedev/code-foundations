@@ -22,6 +22,7 @@ Keeping these here instead of inline in `build.md`:
 - `## Additional Skills` blocks: for EACH skill assigned to the phase, emit one `Skill(<plugin:name>)` line — this plugin's own skills as `Skill(code-foundations:<name>)`, skills from other installed plugins as `Skill(<plugin>:<name>)`. All assigned skills are real, model-invocable skills; the build subagent invokes them via the Skill tool (an explicit `Skill(...)` line in the dispatch prompt invokes the skill even though subagents don't inherit the register). The Skill tool loads the SKILL.md body, and each skill self-loads its own checklists via `${CLAUDE_SKILL_DIR}` once invoked — so emit NO separate checklist `Read()` lines. Do not Read-inject SKILL.md text; that was the old workaround for non-invocable skills.
 - **Skills propagate BUILD → REVIEW:** if the BUILD agent's `### Skills Loaded` output reports skills beyond the plan's assignment, add those as `Skill(<plugin:name>)` lines to the REVIEW dispatch's `## Additional Skills` block too. The reviewer needs the same skill context to verify against.
 - Test/typecheck/lint command placeholders → resolve from project config (package.json scripts, Makefile, Cargo.toml, etc.) — exact runnable commands, not descriptions.
+- **Wave mode (parallel phases only):** when a phase runs in its own phase worktree (build.md → Parallel Waves), every path in the prompt is rooted at that worktree, and the prompt gains two additions — for BUILD: "Work ONLY inside `<worktree-root>`; run all commands from there. End with exactly ONE commit: `wip(phase-N): <name>` — squash if you made more. Report the worktree path and wip sha in your output." For REVIEW: "Run all commands from `<worktree-root>`." Serial phases omit all of this.
 
 ---
 
@@ -32,7 +33,7 @@ Use for **Full gate** and **Standard gate** phases. The build agent runs discove
 ```
 Agent tool:
 - subagent_type: "code-foundations:build-agent"
-- model: [from plan's **Model:** field, or omit if not set]
+- model: [from plan's **Model:** field — required; a plan without it stops the build at LOAD]
 - description: "BUILD Phase N"
 - prompt: |
     Build Phase N of the build plan. This is a two-part task:
@@ -40,6 +41,10 @@ Agent tool:
     2. Implementation — stub the interface, implement it, then write tests that validate each DW item (all tests must pass)
 
     Write discovery file before implementing.
+
+    The phase body and its skills carry the design reasoning — implement steadily
+    within them; when the plan doesn't fit reality, return UPDATE_PLAN rather than
+    re-architecting on your own.
 
     ## Plan Context
     [paste the Context section from the plan file — the 2-3 sentence problem statement]
@@ -92,7 +97,7 @@ Use for **Minimal gate** phases. Skips discovery — implements directly from pl
 ```
 Agent tool:
 - subagent_type: "code-foundations:build-agent"
-- model: [from plan's **Model:** field, or omit if not set]
+- model: [from plan's **Model:** field — required; a plan without it stops the build at LOAD]
 - description: "BUILD Phase N (minimal)"
 - prompt: |
     Build Phase N of the build plan. This phase uses minimal gate
@@ -139,12 +144,12 @@ Use for **Full and Standard gate** REVIEW sub-phases. Always uses `code-foundati
 
 **Debiasing rules (do not violate):** the reviewer must receive NO intent-framing. Do NOT include the plan's Context/problem statement, progress summaries ("Completed Phase…"), the discovery file, or any account of what the build agent did or intended. Requirements + files + commands only.
 
-**Security-sensitive (3-sample):** if the phase is marked `**Security-sensitive:** yes` in the plan, dispatch THREE independent copies of this prompt (separate Agent calls) and take the majority verdict. The copies are identical EXCEPT for the per-sample review path: substitute `K`=1,2,3 so each sample's review path is `<plan-name>-phase-N-review-sample-K.md`. Without this the three samples race and overwrite a single review file. For a non-sampled (single) review, drop the `-sample-K` suffix (review → `<plan-name>-phase-N-review.md`).
+**Security-sensitive (3-sample):** if the phase is marked `**Security-sensitive:** yes` in the plan, dispatch THREE independent copies of this prompt as three Agent calls **in a single message** (they run concurrently — independence is contextual, not temporal) on **fable**, and take the majority verdict. The copies are identical EXCEPT for the per-sample review path: substitute `K`=1,2,3 so each sample's review path is `<plan-name>-phase-N-review-sample-K.md`. Without this the three samples race and overwrite a single review file. Each sample writes its own scratch artifacts (coverage output, temp files) under a sample-unique directory and runs no mutating commands (no `lint --fix`, no dependency installs). If the suite uses shared mutable resources (DB, ports, docker services, on-disk fixtures), run the three samples sequentially instead. For a non-sampled (single) review, drop the `-sample-K` suffix (review → `<plan-name>-phase-N-review.md`).
 
 ```
 Agent tool:
 - subagent_type: "code-foundations:post-gate-agent"
-- model: [resolved REVIEW model per the orchestrator's Model Resolution — the phase's BUILD model downgraded one tier; omit if the plan sets no **Model:**]
+- model: [resolved REVIEW model per the orchestrator's Model Resolution — the phase's BUILD model downgraded one tier (fable→sonnet, opus→sonnet, sonnet→haiku, haiku floor); fable for security-sensitive samples]
 - description: "REVIEW Phase N"
 - prompt: |
     Independently verify the implementation in the files below against the
@@ -206,12 +211,12 @@ Agent tool:
 
 Inserted dynamically before a Full gate phase when 2+ phases have run since the last REVIEW. Batches verification across accumulated Minimal phases — the only tier without per-phase REVIEW. Same debiasing rules as § REVIEW: no plan Context, no progress narrative, no discovery files.
 
-**Model:** use the upcoming Full phase's resolved REVIEW model (its BUILD model downgraded one tier per the orchestrator's Model Resolution). If that phase has no `**Model:**` set, omit the model parameter.
+**Model:** use the upcoming Full phase's resolved REVIEW model (its BUILD model downgraded one tier per the orchestrator's Model Resolution).
 
 ```
 Agent tool:
 - subagent_type: "code-foundations:post-gate-agent"
-- model: [upcoming Full phase's resolved REVIEW model, or omit]
+- model: [upcoming Full phase's resolved REVIEW model]
 - description: "Catch-up REVIEW for Phases X-Y"
 - prompt: |
     Independently verify the implementations below against their requirements.

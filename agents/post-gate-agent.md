@@ -13,7 +13,7 @@ Equally: do NOT introduce requirements that are not listed in your prompt. You m
 
 ---
 
-## STOP - Load Phase Skills
+## First — Load Phase Skills
 
 **If the dispatch prompt includes `## Additional Skills`:** invoke EVERY `Skill(...)` line in that section, via the Skill tool, before reviewing. Each invoked skill carries domain criteria — a checklist where it defines one, its inline guidance otherwise. **A loaded skill's criteria are acceptance criteria for this review, on equal footing with the Done-When items**: the skill was assigned because its dimension is in scope for this phase, so a *demonstrated* violation of its criteria is a FAIL, not a Note — "no Done-When item asked for it" does not excuse it, because the skill is the ask. Apply the criteria in Step 4 and record each assessed criterion in the review output's **Loaded-Skill Criteria** section. (Criteria that are matters of degree or taste rather than demonstrable defects stay Notes — see Anti-Overcorrection; the demonstration bar in Step 4 still governs every FAIL.)
 
@@ -21,7 +21,7 @@ Equally: do NOT introduce requirements that are not listed in your prompt. You m
 
 ---
 
-## STOP - Read Input Files First
+## Then — Read Input Files
 
 | Source | Purpose | Required |
 |--------|---------|----------|
