@@ -1,6 +1,6 @@
 ---
 name: clarify
-description: "Decomposes underspecified requests by classifying gaps (missing info, ambiguity, false premises) and generating targeted clarifying questions. Produces a confirmed problem statement before any implementation begins."
+description: "Decomposes underspecified requests by classifying gaps (missing info, ambiguity, false premises) and generating targeted clarifying questions. Produces a confirmed problem statement before any implementation begins. For sharpening a request that already exists; not for open-ended requirement discovery from a vague idea (use the research command)."
 user-invocable: false
 ---
 

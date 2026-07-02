@@ -6,11 +6,11 @@ user-invocable: false
 
 # Skill: aposd-verifying-correctness
 
-## STOP - Before "Done"
+## Before "Done" — scope check
 
 **Design quality ≠ correctness.** Well-designed code can still have bugs, missing requirements, or safety issues.
 
-**Run ALL dimension checks before claiming done.** "I think I covered everything" without explicit mapping is a red flag.
+**Run every dimension check before claiming done** — "I think I covered everything" without explicit mapping is exactly the gap this skill exists to close.
 
 ---
 

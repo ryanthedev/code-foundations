@@ -1,6 +1,6 @@
 ---
 name: cc-control-flow-quality
-description: "Audits and restructures control flow using Code Complete's nesting, cyclomatic complexity, loop design, guard-clause, and boolean simplification rules. Covers deep nesting, loop exit design, index naming, and callback chains."
+description: "Audits and restructures control flow using Code Complete's nesting, cyclomatic complexity, loop design, guard-clause, and boolean simplification rules. Covers deep nesting, loop exit design, index naming, and callback chains. For statement-level flow inside a routine; not for routine/class structure (use cc-routine-and-class-design) or staging a broader refactor (use cc-refactoring-guidance)."
 user-invocable: false
 ---
 

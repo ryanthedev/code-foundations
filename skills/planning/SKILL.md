@@ -13,7 +13,7 @@ The plan is written in stages, not one shot: DECOMPOSE fixes the phase shape and
 
 The plan is a contract between plan and build. It specifies WHAT and WHY at the strategic level, with explicit interfaces between phases.
 
-**Thinking effort:** Planning benefits from max effort. If not already at max, suggest the user increase it before proceeding.
+**Thinking effort:** Planning is where the reasoning lives — it benefits from **high** effort. If the session is running lower, suggest the user increase it before proceeding. (Build runs the other way: low for all-serial plans, default for wave plans — see `references/plan-integration.md`.)
 
 ### Create Progress Tasks
 
@@ -24,6 +24,8 @@ DISCOVER | CLASSIFY | EXPLORE | DECOMPOSE | DETAIL | CROSS-CUT | SAVE | CHECK | 
 ```
 
 During DETAIL, add one sub-task per phase under it (one `TaskCreate` each), worked in DAG order.
+
+At user checkpoints (EXPLORE decision gate, Skeleton Checkpoint, CONFIRM) the rendered artifact is the turn's final message — complete the step's task at the **start of the next turn**, after the user answers, so the bookkeeping never trails the presentation.
 
 **CHECK runs on all tracks** — never skip independent review.
 
@@ -43,9 +45,8 @@ The code-standards scan already ran in the plan command's shared step 1 — `doc
 
 A confirmed problem statement already arrives from the plan command's shared step — clarification ran there, under its 5-round cap. Do **not** reload the clarify skill or re-clarify from scratch. Only if deeper research contradicts or materially broadens the stated problem do you re-confirm (see Output below).
 
-### Questioning Gate
+### Gate — proceed to CLASSIFY only when all three hold
 
-**STOP. Cannot proceed until ALL true:**
 - [ ] Codebase research deepened (pattern reuse + prior art checked)
 - [ ] Track received from dispatch (Medium/Complex)
 - [ ] Problem statement holds, or was re-confirmed after a discovery contradiction
@@ -54,7 +55,7 @@ A confirmed problem statement already arrives from the plan command's shared ste
 
 A confirmed problem statement arrives from the shared steps in the plan command. DISCOVER refines it with deeper codebase context — don't redo clarification from scratch.
 
-Review the existing problem statement against what deeper discovery found. If it holds, proceed. If discovery reveals the problem is different or broader than stated, update and re-confirm via `AskUserQuestion`: "Discovery found [X]. Updated problem statement: [Y]. Does this still capture what you want?"
+Review the existing problem statement against what deeper discovery found. If it holds, proceed. If discovery reveals the problem is different or broader than stated, update it, render the updated statement as markdown in conversation, and end the turn asking: "Discovery found [X]. Does the updated statement still capture what you want?" — content confirmations happen in conversation, where the full statement is visible (see Channel Selection in [adaptive-questioning.md](${CLAUDE_PLUGIN_ROOT}/references/adaptive-questioning.md)).
 
 ---
 
@@ -108,17 +109,13 @@ Approaches must be **structurally different** (different technology, pattern, or
 
 ### Recommendation + Decision Gate
 
-Print the approach table in conversation, then **name a recommendation with 1-sentence rationale** — not neutral presentation. The user wants an opinion, then picks.
+End the turn with the approach comparison rendered as markdown in conversation — the full table (trade-offs, best-when, research source per approach; pre-mortem for Complex) — then **name a recommendation with 1-sentence rationale** (not neutral presentation; the user wants an opinion) and ask which approach to take. The comparison must be the turn's **final message, with no tool calls after it**: an approach comparison is a content review, and the conversation is the only surface that renders it in full (see Channel Selection in [adaptive-questioning.md](${CLAUDE_PLUGIN_ROOT}/references/adaptive-questioning.md)).
 
-**MUST use `AskUserQuestion`** with options:
-- Each approach from the table (A, B, C...) as a selectable option — **`preview` REQUIRED on each**: that approach's trade-offs, best-when, and research source as markdown. The preview pane is the guaranteed-visible surface; the user compares approaches side-by-side there even if the table print was skipped.
-- "Different direction" — none of the above fits
+The user answers free-form — an approach name, "your recommendation", or a different direction entirely.
 
-**Hard gate: Cannot proceed to DETAIL until the user picks an approach via `AskUserQuestion`.** Writing "Going with X" and moving on is a violation — the user must answer. No silent defaults, no "I'll flag it at confirm."
+**Gate: DETAIL starts only after the user has picked.** Writing "Going with X" and moving on skips the decision that anchors every phase body — the user must answer. If they've been terse, apply confirmatory mode: lead with "I'll go with [X] unless you'd rather one of the others."
 
-**Question style:** See [adaptive-questioning.md](${CLAUDE_PLUGIN_ROOT}/references/adaptive-questioning.md). Encode the recommendation in the option labels (e.g., "Use JWT (recommended)") so confirmatory mode works inside the structured tool.
-
-Record chosen approach, rationale, and fallback.
+Record chosen approach, rationale, and fallback — held in conversation until DECOMPOSE writes them into the plan file's `## Chosen Approach` (the file doesn't exist yet).
 
 ---
 
@@ -146,10 +143,10 @@ For each phase, write only:
 
 Skills are matched HERE so DETAIL can load them while writing phase bodies — a phase body written without domain knowledge is the planner guessing.
 
-1. Match against your **available-skills register** — every skill whose description is in context. That includes the 19 internal code-foundations skills (`user-invocable: false`: model-discoverable, hidden from the slash menu) AND skills from other installed plugins (e.g. skill-craft, mcp-builder, security-guidance). Each description carries its own when-to-match and sibling-disambiguation (the "not for X (use Y)" clauses) — match on the descriptions directly.
+1. Match against your **available-skills register** — every skill whose description is in context. That includes the 18 matchable internal code-foundations skills (`user-invocable: false`: model-discoverable, hidden from the slash menu; `planning` itself is excluded — `disable-model-invocation` keeps it out of the register) AND skills from other installed plugins (e.g. skill-craft, mcp-builder, security-guidance). Each description carries its own when-to-match and sibling-disambiguation (the "not for X (use Y)" clauses) — match on the descriptions directly.
 2. For each phase, compare the phase's goal against every candidate skill's when-to-match conditions (register descriptions for external skills; catalog entries plus their disambiguation notes for the internal sibling pairs)
 3. Assign skills whose triggers match the phase work. Most phases match 1-3 skills.
-4. Exclude workflow commands (plan, build, debug, research, code-standards, clarify)
+4. Exclude workflow commands and pipeline skills (plan, build, debug, research, code-standards, clarify, planning)
 5. Write `**Skills:**` on every skeleton header — `none -- [reason]` valid, omission NOT valid
 
 **`none` is the exception, not the default.** If a phase writes code, designs an API, refactors, handles errors, touches control flow, or modifies existing untested code — there is almost certainly a matching skill. DETAIL may add skills it discovers while writing bodies; SAVE validates the final set.
@@ -162,16 +159,12 @@ Phase counts: Medium 3-5, Complex 5-7. Prefer fewer. Express independent phases 
 
 ### Skeleton Checkpoint
 
-Catching a wrong decomposition here is far cheaper than after the bodies are written. The user can only review what the dialog itself shows them — Write tool results render collapsed, and conversation prose is routinely skipped under tool-chaining. **The skeleton travels INSIDE the `AskUserQuestion` call, in the `preview` field.** Do NOT write the plan file first; the file is written after approval.
+Catching a wrong decomposition here is far cheaper than after the bodies are written. End the turn with the full skeleton rendered as markdown in conversation, asking "Does the N-phase decomposition look right?" — the user replies free-form. Two rules make this checkpoint structural rather than skippable:
 
-`AskUserQuestion` — "Does the N-phase decomposition look right? Review the skeleton in the preview." Options — **the `preview` field on BOTH options is REQUIRED and carries the identical full skeleton**:
+1. **The skeleton is the turn's final message, with no tool calls after it.** Nothing is written to disk yet, so there is nothing to chain into — dialog previews truncate multi-phase content and collapsed Write output doesn't count as presentation, which is why the conversation is the channel.
+2. **The plan file is written only after approval** (next section). A skeleton the user never saw cannot become a plan.
 
-- "Looks right" — description: "Write the skeleton to the plan file and proceed to detailing each phase." — `preview`: the skeleton
-- "Adjust" — description: "Name what's off — phase boundaries, ordering, scope, or missing work." — `preview`: the skeleton
-
-An option without the skeleton preview asks the user to confirm something they cannot see — the question is invalid without it. On "Adjust": revise, re-ask with the updated skeleton in the previews.
-
-Preview content shape (markdown):
+Skeleton content shape (markdown):
 
 ```markdown
 ## Skeleton: N phases
@@ -181,11 +174,11 @@ Preview content shape (markdown):
 DAG: 1 → 2 → {3, 4} → 5
 ```
 
-Printing the skeleton in conversation before the call is good practice too — but the preview is the mandatory channel, not the print.
+On "adjust"-type replies: revise, re-present the updated skeleton the same way.
 
 ### Write the Skeleton to the File
 
-After "Looks right": create the plan file (see Step 7 schema): header + Context + Constraints + Chosen Approach, then one header per phase carrying name, goal, Depends on / Unlocks, Produces, Skills, Difficulty. The file is built **progressively** across DECOMPOSE -> DETAIL -> CROSS-CUT -> SAVE — recoverable if interrupted. Do not commit it.
+After "Looks right": `mkdir -p .code-foundations/plans` and create the plan file at `.code-foundations/plans/YYYY-MM-DD-<topic-slug>.md` (see Step 7 schema). The header carries `# Plan:`, `**Created:**`, `**Status:** draft`, `**Complexity:**`; then Context + Constraints + Chosen Approach, then one header per phase carrying name, goal, Depends on / Unlocks, Produces, Skills, Difficulty. The file is built **progressively** across DECOMPOSE -> DETAIL -> CROSS-CUT -> SAVE — recoverable if interrupted. Do not commit it.
 
 ---
 
@@ -223,14 +216,15 @@ For each phase task, in DAG order:
 
 **Constraints:** [non-discoverable requirements -- omit if none]
 **Edge cases:** [boundaries + error paths this phase must handle -- skill-informed; omit if none]
+**Depends on:** [none | Phase X] | **Unlocks:** [Phase Y]
+**File scope:** [globs this phase may touch, e.g. `src/auth/**, tests/auth/**` -- enables wave parallelism during build; omit if unknowable, and the phase then never runs in parallel]
+**Produces:** [what downstream consumes -- carried from skeleton. If the seam is code, state the contract: signature / type / route / schema -- not prose]
+**Security-sensitive:** [yes -- ONLY if the phase touches auth, crypto, secrets, deserialization, or untrusted input; omit otherwise. Triggers 3-sample majority-vote REVIEW during build.]
+**Rollback:** [required if the phase performs destructive or irreversible actions (data deletion, prod deploy, migration): the compensating action, or "point of no return -- [mitigation]"; omit otherwise]
 
 [Medium/Complex only]
 **Approach notes:** [non-discoverable user decisions -- omit if none]
 **File hints:** `path/` -- [why relevant]
-**Depends on:** [Phase X] | **Unlocks:** [Phase Y]
-**Produces:** [what downstream consumes -- carried from skeleton. If the seam is code, state the contract: signature / type / route / schema -- not prose]
-**Security-sensitive:** [yes -- ONLY if the phase touches auth, crypto, secrets, deserialization, or untrusted input; omit otherwise. Triggers 3-sample majority-vote REVIEW during build.]
-**Rollback:** [REQUIRED if the phase performs destructive or irreversible actions (data deletion, prod deploy, migration): the compensating action, or "point of no return -- [mitigation]"; omit otherwise]
 [/Medium/Complex only]
 
 **Done when:**
@@ -256,9 +250,9 @@ Only non-discoverable user decisions. **Test:** could codebase search find it? I
 
 Derive the whole-plan sections now that every phase body exists — they fall out of the full phase set.
 
-### Test Coverage (MANDATORY -- ask first)
+### Test Coverage (ask first — the level gates how much you derive next)
 
-`AskUserQuestion`: "How much test coverage?" Options: 100% (recommended), Backend only, Backend + frontend, None, Per-phase. Record under `## Test Coverage`. The level gates how much you derive next.
+`AskUserQuestion`: "How much test coverage?" Options (a decisive pick, so the dialog is the right channel): **100% (Recommended)**, **Targeted** (user names the layers, e.g. backend only), **Per-phase**, **None**. On **Targeted**, ask in conversation which layers before recording. Record under `## Test Coverage`.
 
 ### Test Plan
 
@@ -290,22 +284,27 @@ The file already exists from DECOMPOSE, with bodies and cross-cut sections fille
 
 ### Model Detection + Gate Assignment + Skill Validation
 
-**Model detection per phase (MANDATORY -- every phase MUST have `**Model:**` populated):**
+**Model detection per phase — every phase carries `**Model:**`; build stops on a plan that omits it:**
+
+Rules are evaluated **top-down, first match wins**, against the phase's name + Goal (keywords) and its DW list + File hints (counts); an "area" is a distinct top-level directory in File hints:
 
 ```
-OPUS_KEYWORDS  = [refactor, architect, migrate, redesign, rewrite, overhaul,
+FABLE_KEYWORDS = [refactor, architect, migrate, redesign, rewrite, overhaul,
                   new abstraction, novel pattern, system design]
 HAIKU_KEYWORDS = [config, rename, typo, bump, cleanup, delete, remove,
                   backfill, data fix, sql update, doc update]
 
-DW items <= 2 AND file hints <= 1 area AND any HAIKU_KEYWORD   -> haiku
-Any OPUS_KEYWORD OR (DW items >= 6 AND file hints >= 4 areas)  -> opus
-Otherwise                                                       -> sonnet
+1. **Security-sensitive:** yes OR any FABLE_KEYWORD
+   OR (DW items >= 6 AND file hints >= 4 areas)                  -> fable
+2. DW items <= 2 AND file hints <= 1 area AND any HAIKU_KEYWORD  -> haiku
+3. Otherwise                                                     -> sonnet
 ```
 
-**Why Sonnet is the default, not omit:** Omit means inherit the user's session model -- and plan tells the user to crank to max effort, so Opus propagates to every subagent. Most code-touching phases (test, fix, validate, implement, wire, helper, hook, integration) are mechanical translation work that runs faster and cheaper on Sonnet without measurable quality loss. Reserve Opus for the keyword-flagged design-heavy phases.
+(The fable rule sits first so a security-sensitive "auth config cleanup" can never fall through to haiku on its mechanical keywords.)
 
-**Gate assignment per phase (MANDATORY -- every phase MUST have `**Gate:**` populated):**
+**Why Sonnet is the default, not omit:** Omit means inherit the user's session model — and the session may be running fable, which then propagates to every subagent. Most code-touching phases (test, fix, validate, implement, wire, helper, hook, integration) are well-specified translation work that Sonnet 5 runs faster and cheaper without measurable quality loss. Reserve Fable 5 for the keyword-flagged judgment-heavy phases, where its depth pays. (`opus` stays valid only as an explicit user-requested override — e.g. when fable is unavailable.)
+
+**Gate assignment per phase — every phase carries `**Gate:**`; build stops on a plan that omits it:**
 
 Build consumes the `**Gate:**` field verbatim — `Full`, `Standard`, or `Minimal` (see `commands/build.md` resolution order, rule 2). The planner sets it here with the risk context in hand. Mirror build.md's risk rules:
 
@@ -318,13 +317,19 @@ Build consumes the `**Gate:**` field verbatim — `Full`, `Standard`, or `Minima
 
 Skill presence does NOT decide the gate — every phase carries skills, so skills cannot discriminate gate level. Gate is keyed off the risk of the work itself, exactly as build resolves it.
 
-**Skill validation (EVERY phase MUST have `**Skills:**` field):**
+**Dependency + file-scope validation:**
+
+1. Every phase has `**Depends on:**` (`none` or `Phase X` refs) — build derives its execution waves from these edges; a missing field stops the build.
+2. Every referenced phase exists; a phase consuming another's `Produces` depends on it.
+3. Phases with no dependency path between them and disjoint `**File scope:**` globs will run their BUILDs in parallel — verify the declared scopes are genuinely disjoint. A phase without `File scope` never runs in parallel (that's the opt-out, not an error). Note build adds its own co-scheduling conditions (only Standard/Minimal gates share a wave, width ≤ 3, no shared mutable test resources) — don't promise parallelism in the plan summary for Full-gate phases.
+
+**Skill validation (every phase carries `**Skills:**`):**
 
 Skills were matched at DECOMPOSE and refined during DETAIL. Validate the final set:
 
 1. Every phase has `**Skills:**` populated — `none -- [reason]` valid, omission NOT valid
 2. Every skill name matches a real available skill present in your available-skills register — internal (code-foundations) or external (another plugin) (reject typos/nonexistent names)
-3. No workflow commands (plan, build, debug, research, code-standards, clarify)
+3. No workflow commands or pipeline skills (plan, build, debug, research, code-standards, clarify, planning)
 4. Code-writing phases with `none` justify why no skill's triggers match — on any gap, re-run the DECOMPOSE matching procedure for that phase
 
 ### Plan File Schema
@@ -332,7 +337,7 @@ Skills were matched at DECOMPOSE and refined during DETAIL. Validate the final s
 ```markdown
 # Plan: [Topic]
 **Created:** YYYY-MM-DD
-**Status:** ready
+**Status:** draft   <- flipped to `ready` at CONFIRM; build refuses a draft plan
 **Complexity:** [simple/medium/complex]
 ---
 ## Context
@@ -352,7 +357,7 @@ Skills were matched at DECOMPOSE and refined during DETAIL. Validate the final s
 (Use phase template from Step 5)
 ---
 ## Test Coverage
-**Level:** [100% / Backend only / Backend + frontend / None / Per-phase]
+**Level:** [100% / Targeted: <layers the user named> / Per-phase / None]
 ## Test Plan
 - [ ] [tests] [Medium/Complex only] + Integration + Manual [/Medium/Complex only]
 
@@ -372,18 +377,18 @@ Skills were matched at DECOMPOSE and refined during DETAIL. Validate the final s
 _To be filled during /code-foundations:build_
 ```
 
-### Save (MANDATORY)
+### Save
 
-The file was created at DECOMPOSE (`mkdir -p .code-foundations/plans` already done). Ensure every phase has `**Model:**`, `**Gate:**`, and `**Skills:**` populated and the schema is complete. **Do NOT commit** -- the plan is a working document, not a deliverable. Building handles worktree visibility by copying the plan file after worktree creation.
+The file was created at DECOMPOSE (`mkdir -p .code-foundations/plans` already done). Ensure every phase has `**Model:**`, `**Gate:**`, `**Skills:**`, and `**Depends on:**` populated, the header carries `**Status:** draft`, and the schema is complete — build hard-requires these fields and stops with "re-run /code-foundations:plan" when any is missing. **Do not commit** — the plan is a working document, not a deliverable. Building handles worktree visibility by copying the plan file after worktree creation.
 
 ---
 
 ## Step 8: CHECK
 
-**ALL tracks:** Dispatch subagent to review saved plan with fresh eyes. Never skip — independent review catches blind spots regardless of task size.
+**ALL tracks:** Dispatch subagent to review saved plan with fresh eyes. Never skip — independent review catches blind spots regardless of task size. The reviewer runs on **fable**: the plan is the highest-leverage artifact in the pipeline, and one fable pass here is cheap insurance.
 
 ```
-Agent: sonnet, "Review plan"
+Agent: fable, "Review plan"
 Prompt: Review .code-foundations/plans/<plan>.md for structural issues.
 
 Checklist:
@@ -402,7 +407,12 @@ Checklist:
   code-writing phases with `none` justify why no skill's triggers match
 - Gates: every phase has a Gate field populated (Full/Standard/Minimal), matching its risk
   (Full for security/auth/payment or new cross-phase seams; Minimal for docs/config-only; Standard otherwise)
-- Models: every phase has Model field populated (haiku/sonnet/opus -- never omitted)
+- Models: every phase has Model field populated (fable/sonnet/haiku -- opus only as an
+  explicit user-requested override; never omitted)
+- Dependencies: every phase has Depends on populated and referenced phases exist; a phase
+  consuming another's Produces depends on it; phases declared independent have disjoint
+  File scope globs (File scope absent is valid -- it just opts the phase out of waves)
+- Header: **Status:** is present and reads `draft` (CONFIRM flips it to `ready`)
 
 Output: PASS or FINDINGS with specific fix recommendations.
 ```
@@ -413,27 +423,26 @@ After return: PASS -> proceed. FINDINGS -> fix; **structural fixes (phase bounda
 
 ## Step 9: CONFIRM
 
-**Present to user:** phases, goals, skill assignments, constraint coverage, test coverage level (chosen at CROSS-CUT), review results. Print this summary as markdown in conversation, then `AskUserQuestion` with options carrying it — **`preview` REQUIRED on both** (the identical summary), so the user can review the plan inside the dialog even if the print was skipped. The user won't open the saved file, and Write/Edit tool results render collapsed.
+End the turn with the full plan summary rendered as markdown in conversation — every phase with its goal, model, gate, dependencies, and skills; constraint → phase mapping; test coverage level (chosen at CROSS-CUT); CHECK results; remaining questions — closing with "Does this look right? Anything to add or change?" The user replies in their own words.
 
-Summary content: phases with goals, constraint -> phase mapping, review results, remaining questions.
+Two rules make this checkpoint structural:
 
-Question: "Does this look right? Anything to add or change?" Options:
-- "Approve" — `preview`: the plan summary
-- "Request changes" — `preview`: the plan summary
+1. **The summary is the turn's final message, with no tool calls after it.** The conversation is the only surface that renders a multi-phase plan in full — the user won't open the saved file, Write/Edit results render collapsed, and dialog previews truncate (see Channel Selection in [adaptive-questioning.md](${CLAUDE_PLUGIN_ROOT}/references/adaptive-questioning.md)).
+2. **On approval, flip `**Status:** draft` → `**Status:** ready` in the plan file.** Build refuses a draft plan, so a plan the user never confirmed cannot execute.
 
-**Question style:** See [adaptive-questioning.md](${CLAUDE_PLUGIN_ROOT}/references/adaptive-questioning.md). If the user has been terse during planning, present the plan with assumptions stated rather than asking open-ended "thoughts?"
+If the user has been terse during planning, present with assumptions stated ("Approving means X and Y ship as specced") rather than asking open-ended "thoughts?"
 
 ### Corrections
 
-If changes requested: update plan. Structural changes -> re-run CHECK. Minor changes -> update and re-present.
+If changes requested: update plan (Status stays `draft`). Structural changes -> re-run CHECK. Minor changes -> update and re-present.
 
 ---
 
 ## Step 10: HANDOFF
 
-`AskUserQuestion`: "Plan saved. How would you like to proceed?"
+`AskUserQuestion` (a decisive two-option pick — the dialog is the right channel): "Plan saved and ready. How would you like to proceed?"
 
-1. **Build now** (Recommended) -- Suggest default thinking effort, run `/code-foundations:build .code-foundations/plans/<plan>.md`
+1. **Build now** (Recommended) -- Suggest the effort level for the build run (low if the plan is all-serial, default if any phase carries `**File scope:**` and is therefore wave-eligible — the plan carries the reasoning), then run `/code-foundations:build .code-foundations/plans/<plan>.md`
 2. **Tell me what to do** -- Numbered manual steps
 
 **Question style:** See [adaptive-questioning.md](${CLAUDE_PLUGIN_ROOT}/references/adaptive-questioning.md). The "Recommended" tag on Build now is the confirmatory cue — keep it there.

@@ -1,7 +1,7 @@
 {
   "name": "code-foundations",
-  "version": "5.5.0",
-  "description": "19 software engineering skills from Code Complete, APOSD, GoF, and Clean Architecture. Skills are internal (slash-invocable; injected via Read() — not auto-triggered). Research → plan → build workflow with Gate-field adaptive gates (Full | Standard | Minimal) and per-phase orchestrated commits.",
+  "version": "6.0.0",
+  "description": "19 software engineering skills from Code Complete, APOSD, GoF, and Clean Architecture, driving a research → plan → build workflow: per-phase gates (Full | Standard | Minimal), Fable/Sonnet 5 model ladder with prover-verifier review, wave-parallel phase execution in isolated worktrees, and orchestrated per-phase commits.",
   "author": {
     "name": "ryanthedev"
   },

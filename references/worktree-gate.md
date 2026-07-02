@@ -1,4 +1,4 @@
-# Worktree Gate (MANDATORY - First Check Before Any Build)
+# Worktree Gate (First Check Before Any Build)
 
 The orchestrator (`commands/build.md` Phase 1: LOAD) must clear this gate before any other work. Multi-phase commits on `main` would have no rollback and pollute history.
 
@@ -92,4 +92,4 @@ cp -Rc ../../../node_modules ./node_modules  # APFS CoW, no actual disk copy
 
 ---
 
-**This gate is NON-NEGOTIABLE.** Do not proceed on main/master under any circumstances.
+**Never proceed on main/master** — a multi-phase build committed there has no rollback boundary, and a failed phase leaves the default branch broken.

@@ -6,7 +6,7 @@ user-invocable: false
 
 # Skill: aposd-reviewing-module-design
 
-## STOP - Systematic Review Required
+## Review Is Systematic, Not Intuitive
 
 **Run the checklist.** The checklist exists because intuition misses structural problems.
 

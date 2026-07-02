@@ -1,20 +1,20 @@
 ---
 name: performance-optimization
-description: "Applies measure-first performance optimization: profiles to find hot spots, applies algorithm and data-structure improvements before micro-optimizations, and validates each change prevents regression."
+description: "Applies measure-first performance optimization: profiles to find hot spots, applies algorithm and data-structure improvements before micro-optimizations, and validates each change prevents regression. For single-process code tuning; not for correctness bugs (use cc-debugging) or concurrency, distributed, and real-time tuning (explicitly out of scope)."
 user-invocable: false
 ---
 
 # Skill: performance-optimization
 
-## STOP - Measure First (MANDATORY GATE)
+## Measure First — the gate every optimization passes through
 
-**Do not optimize based on intuition -- profile first.**
+Profile before optimizing — intuition about hot spots is measurably wrong more often than right:
 
 - **Correctness before speed** -- make it work, then make it fast
 - **<4% of code causes >50% of runtime** (Knuth 1971) -- find the hot spot before touching anything
 - **>50% of optimizations produce negligible or negative results** -- measurement prevents wasted effort
 
-No measurement = no optimization. This gate is non-negotiable.
+Optimization proceeds only from a measurement — unmeasured "optimizations" are edits with a coin-flip chance of helping.
 
 ---
 
@@ -38,7 +38,7 @@ Simpler code usually runs faster. Fewer special cases = less code to check; deep
 
 ## Primary Workflow: 7-Step Decision Tree
 
-Each step is a gate. Do NOT skip steps.
+Each step is a gate — skipping one forfeits the evidence the next step depends on.
 
 ```
 1. Is the program correct and complete?
@@ -110,7 +110,7 @@ When no fundamental fix is available, redesign the critical path:
 
 ---
 
-## Code Tuning Procedure (STRICT ORDER)
+## Code Tuning Procedure (ordered — each step's evidence feeds the next)
 
 Only reached after completing the 7-step decision tree.
 

@@ -1,12 +1,12 @@
 ---
 name: code-clarity-and-docs
-description: "Audits and improves code clarity and documentation using APOSD's obviousness rules: naming quality, comment accuracy, AI-facing doc completeness, and the comments-first workflow for new code."
+description: "Audits and improves code clarity and documentation using APOSD's obviousness rules: naming quality, comment accuracy, AI-facing doc completeness, and the comments-first workflow for new code. Not for generating project-wide convention docs (use code-standards) or structural simplification of the code itself (use aposd-simplifying-complexity)."
 user-invocable: false
 ---
 
 # Code Clarity and Documentation
 
-## STOP - The Obviousness Rule
+## The Obviousness Rule
 
 **If a code reviewer says your code is not obvious, it is not obvious** -- regardless of how clear it seems to you.
 

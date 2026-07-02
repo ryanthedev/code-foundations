@@ -1,6 +1,6 @@
 ---
 name: cc-refactoring-guidance
-description: "Guides safe refactoring using Code Complete's fix-first-then-refactor discipline: decides between refactor, rewrite, and fix-first; enforces separate commits; applies small-change rigor to high-error-rate one-liners."
+description: "Guides safe refactoring using Code Complete's fix-first-then-refactor discipline: decides between refactor, rewrite, and fix-first; enforces separate commits; applies small-change rigor to high-error-rate one-liners. Not for diagnosing the bug itself (use cc-debugging), transforming working code's complexity (use aposd-simplifying-complexity), or untested legacy code (it routes to welc-legacy-code)."
 user-invocable: false
 ---
 

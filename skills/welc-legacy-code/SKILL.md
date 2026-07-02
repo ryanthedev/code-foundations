@@ -1,6 +1,6 @@
 ---
 name: welc-legacy-code
-description: "Safely modifies untested legacy code by getting it under test first: characterization tests, seam identification, sprout/wrap techniques, and pinch-point testing before any production changes."
+description: "Safely modifies untested legacy code by getting it under test first: characterization tests, seam identification, sprout/wrap techniques, and pinch-point testing before any production changes. Not for refactoring code that already has test coverage (use cc-refactoring-guidance)."
 user-invocable: false
 ---
 

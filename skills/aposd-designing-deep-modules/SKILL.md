@@ -6,7 +6,7 @@ user-invocable: false
 
 # Skill: aposd-designing-deep-modules
 
-## STOP - Before Implementing
+## Before Implementing — the design-it-twice gate
 
 **Never implement your first design.** Generate 2-3 radically different approaches, compare them, then implement.
 

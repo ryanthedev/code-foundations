@@ -1,6 +1,6 @@
 ---
 name: cc-defensive-programming
-description: "Applies Code Complete's defensive programming rules: barricade design, assertion vs error-handling selection, input validation policy, and correctness-vs-robustness strategy for the current context."
+description: "Applies Code Complete's defensive programming rules: barricade design, assertion vs error-handling selection, input validation policy, and correctness-vs-robustness strategy for the current context. For hardening code at trust boundaries; not for diagnosing an active failure (use cc-debugging) or post-completion verification (use aposd-verifying-correctness)."
 user-invocable: false
 ---
 
