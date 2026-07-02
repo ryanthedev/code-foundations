@@ -108,7 +108,7 @@ User: "/code-foundations:build .code-foundations/plans/2026-01-30-notifications.
 | REVIEW | Debiased review protocol (agent definition) + per-phase skills | Execute-first verification, per-requirement evidence + trace, anti-overcorrection verdict |
 | VERIFY | `performance-optimization`, `cc-refactoring-guidance` | Performance regressions, refactoring opportunities, build + tests + lint |
 
-Gate policy is adaptive: Full (BUILD + REVIEW), Standard (BUILD + tests), Minimal (BUILD only). Skills assigned per phase during plan's SAVE step — gates load only those skills; each agent carries its own protocol. Security-sensitive phases get a 3-sample majority-vote REVIEW.
+Gate policy is adaptive: Full (BUILD + REVIEW, always runs alone), Standard (BUILD + single-sample REVIEW), Minimal (BUILD only; tests are the gate). Skills assigned per phase during plan's SAVE step — gates load only those skills; each agent carries its own protocol. Security-sensitive phases get a 3-sample majority-vote REVIEW on fable. Independent Standard/Minimal phases (no dependency, disjoint `File scope`) build in parallel waves, each in its own worktree, integrated by cherry-pick in plan order.
 
 The system saves every artifact to `.code-foundations/build/`. Per-phase commits enable rollback.
 

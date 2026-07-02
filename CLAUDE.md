@@ -64,16 +64,19 @@ Three-stage pattern for feature development:
   → [Quick: plan → check → present]
   → [Standard/Full: classify → explore → detail → save → check → confirm]
   → DECOMPOSE matches skills per phase against the available-skills register (internal + external), reading each skill's description
-  → SAVE emits per-phase **Gate:** field (Full | Standard | Minimal)
-  → Save to .code-foundations/plans/YYYY-MM-DD-<topic>.md
-  → User confirms
+  → SAVE emits per-phase **Model:** (fable | sonnet | haiku), **Gate:** (Full | Standard | Minimal),
+    **Depends on:**, and optional **File scope:** (wave-parallelism opt-in)
+  → Save to .code-foundations/plans/YYYY-MM-DD-<topic>.md with **Status:** draft
+  → Plan presented as end-turn conversation markdown; user confirms free-form → Status: ready
 
         ↓ (after plan approval)
 
 /code-foundations:build .code-foundations/plans/<plan>.md
-  → Feature branch required
-  → Execute phases with quality gates
-  → Model assigned per phase in plan (sonnet/opus)
+  → Feature branch required; refuses plans whose Status isn't ready
+  → Waves derived from Depends on + File scope: independent Standard/Minimal phases
+    build in parallel (own phase worktrees), integrated by cherry-pick in plan order
+  → Model per phase from plan (fable judgment-heavy / sonnet default / haiku mechanical;
+    opus only as explicit override); REVIEW one tier below BUILD, security REVIEW on fable
   → Per-phase commits after REVIEW passes (or BUILD completes for minimal gate)
   → Final verification + report
 ```
@@ -99,12 +102,21 @@ REVIEW:  debiased review protocol (execute-first, per-DW evidence + trace, anti-
 COMMIT:  Orchestrator commits directly after gates pass
 ```
 
-**Gate policy:** each phase in the plan carries a `**Gate:**` field (Full | Standard | Minimal).
-When absent, build falls back to risk rules: security/auth/payment → Full; multi-file with new
-seams → Full; docs/config-only → Minimal; else Standard. Full = BUILD + REVIEW + COMMIT
-(heavyweight: catch-up anchoring, home of security 3-sample). Standard = BUILD + REVIEW
-(single-sample) + COMMIT. Minimal = BUILD (no discovery) + COMMIT — the only tier without
+**Gate policy:** each phase in the plan carries a `**Gate:**` field (Full | Standard | Minimal) —
+required, like `**Model:**` and `**Depends on:**`; build stops and asks for a re-plan when any is
+missing (there are no legacy plans). Full = BUILD + REVIEW + COMMIT (heavyweight: catch-up
+anchoring, home of security 3-sample; always runs alone, never in a wave). Standard = BUILD +
+REVIEW (single-sample) + COMMIT. Minimal = BUILD (no discovery) + COMMIT — the only tier without
 REVIEW; tests are its gate.
+
+**Checkpoint doctrine:** content the user must review (plan summaries, skeletons, approach
+comparisons, problem statements) is presented as the turn's final conversation markdown and
+answered free-form — dialog previews truncate multi-phase content. `AskUserQuestion` is reserved
+for decisive 2-4-option picks (clarify, coverage level, handoff). The draft→ready Status flip is
+the structural guard: unconfirmed plans can't build.
+
+**Effort doctrine:** plan at high effort (the reasoning lives there); build at low effort for
+all-serial plans, default when the plan declares waves.
 
 Skills are **workflow-internal** (18 carry `user-invocable: false`; `planning` additionally keeps
 `disable-model-invocation: true` so the model can't run the planning pipeline ad-hoc). They are
