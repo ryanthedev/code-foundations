@@ -157,6 +157,7 @@ Corrections → update and re-confirm. If the response raises new open questions
    - Dependencies: every phase has **Depends on:** and referenced phases exist; a phase
      consuming another's Produces depends on it; phases declared independent have
      disjoint **File scope:** globs
+   - Header: **Status:** is present and reads `draft` (step 7 flips it to `ready`)
 
    Output: PASS or FINDINGS with specific fix recommendations.
    ```
@@ -167,7 +168,7 @@ Corrections → update and re-confirm. If the response raises new open questions
 
    **On any confirmation, flip `**Status:** draft` → `**Status:** ready` in the plan file.** Build refuses to execute a plan whose Status isn't `ready`, so the confirmed presentation is a structural gate, not a convention — a plan the user never saw cannot build.
 
-8. **If build:** Suggest the user drop thinking effort to **low** for the build run (the plan carries the reasoning; orchestration is dispatch work), then run `/code-foundations:build .code-foundations/plans/<plan>.md`.
+8. **If build:** Suggest the effort level for the build run — **low** if the plan is all-serial, **default** if any phase carries `**File scope:**` (wave-eligible; the orchestrator keeps real judgment there) — then run `/code-foundations:build .code-foundations/plans/<plan>.md`.
 
 That's it. No EXPLORE, no multi-step planning pipeline. Quick track stays compressed — the staging is lightweight at 1-2 phases — and should take under 3 minutes from invocation to handoff.
 

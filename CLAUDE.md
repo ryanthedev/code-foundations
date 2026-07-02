@@ -118,7 +118,7 @@ the structural guard: unconfirmed plans can't build.
 **Effort doctrine:** plan at high effort (the reasoning lives there); build at low effort for
 all-serial plans, default when any phase carries `File scope` (wave-eligible).
 
-Skills are **workflow-internal** (18 carry `user-invocable: false`; `planning` additionally keeps
+Skills are **workflow-internal** (all 19 carry `user-invocable: false`; `planning` additionally keeps
 `disable-model-invocation: true` so the model can't run the planning pipeline ad-hoc). They are
 hidden from the user's slash menu but ARE in the model's skill register — model-discoverable and
 invocable. Plan/build discover them (alongside external plugin skills) via the register — each

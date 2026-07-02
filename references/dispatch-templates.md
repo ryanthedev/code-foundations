@@ -216,7 +216,7 @@ Agent tool:
 
 Inserted dynamically before a Full gate phase when 2+ phases have run since the last REVIEW. Batches verification across accumulated Minimal phases — the only tier without per-phase REVIEW. Same debiasing rules as § REVIEW: no plan Context, no progress narrative, no discovery files.
 
-**Model:** use the upcoming Full phase's resolved REVIEW model (its BUILD model downgraded one tier per the orchestrator's Model Resolution).
+**Model:** use the upcoming Full phase's resolved REVIEW model (its BUILD model downgraded one tier per the orchestrator's Model Resolution). When fired before VERIFY (no upcoming Full phase), use the highest resolved REVIEW model among the covered phases.
 
 ```
 Agent tool:

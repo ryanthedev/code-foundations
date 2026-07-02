@@ -74,7 +74,7 @@ Set in the plan file: `**Status:** in-progress`, `**Started:** YYYY-MM-DD HH:MM`
 Before creating phase tasks, resolve skills for all phases. Skills do NOT affect gate policy — every phase carries at least one skill, so skill presence cannot discriminate gate level (gate is keyed off the plan's `**Gate:**` field). Resolving skills first still matters: every phase needs a validated, invocable skill set before dispatch.
 
 1. `TaskCreate(subject: "SETUP: Skill Resolution", description: "Validate and resolve skill assignments for all phases.")`
-2. Scan your available-skills register — every skill in context: the internal code-foundations skills (now `user-invocable: false`, so model-discoverable) plus any external plugin skills. Read each candidate's description and trigger conditions. Exclude workflow commands (plan, build, debug, research, code-standards, clarify).
+2. Scan your available-skills register — every skill in context: the internal code-foundations skills (now `user-invocable: false`, so model-discoverable) plus any external plugin skills. Read each candidate's description and trigger conditions. Exclude workflow commands and pipeline skills (plan, build, debug, research, code-standards, clarify, planning).
 3. For each phase, check the plan's `**Skills:**` field:
    - **Specific skills listed** → validate each is a real available skill (internal or external). If a name doesn't match any available skill, STOP and ask the user before proceeding.
    - **`none -- [reason]`** → compare phase goal and scope against every available skill's description. If a skill's triggers match the phase work, add it. Every phase MUST have at least one skill — skills exist for code, documentation, design, and more.

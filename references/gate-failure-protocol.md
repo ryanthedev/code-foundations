@@ -50,9 +50,10 @@ Options:
 
 When one member of a parallel wave fails its gate while siblings pass:
 
-- **The failer is quarantined in its own worktree** — its broken state never touches the build worktree. Fix and re-dispatch REVIEW there, same per-gate 3-retry cap as above.
+- **Wave BLOCKED is the deliberate exception to the retry cap:** a BUILD member returning BLOCKED (or UPDATE_PLAN) does not auto-retry — in-flight siblings finish, their worktrees are held uncommitted, and the orchestrator pauses for the user (build.md → Parallel Waves step 3). Auto-retrying one member while its siblings are held would burn the cap on a problem that usually needs plan-level intervention. The retry cap below applies to REVIEW FAILs.
+- **A REVIEW-failing member is quarantined in its own worktree** — its broken state never touches the build worktree. Fix and re-dispatch REVIEW there, same per-gate 3-retry cap as above.
 - **Sync before each retry REVIEW:** merge the build branch's current HEAD into the failing phase's worktree first (clean by construction — file scopes are disjoint), so retry evidence includes any siblings already committed. Fixes made in the worktree are squashed into a fresh `wip(phase-N)` commit — its sha supersedes the one originally reported, and integration cherry-picks the latest.
 - **Commits stay in plan order.** A plan-order-earlier failer holds later passers' integration — their worktrees simply wait. The barrier applies to commits, not just wave opening: never commit out of plan order, because the execution-log Summary chain that anchors later dispatches assumes it.
 - **Post-integration wave-suite failure** (members green in isolation, red together): a gate failure attributed to the last-integrated member — fix forward under the normal retry cap; do not revert committed siblings.
 - **3rd FAIL on a wave member:** the standard escalation template above, plus one extra user option: "Drop this phase — mark it blocked (blocks only its dependents; committed siblings stand)."
-- **The next wave opens only when every member is committed or escalated.**
+- **The next wave opens only when every member is committed, SKIPped, or escalated.**

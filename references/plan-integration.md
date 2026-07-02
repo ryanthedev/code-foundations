@@ -75,7 +75,7 @@ Every phase carries a `**Model:**` field. The ladder: **fable** (judgment-heavy:
 
 `**Model:**` is required on every phase — there are no legacy plans; build stops and asks for a re-plan when the field is missing. REVIEW runs one tier below BUILD (fable→sonnet, opus→sonnet, sonnet→haiku, haiku floor) — prover-verifier asymmetry, intentional. The one deliberate exception: security-sensitive REVIEW samples run on **fable** regardless of the BUILD model — for security, verification rigor beats cost asymmetry.
 
-Model facts worth knowing when assigning:
+Model facts worth knowing when assigning (as of 2026-07 — re-verify via the claude-api skill when this feels stale):
 
 - **Fable 5** — strongest judgment; give it intent ("why") framing in dispatch prompts; its failure mode is over-elaboration, not laziness, so pair with a brevity nudge on long tasks.
 - **Sonnet 5** — new tokenizer (~1.0–1.35× the tokens of Sonnet 4.6 for the same input); adaptive thinking on by default; excellent default builder.
