@@ -25,13 +25,13 @@ Each of these exists because its absence has a specific failure mode:
 
 ## Phase 1: LOAD (Read Plan File)
 
-### Worktree Gate (first check)
-
-**Read `${CLAUDE_PLUGIN_ROOT}/references/worktree-gate.md`** and clear the gate before any other work: workspace-mode detection, worktree vs feature-branch creation, dependency setup, and record-keeping for REPORT. Never proceed on main/master — commits there have no rollback boundary.
-
 ### Locate Plan
 
 Read the provided plan path from `.code-foundations/plans/`. If no path was given, `ls .code-foundations/plans/*.md` and ask: "Which plan should I execute?"
+
+### Worktree Gate (immediately after the plan is located — it needs the plan filename)
+
+**Read `${CLAUDE_PLUGIN_ROOT}/references/worktree-gate.md`** and clear the gate before any other work: workspace-mode detection, worktree vs feature-branch creation, dependency setup, and record-keeping for REPORT. Never proceed on main/master — commits there have no rollback boundary. Throughout this document, "build worktree" means the build workspace this gate produced — the worktree, or the feature-branch checkout in feature-branch mode.
 
 ### Parse Plan Structure
 
@@ -56,9 +56,10 @@ Extract from the plan file:
 |-------------|--------|
 | `draft` | **Stop.** The plan was never confirmed by the user — the planner flips draft → ready only after the user approves the presented plan. Tell the user to finish `/code-foundations:plan` |
 | `ready` | Proceed |
-| `in-progress` | Resume from last checkpoint |
+| `in-progress` | Resume: derive completed phases from the execution log + commit trailers, re-run SETUP task creation for the remainder, continue from the first incomplete phase |
 | `complete` | Ask: "Plan already complete. Re-execute or archive?" |
 | `blocked` | Show blockers, ask how to proceed |
+| missing or unrecognized | Treat as `draft` — stop and send the user back to `/code-foundations:plan` |
 
 ---
 
@@ -70,7 +71,7 @@ Set in the plan file: `**Status:** in-progress`, `**Started:** YYYY-MM-DD HH:MM`
 
 ### Skill Resolution (One-Time Task)
 
-Before creating phase tasks, resolve skills for all phases. Skills do NOT affect gate policy — every phase carries at least one skill, so skill presence cannot discriminate gate level (gate is keyed off the plan's `**Gate:**` field or risk fallback). Resolving skills first still matters: every phase needs a validated, invocable skill set before dispatch.
+Before creating phase tasks, resolve skills for all phases. Skills do NOT affect gate policy — every phase carries at least one skill, so skill presence cannot discriminate gate level (gate is keyed off the plan's `**Gate:**` field). Resolving skills first still matters: every phase needs a validated, invocable skill set before dispatch.
 
 1. `TaskCreate(subject: "SETUP: Skill Resolution", description: "Validate and resolve skill assignments for all phases.")`
 2. Scan your available-skills register — every skill in context: the internal code-foundations skills (now `user-invocable: false`, so model-discoverable) plus any external plugin skills. Read each candidate's description and trigger conditions. Exclude workflow commands (plan, build, debug, research, code-standards, clarify).
@@ -124,10 +125,11 @@ Derive the execution order from the plan's dependency DAG, not from file order:
 2. **Co-scheduling rule** — two phases in the same layer share a wave only when ALL hold:
    - neither transitively depends on the other,
    - both declare `**File scope:**` and the globs are pairwise disjoint,
-   - neither Consumes the other's Produces,
    - **both gates are Standard or Minimal** (Full-gate phases always run alone — they're high-risk by definition, and serial execution keeps catch-up accounting well-defined),
    - the test suite does not use shared mutable resources (fixed ports, docker services, global test DBs, on-disk fixtures — evident from the test command or the plan's Notes). If it does, serialize: correct beats concurrent.
-3. **Wave width cap: 3** (foreground fan-out + orchestrator context budget). Wider layers split into consecutive waves in plan order.
+
+   (Seam consumption needs no separate check — a phase consuming another's Produces depends on it, which the dependency check already covers; the planner's CHECK enforces that invariant.)
+3. **Wave width cap: 3** (foreground fan-out + orchestrator context budget). Wider layers split into consecutive waves in plan order. A Full-gate phase inside a layer forms its own single-phase wave, placed in plan order relative to the grouped waves.
 4. Any doubt about independence → serialize within the layer in plan order. A phase without `File scope` never shares a wave.
 
 **State the derived waves aloud before creating tasks:** "Wave 1: Phase 1. Wave 2: Phases 2, 3 in parallel (disjoint scopes). Wave 3: Phase 4." Waves are derived here, never stored in the plan — plan edits would leave stored wave numbers stale.
@@ -194,34 +196,41 @@ Serial flow, per task:
 
 ### Parallel Waves (2-3 phases)
 
-When a wave holds multiple phases, isolation is what makes it sound: BUILD and REVIEW agents run the test suite as their evidence, and two agents sharing a tree would each see the other's half-written code.
+When a wave holds multiple phases, isolation is what makes it sound: BUILD and REVIEW agents run the test suite as their evidence, and two agents sharing a tree would each see the other's half-written code. **This procedure replaces serial-flow steps 3-7 for the wave's members** — in particular, commits are deferred to integration (step 5), never made immediately after a REVIEW.
 
 ```
-1. For each member phase: git worktree add .code-foundations/wave-worktrees/phase-N <build-branch HEAD>
-   then copy in what a fresh checkout lacks: the plan file, docs/code-standards.md if untracked,
-   and run the dependency setup from worktree-gate.md
+1. For each member phase: git worktree add --detach .code-foundations/wave-worktrees/phase-N HEAD
+   (run from the build worktree), then copy in what a fresh checkout lacks: the plan file,
+   docs/code-standards.md if untracked, and run the dependency setup from worktree-gate.md
 2. ONE message, one BUILD Agent call per phase (its plan **Model:**). Prompt additions to the
    template: "Work ONLY inside <worktree-root>; run all commands from there. End with exactly ONE
    commit: wip(phase-N): <name> — squash if you made more. Report the worktree path and wip sha."
-3. Handle each BUILD status as in the serial flow (SKIP / UPDATE_PLAN / BLOCKED / DONE).
-   UPDATE_PLAN or BLOCKED from one member: let in-flight siblings finish, hold their worktrees
-   uncommitted, then pause for the user.
-4. As each BUILD returns DONE, dispatch its REVIEW into that phase's worktree — same § REVIEW
-   template with paths and commands rooted at the worktree, plus "run all commands from
-   <worktree-root>". Debiasing is unchanged: a different directory is not intent-framing.
+3. Handle each BUILD status:
+   - DONE → step 4.
+   - SKIP → mark the task completed, append the SKIP execution-log entry, git worktree remove
+     that phase's worktree. A SKIPped member counts as settled for step 8.
+   - UPDATE_PLAN or BLOCKED from one member → let in-flight siblings finish, hold their
+     worktrees uncommitted, then pause for the user.
+4. As each BUILD returns DONE: Standard members get their REVIEW dispatched into that phase's
+   worktree — same § REVIEW template with paths and commands rooted at the worktree, plus "run
+   all commands from <worktree-root>" (debiasing is unchanged: a different directory is not
+   intent-framing). Minimal members have no REVIEW — DONE with passing tests counts as PASSED.
 5. Integrate PASSED phases strictly in plan order — a plan-order-earlier phase that is still
-   failing holds later passers (the barrier applies to commits, not just wave opening):
-     git cherry-pick -n <wip-sha> in the build worktree → real commit per commit-format.md
-     → execution-log entry → copy the phase's discovery/review artifacts into the build
-     worktree's .code-foundations/build/ → git worktree remove
+   failing holds later passers (the barrier applies to commits, not just wave opening; held
+   passers' worktrees simply wait unchanged — the step-7 integration run covers combined
+   behavior):
+     git cherry-pick -n <latest reported wip-sha> in the build worktree → real commit per
+     commit-format.md → execution-log entry → copy the phase's discovery/review artifacts into
+     the build worktree's .code-foundations/build/ → git worktree remove
    A cherry-pick conflict means the File scope declaration was violated: treat as a gate
    failure — drop that phase's WIP, re-dispatch its BUILD serially on top of current HEAD.
 6. FAILED phases: Gate Failure Protocol in their own worktree (see gate-failure-protocol.md
-   Wave Failures); sync the worktree with build HEAD before each retry REVIEW.
+   Wave Failures); sync the worktree with build HEAD before each retry REVIEW; fixes are
+   squashed into a fresh wip(phase-N) commit whose sha supersedes the old one.
 7. Wave integration: after the last member commits, run the full test suite once in the build
    worktree — members were green in isolation but never tested together. Red → gate failure
    attributed to the last-integrated member, fix forward.
-8. The next wave opens only when every member is committed or escalated.
+8. The next wave opens only when every member is committed, SKIPped, or escalated.
 ```
 
 ### Sub-Phase N.1: BUILD (Discovery + Design + Implementation)
@@ -242,7 +251,7 @@ TaskUpdate → in_progress, then dispatch the build agent. It combines discovery
 1. Check status: DONE, SKIP, UPDATE_PLAN, or BLOCKED
 2. If SKIP → mark task completed, skip REVIEW task if exists, **append a SKIP execution-log entry** to the plan file (the `### Phase N` entry from `commit-format.md` with BUILD/REVIEW/Committed lines replaced by a single `- [x] SKIPPED — [reason from build agent]` and no commit hash), then proceed to next phase
 3. If UPDATE_PLAN → pause and ask user
-4. If BLOCKED → do NOT mark completed → debug and re-dispatch or escalate
+4. If BLOCKED → do NOT mark completed → Gate Failure Protocol (BLOCKED is BUILD's failure status; the 3-retry cap applies)
 5. If DONE → TaskUpdate → completed
 6. If Minimal gate → commit now (see Commit After Phase)
 7. If Full or Standard gate → proceed to REVIEW
@@ -264,7 +273,7 @@ TaskUpdate → in_progress, then dispatch `code-foundations:post-gate-agent` wit
 
 ### Catch-Up REVIEW (inserted dynamically)
 
-**Trigger:** evaluated at wave boundaries (where the completed-phase order is total, since Full phases always run alone): before a Full gate phase's BUILD, check whether 2+ phases have committed since the last REVIEW. If yes, insert a catch-up review first using `§ CATCHUP_REVIEW` (model rule is in the template header). This prevents drift across accumulated Minimal phases — the only tier without per-phase REVIEW — without extra overhead.
+**Trigger:** evaluated at wave boundaries (where the completed-phase order is total, since Full phases always run alone): before a Full gate phase's BUILD — and once more before VERIFY, so trailing un-reviewed phases don't slip through — check whether 2+ committed phases carry the `Review: skipped (Minimal)` trailer since the last REVIEW. If yes, insert a catch-up review first using `§ CATCHUP_REVIEW` (model rule is in the template header). This prevents drift across accumulated Minimal phases — the only tier without per-phase REVIEW — without extra overhead. On PASS, append a dated `Covered by catch-up review` addendum line to each covered phase's execution-log entry.
 
 - PASS → proceed to the Full phase's BUILD
 - FAIL → Gate Failure Protocol before proceeding
@@ -281,7 +290,7 @@ Then append the phase's execution-log entry to the plan file. **Its Summary line
 
 ### Gate Failure Protocol
 
-When a BUILD or REVIEW task returns FAIL, **read `${CLAUDE_PLUGIN_ROOT}/references/gate-failure-protocol.md`** for the per-failure action table and user-escalation template. The failed task stays `in_progress`; re-dispatch at most 3 times, then STOP and escalate — never silently retry a 4th time.
+When a REVIEW task returns FAIL or a BUILD task returns BLOCKED, **read `${CLAUDE_PLUGIN_ROOT}/references/gate-failure-protocol.md`** for the per-failure action table and user-escalation template. The failed task stays `in_progress`; re-dispatch at most 3 times, then stop and escalate — never silently retry a 4th time.
 
 ---
 
@@ -300,13 +309,13 @@ Verify against the plan's **Test Coverage** level: **100%** (unit tests for all 
 
 Execute each item from the plan's Test Plan section, then run a clean build and linter. No new warnings or lint errors — if uncertain whether a warning is pre-existing, disambiguate with `git stash && build && git stash pop`. Fix everything new before proceeding.
 
-**Suite re-run delta rule:** skip the redundant full-suite re-run iff a full-suite run already executed **in the build worktree** after the last integration (the final phase's REVIEW for serial builds, or the wave-integration run) AND the tree is unchanged since (`git status` clean) — cite that run's output as the trust-report evidence. Anything else (final phase was Minimal, post-review fixes touched the tree) → run the suite once now. The Test Plan items, coverage check, and clean-build warning delta always run — no earlier step disambiguates pre-existing vs new warnings.
+**Suite re-run delta rule:** skip the redundant full-suite re-run iff a full-suite run already executed **in the build worktree** after the last integration (the final phase's REVIEW for serial builds, or the wave-integration run) AND no source has changed since — `git status` clean apart from the plan file and `.code-foundations/` artifacts (execution-log appends don't invalidate test evidence). Cite that run's output as the trust-report evidence. Anything else (final phase was Minimal, post-review fixes touched source) → run the suite once now. The Test Plan items, coverage check, and clean-build warning delta always run — no earlier step disambiguates pre-existing vs new warnings.
 
 ### Verification Gate
 
 | Condition | Action |
 |-----------|--------|
-| All tests pass, coverage met, build clean, no skipped tasks | Proceed to REPORT |
+| All tests pass, coverage met, build clean, no unsanctioned skips (SKIPs via BUILD status are fine when their log entries exist) | Proceed to REPORT |
 | Tests fail | Debug, fix, re-verify |
 | Build warnings/errors introduced | Fix, rebuild, re-verify |
 | Tests missing (but required by coverage level) | Write tests, then re-verify |
@@ -319,6 +328,10 @@ Execute each item from the plan's Test Plan section, then run a clean build and 
 ### Update Plan File
 
 Set `**Status:** complete`, `**Completed:** YYYY-MM-DD HH:MM`, `**Duration:** [start → complete]`. The execution log is already populated per-phase at commit time.
+
+### Final Commit
+
+If VERIFY made any changes (debug fixes, added tests) or the plan file changed, commit them now: `chore(build): verification fixes + plan completion` with the standard trailers — otherwise the branch handed to the user is missing the fixes VERIFY made.
 
 ### Summary Output (Trust Report)
 

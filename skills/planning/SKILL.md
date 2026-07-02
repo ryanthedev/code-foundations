@@ -25,6 +25,8 @@ DISCOVER | CLASSIFY | EXPLORE | DECOMPOSE | DETAIL | CROSS-CUT | SAVE | CHECK | 
 
 During DETAIL, add one sub-task per phase under it (one `TaskCreate` each), worked in DAG order.
 
+At user checkpoints (EXPLORE decision gate, Skeleton Checkpoint, CONFIRM) the rendered artifact is the turn's final message — complete the step's task at the **start of the next turn**, after the user answers, so the bookkeeping never trails the presentation.
+
 **CHECK runs on all tracks** — never skip independent review.
 
 ---
@@ -113,7 +115,7 @@ The user answers free-form — an approach name, "your recommendation", or a dif
 
 **Gate: DETAIL starts only after the user has picked.** Writing "Going with X" and moving on skips the decision that anchors every phase body — the user must answer. If they've been terse, apply confirmatory mode: lead with "I'll go with [X] unless you'd rather one of the others."
 
-Record chosen approach, rationale, and fallback.
+Record chosen approach, rationale, and fallback — held in conversation until DECOMPOSE writes them into the plan file's `## Chosen Approach` (the file doesn't exist yet).
 
 ---
 
@@ -141,10 +143,10 @@ For each phase, write only:
 
 Skills are matched HERE so DETAIL can load them while writing phase bodies — a phase body written without domain knowledge is the planner guessing.
 
-1. Match against your **available-skills register** — every skill whose description is in context. That includes the 19 internal code-foundations skills (`user-invocable: false`: model-discoverable, hidden from the slash menu) AND skills from other installed plugins (e.g. skill-craft, mcp-builder, security-guidance). Each description carries its own when-to-match and sibling-disambiguation (the "not for X (use Y)" clauses) — match on the descriptions directly.
+1. Match against your **available-skills register** — every skill whose description is in context. That includes the 18 matchable internal code-foundations skills (`user-invocable: false`: model-discoverable, hidden from the slash menu; `planning` itself is excluded — `disable-model-invocation` keeps it out of the register) AND skills from other installed plugins (e.g. skill-craft, mcp-builder, security-guidance). Each description carries its own when-to-match and sibling-disambiguation (the "not for X (use Y)" clauses) — match on the descriptions directly.
 2. For each phase, compare the phase's goal against every candidate skill's when-to-match conditions (register descriptions for external skills; catalog entries plus their disambiguation notes for the internal sibling pairs)
 3. Assign skills whose triggers match the phase work. Most phases match 1-3 skills.
-4. Exclude workflow commands (plan, build, debug, research, code-standards, clarify)
+4. Exclude workflow commands and pipeline skills (plan, build, debug, research, code-standards, clarify, planning)
 5. Write `**Skills:**` on every skeleton header — `none -- [reason]` valid, omission NOT valid
 
 **`none` is the exception, not the default.** If a phase writes code, designs an API, refactors, handles errors, touches control flow, or modifies existing untested code — there is almost certainly a matching skill. DETAIL may add skills it discovers while writing bodies; SAVE validates the final set.
@@ -176,7 +178,7 @@ On "adjust"-type replies: revise, re-present the updated skeleton the same way.
 
 ### Write the Skeleton to the File
 
-After "Looks right": create the plan file (see Step 7 schema): header + Context + Constraints + Chosen Approach, then one header per phase carrying name, goal, Depends on / Unlocks, Produces, Skills, Difficulty. The file is built **progressively** across DECOMPOSE -> DETAIL -> CROSS-CUT -> SAVE — recoverable if interrupted. Do not commit it.
+After "Looks right": `mkdir -p .code-foundations/plans` and create the plan file at `.code-foundations/plans/YYYY-MM-DD-<topic-slug>.md` (see Step 7 schema). The header carries `# Plan:`, `**Created:**`, `**Status:** draft`, `**Complexity:**`; then Context + Constraints + Chosen Approach, then one header per phase carrying name, goal, Depends on / Unlocks, Produces, Skills, Difficulty. The file is built **progressively** across DECOMPOSE -> DETAIL -> CROSS-CUT -> SAVE — recoverable if interrupted. Do not commit it.
 
 ---
 
@@ -214,15 +216,15 @@ For each phase task, in DAG order:
 
 **Constraints:** [non-discoverable requirements -- omit if none]
 **Edge cases:** [boundaries + error paths this phase must handle -- skill-informed; omit if none]
+**Depends on:** [none | Phase X] | **Unlocks:** [Phase Y]
+**File scope:** [globs this phase may touch, e.g. `src/auth/**, tests/auth/**` -- enables wave parallelism during build; omit if unknowable, and the phase then never runs in parallel]
+**Produces:** [what downstream consumes -- carried from skeleton. If the seam is code, state the contract: signature / type / route / schema -- not prose]
+**Security-sensitive:** [yes -- ONLY if the phase touches auth, crypto, secrets, deserialization, or untrusted input; omit otherwise. Triggers 3-sample majority-vote REVIEW during build.]
+**Rollback:** [required if the phase performs destructive or irreversible actions (data deletion, prod deploy, migration): the compensating action, or "point of no return -- [mitigation]"; omit otherwise]
 
 [Medium/Complex only]
 **Approach notes:** [non-discoverable user decisions -- omit if none]
 **File hints:** `path/` -- [why relevant]
-**File scope:** [globs this phase may touch, e.g. `src/auth/**, tests/auth/**` -- enables wave parallelism during build; omit if unknowable, and the phase then never runs in parallel]
-**Depends on:** [none | Phase X] | **Unlocks:** [Phase Y]
-**Produces:** [what downstream consumes -- carried from skeleton. If the seam is code, state the contract: signature / type / route / schema -- not prose]
-**Security-sensitive:** [yes -- ONLY if the phase touches auth, crypto, secrets, deserialization, or untrusted input; omit otherwise. Triggers 3-sample majority-vote REVIEW during build.]
-**Rollback:** [REQUIRED if the phase performs destructive or irreversible actions (data deletion, prod deploy, migration): the compensating action, or "point of no return -- [mitigation]"; omit otherwise]
 [/Medium/Complex only]
 
 **Done when:**
@@ -250,7 +252,7 @@ Derive the whole-plan sections now that every phase body exists — they fall ou
 
 ### Test Coverage (ask first — the level gates how much you derive next)
 
-`AskUserQuestion`: "How much test coverage?" Options (a decisive pick, so the dialog is the right channel): **100% (Recommended)**, **Targeted** (user names the layers, e.g. backend only), **Per-phase**, **None**. Record under `## Test Coverage`.
+`AskUserQuestion`: "How much test coverage?" Options (a decisive pick, so the dialog is the right channel): **100% (Recommended)**, **Targeted** (user names the layers, e.g. backend only), **Per-phase**, **None**. On **Targeted**, ask in conversation which layers before recording. Record under `## Test Coverage`.
 
 ### Test Plan
 
@@ -284,17 +286,21 @@ The file already exists from DECOMPOSE, with bodies and cross-cut sections fille
 
 **Model detection per phase — every phase carries `**Model:**`; build stops on a plan that omits it:**
 
+Rules are evaluated **top-down, first match wins**, against the phase's name + Goal (keywords) and its DW list + File hints (counts); an "area" is a distinct top-level directory in File hints:
+
 ```
 FABLE_KEYWORDS = [refactor, architect, migrate, redesign, rewrite, overhaul,
                   new abstraction, novel pattern, system design]
 HAIKU_KEYWORDS = [config, rename, typo, bump, cleanup, delete, remove,
                   backfill, data fix, sql update, doc update]
 
-DW items <= 2 AND file hints <= 1 area AND any HAIKU_KEYWORD    -> haiku
-Any FABLE_KEYWORD OR (DW items >= 6 AND file hints >= 4 areas)
-  OR **Security-sensitive:** yes                                 -> fable
-Otherwise                                                        -> sonnet
+1. **Security-sensitive:** yes OR any FABLE_KEYWORD
+   OR (DW items >= 6 AND file hints >= 4 areas)                  -> fable
+2. DW items <= 2 AND file hints <= 1 area AND any HAIKU_KEYWORD  -> haiku
+3. Otherwise                                                     -> sonnet
 ```
+
+(The fable rule sits first so a security-sensitive "auth config cleanup" can never fall through to haiku on its mechanical keywords.)
 
 **Why Sonnet is the default, not omit:** Omit means inherit the user's session model — and the session may be running fable, which then propagates to every subagent. Most code-touching phases (test, fix, validate, implement, wire, helper, hook, integration) are well-specified translation work that Sonnet 5 runs faster and cheaper without measurable quality loss. Reserve Fable 5 for the keyword-flagged judgment-heavy phases, where its depth pays. (`opus` stays valid only as an explicit user-requested override — e.g. when fable is unavailable.)
 
@@ -315,7 +321,7 @@ Skill presence does NOT decide the gate — every phase carries skills, so skill
 
 1. Every phase has `**Depends on:**` (`none` or `Phase X` refs) — build derives its execution waves from these edges; a missing field stops the build.
 2. Every referenced phase exists; a phase consuming another's `Produces` depends on it.
-3. Phases with no dependency path between them and disjoint `**File scope:**` globs will run their BUILDs in parallel — verify the declared scopes are genuinely disjoint. A phase without `File scope` never runs in parallel (that's the opt-out, not an error).
+3. Phases with no dependency path between them and disjoint `**File scope:**` globs will run their BUILDs in parallel — verify the declared scopes are genuinely disjoint. A phase without `File scope` never runs in parallel (that's the opt-out, not an error). Note build adds its own co-scheduling conditions (only Standard/Minimal gates share a wave, width ≤ 3, no shared mutable test resources) — don't promise parallelism in the plan summary for Full-gate phases.
 
 **Skill validation (every phase carries `**Skills:**`):**
 
@@ -323,7 +329,7 @@ Skills were matched at DECOMPOSE and refined during DETAIL. Validate the final s
 
 1. Every phase has `**Skills:**` populated — `none -- [reason]` valid, omission NOT valid
 2. Every skill name matches a real available skill present in your available-skills register — internal (code-foundations) or external (another plugin) (reject typos/nonexistent names)
-3. No workflow commands (plan, build, debug, research, code-standards, clarify)
+3. No workflow commands or pipeline skills (plan, build, debug, research, code-standards, clarify, planning)
 4. Code-writing phases with `none` justify why no skill's triggers match — on any gap, re-run the DECOMPOSE matching procedure for that phase
 
 ### Plan File Schema
@@ -351,7 +357,7 @@ Skills were matched at DECOMPOSE and refined during DETAIL. Validate the final s
 (Use phase template from Step 5)
 ---
 ## Test Coverage
-**Level:** [100% / Backend only / Backend + frontend / None / Per-phase]
+**Level:** [100% / Targeted: <layers the user named> / Per-phase / None]
 ## Test Plan
 - [ ] [tests] [Medium/Complex only] + Integration + Manual [/Medium/Complex only]
 
@@ -373,7 +379,7 @@ _To be filled during /code-foundations:build_
 
 ### Save
 
-The file was created at DECOMPOSE (`mkdir -p .code-foundations/plans` already done). Ensure every phase has `**Model:**`, `**Gate:**`, `**Skills:**`, and `**Depends on:**` populated and the schema is complete — build hard-requires these fields and stops with "re-run /code-foundations:plan" when any is missing. **Do not commit** — the plan is a working document, not a deliverable. Building handles worktree visibility by copying the plan file after worktree creation.
+The file was created at DECOMPOSE (`mkdir -p .code-foundations/plans` already done). Ensure every phase has `**Model:**`, `**Gate:**`, `**Skills:**`, and `**Depends on:**` populated, the header carries `**Status:** draft`, and the schema is complete — build hard-requires these fields and stops with "re-run /code-foundations:plan" when any is missing. **Do not commit** — the plan is a working document, not a deliverable. Building handles worktree visibility by copying the plan file after worktree creation.
 
 ---
 
@@ -406,6 +412,7 @@ Checklist:
 - Dependencies: every phase has Depends on populated and referenced phases exist; a phase
   consuming another's Produces depends on it; phases declared independent have disjoint
   File scope globs (File scope absent is valid -- it just opts the phase out of waves)
+- Header: **Status:** is present and reads `draft` (CONFIRM flips it to `ready`)
 
 Output: PASS or FINDINGS with specific fix recommendations.
 ```
@@ -435,7 +442,7 @@ If changes requested: update plan (Status stays `draft`). Structural changes -> 
 
 `AskUserQuestion` (a decisive two-option pick — the dialog is the right channel): "Plan saved and ready. How would you like to proceed?"
 
-1. **Build now** (Recommended) -- Suggest the effort level for the build run (low if the plan is all-serial, default if it declares waves — the plan carries the reasoning), then run `/code-foundations:build .code-foundations/plans/<plan>.md`
+1. **Build now** (Recommended) -- Suggest the effort level for the build run (low if the plan is all-serial, default if any phase carries `**File scope:**` and is therefore wave-eligible — the plan carries the reasoning), then run `/code-foundations:build .code-foundations/plans/<plan>.md`
 2. **Tell me what to do** -- Numbered manual steps
 
 **Question style:** See [adaptive-questioning.md](${CLAUDE_PLUGIN_ROOT}/references/adaptive-questioning.md). The "Recommended" tag on Build now is the confirmatory cue — keep it there.

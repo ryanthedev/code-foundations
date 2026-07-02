@@ -116,7 +116,7 @@ for decisive 2-4-option picks (clarify, coverage level, handoff). The draft→re
 the structural guard: unconfirmed plans can't build.
 
 **Effort doctrine:** plan at high effort (the reasoning lives there); build at low effort for
-all-serial plans, default when the plan declares waves.
+all-serial plans, default when any phase carries `File scope` (wave-eligible).
 
 Skills are **workflow-internal** (18 carry `user-invocable: false`; `planning` additionally keeps
 `disable-model-invocation: true` so the model can't run the planning pipeline ad-hoc). They are

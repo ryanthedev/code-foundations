@@ -68,7 +68,7 @@ Corrections → update and re-confirm. If the response raises new open questions
 
 **Problem statement confirmed → decompose → detail → cross-cut → save → check → present → go.** Even Quick is staged, just compressed — don't write all phase bodies in one shot.
 
-1. **Decompose (skeleton).** For each of the 1-2 phases write only: name, one-line goal, matched skills (compare the phase goal against your available-skills register — the internal 19 plus any external plugin skills now in context; each description carries its own when-to-match and sibling-disambiguation (the "not for X (use Y)" clauses); `none -- [reason]` valid; exclude workflow commands), difficulty. Every phase gets `**Depends on:**` (`none` or `Phase N`); with 2 phases, add `**Produces:**` (what phase 1 hands phase 2). Hold the skeleton in conversation — the file is written in step 3 after the split is confirmed.
+1. **Decompose (skeleton).** For each of the 1-2 phases write only: name, one-line goal, matched skills (compare the phase goal against your available-skills register — the 18 matchable internal skills plus any external plugin skills now in context; each description carries its own when-to-match and sibling-disambiguation (the "not for X (use Y)" clauses); `none -- [reason]` valid; exclude workflow commands), difficulty. Every phase gets `**Depends on:**` (`none` or `Phase N`); with 2 phases, add `**Produces:**` (what phase 1 hands phase 2). Hold the skeleton in conversation — the file is written in step 3 after the split is confirmed.
 
 2. **Skeleton checkpoint.** If 2 phases: render the split as markdown in conversation (each phase's name + goal, the Produces handoff, and the dependency between them) and end the turn asking "Does the split look right?" — the user replies free-form. The skeleton must be the final message of that turn, with no tool calls after it: the conversation is the only surface that renders it in full, and nothing is written to disk yet, so there is nothing to chain into. If 1 phase: skip — nothing to decompose.
 
@@ -91,12 +91,14 @@ Corrections → update and re-confirm. If the response raises new open questions
    **Edge cases:** [boundaries + error paths -- omit if none]
 
    **Produces:** [what downstream consumes -- if the seam is code, state the contract (signature/type/route); omit if single phase]
+   **Security-sensitive:** [yes -- only if the phase touches auth, crypto, secrets, deserialization, or untrusted input; omit otherwise]
+   **Rollback:** [required for destructive/irreversible actions: compensating action, or "point of no return -- [mitigation]"; omit otherwise]
 
    **Done when:**
    - [ ] DW-N.1: [Verifiable criterion]
    ```
 
-   **Assign `**Gate:**` per phase** — build consumes this field verbatim (see `commands/build.md` resolution order). Mirror its risk rules: **Full** for security/auth/payment work or a multi-file change introducing new cross-phase seams; **Minimal** for a docs-only or config-only change; **Standard** otherwise. Even a Quick 1-2 phase plan sets the field — absent it, build falls back to risk inference, but the planner has the risk context in hand now, so decide it here.
+   **Assign `**Gate:**` per phase** — build consumes this field verbatim (see `commands/build.md` resolution order) and stops on a plan that omits it, so always set it. Risk rules: **Full** for security/auth/payment work or a multi-file change introducing new cross-phase seams; **Minimal** for a docs-only or config-only change; **Standard** otherwise. A phase doing auth/crypto/secrets/deserialization/untrusted-input work also gets `**Security-sensitive:** yes` (triggers the 3-sample fable REVIEW during build) and, if it performs destructive or irreversible actions, a `**Rollback:**` line (compensating action, or "point of no return -- [mitigation]").
 
    **Assign `**Model:**` per phase** — **sonnet** is the default (Sonnet 5: fast, cheap, handles well-specified implementation work); **haiku** for purely mechanical phases (config edits, renames, doc moves); **fable** for judgment-heavy phases (novel architecture, security-sensitive design, cross-cutting refactors). **opus** stays a valid override — use it when fable is unavailable or when the user asks for it. Build resolves the REVIEW model by downgrading one tier (fable→sonnet, opus→sonnet, sonnet→haiku).
 
@@ -147,8 +149,11 @@ Corrections → update and re-confirm. If the response raises new open questions
      code seams in Produces stated as contracts (signature/type/route)
    - Tests: test plan covers DW items + at least one dirty test per code-touching phase
    - Skills: every phase has Skills field, skills match work type, skills actually available
-   - Model: every phase has a **Model:** field (fable/sonnet/haiku) matching its difficulty
-   - Gate: every phase has a **Gate:** field (Full/Standard/Minimal) matching its risk
+   - Model: every phase has a **Model:** field (fable/sonnet/haiku; opus only as an explicit
+     user-requested override) matching its difficulty
+   - Gate: every phase has a **Gate:** field (Full/Standard/Minimal) matching its risk;
+     auth/crypto/secrets/deserialization/untrusted-input phases carry **Security-sensitive:** yes;
+     destructive/irreversible phases carry **Rollback:**
    - Dependencies: every phase has **Depends on:** and referenced phases exist; a phase
      consuming another's Produces depends on it; phases declared independent have
      disjoint **File scope:** globs
@@ -158,9 +163,9 @@ Corrections → update and re-confirm. If the response raises new open questions
 
    PASS -> proceed. FINDINGS -> fix; **structural fixes (phase boundaries, DW set, Produces seams) -> re-run CHECK**; minor fixes -> proceed.
 
-7. **Present and ask.** End the turn with the full plan summary rendered as markdown in conversation — every phase with its goal, model, gate, dependencies, done-when items, and the test coverage — closing with "Build it, adjust it, or tell me what to do?" The user replies in their own words. The summary must be the turn's **final message, with no tool calls after it**: the conversation is the only surface that renders a multi-phase plan in full (dialog previews truncate it, and the collapsed Write output doesn't count as presentation). Parse the reply — "build it" and equivalents proceed; anything else is an adjustment or a question, handle it and re-present.
+7. **Present and ask.** End the turn with the full plan summary rendered as markdown in conversation — every phase with its goal, model, gate, dependencies, done-when items, and the test coverage — closing with "Build it, adjust it, or tell me what to do?" The user replies in their own words. The summary must be the turn's **final message, with no tool calls after it**: the conversation is the only surface that renders a multi-phase plan in full (dialog previews truncate it, and the collapsed Write output doesn't count as presentation). Parse the reply — "build it" and equivalents proceed to step 8; "tell me what to do" is also a confirmation (flip the status, then give numbered manual steps instead of running build); anything else is an adjustment or a question, handle it and re-present.
 
-   **On confirmation, flip `**Status:** draft` → `**Status:** ready` in the plan file.** Build refuses to execute a plan whose Status isn't `ready`, so the confirmed presentation is a structural gate, not a convention — a plan the user never saw cannot build.
+   **On any confirmation, flip `**Status:** draft` → `**Status:** ready` in the plan file.** Build refuses to execute a plan whose Status isn't `ready`, so the confirmed presentation is a structural gate, not a convention — a plan the user never saw cannot build.
 
 8. **If build:** Suggest the user drop thinking effort to **low** for the build run (the plan carries the reasoning; orchestration is dispatch work), then run `/code-foundations:build .code-foundations/plans/<plan>.md`.
 

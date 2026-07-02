@@ -18,7 +18,7 @@ How `/code-foundations:plan` and `/code-foundations:build` chain together. Refer
 [Each phase gets **Model:**, **Gate:**, **Skills:**, **Depends on:**, **File scope:** — Gate drives build's gate policy, Depends on + File scope drive wave derivation]
 [Save to .code-foundations/plans/YYYY-MM-DD-topic.md — Status: draft until the user confirms the presented plan, then ready]
   ↓
-[Drop thinking effort for the build run — the plan carries the reasoning (low for all-serial plans, default when the plan declares waves)]
+[Drop thinking effort for the build run — the plan carries the reasoning (low for all-serial plans, default when any phase carries File scope)]
   ↓
 /code-foundations:build .code-foundations/plans/YYYY-MM-DD-topic.md
   ↓
@@ -89,7 +89,7 @@ Model facts worth knowing when assigning:
 Effort follows where the reasoning lives:
 
 - **Planning: high.** The plan is the highest-leverage artifact — decomposition, seam contracts, and gate/model assignment are judgment work. This is where deep thinking pays.
-- **Building: low for all-serial plans, default when the plan declares waves.** The plan already contains the strategic reasoning; serial orchestration is dispatch work. Wave builds keep default effort because the orchestrator retains real judgment (integration failures, wave-failure handling). The subagents think in their own contexts either way — orchestrator effort doesn't cascade to them.
+- **Building: low for all-serial plans, default when any phase carries `**File scope:**`** (wave-eligible — the plan never stores waves; build derives them). The plan already contains the strategic reasoning; serial orchestration is dispatch work. Wave builds keep default effort because the orchestrator retains real judgment (integration failures, wave-failure handling). The subagents think in their own contexts either way — orchestrator effort doesn't cascade to them.
 
 In dispatch prompts, steer per-agent depth with the wording-sensitive phrases: encourage with "This task involves multi-step reasoning. Think carefully before responding."; suppress with "Answer directly without deliberating." — not with hand-written step plans.
 
