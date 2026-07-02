@@ -1,6 +1,6 @@
 ---
 name: code-standards
-description: "Generates or updates docs/code-standards.md by scanning the codebase for actual conventions. Produces an example-rich standards file optimized for LLM consumers, grounded in the project's real patterns."
+description: "Generates or updates docs/code-standards.md by scanning the codebase for actual conventions. Produces an example-rich standards file optimized for LLM consumers, grounded in the project's real patterns. Not for auditing one file's naming, comments, or clarity (use code-clarity-and-docs)."
 user-invocable: false
 ---
 

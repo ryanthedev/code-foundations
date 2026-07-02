@@ -1,6 +1,6 @@
 ---
 name: aposd-simplifying-complexity
-description: "Transforms complex code by applying APOSD's pull-complexity-downward principle: resolves error hierarchies, collapses configuration, and moves caller-side logic into modules. Produces edited code, not just assessment."
+description: "Transforms complex code by applying APOSD's pull-complexity-downward principle: resolves error hierarchies, collapses configuration, and moves caller-side logic into modules. Produces edited code; not for assessment-only review (use aposd-reviewing-module-design) or designing new modules from scratch (use aposd-designing-deep-modules)."
 user-invocable: false
 ---
 

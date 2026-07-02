@@ -1,6 +1,6 @@
 ---
 name: gof-design-patterns
-description: "Provides all 23 Gang of Four patterns as a decision guide: maps code symptoms to patterns, then loads the structural recipe for the selected pattern."
+description: "Maps code symptoms — exploding subclass combinations, switch-on-type dispatch, tangled object construction, incompatible interfaces, one-to-many update cascades — to the matching Gang of Four pattern, then loads that pattern's structural recipe from its 23 reference files. For selecting and implementing a design pattern; not for system-level boundaries (use ca-architecture-boundaries) or module interface depth (use aposd-designing-deep-modules)."
 user-invocable: false
 ---
 
