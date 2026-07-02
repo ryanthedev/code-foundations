@@ -52,7 +52,9 @@ Three-stage pattern for feature development:
 /code-foundations:research "I want to build a notification system"
   → Facilitated conversation to clarify intent
   → Progressive narrowing: purpose, actors, context, boundaries, needs, risks
-  → Save confirmed requirements to .code-foundations/research/
+  → Save to .code-foundations/research/ with Status: draft
+  → Optional verification: grill (adversarial Q&A) + cold-read subagent
+    (fresh context, no intent-framing) → Status: confirmed
 
         ↓ (when requirements are clear)
 

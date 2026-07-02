@@ -120,9 +120,64 @@ The document format is **whatever the findings demand.** It might be:
 
 Don't force a template. Write what emerged from the conversation in a form that's useful for what comes next.
 
+---
+
+## Verification (optional, before confirming)
+
+Once the doc is saved, offer one last pass before calling it confirmed: a grill,
+then a cold read. Skip it when the idea is simple or the user is done — the doc
+just stays **draft**.
+
+### The Grill
+
+Switch stances — you're no longer facilitating, you're trying to break the
+document. Hunt for the question whose answer would change what's written: an
+assumption nobody stated, two needs that contradict, an actor with no answer,
+a boundary that moves under pressure, the riskiest assumption left untested.
+
+- One question at a time. Wait for the answer before asking the next.
+- Pair every question with your recommended answer — the user reacts faster to
+  a position than to a blank.
+- If the codebase or a search can answer it, look it up instead of asking
+  (same rules as When to Research).
+- Fold answers into the document as they land.
+
+Stop when two consecutive questions change nothing.
+
+### The Cold Read
+
+You wrote the doc with the whole conversation in your head, so you can't see
+where it leans on context that isn't on the page. Dispatch a fresh subagent that
+has none of it — no conversation summary, no intent framing; the file path is
+the entire briefing:
+
+```
+Agent tool:
+- description: "Cold-read research doc"
+- run_in_background: false
+- prompt: |
+    Read .code-foundations/research/<file>.md. You have no other context about
+    it, and the next reader won't either — it feeds implementation planning in
+    a fresh session. Report, as a short severity-ranked list (or "clean"):
+    - Questions you'd have to ask before you could plan from this doc
+    - Requirements a planner couldn't act on without guessing
+    - Internal contradictions (needs vs needs, needs vs boundaries)
+    - Claims about the existing codebase that don't hold — spot-check them
+      against the repo
+    - Mismatches between the "still open" list and the body (open items the
+      body actually resolves; unresolved questions the body raises but the
+      list omits)
+    Do not propose solutions or redesign anything. Findings only.
+```
+
+Fold trivial findings into the doc directly; take substantive ones back to the
+user — they may become one more round of grill. When the cold read comes back
+clean, or every finding is resolved or consciously accepted, flip status to
+**confirmed**.
+
 **Always include at the top:**
 - One-sentence summary of what this is
-- Date and status (draft / confirmed)
+- Date and status (**draft** on save; **confirmed** only through Verification below)
 - What's still open (if anything)
 
 ---

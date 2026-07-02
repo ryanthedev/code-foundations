@@ -44,7 +44,9 @@ User: "/code-foundations:research add user notifications"
 
   → Facilitated conversation
   → Progressive narrowing: purpose, actors, context, boundaries, needs, risks
-  → Save confirmed requirements to .code-foundations/research/
+  → Save requirements to .code-foundations/research/ (Status: draft)
+  → Optional verification: grill (adversarial Q&A, one question at a time)
+    + cold-read subagent (fresh context, doc path only) → Status: confirmed
 ```
 
 ### `/code-foundations:plan` — Create the Plan
