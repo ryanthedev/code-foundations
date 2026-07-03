@@ -15,6 +15,6 @@
       "detectable_via": "bun test repro.test.ts fails 2/2 cases on the clean starter; comparing stats.ts STATS_SELECT against quota.ts sumUniqueStorageForSpace shows the archived term lacks any dedup/storage_format filter."
     }
   ],
-  "allowed_change_scope": ["stats.ts", "stats.test.ts"],
+  "allowed_change_scope": ["stats.ts", "stats.test.ts", "report.md"],
   "pinned_files": ["quota.ts", "schema.ts", "fixtures.ts", "quota.test.ts", "repro.test.ts"]
 }

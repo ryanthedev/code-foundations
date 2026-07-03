@@ -137,3 +137,78 @@ All commands run from clean copies (never in-place) via bun 1.3.14; merge-contra
 - Manifest conformance: all 4 manifests carry the pinned fields with `report_file`/`answer_key` set; both rung-3 manifests carry `toolchain.repro`; `id` matches dir name; rungs 3, 3, 4, 4 → ALL PASS.
 - **T-2.5 (DW-2.5)** spec greps on both 04-*/spec.md: required REVIEW-dispatch strings present (`You did not write this code`, `PREMISE`, `EVIDENCE`, `TRACE`, `VERDICT`, `OVERALL: PASS|FAIL`, `FIRST ACTION: run the test suite`, `How to run the suite`, `requirements that are not listed here`); intent-framing tokens absent (`## Plan Context`, `## Progress`, `## Goal`, `Completed: Phase`, `discovery`, `problem statement`, `This is the first phase`, `Current: Phase`) → ALL PASS. (Note: the forbidden check is section-shaped — bare-word `Progress` would false-positive on the domain type `HashProgress`.)
 - **T-2.3 (DW-2.3)** detection-evidence completeness: every answer-key defect id appears in its task's detection-evidence.md with an artifact trail + recorded witness → ALL PASS.
+
+## Addendum — 2026-07-03 calibration-finding fixes (post-review)
+
+Live calibration pilots + cross-vendor vet (`benchmarks/model-tiers/calibration/decisions.md`)
+surfaced two Phase-2 defects after this phase passed review. Both fixed; all original
+validation evidence re-verified where touched. Files changed (only these three):
+
+1. `tasks/03-kv-key-mismatch/answer-key.json` — `allowed_change_scope` += `"report.md"`
+2. `tasks/03-storage-meter-dedup/answer-key.json` — `allowed_change_scope` += `"report.md"`
+3. `tasks/04-hash-progress-review/spec.md` — new "Ground rules the requirements refer to"
+   section (between preamble and DW items)
+
+### Fix 1 — rung-3 answer keys rejected compliant submissions (SCORER_BUG_FOUND, decisions.md)
+
+Both rung-3 specs REQUIRE `outputs/report.md`, but neither key listed `report.md` in
+`allowed_change_scope`, so `score_run._diff_scope_ok` (which compares the bare `f.name`
+of every top-level file in `outputs/` against the scope list — `report.md` is the exact
+form it sees) counted the mandatory report as out-of-scope and unconditionally failed
+`_score_debug` on every compliant run. Pilots had passed hidden suites 100% yet scored
+correct=0 from this alone.
+
+Re-validation (run on scratchpad copies of the retained fable-5 pilot run dirs at
+`placeholder-skill-workspace/iteration-1/03-*/without_skill/run-1/`, via
+`python3 score_run.py --run-dir <copy> --task-dir tasks/<task>`):
+
+| Case | Pre-fix | Post-fix |
+|---|---|---|
+| 03-kv-key-mismatch compliant pilot (hidden 13/13) | correct=0 score=0.0 | **correct=1 score=1.0** |
+| 03-storage-meter-dedup compliant pilot (hidden 12/12) | correct=0 score=0.0 | **correct=1 score=1.0** |
+| Synthetic out-of-scope rewrite: pilot outputs + edited pinned `access-control.ts` (kv) | — | **correct=0** (scope check still bites) |
+| Synthetic out-of-scope rewrite: pilot outputs + edited pinned `quota.ts` (meter) | — | **correct=0** |
+
+- **DW-2.4 re-run (rung-3 half):** gold files staged as a synthetic run dir → `score_run`
+  → correct=1 score=1.0 for BOTH rung-3 tasks (hidden suites green + diff-scope OK; gold
+  carries no report.md — the scope check is a subset check, so that stays legal).
+- **DW-2.2-style schema re-run:** all 4 answer keys still carry
+  `id, kind, location, severity, anchors[5], detectable_via` per defect; both rung-3 keys
+  now include `report.md` in `allowed_change_scope`.
+
+### Fix 2 — 04-hash-progress-review spec under-specified its ground rules (vet FAIL/FAIL)
+
+Vet: "relies on undocumented external `.upublishignore` pattern forms and an unstated
+prior return contract not present in starter/spec" — the only statement of the three
+ignore-pattern forms was the code-under-review's own doc comment (untrustable by design:
+doc/code drift IS the detection surface), and DW-2.5's "unchanged" had no stated baseline.
+Added a neutral authoritative-context section to spec.md stating (a) the `.upublishignore`
+convention and its exactly-three documented pattern forms (exact name, `dir/`, `*.ext`)
+and (b) the prior synchronous `collectFilesWithHashes` return contract. No answer-key
+content leaked: the section names no defect, no absence, no file:line; detection still
+requires reading the code against these rules.
+
+Re-validation:
+
+- **DW-2.3 witnesses re-run** (all four, from clean starter, bun; script re-derives the
+  recorded detection-evidence.md witnesses):
+  - HP-1: first progress report `{"completed":1,...}`, zero-report present: false ✓
+  - HP-2: macrotask (`setTimeout(0)`) interleaved during `hashFiles(5×2KB, yieldEvery:1024)`: false ✓
+  - HP-3: file grown 4→8 bytes between stat and hash → hashed size 8, final completedBytes 4 ✓
+  - HP-4: `.upublishignore` = `private/` → `listFiles` returns `["index.html","private/notes.txt"]` ✓
+- **T-2.5 (DW-2.5) re-run** on the edited spec: all required REVIEW-dispatch strings present,
+  all forbidden intent-framing tokens absent (both 04-* specs) → PASS.
+- **Leak check:** no answer-key defect id (full or short form) and no plant-revealing phrase
+  (`is absent`, `not implemented`, `dropped`, `missing branch`, `Promise.resolve`,
+  `entry.size`, `hashing.ts:` …) appears in the edited spec → CLEAN.
+- **Visible suite unchanged:** starter `bun test` → 10 pass, 0 fail (code untouched).
+- **DW-2.4 re-run (rung-4 half):** gold/report.md `[HP-n]` findings ↔ answer-key defects
+  1:1 (4/4; same check on 04-loop-core-review: 5/5); report-gate hidden suite with gold
+  report merged → 4 pass, 0 fail; missing report → exit 1.
+
+### Anchoring
+
+Harness suite (`pytest test_score_run.py test_judge.py test_run_suite.py`):
+**65 passed, 3 skipped** — the passing set is intact (skips are the pre-existing
+live-judge guards). Both tasks now need re-piloting (decisions.md ACTION REQUIRED);
+that is Phase-4 calibration work, not done here.

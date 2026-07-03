@@ -12,6 +12,26 @@ Bash and capture its output BEFORE reading any source file. A passing suite is
 evidence, not a verdict — requirements may be unmet in ways the suite never
 exercises.
 
+## Ground rules the requirements refer to (authoritative)
+
+These definitions are part of the requirements below — verify against THEM,
+not against whatever the code or its comments happen to say.
+
+- `.upublishignore` convention: an optional file at the root of the directory
+  being enumerated, listing exclusion patterns one per line; `#` comment lines
+  and blank lines are skipped. Exactly three pattern forms are documented:
+  an exact file or directory name (`secrets.txt`), a trailing-slash directory
+  form (`private/`) that excludes a directory of that name and everything
+  under it, and a `*.ext` suffix form (`*.log`). DW-2.2's "every documented
+  `.upublishignore` pattern form" means these three.
+- Prior contract of `collectFilesWithHashes` (the baseline DW-2.5's
+  "unchanged" is judged against): `collectFilesWithHashes(dirPath: string)`
+  returns SYNCHRONOUSLY (a plain value, never a Promise) an object
+  `{ files, excluded, warnings }`, where `files` maps each kept file's
+  root-relative path to `{ hash, size, fullPath }` — the file's MD5 hex
+  digest, its byte size, and its absolute on-disk path — and
+  `excluded`/`warnings` are string path lists from the enumeration.
+
 ## Requirements to verify (Done-When items)
 
 For EACH item, fill the template. A PASS verdict REQUIRES execution evidence

@@ -19,7 +19,8 @@
     "namespace-sites.ts",
     "billing.ts",
     "space.ts",
-    "server.test.ts"
+    "server.test.ts",
+    "report.md"
   ],
   "pinned_files": ["kv.ts", "access-control.ts", "worker.test.ts", "repro.test.ts"]
 }

@@ -122,3 +122,59 @@ fields in any of the three; `rung` values are `1, 2, 2` as expected (one easy, t
 
 ## Recommendation
 BUILD. Screening confirmed portability for one easy + two hard candidates (theGrid rejected at screening per the plan's own fallback instruction, no invented tasks needed). Proceed to stub → implement → validate for all three task fixtures plus SCHEMA.md.
+
+## Addendum (2026-07-03): calibration-vet fix for 02-cas-refcount-quota
+
+Live calibration (`benchmarks/model-tiers/calibration/decisions.md`, `02-cas-refcount-quota`
+entry) rejected this task: `vet_result` FAIL/FAIL on 2 independent judge-pair runs — codex:
+"dereferenceVersion nonempty return shape, duplicate-hash sizes, and live_version->site_versions
+mapping undefined." A solver could satisfy the visible DW text with materially different behavior
+than the hidden suite (`hidden/hidden.test.ts`) actually asserts. Fix scope was `spec.md` only
+(per `SCHEMA.md`'s "spec.md ... NEVER hints at the hidden suite's contents or the gold solution");
+no hidden test, gold, starter, or manifest file was touched.
+
+### What changed (spec.md, `tasks/02-cas-refcount-quota/spec.md`)
+
+| Ambiguity (vet finding) | Fix |
+|---|---|
+| `dereferenceVersion` return shape unstated | DW-H1.2 now states the signature (`referenceBlobs` → `void`, `dereferenceVersion` → `Array<{hash, size}>`) and pins the contract: the array lists exactly the hashes whose `refcount` reaches 0 as a *direct* result of the call; a hash decremented but still >0 is excluded; a hash already at 0 before the call (guarded) is excluded too — not reported as newly freed. |
+| `live_version` → `site_versions` mapping undefined | New Background paragraph: `sites.live_version` stores a `site_versions.version_number` (not a `site_versions.id`); a site's live version is found by joining on `site_id` + `version_number = sites.live_version`; a site with no matching row has no CAS live version. This is the join DW-H1.4's hybrid quota depends on to decide whether a site's live version is CAS- or prefix-format. |
+| Hybrid-quota duplicate-hash / term semantics under-specified | DW-H1.3 gained a bullet pinning that `blobs.size` is set once at a hash's first reference and never overwritten by a later re-reference (content-addressing invariant — same hash, same bytes, same size). DW-H1.4 was rewritten from a narrative description into three explicit, named, non-overlapping terms (CAS term: `SUM(blobs.size)` where `refcount > 0`; prefix term (a): live-site `total_size` for non-CAS-live sites; prefix term (b): archived-version `total_size` for `storage_format = 'prefix'`), with the CAS-free-equals-legacy and transition-fixture claims re-derived against the named terms instead of prose. |
+
+No SQL or code was added to spec.md — only prose contract language (signatures, term names, and
+inclusion/exclusion rules), consistent with "specify contracts, not test cases." No fixture number
+from the hidden suite (e.g. specific byte sizes) was copied into spec.md.
+
+### Re-validation (re-run from a scratch workspace, not in place)
+
+```
+$ bun test hidden.test.ts     # gold/{db.ts,schema.ts} + hidden/hidden.test.ts, scratch dir
+23 pass
+0 fail
+37 expect() calls
+Ran 23 tests across 1 file.
+
+$ bun test pristine.test.ts   # untouched starter/{db.ts,schema.ts} + hidden/pristine.test.ts
+3 pass
+0 fail
+5 expect() calls
+Ran 3 tests across 1 file.
+```
+
+- **DW-1.2** (gold passes hidden suite from clean starter; pristine starter green): re-confirmed —
+  identical pass counts to the original authoring-time run (23/23, 3/3) since only `spec.md` prose
+  changed, not `gold/`, `starter/`, or `hidden/`.
+- **DW-1.3** (dirty tests per DW item; ≥2 modules for a hard task): re-confirmed — `starter/` vs
+  `gold/` still differ in exactly 2 files (`db.ts`, `schema.ts`); `hidden.test.ts` still has 7
+  `test_offdw_*` cases spanning DW-H1.1 through DW-H1.5, unchanged.
+- **spec.md still DW-items-only, no solution hints**: confirmed — the only fenced code blocks in
+  `spec.md` are the original two starter-signature stubs (`migrate`, `sumStorageForSpace`); no SQL,
+  no new code block, no hidden-suite fixture value was added.
+
+### Files changed
+- `benchmarks/model-tiers/tasks/02-cas-refcount-quota/spec.md` (Background + DW-H1.2/H1.3/H1.4
+  prose clarified; no other files in the task directory touched).
+
+Next step (outside this fix's scope, per the original vet_result note): 02-cas-refcount-quota
+loops back into the Phase 4 calibration vet for re-judgment against the clarified spec — that
+re-vet is a Phase 4 activity, not part of this Phase 1 spec fix.
