@@ -1,8 +1,10 @@
 # Plan: Model-Tier Benchmark Suite (benchmarks/model-tiers)
 **Created:** 2026-07-03
-**Status:** in-progress
+**Status:** complete
 **Started:** 2026-07-03 21:00
-**Current Phase:** 1
+**Completed:** 2026-07-03 23:59
+**Duration:** ~3h (5 phases, 1 calibration loop-back)
+**Current Phase:** done
 **Complexity:** medium
 ---
 ## Context
@@ -282,3 +284,10 @@ Summary: benchmarks/model-tiers/judge.py (blind cross-vendor panel: codex exec /
 - [x] Committed
 Commit: 8100ffc
 Summary: Calibration ran live (4 model ids verified; 7 tasks vetted + piloted on sonnet-5/fable-5) and REJECTED all 7 under the pre-registered headroom rule -- after fixes, every valid task pilots both-perfect (saturation confirmed at n=2, including 5/5 planted-defect recall on review tasks by both models); matrix vacuously complete, no results-*.csv; the 12 paired pilot ties live in calibration/pilot_rows.json + decisions.md and are Phase 5's primary evidence; cumulative cost $10.01. Residual: 04-hash-progress-review has one more spec gap (default exclusion rules) if the suite is re-run with harder tasks.
+
+### Phase 5: Analysis + REPORT (Gate: Standard)
+- [x] BUILD: Discovery + design + implementation complete
+- [x] REVIEW: Verification passed (REPORT.md regenerates byte-identical)
+- [x] Committed
+Commit: 726d358
+Summary: analyze.py + 36 known-answer tests + REPORT.md -- Q1 (fable-vs-opus horizon) and Q2 (REVIEW tier) both verdict insufficient-data under the verbatim pre-registered rules (empty matrix, inputs shown); calibration-level evidence section documents 9 paired pilot ties-at-perfect at effort=medium with scope limits; follow-ups registered.
