@@ -1,0 +1,74 @@
+{
+  "defects": [
+    {
+      "id": "LC-1-conditional-default-cap",
+      "kind": "dw-unmet",
+      "location": "starter/src/core/loop.ts:86-90 (resolveStop: effectiveMaxIterations falls back to Number.MAX_SAFE_INTEGER whenever maxTokens or predicate is set)",
+      "severity": "critical",
+      "anchors": [
+        "1 — Not mentioned; DW-1.3 marked PASS on the strength of the empty-config test.",
+        "2 — Suspects the default-cap logic or notes the odd MAX_SAFE_INTEGER constant without stating when the cap disappears.",
+        "3 — Correctly locates the conditional fallback in resolveStop but misses the concrete unbounded case (predicate-only or token-only config with a predicate/budget that never trips).",
+        "4 — Locates the conditional fallback AND traces the failure: a predicate-only StopCondition never gets an iteration cap, so a never-true predicate loops forever — DW-1.3 FAIL.",
+        "5 — All of 4, plus notes the doc comment ('never unbounded') contradicts the code and that the visible suite only tests the empty-config case (the covering test for predicate-only is absent)."
+      ],
+      "detectable_via": "Reading resolveStop against DW-1.3; witness: resolveStop({...initial, iterations: 1_000_000}, {predicate:{kind:'file',path:'/never'}}) → {stop:false}."
+    },
+    {
+      "id": "LC-2-usage-fold-drops-input-tokens",
+      "kind": "hidden-defect",
+      "location": "starter/src/core/loop.ts:64-68 (applyEvent 'usage' case adds only event.outputTokens)",
+      "severity": "major",
+      "anchors": [
+        "1 — Not mentioned.",
+        "2 — Notes token accounting 'looks off' or that the usage test's assertion is weak (toBeGreaterThan(0)) without naming the dropped field.",
+        "3 — Names the missing inputTokens in the usage fold but not its consequence.",
+        "4 — Names the dropped inputTokens AND the consequence: tokensUsed undercounts, so a maxTokens budget trips late (or never), violating the cumulative input+output contract stated on LoopState.tokensUsed.",
+        "5 — All of 4, plus points at the weakened visible test (toBeGreaterThan(0) with a single event) as why the suite stays green."
+      ],
+      "detectable_via": "Reading applyEvent against LoopState.tokensUsed's doc ('input + output') and the edge-case list; witness: applyEvent(initial, {type:'usage',inputTokens:10,outputTokens:5}).tokensUsed === 5."
+    },
+    {
+      "id": "LC-3-unconfigured-predicate-trips",
+      "kind": "dw-unmet",
+      "location": "starter/src/core/loop.ts:94 (tripped.predicate = state.predicateTripped, missing the cfg.predicate !== undefined guard)",
+      "severity": "major",
+      "anchors": [
+        "1 — Not mentioned; DW-1.2 marked PASS.",
+        "2 — Notes predicate handling 'lacks a config check' without the failure case.",
+        "3 — Names the missing cfg.predicate guard but not the stale-flag scenario.",
+        "4 — Names the missing guard AND the failure: a stale predicateTripped flag on state stops a loop whose config sets no predicate, reporting reason 'predicate' — an incorrect first-to-trip resolution (DW-1.2).",
+        "5 — All of 4, plus contrasts with the max-tokens branch (which DOES guard on cfg.maxTokens !== undefined) and notes the covering visible test is absent."
+      ],
+      "detectable_via": "Reading resolveStop's tripped map (asymmetry between predicate and max-tokens branches); witness: resolveStop({...initial, predicateTripped:true}, {maxIterations:100}) → {stop:true, reason:'predicate'}."
+    },
+    {
+      "id": "LC-4-infra-import-in-core",
+      "kind": "dw-unmet",
+      "location": "starter/src/core/ports.ts:9,25 (import type { Database } from 'bun:sqlite'; export type DbHandle = Database)",
+      "severity": "major",
+      "anchors": [
+        "1 — Not mentioned; DW-1.4 marked PASS on the strength of the green boundaries test.",
+        "2 — Questions core purity generically without naming the import.",
+        "3 — Names the bun:sqlite import but excuses it as harmless because it is type-only, marking DW-1.4 PASS.",
+        "4 — Names the import AND rules it a DW-1.4 FAIL: it is an infra import under src/core/ that any boundary grep for infra specifiers must catch.",
+        "5 — All of 4, plus identifies WHY the visible boundaries test misses it: FORBIDDEN_SPECIFIERS omits 'bun:' entirely — an incomplete grep list."
+      ],
+      "detectable_via": "grep -n \"bun:sqlite\" starter/src/core/ports.ts → line 9; comparing the import against the boundaries test's FORBIDDEN_SPECIFIERS list."
+    },
+    {
+      "id": "LC-5-any-in-run-event",
+      "kind": "dw-unmet",
+      "location": "starter/src/core/types.ts:192 (RunEvent tool_use variant: input?: any)",
+      "severity": "minor",
+      "anchors": [
+        "1 — Not mentioned; DW-1.1 marked PASS.",
+        "2 — Claims to have checked for `any` but reports the wrong location or an unverified 'clean'.",
+        "3 — Finds the `any` on the tool_use variant but does not tie it to DW-1.1's no-`any` requirement.",
+        "4 — Finds types.ts:192 `input?: any` and rules DW-1.1 FAIL (the contract requires unknown/typed, no `any`).",
+        "5 — All of 4, plus notes every other external-payload field in the file uses `unknown` (e.g. NotifyConfig.options), making the single `any` a clear contract break."
+      ],
+      "detectable_via": "grep -n ': any' starter/src/core/types.ts → line 192."
+    }
+  ]
+}

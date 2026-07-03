@@ -1,0 +1,16 @@
+{
+  "id": "04-loop-core-review",
+  "rung": 4,
+  "source": {
+    "repo": "meeseeks",
+    "plan": ".code-foundations/plans/2026-06-28-meeseeks-cron-loop-manager.md",
+    "phase": "Phase 1: Core domain + ports"
+  },
+  "toolchain": {
+    "install": "true",
+    "test_hidden": "bun test hidden.test.ts"
+  },
+  "starter_dir": "starter",
+  "report_file": "report.md",
+  "answer_key": "answer-key.json"
+}

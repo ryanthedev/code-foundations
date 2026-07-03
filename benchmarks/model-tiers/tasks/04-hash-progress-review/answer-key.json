@@ -1,0 +1,60 @@
+{
+  "defects": [
+    {
+      "id": "HP-1-missing-opening-zero-report",
+      "kind": "dw-unmet",
+      "location": "starter/src/hashing.ts:339-357 (hashFiles loop — the documented opening `{completed: 0, total, completedBytes: 0, totalBytes}` report before the loop is absent; the first report fires after file 1 completes)",
+      "severity": "major",
+      "anchors": [
+        "1 — Not mentioned; DW-2.3 marked PASS on monotonicity + final totals alone.",
+        "2 — Notes progress reporting 'starts late' or that a consumer sees no report until the first file finishes, without tying it to the required at-0 report.",
+        "3 — Names the missing pre-loop zero report but not its consumer consequence (no known denominator until file 1 — a percentage bar cannot open at 0%).",
+        "4 — Names the missing zero report, cites the requirement (fires at 0 before any file is hashed) and the module's own doc claiming it, and rules DW-2.3 FAIL.",
+        "5 — All of 4, plus notes the visible monotonicity test cannot catch it (a sequence starting at completed=1 is still monotonic) — the at-0 assertion is absent from the suite."
+      ],
+      "detectable_via": "Reading hashFiles against DW-2.3 and its own doc comment; witness: hashFiles over 2 files → first report is {completed: 1, ...}, never {completed: 0, ...}."
+    },
+    {
+      "id": "HP-2-microtask-yield",
+      "kind": "dw-unmet",
+      "location": "starter/src/hashing.ts:173 (yieldToEventLoop = () => Promise.resolve() — a MICROTASK; its doc comment claims 'Awaits a macrotask')",
+      "severity": "critical",
+      "anchors": [
+        "1 — Not mentioned; DW-2.4 marked PASS because the function awaits 'yields'.",
+        "2 — Doubts the yield mechanism or flags the doc/code mismatch without stating microtask vs macrotask semantics.",
+        "3 — Names Promise.resolve() as a microtask but not the consequence (queued I/O such as a pending notification send never runs; the loop is never actually released).",
+        "4 — Names the microtask, explains that awaiting a resolved promise does not release the event loop to timers/I/O, so DW-2.4's 'a scheduled macrotask interleaves' is unmet — FAIL.",
+        "5 — All of 4, plus demonstrates it (a setTimeout(0) scheduled before hashFiles does not run during the hash) and notes the visible test only asserts async resolution, not interleaving."
+      ],
+      "detectable_via": "Reading yieldToEventLoop's one-line body against its own doc and DW-2.4; witness: setTimeout(0) queued before hashFiles(yieldEvery: 1024, 5 files) never fires mid-run."
+    },
+    {
+      "id": "HP-3-stat-bytes-reported",
+      "kind": "hidden-defect",
+      "location": "starter/src/hashing.ts:346 (completedBytes += entry.size — the statSync estimate — instead of hashed.size, the bytes actually streamed)",
+      "severity": "major",
+      "anchors": [
+        "1 — Not mentioned.",
+        "2 — Notes the progress numbers 'come from stat' somewhere without the exact accumulation line or why it matters.",
+        "3 — Names line 346 using entry.size but not the TOCTOU consequence, or claims it is equivalent to hashed.size.",
+        "4 — Names line 346, contrasts with hashed.size one line above (which IS stored in the result map), and rules DW-2.3's 'bytes from hashed content' unmet — a file resized between stat and hash reports stale bytes and the closing completedBytes === totalBytes identity is pinned to the wrong quantity.",
+        "5 — All of 4, plus notes why every test stays green (fixtures never change size mid-run, so stat === hashed) and cites the interface doc declaring completedBytes authoritative-from-streaming."
+      ],
+      "detectable_via": "Reading the accumulation line against HashProgress's doc and DW-2.3; witness: append to a file after listFiles → final completedBytes 4 while hashed size is 8."
+    },
+    {
+      "id": "HP-4-dir-pattern-dropped",
+      "kind": "dw-unmet",
+      "location": "starter/src/hashing.ts:109-115 (matchesIgnore handles exact-name and `*.ext` but the `dir/` trailing-slash form its own doc comment documents is not implemented)",
+      "severity": "major",
+      "anchors": [
+        "1 — Not mentioned; DW-2.2 marked PASS on the exact-name/*.ext tests.",
+        "2 — Suspects ignore handling is incomplete without naming the missing pattern form.",
+        "3 — Names the missing `dir/` branch but not the behavioral consequence.",
+        "4 — Names the missing branch AND the consequence: a `.upublishignore` directory pattern (e.g. `private/`) silently stops excluding — the directory's entire contents are published — DW-2.2 FAIL.",
+        "5 — All of 4, plus notes the function's own doc comment still documents the `dir/` form and that the visible suite exercises only the other two forms."
+      ],
+      "detectable_via": "Reading matchesIgnore against its doc comment; witness: .upublishignore containing 'private/' → listFiles still returns private/notes.txt."
+    }
+  ]
+}

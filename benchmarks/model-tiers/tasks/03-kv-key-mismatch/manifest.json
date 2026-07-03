@@ -1,0 +1,17 @@
+{
+  "id": "03-kv-key-mismatch",
+  "rung": 3,
+  "source": {
+    "repo": "upublish-backend",
+    "plan": ".code-foundations/plans/2026-05-20-kv-key-format-fix.md",
+    "phase": "Phase 1: Server — standardize KV key writes"
+  },
+  "toolchain": {
+    "install": "true",
+    "test_hidden": "bun test hidden.test.ts",
+    "repro": "bun test repro.test.ts"
+  },
+  "starter_dir": "starter",
+  "report_file": "report.md",
+  "answer_key": "answer-key.json"
+}

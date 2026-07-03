@@ -1,0 +1,20 @@
+{
+  "defects": [
+    {
+      "id": "stats-double-count-deduped-archived",
+      "kind": "root-cause",
+      "location": "starter/stats.ts:34-45 (STATS_SELECT adds a correlated archived site_versions subquery with no dedup/storage_format awareness, used by both listRootNamespacesWithStats and listNamespacesForUser) and starter/stats.ts:88-93 (getAccountStorageTotal sums those inflated per-namespace rows instead of the gate's sumUniqueStorageForSpace)",
+      "severity": "major",
+      "anchors": [
+        "1 — Report does not identify the stats-side double count (blames the gate, the blob refcounts, or the fixtures).",
+        "2 — Report notices meter and gate disagree but locates the cause vaguely ('the meter is wrong') without naming the archived-subquery term in STATS_SELECT.",
+        "3 — Report names the archived site_versions subquery as the inflation source but misses either that CAS-archived bytes are deduplicated (why it is wrong) or that the account total must switch to the dedup-aware footprint — e.g. fixes only one of the two read-side layers, or subtracts CAS rows inside the subquery while keeping per-namespace archived accounting.",
+        "4 — Report names the subquery, explains the CAS dedup reason, drops archived bytes from per-namespace total_storage AND bases the account total on sumUniqueStorageForSpace, leaving quota.ts untouched.",
+        "5 — All of 4, plus explains why the gate is the authoritative side (publish/billing already use it), notes prefix-legacy archived bytes remain correctly counted by the gate's prefix term, and notes the account total no longer equals the per-namespace sum by design."
+      ],
+      "detectable_via": "bun test repro.test.ts fails 2/2 cases on the clean starter; comparing stats.ts STATS_SELECT against quota.ts sumUniqueStorageForSpace shows the archived term lacks any dedup/storage_format filter."
+    }
+  ],
+  "allowed_change_scope": ["stats.ts", "stats.test.ts"],
+  "pinned_files": ["quota.ts", "schema.ts", "fixtures.ts", "quota.test.ts", "repro.test.ts"]
+}
