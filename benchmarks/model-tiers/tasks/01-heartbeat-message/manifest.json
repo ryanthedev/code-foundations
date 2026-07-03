@@ -1,0 +1,16 @@
+{
+  "id": "01-heartbeat-message",
+  "rung": 1,
+  "source": {
+    "repo": "upublish.skill",
+    "plan": "../upublish-backend/.code-foundations/plans/2026-06-20-cas-diff-bounded-concurrency.md",
+    "phase": "Phase 2: Relabel the manifest-wait heartbeat (skill)"
+  },
+  "toolchain": {
+    "install": "true",
+    "test_hidden": "bun test hidden.test.ts"
+  },
+  "starter_dir": "starter",
+  "report_file": null,
+  "answer_key": null
+}

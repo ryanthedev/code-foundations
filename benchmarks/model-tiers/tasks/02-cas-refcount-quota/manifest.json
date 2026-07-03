@@ -1,0 +1,16 @@
+{
+  "id": "02-cas-refcount-quota",
+  "rung": 2,
+  "source": {
+    "repo": "upublish-backend",
+    "plan": ".code-foundations/plans/2026-06-03-cas-dedup-resume.md",
+    "phase": "Phase 1: Foundation — schema, refcounts, hybrid quota"
+  },
+  "toolchain": {
+    "install": "true",
+    "test_hidden": "bun test hidden.test.ts"
+  },
+  "starter_dir": "starter",
+  "report_file": null,
+  "answer_key": null
+}
