@@ -16,3 +16,9 @@ benchmarks/concise-doctrine/results-*/
 # venv + live build transcripts (heavy / transient) — harness, tasks, reports, result CSVs kept
 benchmarks/concise-doctrine/.venv/
 benchmarks/concise-doctrine/_live-smoke/
+
+# model-tiers: skill-eval run_eval workspace (heavy transcripts, regenerable via run_suite.py +
+# evals.json) — code, tasks, calibration/, results-*.csv are kept
+benchmarks/model-tiers/.venv/
+benchmarks/model-tiers/*-workspace/
+benchmarks/model-tiers/__pycache__/

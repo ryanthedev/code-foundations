@@ -254,3 +254,24 @@ Per-DW (each DW item has a verifying test/command), plus boundary + dirty:
 ---
 ## Execution Log
 _To be filled during /code-foundations:build_
+
+### Phase 1: Build-rung tasks from corpus (Gate: Full)
+- [x] BUILD: Discovery + design + implementation (stub -> implement -> validate) complete
+- [x] REVIEW: Verification passed
+- [x] Committed
+Commit: b15fb88
+Summary: benchmarks/model-tiers/ now holds SCHEMA.md (the pinned manifest contract) and three validated build-rung tasks -- 01-heartbeat-message (easy), 02-cas-refcount-quota and 02-cas-bounded-concurrency (hard, multi-module) -- each with pristine-green starter, hidden bun/vitest suite with per-DW dirty tests, and a gold solution passing 100%; hidden suites run offline via manifest toolchain.test_hidden.
+
+### Phase 2: Debug + review tasks (Gate: Standard)
+- [x] BUILD: Discovery + design + implementation complete (wave 2, phase worktree)
+- [x] REVIEW: Verification passed
+- [x] Committed
+Commit: 42986d8
+Summary: tasks/03-kv-key-mismatch and 03-storage-meter-dedup (real upublish bugs, 5/5 deterministic failing repros, answer keys with allowed-change scopes) plus tasks/04-loop-core-review and 04-hash-progress-review (9 planted violations total with 5-point anchors and per-defect detection evidence; REVIEW-shaped specs, zero intent framing); rung-3 manifests carry additive toolchain.repro -- SCHEMA.md doc row deferred to Phase 4.
+
+### Phase 3: Judge panel + scorers (Gate: Standard)
+- [x] BUILD: Discovery + design + implementation complete (wave 2, phase worktree)
+- [x] REVIEW: Verification passed
+- [x] Committed
+Commit: a390acd
+Summary: benchmarks/model-tiers/judge.py (blind cross-vendor panel: codex exec / agy --print / claude -p claude-sonnet-4-6, retry-once-then-judge-failure, 2-of-3 quorum, majority binary + median 5-point) and score_run.py (run dir + manifest -> 14-field ROW_FIELDS row, all four rungs) validated on synthetic fixtures + one live call per judge; suite: .venv/bin/python -m pytest test_judge.py test_score_run.py (24 pass, 3 live-gated).

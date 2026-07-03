@@ -48,6 +48,7 @@ tasks/<NN-slug>/
 | `source.phase` | yes | The exact phase heading (`### Phase N: <name>`) the task ports. |
 | `toolchain.install` | yes | Shell command, run once from the (copied) `starter_dir` before any test run. |
 | `toolchain.test_hidden` | yes | Shell command that runs the hidden suite against `outputs/` — see Execution contract. |
+| `toolchain.repro` | rung 3 only | Shell command reproducing the bug on a clean `starter/` copy; expected to **exit non-zero** on the pristine starter (the failing repro) and exit zero once the bug is fixed. Additive — absent on rungs 1, 2, 4. |
 | `starter_dir` | yes | Relative path (from the task dir) to the workspace root given to the agent. |
 | `report_file` | rung 3/4 only | Path (relative to `outputs/`) to the artifact judges grade (e.g. `report.md`). `null` for rungs 1-2 (graded by hidden suite only). |
 | `answer_key` | rung 3/4 only | Path to `answer-key.json` — never shown to the agent under test. `null` for rungs 1-2. |

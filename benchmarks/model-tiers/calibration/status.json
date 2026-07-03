@@ -1,0 +1,9 @@
+{
+  "01-heartbeat-message": "rejected",
+  "02-cas-bounded-concurrency": "rejected",
+  "02-cas-refcount-quota": "rejected",
+  "03-kv-key-mismatch": "rejected",
+  "03-storage-meter-dedup": "rejected",
+  "04-hash-progress-review": "rejected",
+  "04-loop-core-review": "rejected"
+}
