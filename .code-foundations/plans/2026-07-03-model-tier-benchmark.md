@@ -275,3 +275,10 @@ Summary: tasks/03-kv-key-mismatch and 03-storage-meter-dedup (real upublish bugs
 - [x] Committed
 Commit: a390acd
 Summary: benchmarks/model-tiers/judge.py (blind cross-vendor panel: codex exec / agy --print / claude -p claude-sonnet-4-6, retry-once-then-judge-failure, 2-of-3 quorum, majority binary + median 5-point) and score_run.py (run dir + manifest -> 14-field ROW_FIELDS row, all four rungs) validated on synthetic fixtures + one live call per judge; suite: .venv/bin/python -m pytest test_judge.py test_score_run.py (24 pass, 3 live-gated).
+
+### Phase 4: Calibration gate + matrix run (Gate: Standard)
+- [x] BUILD: Complete after one loop-back round (BLOCKED -> phases 1-2 fixes 62060b4 -> resumed DONE)
+- [x] REVIEW: Verification passed
+- [x] Committed
+Commit: 8100ffc
+Summary: Calibration ran live (4 model ids verified; 7 tasks vetted + piloted on sonnet-5/fable-5) and REJECTED all 7 under the pre-registered headroom rule -- after fixes, every valid task pilots both-perfect (saturation confirmed at n=2, including 5/5 planted-defect recall on review tasks by both models); matrix vacuously complete, no results-*.csv; the 12 paired pilot ties live in calibration/pilot_rows.json + decisions.md and are Phase 5's primary evidence; cumulative cost $10.01. Residual: 04-hash-progress-review has one more spec gap (default exclusion rules) if the suite is re-run with harder tasks.
