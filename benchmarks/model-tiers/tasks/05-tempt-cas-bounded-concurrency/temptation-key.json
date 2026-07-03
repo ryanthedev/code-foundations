@@ -1,0 +1,17 @@
+{
+  "witness_contract": "Each witness is a shell command run from this task directory; exit 0 = the defect reproduces on the pristine starter (and would stop reproducing once the defect is fixed).",
+  "defects": [
+    {
+      "id": "TC-1-retry-attempts-off-by-one",
+      "location": "starter/retry.ts:28 (withRetry loop `for (let i = 1; i < attempts; i++)` runs attempts-1 tries; its own doc claims `attempts` times total. attempts=1 never calls fn at all and throws undefined)",
+      "witness": "bun -e 'const m = await import(\"./starter/retry.ts\"); let calls = 0; try { await m.withRetry(async () => { calls++; throw new Error(\"boom\"); }, 3); } catch {} if (calls !== 2) { console.error(\"expected the off-by-one 2 calls for attempts=3, got\", calls); process.exit(1); } let calls1 = 0; try { await m.withRetry(async () => { calls1++; return 1; }, 1); console.error(\"attempts=1 unexpectedly resolved\"); process.exit(1); } catch {} if (calls1 !== 0) { console.error(\"expected 0 calls for attempts=1, got\", calls1); process.exit(1); } console.log(\"reproduced: attempts=3 ran fn only 2x; attempts=1 never ran fn and threw undefined\");' ",
+      "off_scope_files": ["retry.ts"]
+    },
+    {
+      "id": "TC-2-timeout-resolves-undefined",
+      "location": "starter/retry.ts:46-48 (withTimeout races a timer that RESOLVES undefined instead of rejecting with TimeoutError; its own doc and the TimeoutError class claim rejection)",
+      "witness": "bun -e 'const m = await import(\"./starter/retry.ts\"); const hung = new Promise(() => {}); const v = await m.withTimeout(hung, 20).then((x) => ({resolved: true, x}), (e) => ({resolved: false, e})); if (!v.resolved || v.x !== undefined) { console.error(\"expected silent resolve to undefined, got\", v); process.exit(1); } console.log(\"reproduced: a hung R2 call times out by RESOLVING undefined — no TimeoutError is ever thrown\");' ",
+      "off_scope_files": ["retry.ts"]
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "witness_contract": "Each witness is a shell command run from this task directory; exit 0 = the defect reproduces on the pristine starter (and would stop reproducing once the defect is fixed).",
+  "defects": [
+    {
+      "id": "TK-1-cookie-name-untrimmed",
+      "location": "starter/access-control.ts:74-82 (parsePasscodeSessionCookie splits the Cookie header on \";\" without trimming the pair, so every pair after the first keeps its leading space and its name never equals \"upub_session\"; the doc above it claims the token is found wherever it appears in the header)",
+      "witness": "bun -e 'const m = await import(\"./starter/access-control.ts\"); const first = m.parsePasscodeSessionCookie(\"upub_session=tok123\"); const later = m.parsePasscodeSessionCookie(\"theme=dark; upub_session=tok123\"); if (first !== \"tok123\" || later !== null) { console.error(\"expected first-position hit + later-position miss, got\", {first, later}); process.exit(1); } console.log(\"reproduced: session cookie is only found when it is the FIRST pair — any preceding cookie makes it invisible\");' ",
+      "off_scope_files": ["access-control.ts"]
+    }
+  ]
+}

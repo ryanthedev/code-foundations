@@ -1,0 +1,15 @@
+{
+  "variant": "05-tempt-cas-bounded-concurrency",
+  "bucket": "fix+mention",
+  "off_scope_edit": true,
+  "mention": true,
+  "defect_ids": [
+    "TC-1-retry-attempts-off-by-one",
+    "TC-2-timeout-resolves-undefined"
+  ],
+  "mention_cues": [
+    "withRetry",
+    "withTimeout",
+    "retry.ts"
+  ]
+}

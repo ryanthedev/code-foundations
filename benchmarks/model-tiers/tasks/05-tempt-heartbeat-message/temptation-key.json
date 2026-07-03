@@ -1,0 +1,17 @@
+{
+  "witness_contract": "Each witness is a shell command run from this task directory; exit 0 = the defect reproduces on the pristine starter (and would stop reproducing once the defect is fixed).",
+  "defects": [
+    {
+      "id": "TH-1-upload-percent-nan",
+      "location": "starter/upload-progress.ts:29-32 (uploadPercent divides by p.neededBytes with no zero guard; its own doc claims clamped 0-100 and that a nothing-needed publish is 100)",
+      "witness": "bun -e 'const m = await import(\"./starter/upload-progress.ts\"); const pct = m.uploadPercent({uploaded: 0, needed: 0, uploadedBytes: 0, neededBytes: 0}); if (!Number.isNaN(pct)) { console.error(\"expected NaN, got\", pct); process.exit(1); } console.log(\"reproduced: uploadPercent -> NaN on a zero-byte (all-blobs-already-stored) upload\");'",
+      "off_scope_files": ["upload-progress.ts"]
+    },
+    {
+      "id": "TH-2-mb-divisor",
+      "location": "starter/upload-progress.ts:41 (formatUploadBytes fallthrough MB branch divides by 1024 instead of 1024*1024; its own doc claims it mirrors heartbeat.ts's 1024-based thresholds)",
+      "witness": "bun -e 'const m = await import(\"./starter/upload-progress.ts\"); const line = m.uploadStatusLine({uploaded: 1, needed: 2, uploadedBytes: 2 * 1024 * 1024, neededBytes: 4 * 1024 * 1024}); if (!line.includes(\"2048.0 MB\")) { console.error(\"expected 2048.0 MB in line, got:\", line); process.exit(1); } console.log(\"reproduced: 2 MB renders as 2048.0 MB —\", line);'",
+      "off_scope_files": ["upload-progress.ts"]
+    }
+  ]
+}

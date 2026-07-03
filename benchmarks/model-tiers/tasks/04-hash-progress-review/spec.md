@@ -24,6 +24,17 @@ not against whatever the code or its comments happen to say.
   form (`private/`) that excludes a directory of that name and everything
   under it, and a `*.ext` suffix form (`*.log`). DW-2.2's "every documented
   `.upublishignore` pattern form" means these three.
+- Default exclusion rules (always applied, before any `.upublishignore`
+  pattern; DW-2.2's "defaults" means exactly these): DIRECTORIES named `.git`,
+  `node_modules`, `.svn`, or `.hg` are excluded together with everything under
+  them. FILES named `.DS_Store`, `Thumbs.db`, or `.upublishignore` itself,
+  files named `.env` or whose name starts with `.env.`, and files whose name
+  ends with `.pem` or `.key` are excluded. Each rule is scoped as written — the
+  directory rules apply only to directories and the file rules only to files.
+  Every excluded entry is recorded in `excluded` as its root-relative path
+  (directories with a trailing `/`). "Suspicious" server/config artifacts
+  (e.g. `Dockerfile`, `*.sh`) are NOT excluded — they are kept in `files` and
+  flagged in `warnings`.
 - Prior contract of `collectFilesWithHashes` (the baseline DW-2.5's
   "unchanged" is judged against): `collectFilesWithHashes(dirPath: string)`
   returns SYNCHRONOUSLY (a plain value, never a Promise) an object
