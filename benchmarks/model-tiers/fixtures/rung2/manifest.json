@@ -1,0 +1,9 @@
+{
+  "id": "fx-rung2-mult",
+  "rung": 2,
+  "source": {"repo": "synthetic-fixture", "plan": "n/a", "phase": "n/a"},
+  "toolchain": {"install": "true", "test_hidden": "bun test hidden.test.ts"},
+  "starter_dir": "starter",
+  "report_file": null,
+  "answer_key": null
+}
