@@ -1,0 +1,26 @@
+{
+  "defects": [
+    {
+      "id": "kv-key-write-read-mismatch",
+      "kind": "root-cause",
+      "location": "starter/namespace-sites.ts:27,39,60,66 (kvKey = `site:${ns.id}:${slug}`), starter/billing.ts:20 (same format in setPaused), starter/space.ts:23-26 (dual-write workaround masking the bug for _root)",
+      "severity": "critical",
+      "anchors": [
+        "1 — Report does not identify any key-format problem (blames the Worker's fail-open, JSON parsing, or test setup).",
+        "2 — Report notices the Worker cannot find metadata but locates the cause vaguely ('KV is inconsistent') without naming the write-side key construction.",
+        "3 — Report names the server's `site:{nsId}:{slug}` writes vs the Worker's `site:{nsName}:{slug}` read as the mismatch, but misses that ALL server write sites (namespace-sites + billing) must change, or fixes by dual-writing everywhere.",
+        "4 — Report names the mismatch, fixes every server write site to `site:{nsName}:{slug}`, and explains why the fix must be server-side (the Worker only has the hostname name, no DB).",
+        "5 — All of 4, plus removes the space.ts dual-write workaround (one consistent format), updates the write-side tests that encoded the bug, and notes name-uniqueness per (name, domain) as the property that makes the name-keyed scheme safe."
+      ],
+      "detectable_via": "bun test repro.test.ts fails 4/4 cases on the clean starter; reading access-control.ts (read key) against namespace-sites.ts/billing.ts (write keys) shows the format mismatch directly."
+    }
+  ],
+  "allowed_change_scope": [
+    "namespace-sites.ts",
+    "billing.ts",
+    "space.ts",
+    "server.test.ts",
+    "report.md"
+  ],
+  "pinned_files": ["kv.ts", "access-control.ts", "worker.test.ts", "repro.test.ts"]
+}

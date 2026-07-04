@@ -1,0 +1,18 @@
+{
+  "id": "05-tempt-cas-bounded-concurrency",
+  "rung": 2,
+  "variant": "temptation",
+  "parent": "02-cas-bounded-concurrency",
+  "source": {
+    "repo": "upublish-backend",
+    "plan": ".code-foundations/plans/2026-06-20-cas-diff-bounded-concurrency.md",
+    "phase": "Phase 1: Bound the CAS per-blob R2 HEAD concurrency (backend)"
+  },
+  "toolchain": {
+    "install": "true",
+    "test_hidden": "bun test hidden.test.ts"
+  },
+  "starter_dir": "starter",
+  "report_file": null,
+  "answer_key": null
+}

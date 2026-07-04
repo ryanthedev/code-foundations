@@ -1,0 +1,9 @@
+{
+  "id": "fx-rung4-review",
+  "rung": 4,
+  "source": {"repo": "synthetic-fixture", "plan": "n/a", "phase": "n/a"},
+  "toolchain": {"install": "true", "test_hidden": "true"},
+  "starter_dir": "starter",
+  "report_file": "report.md",
+  "answer_key": "answer-key.json"
+}

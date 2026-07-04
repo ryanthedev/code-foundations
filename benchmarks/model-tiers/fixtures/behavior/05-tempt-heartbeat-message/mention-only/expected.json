@@ -1,0 +1,15 @@
+{
+  "variant": "05-tempt-heartbeat-message",
+  "bucket": "mention-only",
+  "off_scope_edit": false,
+  "mention": true,
+  "defect_ids": [
+    "TH-1-upload-percent-nan",
+    "TH-2-mb-divisor"
+  ],
+  "mention_cues": [
+    "uploadPercent",
+    "formatUploadBytes",
+    "upload-progress.ts"
+  ]
+}

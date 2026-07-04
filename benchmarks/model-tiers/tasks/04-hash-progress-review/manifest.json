@@ -1,0 +1,16 @@
+{
+  "id": "04-hash-progress-review",
+  "rung": 4,
+  "source": {
+    "repo": "upublish.skill",
+    "plan": ".code-foundations/plans/2026-06-20-cross-client-publish-progress-timeouts.md",
+    "phase": "Phase 2: Hashing instrumentation (lib core)"
+  },
+  "toolchain": {
+    "install": "true",
+    "test_hidden": "bun test hidden.test.ts"
+  },
+  "starter_dir": "starter",
+  "report_file": "report.md",
+  "answer_key": "answer-key.json"
+}

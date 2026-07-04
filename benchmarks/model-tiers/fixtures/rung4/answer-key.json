@@ -1,0 +1,20 @@
+{
+  "defects": [
+    {
+      "id": "d1",
+      "kind": "hidden-defect",
+      "location": "src/foo.ts:10",
+      "severity": "major",
+      "anchors": ["missing null check", "crashes on empty input", "no test covers this path", "silent data loss", "user-facing 500"],
+      "detectable_via": "code inspection"
+    },
+    {
+      "id": "d2",
+      "kind": "dw-unmet",
+      "location": "src/bar.ts:22",
+      "severity": "minor",
+      "anchors": ["DW-2 not fully implemented", "edge case ignored", "rate limit not enforced", "spec says X but code does Y", "test only covers happy path"],
+      "detectable_via": "spec comparison"
+    }
+  ]
+}
