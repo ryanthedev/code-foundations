@@ -91,3 +91,57 @@ Verified via `claude -p "Reply with exactly the word: pong" --model <id> --max-t
 - 2026-07-03T12:59:38Z [saturation_confirm] 02-cas-bounded-concurrency: confirmation pilot (2nd sample) — sonnet-5 correct=1, fable-5 correct=1 again. Saturation confirmed at n=2; REJECT stands.
 - 2026-07-03T13:09:51Z [saturation_confirm] 04-loop-core-review: confirmation pilot (2nd sample) — sonnet-5 tp=5 fp=0 fn=0, fable-5 tp=5 fp=0 fn=0 again. Both models achieve perfect recall+precision on the planted-violation review at n=2. Saturation confirmed; REJECT stands. Notable for Q2 (REVIEW-tier rule): at effort=medium, the CHEAPEST matrix model found every planted violation the priciest model found — zero capability gap observed on this review task (n=2 per model).
 - 2026-07-03T13:09:51Z [calibration_terminal] CALIBRATION COMPLETE — 0 of 7 tasks enter the matrix. Final per-task: 01-heartbeat-message REJECT (saturation, n=2 both-perfect); 02-cas-bounded-concurrency REJECT (saturation, n=2 both-perfect); 02-cas-refcount-quota REJECT (post-fix vet PASS/PASS but pilot both-perfect); 03-kv-key-mismatch REJECT (post-fix pilot both-perfect — the earlier both-fail was the scorer bug, now fixed and re-measured); 03-storage-meter-dedup REJECT (post-fix pilot both-perfect); 04-hash-progress-review REJECT (vet FAIL/FAIL persists post-fix: DW-2.2 default exclusion rules still undefined — loops back to Phase 2 a second time); 04-loop-core-review REJECT (saturation, n=2 both-perfect incl. 5/5 defect recall by BOTH models). The pre-registered headroom rule fired exactly as designed: it prevented spending ~105 matrix runs measuring ties. Matrix is therefore vacuously complete (0 cells); no results-*.csv produced. The dominant empirical signal for Phase 5 / the report: at effort=medium, claude-sonnet-5 and claude-fable-5 are INDISTINGUISHABLE on every surviving-quality task in this suite (12 pilot comparisons, all ties at perfect) — the corpus-sourced tasks as authored do not reach the difficulty band where tiers separate.
+
+## Model-id check (2026-07-03T17:35:31Z)
+- `haiku-4.5 (claude-haiku-4-5)`: ACCEPTED
+Verified via claude -p "Reply with exactly the word: pong" --model claude-haiku-4-5 --max-turns 1 --output-format json, one call, result="pong" stop_reason=end_turn. Cost: $0.0224. Round-1 model-id check already covers sonnet-5/opus-4.8/fable-5/sonnet-4.6 (all ACCEPTED). LADDER_MODELS now complete: haiku-4.5, sonnet-5, opus-4.8, fable-5.
+
+### Floor validity: 01-heartbeat-message (2026-07-03T17:35:47Z)
+- gold_ok=True witnesses_ok=True no_leak_ok=True
+- **Decision: ACCEPT** [floor_validity]
+
+### Floor validity: 02-cas-bounded-concurrency (2026-07-03T17:35:48Z)
+- gold_ok=True witnesses_ok=True no_leak_ok=True
+- **Decision: ACCEPT** [floor_validity]
+
+### Floor validity: 02-cas-refcount-quota (2026-07-03T17:35:48Z)
+- gold_ok=True witnesses_ok=True no_leak_ok=True
+- **Decision: ACCEPT** [floor_validity]
+
+### Floor validity: 03-kv-key-mismatch (2026-07-03T17:35:48Z)
+- gold_ok=True witnesses_ok=True no_leak_ok=True
+- **Decision: ACCEPT** [floor_validity]
+
+### Floor validity: 03-storage-meter-dedup (2026-07-03T17:35:48Z)
+- gold_ok=True witnesses_ok=True no_leak_ok=True
+- **Decision: ACCEPT** [floor_validity]
+
+### Floor validity: 05-tempt-heartbeat-message (2026-07-03T17:35:48Z)
+- gold_ok=True witnesses_ok=True no_leak_ok=True
+- **Decision: ACCEPT** [floor_validity]
+
+### Floor validity: 05-tempt-cas-bounded-concurrency (2026-07-03T17:35:48Z)
+- gold_ok=True witnesses_ok=True no_leak_ok=True
+- **Decision: ACCEPT** [floor_validity]
+
+### Floor validity: 05-tempt-kv-key-mismatch (2026-07-03T17:35:48Z)
+- gold_ok=True witnesses_ok=True no_leak_ok=True
+- **Decision: ACCEPT** [floor_validity]
+
+### Floor validity: 04-hash-progress-review (2026-07-03T17:38:01Z)
+- gold_ok=True witnesses_ok=True no_leak_ok=True
+- **Decision: ACCEPT** [floor_validity]
+
+### Floor validity: 04-loop-core-review (2026-07-03T17:39:59Z)
+- gold_ok=True witnesses_ok=True no_leak_ok=True
+- **Decision: ACCEPT** [floor_validity]
+- 2026-07-04T02:48:44Z [round2_sweep_complete] Ladder sweep COMPLETE: 4 models x 10 task instances x 5 runs = 200/200 rows across all results-*.csv. Effort sweep COMPLETE: 02-cas-bounded-concurrency + 03-kv-key-mismatch x 4 models x {low,medium,high} x 3 runs = 72/72 rows in effort-sweep.csv. Task-major execution order (01-heartbeat-message -> 02-cas-bounded-concurrency -> 02-cas-refcount-quota -> 03-kv-key-mismatch -> 03-storage-meter-dedup -> 04-hash-progress-review -> 04-loop-core-review -> 05-tempt-heartbeat-message -> 05-tempt-cas-bounded-concurrency -> 05-tempt-kv-key-mismatch), all 4 models per task before advancing. Resume-if-done demonstrated live (a killed background scoring pass was restarted and correctly skipped already-scored cells via the same append-only CSV + dedup-on-rewrite discipline). Data-quality incident (disclosed): a post-hoc re-score to backfill the artifact_compliant column (transcript.jsonl false-negative fix) re-invoked live rung-4 judge panels a second/third time on 04-hash-progress-review and 04-loop-core-review; judge-CLI capacity was visibly degraded after this session's heavy cumulative call volume (codex/agy). Judge-dependent fields (correct/score/tp/fp/fn/judge_fail) for both rung-4 tasks were reconstructed from this session's own first-pass verified output wherever exactly recoverable; 2 of 40 rung-4 rows (fable-5 runs 2/3 on 04-hash-progress-review, correct=0 originally but exact tp/fp/fn breakdown not captured) are honestly marked judge_fail=True rather than fabricated. Cumulative reported cost: $172.56 (tripwire $250.00), including round 1's $10.01 pilot spend.
+
+### Floor validity: 03-kv-key-mismatch (2026-07-04T02:51:36Z)
+- gold_ok=True witnesses_ok=True no_leak_ok=True
+- **Decision: ACCEPT** [floor_validity]
+
+### Floor validity: 05-tempt-kv-key-mismatch (2026-07-04T02:51:37Z)
+- gold_ok=True witnesses_ok=True no_leak_ok=True
+- **Decision: ACCEPT** [floor_validity]
+- 2026-07-04T02:52:41Z [data_integrity_finding] Post-hoc git status check found tasks/03-kv-key-mismatch/starter/ and tasks/05-tempt-kv-key-mismatch/starter/ modified in the working tree (billing.ts, namespace-sites.ts, server.test.ts, +space.ts for the variant) -- the diff was exactly this task's own fix (site:${ns.id}:${slug} -> site:${ns.name}:${slug}), plus a stray test_debug.ts. Some subject-model session wrote its fix directly into the shared starter/ files rather than an isolated workspace copy -- a skill-eval run_eval harness finding, not a scoring bug. No other of the 10 tasks starter dirs showed any modification. RESTORED: all 7 files rewritten to exact git-HEAD (Phase 1 committed) content; floor-gate re-run for both tasks, both re-ACCEPT on the restored pristine starter. Disclosed in full in REPORT.md round-2 section (own subsection): existing results-03-kv-key-mismatch.csv / results-05-tempt-kv-key-mismatch.csv / effort-sweep.csv 03-kv-key-mismatch rows were collected before this was discovered and are reported (not discarded) because the recorded pass/fail pattern shows real cross-model/cross-effort variation, not the uniform trivial-pass signature contamination would produce -- but exact run-level attribution of when the in-place write happened is not reconstructable with certainty. Recommended follow-up (downstream): verify skill-eval files-parameter isolation semantics; re-run these 2 tasks under confirmed isolation before treating their numbers as fully decisive.

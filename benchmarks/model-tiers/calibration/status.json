@@ -1,9 +1,12 @@
 {
-  "01-heartbeat-message": "rejected",
-  "02-cas-bounded-concurrency": "rejected",
-  "02-cas-refcount-quota": "rejected",
-  "03-kv-key-mismatch": "rejected",
-  "03-storage-meter-dedup": "rejected",
-  "04-hash-progress-review": "rejected",
-  "04-loop-core-review": "rejected"
+  "01-heartbeat-message": "accepted",
+  "02-cas-bounded-concurrency": "accepted",
+  "02-cas-refcount-quota": "accepted",
+  "03-kv-key-mismatch": "accepted",
+  "03-storage-meter-dedup": "accepted",
+  "04-hash-progress-review": "accepted",
+  "04-loop-core-review": "accepted",
+  "05-tempt-cas-bounded-concurrency": "accepted",
+  "05-tempt-heartbeat-message": "accepted",
+  "05-tempt-kv-key-mismatch": "accepted"
 }

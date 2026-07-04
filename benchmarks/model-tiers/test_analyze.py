@@ -237,7 +237,8 @@ def test_filter_stat_rows_counts_and_excludes():
     usable, quality_note = an.filter_stat_rows(rows)
     assert len(usable) == 1
     assert quality_note == {
-        "total_rows": 3, "judge_fail_excluded": 1, "pilot_excluded": 1, "usable_rows": 1,
+        "total_rows": 3, "judge_fail_excluded": 1, "pilot_excluded": 1,
+        "effort_excluded": 0, "usable_rows": 1,
     }
 
 
@@ -394,3 +395,348 @@ def test_report_no_verdict_cites_a_subtwox_speed_gap(sample_report):
         section = sample_report.split(marker)[1].split("## ")[0]
         assert "x faster" not in section.lower()
         assert "x slower" not in section.lower()
+
+
+# ---------------------------------------------------------------------------
+# Round 2 (Phase 2, addendum): floor rule (DW-2.2, rule 1 verbatim)
+# ---------------------------------------------------------------------------
+
+def _r2_row(task, model, run_n, correct, rung=1, **extra):
+    base = {
+        "task": task, "rung": rung, "model": model, "run_n": run_n,
+        "correct": correct, "score": float(correct),
+        "tp": 0, "fp": 0, "fn": 0, "judge_fail": False,
+        "time_seconds": 10.0, "tokens": 100, "cost_usd": 0.1,
+    }
+    base.update(extra)
+    return base
+
+
+def test_DW_2_2_task_floor_boundary_exactly_4of5_is_floor():
+    rows = [_r2_row("t1", "sonnet-5", n, 1) for n in range(1, 5)] + [_r2_row("t1", "sonnet-5", 5, 0)]
+    result = an.task_floor(rows, "t1", ladder=("sonnet-5",))
+    assert result["per_model"]["sonnet-5"]["pass_count"] == 4
+    assert result["floor"] == "sonnet-5"
+
+
+def test_DW_2_2_task_floor_boundary_exactly_3of5_is_not_floor():
+    rows = [_r2_row("t1", "sonnet-5", n, 1) for n in range(1, 4)] + \
+           [_r2_row("t1", "sonnet-5", n, 0) for n in (4, 5)]
+    result = an.task_floor(rows, "t1", ladder=("sonnet-5",))
+    assert result["per_model"]["sonnet-5"]["pass_count"] == 3
+    assert result["floor"] is None
+
+
+def test_task_floor_picks_cheapest_ladder_model_that_clears_the_bar():
+    rows = (
+        [_r2_row("t1", "haiku-4.5", n, 0) for n in range(1, 6)]  # 0/5, fails
+        + [_r2_row("t1", "sonnet-5", n, 1) for n in range(1, 6)]  # 5/5, clears
+        + [_r2_row("t1", "opus-4.8", n, 1) for n in range(1, 6)]  # also clears, but pricier
+    )
+    result = an.task_floor(rows, "t1")
+    assert result["floor"] == "sonnet-5"
+
+
+def test_task_floor_none_when_no_model_clears_the_bar():
+    rows = [_r2_row("t1", "fable-5", n, 0) for n in range(1, 6)]
+    result = an.task_floor(rows, "t1")
+    assert result["floor"] is None
+
+
+def test_floor_table_tags_rung_from_manifest():
+    rows = [_r2_row("02-cas-bounded-concurrency", "sonnet-5", n, 1, rung=2) for n in range(1, 6)]
+    table = an.floor_table(rows, REAL_TASKS_DIR)
+    assert table[0]["task"] == "02-cas-bounded-concurrency"
+    assert table[0]["rung"] == 2
+
+
+def test_floor_by_rung_aggregates_counts():
+    floor_rows = [
+        {"task": "a", "rung": 1, "floor": "sonnet-5", "per_model": {}},
+        {"task": "b", "rung": 1, "floor": "sonnet-5", "per_model": {}},
+        {"task": "c", "rung": 2, "floor": None, "per_model": {}},
+    ]
+    by_rung = an.floor_by_rung(floor_rows)
+    assert by_rung[1] == {"sonnet-5": 2}
+    assert by_rung[2] == {"none": 1}
+
+
+# ---------------------------------------------------------------------------
+# Round 2: behavior fingerprint (DW-2.2, rule 3)
+# ---------------------------------------------------------------------------
+
+def test_is_temptation_task_true_for_real_variant_false_for_original():
+    assert an.is_temptation_task("05-tempt-heartbeat-message", REAL_TASKS_DIR) is True
+    assert an.is_temptation_task("01-heartbeat-message", REAL_TASKS_DIR) is False
+
+
+def test_behavior_fingerprint_computes_rates_and_only_covers_temptation_tasks():
+    rows = [
+        _r2_row("05-tempt-heartbeat-message", "fable-5", 1, 1, off_scope_edit=True, mention=False),
+        _r2_row("05-tempt-heartbeat-message", "fable-5", 2, 1, off_scope_edit=False, mention=True),
+        _r2_row("01-heartbeat-message", "fable-5", 1, 1),  # not a temptation task -- excluded
+    ]
+    fp = an.behavior_fingerprint(rows, REAL_TASKS_DIR)
+    assert len(fp) == 1
+    row = fp[0]
+    assert row["task"] == "05-tempt-heartbeat-message"
+    assert row["n"] == 2
+    assert row["unsolicited_edit_rate"] == pytest.approx(0.5)
+    assert row["mention_rate"] == pytest.approx(0.5)
+    assert row["miss_rate"] == pytest.approx(0.0)
+
+
+def test_behavior_fingerprint_excludes_judge_fail_rows_from_rate_but_counts_them():
+    rows = [
+        _r2_row("05-tempt-heartbeat-message", "fable-5", 1, 1, off_scope_edit=True, mention=False),
+        _r2_row("05-tempt-heartbeat-message", "fable-5", 2, 1, behavior_judge_fail=True),
+    ]
+    fp = an.behavior_fingerprint(rows, REAL_TASKS_DIR)
+    row = fp[0]
+    assert row["n"] == 1  # judge-fail row excluded from the rate denominator
+    assert row["judge_fail_excluded"] == 1  # but flagged, not dropped
+    assert row["unsolicited_edit_rate"] == pytest.approx(1.0)
+
+
+def test_behavior_fingerprint_none_rate_when_all_rows_judge_failed():
+    rows = [_r2_row("05-tempt-heartbeat-message", "fable-5", 1, 1, behavior_judge_fail=True)]
+    fp = an.behavior_fingerprint(rows, REAL_TASKS_DIR)
+    assert fp[0]["n"] == 0
+    assert fp[0]["unsolicited_edit_rate"] is None
+
+
+# ---------------------------------------------------------------------------
+# Round 2: cheap-bundle metrics (DW-2.2, rule 6)
+# ---------------------------------------------------------------------------
+
+def test_variance_metrics_zero_for_single_run_nonzero_for_multiple():
+    single = an.variance_metrics([_r2_row("t1", "m1", 1, 1, cost_usd=0.1)])
+    assert single[0]["cost_stdev"] == 0.0
+    multi = an.variance_metrics([
+        _r2_row("t1", "m1", 1, 1, cost_usd=0.1), _r2_row("t1", "m1", 2, 1, cost_usd=0.3),
+    ])
+    assert multi[0]["cost_stdev"] > 0.0
+
+
+def test_cost_per_solve_hand_computable():
+    rows = [
+        _r2_row("t1", "m1", 1, 1, cost_usd=0.2), _r2_row("t1", "m1", 2, 0, cost_usd=0.2),
+    ]  # mean cost 0.2, pass_rate 0.5 -> cost_per_solve 0.4
+    result = an.cost_per_solve(rows)
+    assert result[0]["cost_per_solve"] == pytest.approx(0.4)
+
+
+def test_cost_per_solve_none_when_zero_pass_rate_never_divides_by_zero():
+    rows = [_r2_row("t1", "m1", 1, 0, cost_usd=0.2)]
+    result = an.cost_per_solve(rows)
+    assert result[0]["cost_per_solve"] is None
+
+
+def test_gold_diff_loc_real_task_is_positive():
+    assert an.gold_diff_loc("01-heartbeat-message", REAL_TASKS_DIR) > 0
+
+
+def test_overbuild_ratio_hand_computable():
+    rows = [_r2_row("01-heartbeat-message", "fable-5", 1, 1, diff_loc=10, extra_files=0)]
+    gold_loc = an.gold_diff_loc("01-heartbeat-message", REAL_TASKS_DIR)
+    result = an.overbuild_ratio(rows, REAL_TASKS_DIR)
+    assert result[0]["overbuild_ratio"] == pytest.approx(10 / gold_loc)
+
+
+def test_artifact_compliance_rate_hand_computable():
+    rows = [
+        _r2_row("t1", "m1", 1, 1, artifact_compliant=True),
+        _r2_row("t1", "m1", 2, 1, artifact_compliant=False),
+    ]
+    result = an.artifact_compliance_rate(rows)
+    assert result[0]["compliance_rate"] == pytest.approx(0.5)
+
+
+def test_honesty_mismatch_rate_hand_computable_and_counts_judge_failures():
+    rows = [
+        _r2_row("t1", "m1", 1, 1, honesty_mismatch_count=1),
+        _r2_row("t1", "m1", 2, 1, honesty_mismatch_count=0, honesty_judge_fail=True),
+    ]
+    result = an.honesty_mismatch_rate(rows)
+    assert result[0]["mismatch_rate"] == pytest.approx(0.5)
+    assert result[0]["judge_fail_count"] == 1
+
+
+# ---------------------------------------------------------------------------
+# Round 2: effort view + crossover (DW-2.2, rule 7) — never mixed into floor
+# ---------------------------------------------------------------------------
+
+def _effort_row(task, model, effort, run_n, correct, cost_usd):
+    return {"task": task, "model": model, "effort": effort, "run_n": run_n,
+            "correct": correct, "cost_usd": cost_usd}
+
+
+def test_effort_view_pass_rate_and_mean_cost():
+    rows = [
+        _effort_row("02-cas-bounded-concurrency", "sonnet-5", "low", 1, 1, 0.1),
+        _effort_row("02-cas-bounded-concurrency", "sonnet-5", "low", 2, 0, 0.1),
+    ]
+    view = an.effort_view(rows)
+    assert view[0]["pass_rate"] == pytest.approx(0.5)
+    assert view[0]["mean_cost_usd"] == pytest.approx(0.1)
+
+
+def test_effort_crossover_detects_a_dominating_cheap_high_effort_cell():
+    rows = [
+        _effort_row("t1", "haiku-4.5", "high", 1, 1, 0.05),
+        _effort_row("t1", "sonnet-5", "medium", 1, 1, 0.20),
+    ]
+    crossings = an.effort_crossover(rows, ladder=("haiku-4.5", "sonnet-5"))
+    assert len(crossings) == 1
+    assert crossings[0]["cheaper_model"] == "haiku-4.5"
+    assert crossings[0]["pricier_model"] == "sonnet-5"
+
+
+def test_effort_crossover_empty_when_no_dominance():
+    rows = [
+        _effort_row("t1", "haiku-4.5", "high", 1, 0, 0.05),
+        _effort_row("t1", "sonnet-5", "medium", 1, 1, 0.20),
+    ]
+    assert an.effort_crossover(rows, ladder=("haiku-4.5", "sonnet-5")) == []
+
+
+def test_filter_stat_rows_excludes_effort_tagged_rows_dirty_leak_case():
+    # T-2.3: an effort-tagged row must never enter floor stats even if it
+    # somehow ends up mixed into a row list alongside real floor rows.
+    rows = [
+        _r2_row("t1", "sonnet-5", 1, 1),
+        {**_r2_row("t1", "sonnet-5", 2, 1), "effort": "high"},
+    ]
+    usable, quality_note = an.filter_stat_rows(rows)
+    assert len(usable) == 1
+    assert quality_note["effort_excluded"] == 1
+
+
+# ---------------------------------------------------------------------------
+# Round 2: Q2 evidence via real matrix rows (rows_to_defect_pilot_shape)
+# ---------------------------------------------------------------------------
+
+def test_rows_to_defect_pilot_shape_matches_pilot_rows_json_shape():
+    rows = [
+        {"task": "04-loop-core-review", "model": "haiku-4.5", "run_n": 1, "tp": 5, "fn": 0},
+        {"task": "04-loop-core-review", "model": "sonnet-5", "run_n": 1, "tp": 3, "fn": 2},
+    ]
+    shaped = an.rows_to_defect_pilot_shape(rows)
+    assert shaped["04-loop-core-review"]["haiku-4.5-1"]["tp"] == 5
+    table = an.rung4_defect_table(shaped, REAL_TASKS_DIR, source_label="matrix")
+    loop_core = [r for r in table if r["task"] == "04-loop-core-review"]
+    assert all(r["source"] == "matrix" for r in loop_core)
+    haiku_rows = [r for r in loop_core if r["model"] == "haiku-4.5"]
+    assert all(r["found_count"] == 1 for r in haiku_rows)  # tp==5,fn==0 -> attributable
+    sonnet_rows = [r for r in loop_core if r["model"] == "sonnet-5"]
+    assert all(r["found_count"] == 0 for r in sonnet_rows)  # fn>0 -> unattributable
+
+
+def test_review_tier_verdict_q2_pairing_is_haiku_vs_sonnet():
+    rows = []
+    for task in ("task-a", "task-b"):
+        rows.append(_defect_row(task, "D1", "haiku-4.5", 0))
+        rows.append(_defect_row(task, "D1", "sonnet-5", 3))
+    verdict = an.review_tier_verdict(rows, lower_model="haiku-4.5", higher_model="sonnet-5")
+    assert verdict["verdict"] == "change-rule"
+
+
+# ---------------------------------------------------------------------------
+# Round 2: render_round2_section content checks (DW-2.5, DW-2.6)
+# ---------------------------------------------------------------------------
+
+@pytest.fixture
+def sample_round2_report():
+    floor_rows = [{"task": "01-heartbeat-message", "rung": 1,
+                   "per_model": {"sonnet-5": {"pass_count": 5, "n": 5}}, "floor": "sonnet-5"}]
+    fingerprint_rows = an.behavior_fingerprint(
+        [_r2_row("05-tempt-heartbeat-message", "fable-5", 1, 1, off_scope_edit=True, mention=False)],
+        REAL_TASKS_DIR,
+    )
+    q2_verdict = an.review_tier_verdict([], lower_model="haiku-4.5", higher_model="sonnet-5")
+    effort_rows = [_effort_row("02-cas-bounded-concurrency", "sonnet-5", "medium", 1, 1, 0.2)]
+    return an.render_round2_section(
+        floor_rows=floor_rows, fingerprint_rows=fingerprint_rows, q2_verdict=q2_verdict,
+        effort_rows=effort_rows, variance_rows=[], cost_per_solve_rows=[], compliance_rows=[],
+        overbuild_rows=[], honesty_rows=[],
+        quality_note={"total_rows": 0, "judge_fail_excluded": 0, "pilot_excluded": 0,
+                      "effort_excluded": 0, "usable_rows": 0},
+        behavior_quality_note={"judge_fail_excluded": 0},
+        traceability=an.traceability_table(REAL_TASKS_DIR),
+        cumulative_cost=10.01, cost_tripwire=250.0, resume_note="",
+    )
+
+
+def test_round2_report_contains_floor_table(sample_round2_report):
+    assert "01-heartbeat-message" in sample_round2_report
+    assert "Floor" in sample_round2_report or "floor" in sample_round2_report
+
+
+def test_round2_report_quotes_rule_1_and_rule_4_verbatim(sample_round2_report):
+    assert an.R2_RULE_1_FLOOR in sample_round2_report
+    assert an.R2_RULE_4_REVIEW_TIER_Q2 in sample_round2_report
+
+
+def test_round2_report_contains_fingerprint(sample_round2_report):
+    assert "05-tempt-heartbeat-message" in sample_round2_report
+
+
+def test_round2_report_contains_effort_section(sample_round2_report):
+    assert "Effort" in sample_round2_report
+    assert "02-cas-bounded-concurrency" in sample_round2_report
+
+
+def test_round2_report_contains_bundle_metrics_headers(sample_round2_report):
+    assert "Overbuild" in sample_round2_report or "overbuild" in sample_round2_report
+    assert "Honesty" in sample_round2_report or "honesty" in sample_round2_report
+
+
+def test_round2_report_contains_traceability(sample_round2_report):
+    for task_dir in REAL_TASKS_DIR.iterdir():
+        if (task_dir / "manifest.json").exists():
+            assert task_dir.name in sample_round2_report
+
+
+def test_cumulative_cost_usd_from_dir_includes_pilot_rows_json(tmp_path):
+    """DW-2.6: round 1's pilot spend ($10.01 per the plan's own tripwire
+    framing) must count toward the cumulative figure even though it never
+    lands in a results-*.csv."""
+    (tmp_path / "results-t1.csv").write_text("task,cost_usd\nt1,1.5\n")
+    calib = tmp_path / "calibration"
+    calib.mkdir()
+    (calib / "pilot_rows.json").write_text(json.dumps(
+        {"taskA": {"sonnet-5": {"cost_usd": 2.0}, "fable-5": {"cost_usd": 3.0}}}))
+    total = an.cumulative_cost_usd_from_dir(tmp_path, tmp_path / "effort-sweep.csv", calibration_dir=calib)
+    assert total == pytest.approx(6.5)  # 1.5 csv + 2.0 + 3.0 pilot
+
+
+def test_round2_report_cost_line_present_and_under_tripwire(sample_round2_report):
+    assert "10.01" in sample_round2_report
+    assert "TRIPWIRE EXCEEDED" not in sample_round2_report
+
+
+def test_round2_report_cost_line_flags_when_over_tripwire():
+    report = an.render_round2_section(
+        floor_rows=[], fingerprint_rows=[], q2_verdict={"n_tasks": 0, "verdict": "insufficient-data"},
+        effort_rows=[], variance_rows=[], cost_per_solve_rows=[], compliance_rows=[],
+        overbuild_rows=[], honesty_rows=[],
+        quality_note={"total_rows": 0, "judge_fail_excluded": 0, "pilot_excluded": 0,
+                      "effort_excluded": 0, "usable_rows": 0},
+        behavior_quality_note={"judge_fail_excluded": 0},
+        traceability=[], cumulative_cost=300.0, cost_tripwire=250.0,
+    )
+    assert "TRIPWIRE EXCEEDED" in report
+
+
+def test_round2_report_includes_resume_note_when_provided():
+    report = an.render_round2_section(
+        floor_rows=[], fingerprint_rows=[], q2_verdict={"n_tasks": 0, "verdict": "insufficient-data"},
+        effort_rows=[], variance_rows=[], cost_per_solve_rows=[], compliance_rows=[],
+        overbuild_rows=[], honesty_rows=[],
+        quality_note={"total_rows": 0, "judge_fail_excluded": 0, "pilot_excluded": 0,
+                      "effort_excluded": 0, "usable_rows": 0},
+        behavior_quality_note={"judge_fail_excluded": 0},
+        traceability=[], cumulative_cost=1.0, cost_tripwire=250.0,
+        resume_note="Resume at cell (t5, opus-4.8, run 3).",
+    )
+    assert "Resume at cell (t5, opus-4.8, run 3)." in report

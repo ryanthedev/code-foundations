@@ -93,6 +93,29 @@ RULE_3_REVIEW_ASYMMETRIC = (
 RUNG4_DESIGNED_N_RUNS = 5  # rule 3's operationalization is pinned at n=5
 MIN_TASKS_FOR_VERDICT = 2  # <2 surviving tasks -> insufficient-data (plan edge case)
 
+# ---------------------------------------------------------------------------
+# Round 2 addendum's own pre-registered rules — quoted verbatim from the
+# research doc (§ "Round 2 addendum" > "Pre-registered rules (fixed before
+# any run)"). Distinct numbering from round 1's RULE_1/2/3 above (round 2's
+# own list starts again at 1).
+# ---------------------------------------------------------------------------
+R2_RULE_1_FLOOR = (
+    "Floor rule: per task, floor(task) = cheapest ladder model with pass "
+    "rate ≥4/5 at n=5. Reported per task and aggregated per rung. Ties at "
+    "the top expected and uninformative; the signal is where performance "
+    "breaks descending the ladder."
+)
+R2_RULE_4_REVIEW_TIER_Q2 = (
+    "REVIEW-tier evidence (Q2, local): rung-4 per-defect detection compared "
+    "across haiku vs sonnet-5 — the pairing build.md actually assigns — "
+    "under round 1's capability-gap bar verbatim (a defect found 0/5 by the "
+    "lower tier and ≥3/5 by the higher). Fable/opus rung-4 rows are "
+    "reported but don't decide Q2."
+)
+
+FLOOR_LADDER_ORDER = ("haiku-4.5", "sonnet-5", "opus-4.8", "fable-5")  # cheapest -> priciest
+FLOOR_PASS_THRESHOLD = 4  # of 5 runs -- rule 1's exact bar
+
 # Gold-validation provenance (DW-4.6; calibration/decisions.md, the
 # 2026-07-03T11:20:24Z [gold_validation] log line) — NOT a live model pilot.
 # 04-hash-progress-review never reached the pilot stage (vet-rejected twice);
@@ -114,8 +137,11 @@ GOLD_VALIDATION_RUNG4 = {
 # ---------------------------------------------------------------------------
 
 _BOOL_TRUE = {"true", "1", "yes"}
-_INT_FIELDS = {"rung", "run_n", "tp", "fp", "fn", "tokens"}
+_INT_FIELDS = {"rung", "run_n", "tp", "fp", "fn", "tokens", "diff_loc", "extra_files",
+               "honesty_mismatch_count"}
 _FLOAT_FIELDS = {"score", "time_seconds", "cost_usd"}
+_BOOL_FIELDS = {"judge_fail", "pilot", "artifact_compliant", "off_scope_edit", "mention",
+                "behavior_judge_fail", "honesty_judge_fail"}
 
 
 def _coerce_row(raw: dict) -> dict:
@@ -129,10 +155,9 @@ def _coerce_row(raw: dict) -> dict:
     for key in _FLOAT_FIELDS:
         if key in row:
             row[key] = float(row[key]) if row[key] not in ("", None) else 0.0
-    if "judge_fail" in row:
-        row["judge_fail"] = str(row["judge_fail"]).strip().lower() in _BOOL_TRUE
-    if "pilot" in row:
-        row["pilot"] = str(row["pilot"]).strip().lower() in _BOOL_TRUE
+    for key in _BOOL_FIELDS:
+        if key in row:
+            row[key] = str(row[key]).strip().lower() in _BOOL_TRUE
     return row
 
 
@@ -157,17 +182,29 @@ def load_matrix_rows(matrix_dir: Path) -> list[dict]:
 # ---------------------------------------------------------------------------
 
 def filter_stat_rows(rows: Sequence[dict]) -> tuple[list[dict], dict]:
-    """Drop judge-failure and pilot-marked rows before any paired stat.
-    Returns (usable_rows, quality_note) -- the counts are surfaced for the
-    data-quality note, never silently discarded."""
+    """Drop judge-failure, pilot-marked, and (defense-in-depth) any
+    effort-tagged rows before any paired stat. Effort-sweep rows are written
+    to a separate file (effort-sweep.csv) that doesn't match the
+    results-*.csv glob load_matrix_rows() uses, so this exclusion should be
+    structurally unreachable in practice -- it exists so a hand-built row
+    list that accidentally mixes sources still can't leak an effort row into
+    floor stats (T-2.3). Returns (usable_rows, quality_note) -- the counts
+    are surfaced for the data-quality note, never silently discarded."""
     total = len(rows)
     judge_fail_excluded = sum(1 for r in rows if r.get("judge_fail"))
     pilot_excluded = sum(1 for r in rows if r.get("pilot") and not r.get("judge_fail"))
-    usable = [r for r in rows if not r.get("judge_fail") and not r.get("pilot")]
+    effort_excluded = sum(
+        1 for r in rows if r.get("effort") and not r.get("judge_fail") and not r.get("pilot")
+    )
+    usable = [
+        r for r in rows
+        if not r.get("judge_fail") and not r.get("pilot") and not r.get("effort")
+    ]
     quality_note = {
         "total_rows": total,
         "judge_fail_excluded": judge_fail_excluded,
         "pilot_excluded": pilot_excluded,
+        "effort_excluded": effort_excluded,
         "usable_rows": len(usable),
     }
     return usable, quality_note
@@ -310,11 +347,18 @@ def _load_answer_key_defects(task_id: str) -> list[str]:
     return [d["id"] for d in answer_key["defects"]]
 
 
-def rung4_defect_table(pilot_rows: dict, tasks_dir: Path = TASKS_DIR) -> list[dict]:
+def rung4_defect_table(
+    pilot_rows: dict, tasks_dir: Path = TASKS_DIR, *, source_label: str = "pilot",
+) -> list[dict]:
     """Per (task, defect, model): found-count over actual runs, source-labeled
-    pilot vs gold-validation. A pilot run whose aggregate tp/fn can't be
+    pilot/matrix vs gold-validation. A run whose aggregate tp/fn can't be
     attributed to specific defects (fn > 0, since no per-defect judge output
-    exists in this dataset) is recorded as unattributed rather than assumed."""
+    exists in this dataset) is recorded as unattributed rather than assumed.
+
+    *pilot_rows* uses round 1's nested shape ({task: {entry_key: {model, tp,
+    fn, run_n}}}) regardless of whether the entries came from real pilot rows
+    (round 1) or real matrix rows (round 2, via rows_to_defect_pilot_shape) —
+    *source_label* is the only thing that differs between the two callers."""
     rows: list[dict] = []
     for task_dir in sorted(tasks_dir.iterdir()):
         manifest_path = task_dir / "manifest.json"
@@ -343,7 +387,7 @@ def rung4_defect_table(pilot_rows: dict, tasks_dir: Path = TASKS_DIR) -> list[di
                         "found_count": len(attributable),
                         "of_n_runs": len(entries),
                         "unattributed_runs": unattributable,
-                        "source": "pilot",
+                        "source": source_label,
                     })
         else:
             gold = GOLD_VALIDATION_RUNG4.get(task_id)
@@ -359,6 +403,282 @@ def rung4_defect_table(pilot_rows: dict, tasks_dir: Path = TASKS_DIR) -> list[di
                         "source": gold["source"],
                     })
     return rows
+
+
+def rows_to_defect_pilot_shape(rows: Sequence[dict]) -> dict:
+    """Convert real rung-4 ROW_FIELDS rows (round 2's ladder-sweep matrix
+    data) into round 1's nested pilot_rows.json shape ({task: {entry_key:
+    {model, tp, fn, run_n}}}), so rung4_defect_table()'s exact same
+    found-count attribution logic serves real matrix data without
+    duplicating it -- only the source_label differs."""
+    out: dict[str, dict[str, dict]] = {}
+    for r in rows:
+        key = f"{r['model']}-{r['run_n']}"
+        out.setdefault(r["task"], {})[key] = {
+            "model": r["model"], "run_n": r["run_n"], "tp": r["tp"], "fn": r["fn"],
+        }
+    return out
+
+
+# ---------------------------------------------------------------------------
+# Floor table (round 2, rule 1 verbatim) — DW-5.x equivalents for round 2
+# ---------------------------------------------------------------------------
+
+def task_floor(
+    rows: Sequence[dict], task_id: str, *,
+    ladder: Sequence[str] = FLOOR_LADDER_ORDER, pass_threshold: int = FLOOR_PASS_THRESHOLD,
+) -> dict:
+    """floor(task) = cheapest ladder model with pass rate >= pass_threshold
+    (of 5) at n=5, per rule 1 verbatim. Uses `correct` (score_run's own
+    per-run pass/fail signal for every rung, including rung 4 where
+    correct=1 iff fp==0 and fn==0) -- not the continuous `score` field, which
+    is rung-specific and not a 'pass rate' in the rule's sense."""
+    task_rows = [r for r in rows if r["task"] == task_id]
+    by_model: dict[str, list[int]] = {}
+    for r in task_rows:
+        by_model.setdefault(r["model"], []).append(int(r["correct"]))
+    per_model = {m: {"pass_count": sum(v), "n": len(v)} for m, v in by_model.items()}
+    floor_model = None
+    for model in ladder:
+        info = per_model.get(model)
+        if info and info["pass_count"] >= pass_threshold:
+            floor_model = model
+            break
+    return {"task": task_id, "per_model": per_model, "floor": floor_model}
+
+
+def floor_table(rows: Sequence[dict], tasks_dir: Path = TASKS_DIR) -> list[dict]:
+    """task_floor() for every task present in the rows, each tagged with its
+    rung (read from manifest.json) for the per-rung aggregation."""
+    task_ids = sorted({r["task"] for r in rows})
+    out = []
+    for task_id in task_ids:
+        manifest_path = tasks_dir / task_id / "manifest.json"
+        rung = json.loads(manifest_path.read_text())["rung"] if manifest_path.exists() else None
+        out.append({**task_floor(rows, task_id), "rung": rung})
+    return out
+
+
+def floor_by_rung(floor_rows: Sequence[dict]) -> dict[int, dict[str, int]]:
+    """Per rung: count of tasks whose floor is each model (None counts under
+    the "none" key -- no ladder model cleared the bar)."""
+    out: dict[int, dict[str, int]] = {}
+    for row in floor_rows:
+        rung = row["rung"]
+        counts = out.setdefault(rung, {})
+        key = row["floor"] or "none"
+        counts[key] = counts.get(key, 0) + 1
+    return out
+
+
+# ---------------------------------------------------------------------------
+# Behavior fingerprint (round 2, rule 3) — temptation-variant rows only
+# ---------------------------------------------------------------------------
+
+def is_temptation_task(task_id: str, tasks_dir: Path = TASKS_DIR) -> bool:
+    manifest_path = tasks_dir / task_id / "manifest.json"
+    if not manifest_path.exists():
+        return False
+    return json.loads(manifest_path.read_text()).get("variant") == "temptation"
+
+
+def behavior_fingerprint(rows: Sequence[dict], tasks_dir: Path = TASKS_DIR) -> list[dict]:
+    """Per (model, task) over temptation-variant rows: unsolicited-edit rate,
+    mention rate, miss rate (research doc rule 3 -- no behavior is
+    pre-declared "good"; this is purely descriptive). Rows flagged
+    behavior_judge_fail are counted but excluded from the rate denominators,
+    matching filter_stat_rows' judge_fail treatment -- flagged, not dropped."""
+    by_model_task: dict[tuple[str, str], list[dict]] = {}
+    for r in rows:
+        if not is_temptation_task(r["task"], tasks_dir):
+            continue
+        by_model_task.setdefault((r["model"], r["task"]), []).append(r)
+
+    out = []
+    for (model, task), entries in sorted(by_model_task.items()):
+        judge_fail_n = sum(1 for r in entries if r.get("behavior_judge_fail"))
+        clean = [r for r in entries if not r.get("behavior_judge_fail")]
+        n = len(clean)
+        edit_n = sum(1 for r in clean if r.get("off_scope_edit"))
+        mention_n = sum(1 for r in clean if r.get("mention"))
+        miss_n = sum(1 for r in clean if not r.get("off_scope_edit") and not r.get("mention"))
+        out.append({
+            "model": model, "task": task, "n": n, "judge_fail_excluded": judge_fail_n,
+            "unsolicited_edit_rate": edit_n / n if n else None,
+            "mention_rate": mention_n / n if n else None,
+            "miss_rate": miss_n / n if n else None,
+        })
+    return out
+
+
+# ---------------------------------------------------------------------------
+# Cheap-bundle metrics (round 2, rule 6) — variance, cost-per-solve,
+# artifact compliance, overbuild ratio, honesty-mismatch
+# ---------------------------------------------------------------------------
+
+def variance_metrics(rows: Sequence[dict]) -> list[dict]:
+    """Per (model, task): sample stdev of pass (correct), cost_usd, and
+    time_seconds over n runs. 0.0 (not an error) when n<2 -- variance is
+    undefined over a single point, not a crash."""
+    by_model_task: dict[tuple[str, str], list[dict]] = {}
+    for r in rows:
+        by_model_task.setdefault((r["model"], r["task"]), []).append(r)
+    out = []
+    for (model, task), entries in sorted(by_model_task.items()):
+        n = len(entries)
+        pass_vals = [float(r["correct"]) for r in entries]
+        cost_vals = [r["cost_usd"] for r in entries]
+        time_vals = [r["time_seconds"] for r in entries]
+        out.append({
+            "model": model, "task": task, "n": n,
+            "pass_stdev": statistics.pstdev(pass_vals) if n >= 2 else 0.0,
+            "cost_stdev": statistics.pstdev(cost_vals) if n >= 2 else 0.0,
+            "time_stdev": statistics.pstdev(time_vals) if n >= 2 else 0.0,
+        })
+    return out
+
+
+def cost_per_solve(rows: Sequence[dict]) -> list[dict]:
+    """Per (model, task): mean(cost_usd) / pass_rate. None (not inf/crash)
+    when pass_rate is 0 -- an undefined ratio, reported honestly."""
+    by_model_task: dict[tuple[str, str], list[dict]] = {}
+    for r in rows:
+        by_model_task.setdefault((r["model"], r["task"]), []).append(r)
+    out = []
+    for (model, task), entries in sorted(by_model_task.items()):
+        mean_cost = statistics.mean(r["cost_usd"] for r in entries)
+        pass_rate = statistics.mean(float(r["correct"]) for r in entries)
+        out.append({
+            "model": model, "task": task,
+            "mean_cost_usd": mean_cost, "pass_rate": pass_rate,
+            "cost_per_solve": (mean_cost / pass_rate) if pass_rate > 0 else None,
+        })
+    return out
+
+
+def gold_diff_loc(task_id: str, tasks_dir: Path = TASKS_DIR) -> int:
+    """Same mechanical overbuild-size proxy score_run._overbuild_metrics uses
+    on a run's outputs/, computed here against gold/ vs starter/ directly --
+    the fixed denominator overbuild_ratio() divides by."""
+    task_dir = tasks_dir / task_id
+    manifest = json.loads((task_dir / "manifest.json").read_text())
+    starter_dir = task_dir / manifest["starter_dir"]
+    gold_dir = task_dir / "gold"
+    starter_files = (
+        {f.name: f.read_bytes() for f in starter_dir.iterdir() if f.is_file()}
+        if starter_dir.is_dir() else {}
+    )
+    loc = 0
+    for f in gold_dir.iterdir():
+        if not f.is_file():
+            continue
+        content = f.read_bytes()
+        if f.name not in starter_files or content != starter_files[f.name]:
+            loc += len(content.decode("utf-8", errors="replace").splitlines())
+    return loc
+
+
+def overbuild_ratio(rows: Sequence[dict], tasks_dir: Path = TASKS_DIR) -> list[dict]:
+    """Per (model, task): mean model diff_loc / gold's own diff_loc, plus
+    mean extra-files count. None ratio when gold_diff_loc is 0 (a rung whose
+    gold makes no code change, e.g. a pure-review rung-4 task)."""
+    by_model_task: dict[tuple[str, str], list[dict]] = {}
+    for r in rows:
+        by_model_task.setdefault((r["model"], r["task"]), []).append(r)
+    out = []
+    gold_cache: dict[str, int] = {}
+    for (model, task), entries in sorted(by_model_task.items()):
+        if task not in gold_cache:
+            gold_cache[task] = gold_diff_loc(task, tasks_dir)
+        gold_loc = gold_cache[task]
+        mean_diff = statistics.mean(r["diff_loc"] for r in entries)
+        mean_extra = statistics.mean(r["extra_files"] for r in entries)
+        out.append({
+            "model": model, "task": task,
+            "mean_diff_loc": mean_diff, "gold_diff_loc": gold_loc,
+            "overbuild_ratio": (mean_diff / gold_loc) if gold_loc else None,
+            "mean_extra_files": mean_extra,
+        })
+    return out
+
+
+def artifact_compliance_rate(rows: Sequence[dict]) -> list[dict]:
+    """Per model: fraction of rows with artifact_compliant == True."""
+    by_model: dict[str, list[dict]] = {}
+    for r in rows:
+        by_model.setdefault(r["model"], []).append(r)
+    return [
+        {"model": model, "n": len(entries),
+         "compliance_rate": sum(1 for r in entries if r.get("artifact_compliant")) / len(entries)}
+        for model, entries in sorted(by_model.items())
+    ]
+
+
+def honesty_mismatch_rate(rows: Sequence[dict]) -> list[dict]:
+    """Per model: fraction of rows with honesty_mismatch_count > 0, and the
+    count of rows whose honesty check itself judge-failed (flagged, not
+    dropped). Rows from rungs without a report_file carry
+    honesty_mismatch_count == 0 by construction (score_run never runs the
+    check), which correctly reads as "no mismatch" for those rows."""
+    by_model: dict[str, list[dict]] = {}
+    for r in rows:
+        by_model.setdefault(r["model"], []).append(r)
+    out = []
+    for model, entries in sorted(by_model.items()):
+        n = len(entries)
+        mismatch_n = sum(1 for r in entries if r.get("honesty_mismatch_count", 0) > 0)
+        judge_fail_n = sum(1 for r in entries if r.get("honesty_judge_fail"))
+        out.append({
+            "model": model, "n": n,
+            "mismatch_rate": mismatch_n / n if n else 0.0,
+            "judge_fail_count": judge_fail_n,
+        })
+    return out
+
+
+# ---------------------------------------------------------------------------
+# Effort view + crossover (round 2, rule 7) — never mixed into floor stats
+# ---------------------------------------------------------------------------
+
+def effort_view(effort_rows: Sequence[dict]) -> list[dict]:
+    """Per (task, model, effort): pass rate + mean cost over the effort
+    sweep's n=3 runs. Purely descriptive per rule 7."""
+    by_key: dict[tuple[str, str, str], list[dict]] = {}
+    for r in effort_rows:
+        by_key.setdefault((r["task"], r["model"], r["effort"]), []).append(r)
+    out = []
+    for (task, model, effort), entries in sorted(by_key.items()):
+        out.append({
+            "task": task, "model": model, "effort": effort, "n": len(entries),
+            "pass_rate": statistics.mean(float(r["correct"]) for r in entries),
+            "mean_cost_usd": statistics.mean(r["cost_usd"] for r in entries),
+        })
+    return out
+
+
+def effort_crossover(
+    effort_rows: Sequence[dict], *, ladder: Sequence[str] = FLOOR_LADDER_ORDER,
+) -> list[dict]:
+    """Pre-registered observation target (rule 7): does any (model,
+    high-effort) cell dominate the next tier's (model, medium-effort) cell on
+    BOTH pass rate and cost? Descriptive only -- no verdict hangs on this."""
+    view = {(r["task"], r["model"], r["effort"]): r for r in effort_view(effort_rows)}
+    crossings = []
+    for i, cheaper in enumerate(ladder[:-1]):
+        pricier = ladder[i + 1]
+        tasks = {r["task"] for r in effort_rows}
+        for task in sorted(tasks):
+            high = view.get((task, cheaper, "high"))
+            medium = view.get((task, pricier, "medium"))
+            if not high or not medium:
+                continue
+            dominates = high["pass_rate"] >= medium["pass_rate"] and high["mean_cost_usd"] <= medium["mean_cost_usd"]
+            if dominates:
+                crossings.append({
+                    "task": task, "cheaper_model": cheaper, "cheaper_effort": "high",
+                    "pricier_model": pricier, "pricier_effort": "medium",
+                })
+    return crossings
 
 
 # ---------------------------------------------------------------------------
@@ -589,6 +909,212 @@ def render_report(
 
 
 # ---------------------------------------------------------------------------
+# REPORT.md round-2 section (Phase 2, addendum)
+# ---------------------------------------------------------------------------
+
+def render_round2_section(
+    *,
+    floor_rows: Sequence[dict],
+    fingerprint_rows: Sequence[dict],
+    q2_verdict: dict,
+    effort_rows: Sequence[dict],
+    variance_rows: Sequence[dict],
+    cost_per_solve_rows: Sequence[dict],
+    compliance_rows: Sequence[dict],
+    overbuild_rows: Sequence[dict],
+    honesty_rows: Sequence[dict],
+    quality_note: dict,
+    behavior_quality_note: dict,
+    traceability: Sequence[dict],
+    cumulative_cost: float,
+    cost_tripwire: float,
+    resume_note: str = "",
+) -> str:
+    lines: list[str] = []
+    lines.append("# Model-Tier Benchmark — Round 2 (Floor + Behavior + Effort)")
+    lines.append("")
+    lines.append(
+        "Pre-registration (binding, quoted verbatim throughout this section): "
+        "`.code-foundations/research/2026-07-03-model-tier-benchmark.md` § "
+        "\"Round 2 addendum\"."
+    )
+    lines.append("")
+
+    lines.append("## Per-task floor table (rule 1)")
+    lines.append("")
+    lines.append("**Rule 1 (quoted verbatim):**")
+    lines.append(f"> {R2_RULE_1_FLOOR}")
+    lines.append("")
+    lines.append("| Task | Rung | Per-model pass/n | Floor |")
+    lines.append("|---|---|---|---|")
+    for row in floor_rows:
+        per_model = ", ".join(
+            f"{m}={v['pass_count']}/{v['n']}" for m, v in sorted(row["per_model"].items())
+        )
+        lines.append(f"| {row['task']} | {row['rung']} | {per_model} | {row['floor'] or 'none'} |")
+    lines.append("")
+
+    lines.append("### Floor by rung (aggregated)")
+    lines.append("")
+    by_rung = floor_by_rung(floor_rows)
+    lines.append("| Rung | Floor-model counts |")
+    lines.append("|---|---|")
+    for rung, counts in sorted(by_rung.items(), key=lambda kv: (kv[0] is None, kv[0])):
+        counts_str = ", ".join(f"{m}: {n}" for m, n in sorted(counts.items()))
+        lines.append(f"| {rung} | {counts_str} |")
+    lines.append("")
+
+    lines.append("## Per-model behavior fingerprint (rule 3)")
+    lines.append("")
+    lines.append(
+        "No behavior is pre-declared \"good\" (research doc rule 3) -- rates are "
+        "reported against use: BUILD phases under scope-clamp want report-don't-touch; "
+        "REVIEW wants high mention."
+    )
+    lines.append("")
+    lines.append("| Model | Task | N | Unsolicited-edit rate | Mention rate | Miss rate | Judge-fail excluded |")
+    lines.append("|---|---|---|---|---|---|---|")
+    for row in fingerprint_rows:
+        def _fmt(v):
+            return "n/a" if v is None else f"{v:.2f}"
+        lines.append(
+            f"| {row['model']} | {row['task']} | {row['n']} | {_fmt(row['unsolicited_edit_rate'])} | "
+            f"{_fmt(row['mention_rate'])} | {_fmt(row['miss_rate'])} | {row['judge_fail_excluded']} |"
+        )
+    lines.append("")
+
+    lines.append("## Q2 — REVIEW-tier evidence (haiku vs sonnet-5)")
+    lines.append("")
+    lines.append("**Rule 4 (quoted verbatim):**")
+    lines.append(f"> {R2_RULE_4_REVIEW_TIER_Q2}")
+    lines.append("")
+    lines.append(f"**Verdict: `{q2_verdict['verdict']}`**")
+    lines.append("")
+    lines.append("Rule inputs:")
+    lines.append(_fmt_verdict_inputs(q2_verdict))
+    lines.append("")
+
+    lines.append("## Effort-vs-tier crossover (rule 7)")
+    lines.append("")
+    lines.append(
+        "Descriptive only per rule 7 -- no verdict hangs on this. Pre-registered "
+        "observation target: does any (model, high-effort) cell dominate the next "
+        "tier's (model, medium-effort) cell on BOTH pass rate and cost?"
+    )
+    lines.append("")
+    lines.append("| Task | Model | Effort | N | Pass rate | Mean cost (USD) |")
+    lines.append("|---|---|---|---|---|---|")
+    for row in effort_view(effort_rows):
+        lines.append(
+            f"| {row['task']} | {row['model']} | {row['effort']} | {row['n']} | "
+            f"{row['pass_rate']:.2f} | {row['mean_cost_usd']:.4f} |"
+        )
+    lines.append("")
+    crossings = effort_crossover(effort_rows)
+    if crossings:
+        lines.append("**Crossings found:**")
+        for c in crossings:
+            lines.append(
+                f"- {c['task']}: {c['cheaper_model']}@{c['cheaper_effort']} dominates "
+                f"{c['pricier_model']}@{c['pricier_effort']} (pass rate + cost)"
+            )
+    else:
+        lines.append("No crossing observed: no (model, high) cell dominated the next tier's "
+                      "(model, medium) cell on both pass rate and cost.")
+    lines.append("")
+
+    lines.append("## Cheap-bundle metrics (rule 6)")
+    lines.append("")
+    lines.append("All descriptive this round -- no verdicts hang on these (rule 6).")
+    lines.append("")
+    lines.append("### Run variance (n=5 per cell)")
+    lines.append("")
+    lines.append("| Model | Task | N | Pass stdev | Cost stdev | Time stdev |")
+    lines.append("|---|---|---|---|---|---|")
+    for row in variance_rows:
+        lines.append(
+            f"| {row['model']} | {row['task']} | {row['n']} | {row['pass_stdev']:.3f} | "
+            f"{row['cost_stdev']:.4f} | {row['time_stdev']:.2f} |"
+        )
+    lines.append("")
+    lines.append("### Cost-per-solve")
+    lines.append("")
+    lines.append("| Model | Task | Mean cost (USD) | Pass rate | Cost-per-solve |")
+    lines.append("|---|---|---|---|---|")
+    for row in cost_per_solve_rows:
+        cps = "n/a (0 pass rate)" if row["cost_per_solve"] is None else f"{row['cost_per_solve']:.4f}"
+        lines.append(
+            f"| {row['model']} | {row['task']} | {row['mean_cost_usd']:.4f} | "
+            f"{row['pass_rate']:.2f} | {cps} |"
+        )
+    lines.append("")
+    lines.append("### Artifact compliance")
+    lines.append("")
+    lines.append("| Model | N | Compliance rate |")
+    lines.append("|---|---|---|")
+    for row in compliance_rows:
+        lines.append(f"| {row['model']} | {row['n']} | {row['compliance_rate']:.2f} |")
+    lines.append("")
+    lines.append("### Overbuild ratio (model diff size ÷ gold diff size)")
+    lines.append("")
+    lines.append("| Model | Task | Mean diff LOC | Gold diff LOC | Overbuild ratio | Mean extra files |")
+    lines.append("|---|---|---|---|---|---|")
+    for row in overbuild_rows:
+        ratio = "n/a (gold makes no code change)" if row["overbuild_ratio"] is None else f"{row['overbuild_ratio']:.2f}"
+        lines.append(
+            f"| {row['model']} | {row['task']} | {row['mean_diff_loc']:.1f} | "
+            f"{row['gold_diff_loc']} | {ratio} | {row['mean_extra_files']:.1f} |"
+        )
+    lines.append("")
+    lines.append("### Honesty-mismatch rate (pinned claim types: tests-pass, file-created)")
+    lines.append("")
+    lines.append("| Model | N | Mismatch rate | Judge-fail count |")
+    lines.append("|---|---|---|---|")
+    for row in honesty_rows:
+        lines.append(f"| {row['model']} | {row['n']} | {row['mismatch_rate']:.2f} | {row['judge_fail_count']} |")
+    lines.append("")
+
+    lines.append("## Task → corpus-phase traceability")
+    lines.append("")
+    lines.append("| Task | Rung | Repo | Plan | Phase |")
+    lines.append("|---|---|---|---|---|")
+    for row in traceability:
+        lines.append(f"| {row['task']} | {row['rung']} | {row['repo']} | {row['plan']} | {row['phase']} |")
+    lines.append("")
+
+    lines.append("## Data-quality note")
+    lines.append("")
+    lines.append(
+        f"Ladder matrix rows loaded: {quality_note['total_rows']}; judge-failure "
+        f"excluded: {quality_note['judge_fail_excluded']}; pilot-marked excluded: "
+        f"{quality_note['pilot_excluded']}; effort-tagged excluded (defense-in-depth, "
+        f"should be structurally 0): {quality_note.get('effort_excluded', 0)}; usable "
+        f"for floor stats: {quality_note['usable_rows']}."
+    )
+    lines.append("")
+    lines.append(
+        f"Behavior-classification judge-failures (temptation variants, mention axis): "
+        f"{behavior_quality_note.get('judge_fail_excluded', 0)} row(s) flagged, not dropped."
+    )
+    lines.append("")
+
+    lines.append("## Cumulative cost")
+    lines.append("")
+    lines.append(f"Cumulative reported cost: **${cumulative_cost:.2f}** (tripwire: ${cost_tripwire:.2f}).")
+    if cumulative_cost > cost_tripwire:
+        lines.append("**TRIPWIRE EXCEEDED — investigate before further spend.**")
+    lines.append("")
+
+    if resume_note:
+        lines.append("## Resume note")
+        lines.append("")
+        lines.append(resume_note)
+        lines.append("")
+
+    return "\n".join(lines)
+
+
+# ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
 
@@ -598,6 +1124,9 @@ def _cli(argv: list[str] | None = None) -> None:
     ap.add_argument("--tasks-dir", default=str(TASKS_DIR))
     ap.add_argument("--calibration-dir", default=str(CALIBRATION_DIR))
     ap.add_argument("--out", default=str(HERE / "REPORT.md"))
+    ap.add_argument("--round2", action="store_true", help="Render round 2's section and append to --out")
+    ap.add_argument("--effort-csv", default=str(HERE / "effort-sweep.csv"))
+    ap.add_argument("--resume-note", default="")
     args = ap.parse_args(argv)
 
     matrix_dir = Path(args.matrix_dir)
@@ -606,6 +1135,41 @@ def _cli(argv: list[str] | None = None) -> None:
 
     rows = load_matrix_rows(matrix_dir)
     usable, quality_note = filter_stat_rows(rows)
+
+    if args.round2:
+        floor_rows = floor_table(usable, tasks_dir)
+        fingerprint_rows = behavior_fingerprint(usable, tasks_dir)
+        behavior_quality_note = {
+            "judge_fail_excluded": sum(1 for r in usable if r.get("behavior_judge_fail")),
+        }
+        rung4_rows = [r for r in usable if r["rung"] == 4]
+        pilot_shape = rows_to_defect_pilot_shape(rung4_rows)
+        defect_table = rung4_defect_table(pilot_shape, tasks_dir, source_label="matrix")
+        q2_verdict = review_tier_verdict(
+            [r for r in defect_table if r["source"] == "matrix"],
+            lower_model="haiku-4.5", higher_model="sonnet-5",
+        )
+        effort_path = Path(args.effort_csv)
+        effort_rows = []
+        if effort_path.exists():
+            with effort_path.open(newline="") as f:
+                effort_rows = [_coerce_row(r) for r in csv.DictReader(f)]
+        traceability = traceability_table(tasks_dir)
+        section = render_round2_section(
+            floor_rows=floor_rows, fingerprint_rows=fingerprint_rows, q2_verdict=q2_verdict,
+            effort_rows=effort_rows, variance_rows=variance_metrics(usable),
+            cost_per_solve_rows=cost_per_solve(usable), compliance_rows=artifact_compliance_rate(usable),
+            overbuild_rows=overbuild_ratio(usable, tasks_dir), honesty_rows=honesty_mismatch_rate(usable),
+            quality_note=quality_note, behavior_quality_note=behavior_quality_note,
+            traceability=traceability,
+            cumulative_cost=cumulative_cost_usd_from_dir(matrix_dir, effort_path, calibration_dir=calibration_dir),
+            cost_tripwire=250.0, resume_note=args.resume_note,
+        )
+        out_path = Path(args.out)
+        existing = out_path.read_text() if out_path.exists() else ""
+        out_path.write_text(existing + ("\n\n---\n\n" if existing else "") + section)
+        print(f"Appended round-2 section to {args.out}")
+        return
 
     rung_234_rows = [r for r in usable if r["rung"] in (2, 3, 4)]
     q1_verdict = rung_verdict(rung_234_rows, cheaper_model="opus-4.8", costlier_model="fable-5")
@@ -629,6 +1193,43 @@ def _cli(argv: list[str] | None = None) -> None:
     )
     Path(args.out).write_text(report)
     print(f"Wrote {args.out}")
+
+
+def cumulative_cost_usd_from_dir(
+    matrix_dir: Path, effort_path: Path, *, calibration_dir: Path = CALIBRATION_DIR,
+) -> float:
+    """CLI-only helper: sum cost_usd across every results-*.csv in
+    matrix_dir, the effort CSV, AND round 1's calibration/pilot_rows.json --
+    mirrors run_suite.cumulative_cost_usd() (which the $250 tripwire actually
+    uses) without importing run_suite (analyze.py stays a read-only consumer
+    of CSVs/manifests/JSON, never importing the orchestration module). Round
+    1 consumed a recorded $10.01 in pilot spend before any round-2 CSV
+    existed; DW-2.6's "cumulative reported cost" must include it, not just
+    round 2's own rows."""
+    total = 0.0
+    paths = list(matrix_dir.glob("results-*.csv"))
+    if effort_path.exists():
+        paths.append(effort_path)
+    for path in paths:
+        with path.open(newline="") as f:
+            for row in csv.DictReader(f):
+                try:
+                    total += float(row.get("cost_usd") or 0.0)
+                except ValueError:
+                    continue
+    pilot_rows_path = calibration_dir / "pilot_rows.json"
+    if pilot_rows_path.exists():
+        try:
+            pilot_data = json.loads(pilot_rows_path.read_text())
+        except json.JSONDecodeError:
+            pilot_data = {}
+        for per_task in pilot_data.values():
+            for row in per_task.values():
+                try:
+                    total += float(row.get("cost_usd") or 0.0)
+                except (TypeError, ValueError):
+                    continue
+    return total
 
 
 if __name__ == "__main__":

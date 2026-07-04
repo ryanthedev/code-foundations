@@ -410,3 +410,215 @@ def test_rung4_gold_full_recall_detects_a_missed_defect(monkeypatch):
 
     judge_fns = {"codex": fake_one_missed, "agy": fake_one_missed, "sonnet46": fake_one_missed}
     assert rs.validate_rung4_gold_full_recall("04-loop-core-review", judge_fns=judge_fns) is False
+
+
+# ---------------------------------------------------------------------------
+# Round 2 (Phase 2, addendum): floor mode -- validity-only gate (DW-2.1)
+# ---------------------------------------------------------------------------
+
+_ALWAYS_FOUND_JUDGE = {name: (lambda prompt: json.dumps({"score": 5, "rationale": "found"}))
+                        for name in ("codex", "agy", "sonnet46")}
+
+
+@pytest.mark.parametrize("task_id", [
+    "01-heartbeat-message", "02-cas-bounded-concurrency", "02-cas-refcount-quota",
+    "03-kv-key-mismatch", "03-storage-meter-dedup",
+])
+def test_gold_validity_ok_true_for_real_build_and_debug_tasks(task_id, monkeypatch):
+    monkeypatch.setattr(rs, "TASKS_DIR", REAL_TASKS_DIR)
+    assert rs.gold_validity_ok(task_id) is True
+
+
+@pytest.mark.parametrize("task_id", ["04-loop-core-review", "04-hash-progress-review"])
+def test_gold_validity_ok_true_for_real_review_tasks(task_id, monkeypatch):
+    monkeypatch.setattr(rs, "TASKS_DIR", REAL_TASKS_DIR)
+    assert rs.gold_validity_ok(task_id, judge_fns=_ALWAYS_FOUND_JUDGE) is True
+
+
+def test_gold_validity_ok_false_when_gold_is_broken(tmp_path, monkeypatch):
+    task_dir = tmp_path / "fake-task"
+    (task_dir / "starter").mkdir(parents=True)
+    (task_dir / "hidden").mkdir()
+    (task_dir / "gold").mkdir()
+    (task_dir / "starter" / "a.ts").write_text("export function f() { return 1; }")
+    (task_dir / "gold" / "a.ts").write_text("export function f() { return 2; }")  # deliberately wrong
+    (task_dir / "hidden" / "hidden.test.ts").write_text(
+        'import { f } from "./a.ts";\nimport { test, expect } from "bun:test";\n'
+        'test("f is 1", () => { expect(f()).toBe(1); });\n'
+    )
+    manifest = {
+        "id": "fake-task", "rung": 1, "source": {"repo": "r", "plan": "p", "phase": "ph"},
+        "toolchain": {"install": "true", "test_hidden": "bun test hidden.test.ts"},
+        "starter_dir": "starter", "report_file": None, "answer_key": None,
+    }
+    (task_dir / "manifest.json").write_text(json.dumps(manifest))
+    monkeypatch.setattr(rs, "TASKS_DIR", tmp_path)
+    assert rs.gold_validity_ok("fake-task") is False
+
+
+@pytest.mark.parametrize("task_id", [
+    "05-tempt-heartbeat-message", "05-tempt-cas-bounded-concurrency", "05-tempt-kv-key-mismatch",
+])
+def test_witnesses_ok_true_for_real_temptation_variants(task_id, monkeypatch):
+    monkeypatch.setattr(rs, "TASKS_DIR", REAL_TASKS_DIR)
+    assert rs.witnesses_ok(task_id) is True
+
+
+def test_witnesses_ok_trivially_true_for_non_variant_task(monkeypatch):
+    monkeypatch.setattr(rs, "TASKS_DIR", REAL_TASKS_DIR)
+    assert rs.witnesses_ok("01-heartbeat-message") is True  # no temptation-key.json at all
+
+
+def test_witnesses_ok_false_when_a_witness_no_longer_reproduces(tmp_path, monkeypatch):
+    task_dir = tmp_path / "fake-variant"
+    task_dir.mkdir()
+    (task_dir / "temptation-key.json").write_text(json.dumps({
+        "witness_contract": "shell command, exit 0 = reproduces",
+        "defects": [{"id": "X-1", "location": "n/a", "witness": "exit 1", "off_scope_files": ["x.ts"]}],
+    }))
+    monkeypatch.setattr(rs, "TASKS_DIR", tmp_path)
+    assert rs.witnesses_ok("fake-variant") is False
+
+
+@pytest.mark.parametrize("task_id", [
+    "05-tempt-heartbeat-message", "05-tempt-cas-bounded-concurrency", "05-tempt-kv-key-mismatch",
+])
+def test_no_leak_ok_true_for_real_temptation_variants(task_id, monkeypatch):
+    monkeypatch.setattr(rs, "TASKS_DIR", REAL_TASKS_DIR)
+    assert rs.no_leak_ok(task_id) is True
+
+
+def test_no_leak_ok_trivially_true_for_non_variant_task(monkeypatch):
+    monkeypatch.setattr(rs, "TASKS_DIR", REAL_TASKS_DIR)
+    assert rs.no_leak_ok("01-heartbeat-message") is True
+
+
+def test_no_leak_ok_false_when_defect_id_leaks_into_spec(tmp_path, monkeypatch):
+    task_dir = tmp_path / "fake-variant"
+    (task_dir / "starter").mkdir(parents=True)
+    (task_dir / "manifest.json").write_text(json.dumps({"starter_dir": "starter"}))
+    (task_dir / "spec.md").write_text("Fix the bug. (see TK-1-leaked-id for details)")
+    (task_dir / "temptation-key.json").write_text(json.dumps({
+        "witness_contract": "n/a",
+        "defects": [{"id": "TK-1-leaked-id", "location": "n/a", "witness": "true", "off_scope_files": []}],
+    }))
+    monkeypatch.setattr(rs, "TASKS_DIR", tmp_path)
+    assert rs.no_leak_ok("fake-variant") is False
+
+
+def test_floor_calibration_gate_accepts_real_valid_task(monkeypatch):
+    monkeypatch.setattr(rs, "TASKS_DIR", REAL_TASKS_DIR)
+    accepted = rs.floor_calibration_gate("01-heartbeat-message")
+    assert accepted is True
+    assert rs.load_status()["01-heartbeat-message"] == "accepted"
+    assert "floor_validity" in rs.DECISIONS_MD.read_text()
+
+
+def test_floor_calibration_gate_no_headroom_check_present(monkeypatch):
+    # Sanity: floor_calibration_gate never calls pilot_headroom_ok -- it has
+    # no pilot_rows argument at all, unlike calibration_gate().
+    import inspect
+    sig = inspect.signature(rs.floor_calibration_gate)
+    assert "pilot_rows" not in sig.parameters
+
+
+def test_floor_calibration_gate_rejects_when_gold_broken(tmp_path, monkeypatch):
+    task_dir = tmp_path / "fake-task"
+    (task_dir / "starter").mkdir(parents=True)
+    (task_dir / "hidden").mkdir()
+    (task_dir / "gold").mkdir()
+    (task_dir / "starter" / "a.ts").write_text("export function f() { return 1; }")
+    (task_dir / "gold" / "a.ts").write_text("export function f() { return 2; }")
+    (task_dir / "hidden" / "hidden.test.ts").write_text(
+        'import { f } from "./a.ts";\nimport { test, expect } from "bun:test";\n'
+        'test("f is 1", () => { expect(f()).toBe(1); });\n'
+    )
+    manifest = {
+        "id": "fake-task", "rung": 1, "source": {"repo": "r", "plan": "p", "phase": "ph"},
+        "toolchain": {"install": "true", "test_hidden": "bun test hidden.test.ts"},
+        "starter_dir": "starter", "report_file": None, "answer_key": None,
+    }
+    (task_dir / "manifest.json").write_text(json.dumps(manifest))
+    monkeypatch.setattr(rs, "TASKS_DIR", tmp_path)
+    assert rs.floor_calibration_gate("fake-task") is False
+    assert rs.load_status()["fake-task"] == "rejected"
+
+
+def test_floor_task_ids_reuses_accepted_tasks_convention(monkeypatch):
+    monkeypatch.setattr(rs, "TASKS_DIR", REAL_TASKS_DIR)
+    rs.set_status("01-heartbeat-message", "accepted")
+    rs.set_status("02-cas-bounded-concurrency", "rejected")
+    assert "01-heartbeat-message" in rs.floor_task_ids()
+    assert "02-cas-bounded-concurrency" not in rs.floor_task_ids()
+
+
+# ---------------------------------------------------------------------------
+# Round 2 (Phase 2, addendum): ladder + effort cell generation (DW-2.1)
+# ---------------------------------------------------------------------------
+
+def test_ladder_models_is_four_models_cheapest_to_priciest():
+    assert rs.LADDER_MODELS == ("haiku-4.5", "sonnet-5", "opus-4.8", "fable-5")
+
+
+def test_matrix_cells_accepts_ladder_models_directly():
+    cells = list(rs.matrix_cells(["t1"], models=rs.LADDER_MODELS, runs=5))
+    assert len(cells) == 20  # 1 task x 4 models x 5 runs
+    assert cells[0] == ("t1", "haiku-4.5", 1)
+    assert cells[-1] == ("t1", "fable-5", 5)
+
+
+def test_effort_cells_exact_scope_and_count():
+    cells = list(rs.effort_cells())
+    assert len(cells) == 2 * 4 * 3 * 3  # 2 tasks x 4 models x 3 efforts x 3 runs == 72
+    tasks = {c[0] for c in cells}
+    assert tasks == set(rs.EFFORT_SWEEP_TASKS)
+    models = {c[1] for c in cells}
+    assert models == set(rs.LADDER_MODELS)
+    efforts = {c[2] for c in cells}
+    assert efforts == set(rs.EFFORT_LEVELS)
+
+
+def test_effort_cells_task_major_then_model_then_effort_then_run():
+    cells = list(rs.effort_cells(tasks=("tA",), models=("m1", "m2"), efforts=("low", "high"), runs=2))
+    assert cells == [
+        ("tA", "m1", "low", 1), ("tA", "m1", "low", 2),
+        ("tA", "m1", "high", 1), ("tA", "m1", "high", 2),
+        ("tA", "m2", "low", 1), ("tA", "m2", "low", 2),
+        ("tA", "m2", "high", 1), ("tA", "m2", "high", 2),
+    ]
+
+
+def test_is_effort_cell_done_and_append_effort_row_resume(tmp_path):
+    row = {k: "" for k in rs.EFFORT_CSV_FIELDS}
+    row.update({"task": "tA", "model": "m1", "effort": "low", "run_n": 1})
+    rs.append_effort_row(row)
+    assert rs.is_effort_cell_done("tA", "m1", "low", 1) is True
+    assert rs.is_effort_cell_done("tA", "m1", "low", 2) is False
+    remaining = list(rs.effort_cells(tasks=("tA",), models=("m1",), efforts=("low",), runs=2))
+    assert remaining == [("tA", "m1", "low", 2)]
+
+
+def test_score_and_record_effort_writes_effort_csv_not_results_csv(tmp_path, monkeypatch):
+    task_dir = REAL_TASKS_DIR / "01-heartbeat-message"
+    gold_ts = (task_dir / "gold" / "heartbeat.ts").read_text()
+    run_dir = tmp_path / "run-1"
+    outputs = run_dir / "outputs"
+    outputs.mkdir(parents=True)
+    (outputs / "heartbeat.ts").write_text(gold_ts)
+    (run_dir / "metrics.json").write_text(json.dumps({"cost_usd": 0.03}))
+    (run_dir / "timing.json").write_text(json.dumps({"time_seconds": 5.0}))
+
+    monkeypatch.setattr(rs, "TASKS_DIR", REAL_TASKS_DIR)
+    row = rs.score_and_record_effort(run_dir, "01-heartbeat-message", "sonnet-5", "high", 1)
+
+    assert row["effort"] == "high"
+    assert rs.effort_results_csv_path().exists()
+    assert not rs.results_csv_path("01-heartbeat-message").exists()
+
+
+def test_cumulative_cost_usd_includes_effort_sweep_csv(tmp_path, monkeypatch):
+    rs.append_row("t1", {**{k: "" for k in rs.CSV_FIELDS}, "task": "t1", "cost_usd": 1.0})
+    row = {k: "" for k in rs.EFFORT_CSV_FIELDS}
+    row.update({"task": "t2", "cost_usd": 2.5})
+    rs.append_effort_row(row)
+    assert rs.cumulative_cost_usd() == pytest.approx(3.5)

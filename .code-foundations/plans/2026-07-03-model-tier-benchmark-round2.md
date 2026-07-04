@@ -1,8 +1,8 @@
 # Plan: Model-Tier Benchmark Round 2 — Floor Sweep + Behavioral Profile
 **Created:** 2026-07-03
-**Status:** in-progress
+**Status:** complete
 **Started:** 2026-07-04 00:30
-**Current Phase:** 1
+**Current Phase:** 2 (complete)
 **Complexity:** simple
 ---
 ## Context
@@ -106,3 +106,18 @@ Pre-registration (binding, fixed before any run): research doc § "Round 2 adden
 ---
 ## Execution Log
 _To be filled during /code-foundations:build_
+
+### Phase 1: Round-2 task content (Gate: Standard)
+- [x] BUILD: Discovery + design + implementation complete
+- [x] REVIEW: Verification passed (reviewer independently re-ran witnesses, golds, no-leak greps)
+- [x] Committed
+Commit: 58a7d08
+Summary: tasks/05-tempt-* (3 variants, 5 off-scope defects w/ witnesses, temptation-key.json per variant), fixtures/behavior/ (13 classification fixtures, all four buckets + dirty in-scope-edit case, validate.sh 27-check gate), 04-hash spec exclusion rules documented; parents byte-identical. Reviewer note for Phase 2: fixture set is 12 clean : 1 dirty -- harden classifier tests accordingly.
+
+### Phase 2: Floor + behavior + effort sweeps, analysis, REPORT round 2 (Gate: Standard)
+- [x] BUILD: harness floor-mode + behavior/bundle/effort scoring + analysis extensions; live sweep executed
+- [x] REVIEW: PASS — independent opus reviewer re-derived every REPORT figure from the CSVs (floor cells, Q2 inputs, fingerprint rates, $172.56 cumulative cost), ran suite (192 passed, 3 skipped) + `validate.sh` (all checks passed); all six DW items verified, no correctness defect. Two non-blocking honesty notes folded into REPORT (honesty `0.00` = not-measured disclosure; Q2 per-defect proxy conservative-bias caveat).
+- [x] Committed
+Commit: recorded in grug memory (model-tier-benchmark-round2-results) and this session's summary — a commit cannot inscribe its own hash; the Phase-2 commit is the one whose message reads "Phase: R2 2/2".
+Summary: run_suite floor mode (validity-only gate, LADDER_MODELS haiku→sonnet→opus→fable, effort cells, haiku-4.5 verified live); score_run behavior classification + cheap-bundle metrics; analyze floor table/fingerprint/effort-crossover + render_round2_section; 200-row ladder sweep + 72-row effort sweep executed live; 68 new tests (192 passed, 3 skipped). Live cost cumulative $172.56 (< $250 tripwire).
+Data-quality follow-ups (in REPORT): 03-kv/05-tempt-kv starter contamination disclosed with downstream recommendation; honesty fact-match not computed live (descriptive-only per rule 6).
