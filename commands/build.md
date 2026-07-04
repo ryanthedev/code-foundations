@@ -86,14 +86,16 @@ Before creating phase tasks, resolve skills for all phases. Skills do NOT affect
 
 ### Model Resolution
 
-Every phase's `**Model:**` field is required (see LOAD). BUILD uses it directly; REVIEW runs one tier below (prover-verifier asymmetry — intentional):
+Every phase's `**Model:**` field is required (see LOAD). BUILD uses it directly; REVIEW runs one tier below, **floored at sonnet** (prover-verifier asymmetry — intentional):
 
 | BUILD model | REVIEW model |
 |-------------|--------------|
 | fable | sonnet |
 | opus | sonnet |
-| sonnet | haiku |
-| haiku | haiku (floor) |
+| sonnet | sonnet (floor) |
+| haiku | sonnet (floor) |
+
+**Why the sonnet floor (never haiku):** the model-tier benchmark (round 2, 2026-07) found haiku's planted-defect recall unreliable on REVIEW-shaped tasks — it missed *every* planted defect (0/5) on one review task where higher tiers caught them. A reviewer that misses defects is false insurance, so REVIEW never runs below sonnet even when BUILD does. For a sonnet-built phase the reviewer is the same tier; independence is preserved the way it always has been here — by the intent-stripped dispatch (no plan context, no progress narrative; see § REVIEW debiasing), not by the tier gap.
 
 **Exception:** security-sensitive phases run their 3-sample REVIEW on **fable** regardless of the BUILD model — for security, verification rigor beats cost asymmetry.
 
@@ -116,6 +118,24 @@ Determine the gate level for each phase. This controls which sub-phases run. REV
 Skill presence does NOT affect the gate — every phase carries skills (see Skill Resolution), so skills cannot discriminate gate level.
 
 **State the resolved gate level when creating tasks:** "Phase N gate: [Full/Standard/Minimal] (reason: plan `**Gate:**` field | pipeline override)"
+
+### Effort Alignment
+
+BUILD-agent depth is derived from the phase's `**Model:**` — the same field that already encodes how much thinking the work needs — and applied through the dispatch's depth-steering wording (the Agent tool has no `effort` parameter; see § FULL_BUILD / § MINIMAL_BUILD / § REVIEW and `references/plan-integration.md`):
+
+| Phase Model | BUILD depth | REVIEW depth |
+|---|---|---|
+| fable / opus / sonnet | Think carefully | Think carefully |
+| haiku | Answer directly | Think carefully — REVIEW never drops below (mirrors Model Resolution's sonnet floor; a reviewer that skims misses defects) |
+
+**Mismatch stop — ask the user (only when Model and Gate disagree).** Normally a phase's `**Model:**` (effort) and `**Gate:**` (rigor) agree, and build proceeds silently with the depth above. When they *don't*, the phase's effort doesn't match its risk — STOP and ask the user to reconcile before dispatching that phase, the same way an unknown skill stops at Skill Resolution. Only these two combinations trigger it:
+
+| Mismatch | Reads as | Ask |
+|---|---|---|
+| **haiku + Full gate** | mechanical effort on high-risk work | "Phase N is haiku (mechanical) but Full gate (high-risk). Raise the model, lower the gate, or proceed as-is?" |
+| **fable / opus + Minimal gate** | heavyweight effort on trivial, un-reviewed work | "Phase N is [fable/opus] (judgment-heavy) but Minimal gate (no REVIEW). Lower the model, raise the gate, or proceed as-is?" |
+
+`sonnet` matches any gate and `Standard` matches any model — neither ever triggers the stop. **Proceed-as-is is always a valid answer** (the plan is the user's); the stop only surfaces the tension so it's a conscious choice, never silent. If the user adjusts the model or gate, apply it as a one-run override (announced like the gate/model resolutions) — a gate change re-enters Wave Derivation below with the new value. Run this check per phase; batch the questions if several phases mismatch.
 
 ### Wave Derivation
 

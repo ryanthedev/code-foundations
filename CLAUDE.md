@@ -78,7 +78,7 @@ Three-stage pattern for feature development:
   → Waves derived from Depends on + File scope: independent Standard/Minimal phases
     build in parallel (own phase worktrees), integrated by cherry-pick in plan order
   → Model per phase from plan (fable judgment-heavy / sonnet default / haiku mechanical;
-    opus only as explicit override); REVIEW one tier below BUILD, security REVIEW on fable
+    opus only as explicit override); REVIEW one tier below BUILD (floored at sonnet — never haiku), security REVIEW on fable
   → Per-phase commits after REVIEW passes (or BUILD completes for minimal gate)
   → Final verification + report
 ```
@@ -118,7 +118,10 @@ for decisive 2-4-option picks (clarify, coverage level, handoff). The draft→re
 the structural guard: unconfirmed plans can't build.
 
 **Effort doctrine:** plan at high effort (the reasoning lives there); build at low effort for
-all-serial plans, default when any phase carries `File scope` (wave-eligible).
+all-serial plans, default when any phase carries `File scope` (wave-eligible). Subagent depth is
+separate: BUILD/REVIEW agents are steered by dispatch wording (the Agent tool has no effort knob) —
+derived from each phase's `Model`, REVIEW never below "think carefully"; build's Effort Alignment
+stops to ask when a phase's `Model` (effort) and `Gate` (rigor) disagree.
 
 Skills are **workflow-internal** (all 19 carry `user-invocable: false`; `planning` additionally keeps
 `disable-model-invocation: true` so the model can't run the planning pipeline ad-hoc). They are

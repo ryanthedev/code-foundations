@@ -73,7 +73,7 @@ Every phase carries a `**Model:**` field. The ladder: **fable** (judgment-heavy:
 - [ ] Implement optimizer
 ```
 
-`**Model:**` is required on every phase — there are no legacy plans; build stops and asks for a re-plan when the field is missing. REVIEW runs one tier below BUILD (fable→sonnet, opus→sonnet, sonnet→haiku, haiku floor) — prover-verifier asymmetry, intentional. The one deliberate exception: security-sensitive REVIEW samples run on **fable** regardless of the BUILD model — for security, verification rigor beats cost asymmetry.
+`**Model:**` is required on every phase — there are no legacy plans; build stops and asks for a re-plan when the field is missing. REVIEW runs one tier below BUILD, floored at sonnet (fable→sonnet, opus→sonnet, sonnet→sonnet — never haiku) — prover-verifier asymmetry, intentional; the sonnet floor exists because haiku's planted-defect recall proved unreliable on REVIEW-shaped tasks (round-2 model-tier benchmark, 0/5 on one review task). The one deliberate exception: security-sensitive REVIEW samples run on **fable** regardless of the BUILD model — for security, verification rigor beats cost asymmetry.
 
 Model facts worth knowing when assigning (as of 2026-07 — re-verify via the claude-api skill when this feels stale):
 
@@ -90,6 +90,7 @@ Effort follows where the reasoning lives:
 
 - **Planning: high.** The plan is the highest-leverage artifact — decomposition, seam contracts, and gate/model assignment are judgment work. This is where deep thinking pays.
 - **Building: low for all-serial plans, default when any phase carries `**File scope:**`** (wave-eligible — the plan never stores waves; build derives them). The plan already contains the strategic reasoning; serial orchestration is dispatch work. Wave builds keep default effort because the orchestrator retains real judgment (integration failures, wave-failure handling). The subagents think in their own contexts either way — orchestrator effort doesn't cascade to them.
+- **Subagent depth (BUILD/REVIEW agents): derived from the phase, not the orchestrator.** The Agent tool has no `effort` parameter, so depth is steered by the wording-sensitive phrases below, injected by build's Effort Alignment (`commands/build.md`): BUILD agents get "Think carefully" unless the phase `**Model:**` is haiku (mechanical → "Answer directly"); REVIEW agents always get "Think carefully" — a reviewer that skims misses defects, mirroring the sonnet REVIEW floor. Build stops to ask the user only when a phase's `**Model:**` (effort) and `**Gate:**` (rigor) disagree — the effort doesn't match the risk.
 
 In dispatch prompts, steer per-agent depth with the wording-sensitive phrases: encourage with "This task involves multi-step reasoning. Think carefully before responding."; suppress with "Answer directly without deliberating." — not with hand-written step plans.
 

@@ -35,6 +35,8 @@ Agent tool:
 - model: [from plan's **Model:** field — required; a plan without it stops the build at LOAD]
 - description: "BUILD Phase N"
 - prompt: |
+    [Depth per build's Effort Alignment: if the phase Model is haiku, open with "Answer directly without deliberating."; otherwise open with "This task involves multi-step reasoning. Think carefully before responding."]
+
     Build Phase N of the build plan. This is a two-part task:
     1. Discovery + Design — scope the phase work, identify gaps vs plan, make design decisions, map DW items to test cases
     2. Implementation — stub the interface, implement it, then write tests that validate each DW item (all tests must pass)
@@ -105,6 +107,8 @@ Agent tool:
 - model: [from plan's **Model:** field — required; a plan without it stops the build at LOAD]
 - description: "BUILD Phase N (minimal)"
 - prompt: |
+    Answer directly without deliberating — this is trivial, mechanical work.
+
     Build Phase N of the build plan. This phase uses minimal gate
     policy — skip discovery, implement directly from the plan
     description: stub the interface, implement it, then write tests
@@ -154,9 +158,11 @@ Use for **Full and Standard gate** REVIEW sub-phases. Always uses `code-foundati
 ```
 Agent tool:
 - subagent_type: "code-foundations:post-gate-agent"
-- model: [resolved REVIEW model per the orchestrator's Model Resolution — the phase's BUILD model downgraded one tier (fable→sonnet, opus→sonnet, sonnet→haiku, haiku floor); fable for security-sensitive samples]
+- model: [resolved REVIEW model per the orchestrator's Model Resolution — the phase's BUILD model downgraded one tier, floored at sonnet (fable→sonnet, opus→sonnet, sonnet→sonnet, never haiku); fable for security-sensitive samples]
 - description: "REVIEW Phase N"
 - prompt: |
+    This task involves multi-step reasoning. Think carefully before responding.
+
     Independently verify the implementation in the files below against the
     requirements below. You did not write this code and have no information
     about how or why it was written. Do NOT assume it is correct or complete.
@@ -216,7 +222,7 @@ Agent tool:
 
 Inserted dynamically before a Full gate phase when 2+ phases have run since the last REVIEW. Batches verification across accumulated Minimal phases — the only tier without per-phase REVIEW. Same debiasing rules as § REVIEW: no plan Context, no progress narrative, no discovery files.
 
-**Model:** use the upcoming Full phase's resolved REVIEW model (its BUILD model downgraded one tier per the orchestrator's Model Resolution). When fired before VERIFY (no upcoming Full phase), use the highest resolved REVIEW model among the covered phases.
+**Model:** use the upcoming Full phase's resolved REVIEW model (its BUILD model downgraded one tier, floored at sonnet, per the orchestrator's Model Resolution). When fired before VERIFY (no upcoming Full phase), use the highest resolved REVIEW model among the covered phases.
 
 ```
 Agent tool:
@@ -224,6 +230,8 @@ Agent tool:
 - model: [upcoming Full phase's resolved REVIEW model]
 - description: "Catch-up REVIEW for Phases X-Y"
 - prompt: |
+    This task involves multi-step reasoning. Think carefully before responding.
+
     Independently verify the implementations below against their requirements.
     You did not write this code. Do NOT assume it is correct or complete.
     Assume requirements may be unmet and bugs may be present; verify each item
