@@ -58,7 +58,7 @@ Extract from the plan file:
 | `ready` | Proceed |
 | `in-progress` | Resume: derive completed phases from the execution log + commit trailers, re-run SETUP task creation for the remainder, continue from the first incomplete phase |
 | `complete` | Ask: "Plan already complete. Re-execute or archive?" |
-| `blocked` | Show blockers, ask how to proceed |
+| `blocked` | Show blockers as a short bulleted list (one line each), ask how to proceed |
 | missing or unrecognized | Treat as `draft` — stop and send the user back to `/code-foundations:plan` |
 
 ---
@@ -270,7 +270,7 @@ TaskUpdate → in_progress, then dispatch the build agent. It combines discovery
 **After BUILD returns:**
 1. Check status: DONE, SKIP, UPDATE_PLAN, or BLOCKED
 2. If SKIP → mark task completed, skip REVIEW task if exists, **append a SKIP execution-log entry** to the plan file (the `### Phase N` entry from `commit-format.md` with BUILD/REVIEW/Committed lines replaced by a single `- [x] SKIPPED — [reason from build agent]` and no commit hash), then proceed to next phase
-3. If UPDATE_PLAN → pause and ask user
+3. If UPDATE_PLAN → pause and ask user: the phase's requested change plus the build agent's one-sentence reason, not its raw report
 4. If BLOCKED → do NOT mark completed → Gate Failure Protocol (BLOCKED is BUILD's failure status; the 3-retry cap applies)
 5. If DONE → TaskUpdate → completed
 6. If Minimal gate → commit now (see Commit After Phase)
