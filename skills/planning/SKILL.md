@@ -13,6 +13,8 @@ The plan is written in stages, not one shot: DECOMPOSE fixes the phase shape and
 
 The plan is a contract between plan and build. It specifies WHAT and WHY at the strategic level, with explicit interfaces between phases.
 
+**User-facing output stays terse.** Only three steps run a full checkpoint — a structured render that ends the turn and waits for a reply: EXPLORE's decision gate, the Skeleton Checkpoint, and CONFIRM. A brief one-sentence declaration (CLASSIFY's verdict, a demotion notice) can still surface inline, immediately followed by the next step's work in the same turn — but it stays one sentence, never a restated deliberation trail. Everything else — DISCOVER's gate, DETAIL's per-phase reset — is internal bookkeeping the user never sees. If a step's output reads like a transcript of the reasoning ("X confirmed... Y confirmed... this matches the prior call"), it's wrong regardless of which step produced it.
+
 **Thinking effort:** Planning is where the reasoning lives — it benefits from **high** effort. If the session is running lower, suggest the user increase it before proceeding. (Build runs the other way: low for all-serial plans, default for wave plans — see `references/plan-integration.md`.)
 
 ### Create Progress Tasks
@@ -45,7 +47,7 @@ The code-standards scan already ran in the plan command's shared step 1 — `doc
 
 A confirmed problem statement already arrives from the plan command's shared step — clarification ran there, under its 5-round cap. Do **not** reload the clarify skill or re-clarify from scratch. Only if deeper research contradicts or materially broadens the stated problem do you re-confirm (see Output below).
 
-### Gate — proceed to CLASSIFY only when all three hold
+### Gate (internal check, not narrated to the user) — proceed to CLASSIFY only when all three hold
 
 - [ ] Codebase research deepened (pattern reuse + prior art checked)
 - [ ] Track received from dispatch (Medium/Complex)
@@ -55,7 +57,7 @@ A confirmed problem statement already arrives from the plan command's shared ste
 
 A confirmed problem statement arrives from the shared steps in the plan command. DISCOVER refines it with deeper codebase context — don't redo clarification from scratch.
 
-Review the existing problem statement against what deeper discovery found. If it holds, proceed. If discovery reveals the problem is different or broader than stated, update it, render the updated statement as markdown in conversation, and end the turn asking: "Discovery found [X]. Does the updated statement still capture what you want?" — content confirmations happen in conversation, where the full statement is visible (see Channel Selection in [adaptive-questioning.md](${CLAUDE_PLUGIN_ROOT}/references/adaptive-questioning.md)).
+Review the existing problem statement against what deeper discovery found. If it holds, proceed. If discovery reveals the problem is different or broader than stated, update it, render the updated statement as markdown in conversation, and end the turn asking: "Discovery found [X]. Does the updated statement still capture what you want?" — `[X]` is a short phrase naming what changed, not a restatement of the discovery research; the updated statement itself carries the detail. Content confirmations happen in conversation, where the full statement is visible (see Channel Selection in [adaptive-questioning.md](${CLAUDE_PLUGIN_ROOT}/references/adaptive-questioning.md)).
 
 ---
 
@@ -63,7 +65,7 @@ Review the existing problem statement against what deeper discovery found. If it
 
 Classify using signals: files touched (Medium 4-8, Complex 9+), patterns (Medium 2-3 some new, Complex multiple cross-cutting), cross-cutting concerns (Medium 1-2, Complex 3+), uncertainty (Medium approach unclear, Complex requirements uncertain), phase count (Medium 3-5, Complex 5-7).
 
-State explicitly: "This is a **[Medium/Complex]** task. [1-sentence justification]." **If uncertain between Medium and Complex, choose higher** (this tie-breaker refines Medium-vs-Complex only; the plan command's "Default to Quick" already routed the task here).
+State explicitly: "This is a **[Medium/Complex]** task. [1-sentence justification]." This sentence surfaces inline — it isn't its own checkpoint — and leads straight into EXPLORE's research in the same turn. **If uncertain between Medium and Complex, choose higher** (this tie-breaker refines Medium-vs-Complex only; the plan command's "Default to Quick" already routed the task here).
 
 **Demotion path — discovery reveals the task is actually Simple:** if the signals now read Simple (one focused change, 1-2 phases, no approach comparison needed), stop the pipeline and hand back to the Quick track in `commands/plan.md`. Do not force a 3-phase plan onto a one-thing change. Say so explicitly: "Discovery shows this is a Simple task — switching to the Quick track."
 
@@ -96,10 +98,12 @@ Approaches must be **structurally different** (different technology, pattern, or
 - Good: "JWT tokens" vs "Session cookies" vs "OAuth2"
 - Bad: "JWT with refresh" vs "JWT without refresh" (same approach)
 
-| Approach | Trade-offs | Best When | Research Source |
-|----------|-----------|-----------|-----------------|
-| Option A | [pros/cons] | [conditions] | [codebase/web] |
-| Option B | [pros/cons] | [conditions] | [codebase/web] |
+Everything about an approach lives in its row — no prose paragraph per approach before or after the table. One clause per cell; if a cell needs two sentences, the approach isn't simple enough yet. Source is a short tag (a file or pattern name), not a citation sentence.
+
+| Approach | What | Trade-offs | Best When | Source |
+|----------|------|-----------|-----------|--------|
+| Option A | [one clause] | [one clause] | [one clause] | [codebase/web] |
+| Option B | [one clause] | [one clause] | [one clause] | [codebase/web] |
 
 ### Pre-Mortem (Complex Only)
 
@@ -109,7 +113,7 @@ Approaches must be **structurally different** (different technology, pattern, or
 
 ### Recommendation + Decision Gate
 
-End the turn with the approach comparison rendered as markdown in conversation — the full table (trade-offs, best-when, research source per approach; pre-mortem for Complex) — then **name a recommendation with 1-sentence rationale** (not neutral presentation; the user wants an opinion) and ask which approach to take. The comparison must be the turn's **final message, with no tool calls after it**: an approach comparison is a content review, and the conversation is the only surface that renders it in full (see Channel Selection in [adaptive-questioning.md](${CLAUDE_PLUGIN_ROOT}/references/adaptive-questioning.md)).
+Open directly with the table — no restating CLASSIFY or DISCOVER's conclusions first; those already happened, and the user needs the fork, not the trail that led to it. End the turn with the approach comparison rendered as markdown in conversation — the full table (what, trade-offs, best-when, research source per approach; pre-mortem for Complex) — then **name a recommendation with 1-sentence rationale** (not neutral presentation; the user wants an opinion) and ask which approach to take. The comparison must be the turn's **final message, with no tool calls after it**: an approach comparison is a content review, and the conversation is the only surface that renders it in full (see Channel Selection in [adaptive-questioning.md](${CLAUDE_PLUGIN_ROOT}/references/adaptive-questioning.md)).
 
 The user answers free-form — an approach name, "your recommendation", or a different direction entirely.
 
@@ -423,7 +427,9 @@ After return: PASS -> proceed. FINDINGS -> fix; **structural fixes (phase bounda
 
 ## Step 9: CONFIRM
 
-End the turn with the full plan summary rendered as markdown in conversation — every phase with its goal, model, gate, dependencies, and skills; constraint → phase mapping; test coverage level (chosen at CROSS-CUT); CHECK results; remaining questions — closing with "Does this look right? Anything to add or change?" The user replies in their own words.
+End the turn with the full plan summary rendered as markdown in conversation, closing with "Does this look right? Anything to add or change?" The user replies in their own words.
+
+**Shape:** one table for the phases (goal, model, gate, dependencies, skills — this is the part the user scans first), then a short bullet list below it — constraint → phase mapping, test coverage level, seams, CHECK results — one line per bullet, not a paragraph each. Summarize CHECK's outcome ("PASS" or "N findings, fixed"), never the verbatim finding text. If a seam or guardrail needs more than one line to state, it belongs in the plan file, not the summary; point to the phase instead of re-explaining it there. A doctrine deviation (e.g., skipping a re-CHECK after a fix) gets one sentence on what and why, then the ask — not a justification paragraph.
 
 Two rules make this checkpoint structural:
 
