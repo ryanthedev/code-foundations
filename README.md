@@ -92,13 +92,22 @@ User: "/code-foundations:build .code-foundations/plans/2026-01-30-notifications.
 
   FOR EACH PHASE:
   ┌────────────────────────────────────────────────────────────┐
-  │  BUILD        Build-agent: discovery + design + implement │
+  │  BUILD        Build-agent: discovery + design + implement  │
   │       ⛔ Loads pre-gate + implement standards              │
   ├────────────────────────────────────────────────────────────┤
-  │  REVIEW       Post-gate-agent checks quality (Full gate)   │
+  │  REVIEW       Full gate + security-sensitive phases only   │
   │       ⛔ Cannot commit until reviewer returns PASS         │
   ├────────────────────────────────────────────────────────────┤
-  │  COMMIT       Orchestrator commits after gates pass        │
+  │  COMMIT       Orchestrator commits (green suite is enough  │
+  │               for Standard/Minimal — review comes later)   │
+  └────────────────────────────────────────────────────────────┘
+
+  EVERY N PHASES (Review cadence, default 3):
+  ┌────────────────────────────────────────────────────────────┐
+  │  BATCH REVIEW  Post-gate-agent over every un-reviewed      │
+  │                phase at once + cross-phase coherence       │
+  │       ⛔ Also fires before any Full phase and before the   │
+  │          final VERIFY — nothing ships unreviewed           │
   └────────────────────────────────────────────────────────────┘
 ```
 
@@ -110,7 +119,9 @@ User: "/code-foundations:build .code-foundations/plans/2026-01-30-notifications.
 | REVIEW | Debiased review protocol (agent definition) + per-phase skills | Execute-first verification, per-requirement evidence + trace, anti-overcorrection verdict |
 | VERIFY | `performance-optimization`, `cc-refactoring-guidance` | Performance regressions, refactoring opportunities, build + tests + lint |
 
-Gate policy is adaptive: Full (BUILD + REVIEW, always runs alone), Standard (BUILD + single-sample REVIEW), Minimal (BUILD only; tests are the gate). Skills assigned per phase during plan's SAVE step — gates load only those skills; each agent carries its own protocol. Security-sensitive phases get a 3-sample majority-vote REVIEW on fable. Independent Standard/Minimal phases (no dependency, disjoint `File scope`) build in parallel waves, each in its own worktree, integrated by cherry-pick in plan order.
+Gate policy is adaptive, and what it adapts is review *timing* — every phase is reviewed. Full (BUILD + blocking REVIEW, always runs alone) and security-sensitive phases (3-sample majority vote on fable) hold their commit until the reviewer returns PASS. Standard and Minimal phases commit on a green suite and are covered by a **batch REVIEW** that fires every `Review cadence` phases (default 3), before any Full phase, and once before the final VERIFY. Batching costs a window of un-reviewed HEAD and buys reviewer context: seeing several phases together surfaces cross-phase incoherence that isolated reviews structurally cannot. A batch FAIL is fixed forward against the committed code.
+
+Skills assigned per phase during plan's SAVE step — gates load only those skills; each agent carries its own protocol. Independent Standard/Minimal phases (no dependency, disjoint `File scope`) build in parallel waves, each in its own worktree, integrated by cherry-pick in plan order.
 
 The system saves every artifact to `.code-foundations/build/`. Per-phase commits enable rollback.
 

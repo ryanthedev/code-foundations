@@ -67,7 +67,8 @@ Three-stage pattern for feature development:
   → [Standard/Full: classify → explore → detail → save → check → confirm]
   → DECOMPOSE matches skills per phase against the available-skills register (internal + external), reading each skill's description
   → SAVE emits per-phase **Model:** (fable | sonnet | haiku), **Gate:** (Full | Standard | Minimal),
-    **Depends on:**, and optional **File scope:** (wave-parallelism opt-in)
+    **Depends on:**, and optional **File scope:** (wave-parallelism opt-in), plus the plan-header
+    **Review cadence:** (default 3)
   → Save to .code-foundations/plans/YYYY-MM-DD-<topic>.md with **Status:** draft
   → Plan presented as end-turn conversation markdown; user confirms free-form → Status: ready
 
@@ -79,7 +80,8 @@ Three-stage pattern for feature development:
     build in parallel (own phase worktrees), integrated by cherry-pick in plan order
   → Model per phase from plan (fable judgment-heavy / sonnet default / haiku mechanical;
     opus only as explicit override); REVIEW one tier below BUILD (floored at sonnet — never haiku), security REVIEW on fable
-  → Per-phase commits after REVIEW passes (or BUILD completes for minimal gate)
+  → Per-phase commits: after REVIEW passes (Full, security-sensitive) or on a green suite
+    (Standard, Minimal — review deferred to a batch every `Review cadence` phases)
   → Final verification + report
 ```
 
@@ -99,17 +101,31 @@ BUILD:   baseline discipline (DW→test traceability, stub → implement → val
          skill self-loads its own checklists.
          (discovery + design → implementation: stub → implement → validate, in one agent)
 REVIEW:  debiased review protocol (execute-first, per-DW evidence + trace, anti-overcorrection)
-         (Full and Standard gates — only Minimal skips REVIEW and rides on tests;
-          Full adds catch-up anchoring; security-sensitive phases get 3-sample majority-vote REVIEW)
-COMMIT:  Orchestrator commits directly after gates pass
+         Blocking for Full gates and security-sensitive phases (3-sample majority vote);
+         deferred into a batch REVIEW for Standard and Minimal, which fires every N phases
+         (Review cadence, default 3), before any Full phase, and once before VERIFY
+COMMIT:  Orchestrator commits directly — after REVIEW passes for blocking phases,
+         on a green suite for deferred ones
 ```
 
 **Gate policy:** each phase in the plan carries a `**Gate:**` field (Full | Standard | Minimal) —
 required, like `**Model:**` and `**Depends on:**`; build stops and asks for a re-plan when any is
-missing (there are no legacy plans). Full = BUILD + REVIEW + COMMIT (heavyweight: catch-up
-anchoring, home of security 3-sample; always runs alone, never in a wave). Standard = BUILD +
-REVIEW (single-sample) + COMMIT. Minimal = BUILD (no discovery) + COMMIT — the only tier without
-REVIEW; tests are its gate.
+missing (there are no legacy plans). The gate decides review **timing**, not whether a review
+happens — every phase is reviewed. Full = BUILD + blocking REVIEW + COMMIT (the commit waits for
+PASS; always runs alone, never in a wave). Standard = BUILD + COMMIT, review deferred to the next
+batch. Minimal = BUILD (no discovery) + COMMIT, same deferral. `**Security-sensitive:** yes`
+forces an immediate 3-sample REVIEW at any gate — never deferred.
+
+**Review cadence:** the plan header carries `**Review cadence:** N` (default 3, clamped to 1–5).
+Standard and Minimal phases commit on a green suite and join an un-reviewed set; a batch REVIEW
+covers the whole set at once when N accumulate, before any Full phase opens, and once before
+VERIFY. Batch REVIEW runs against committed code, so a FAIL is fixed forward (a `fix(phase-N)`
+commit answering the findings, then a re-run over the whole set) rather than gating a commit —
+see `references/gate-failure-protocol.md` → Batch Failures. Reviewing several phases together is
+also what buys the cross-phase coherence check that isolated per-phase reviews can't produce.
+Commits record `Review: deferred (batch pending)`, paired with a `Covered by batch review`
+addendum in the execution log; a deferred trailer with no addendum is a build defect the trust
+report must catch.
 
 **Checkpoint doctrine:** content the user must review (plan summaries, skeletons, approach
 comparisons, problem statements) is presented as the turn's final conversation markdown and

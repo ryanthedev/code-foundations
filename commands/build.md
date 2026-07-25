@@ -15,8 +15,8 @@ Each of these exists because its absence has a specific failure mode:
 - **Worktree isolation** — building on main/master leaves multi-phase commits with no rollback boundary
 - **Load plan before coding** — no plan means no checklist, and unlisted tasks get forgotten
 - **One wave at a time** — phases run in parallel only when the plan declares them independent (`Depends on` + disjoint `File scope`) and each runs in its own phase worktree; same-tree parallel execution contaminates test evidence and causes merge conflicts. The commit is the phase boundary — nothing downstream starts before it exists
-- **BUILD before REVIEW** (Full and Standard gates) — REVIEW runs on every phase except Minimal; Minimal skips both REVIEW and discovery
-- **Verification before commit, per gate policy** — Full/Standard: REVIEW must PASS; Minimal: tests are the gate
+- **Every phase gets reviewed, but not every phase blocks on it** — Full-gate and security-sensitive phases review immediately, before their commit; Standard and Minimal phases commit on green tests and are covered by a later batch REVIEW. Nothing ships unreviewed; the review just arrives after the commit instead of before it
+- **The batch never goes stale** — it fires at the cadence, before any Full phase, and once before VERIFY. An un-reviewed phase cannot reach the trust report
 - **Independent verification on complex work only** — self-review is blind, but over-verifying trivial work injects noise
 - **Mark complete only when gates pass** — premature completion ships unverified work
 - **Update the execution log** — it debugs failed builds and anchors later phases
@@ -46,7 +46,8 @@ Extract from the plan file:
 8. **Gate per phase** - `**Gate:**` (required on every phase); optional `**Pipeline:**` override
 9. **Dependencies** - `**Depends on:**` per phase (required) and optional `**File scope:**` globs — these drive wave derivation
 10. **Assumptions** - Assumptions table with `Verify Before Phase` timing
-11. **Security-sensitive flags** - Optional `**Security-sensitive:** yes` per phase (triggers 3-sample REVIEW majority vote)
+11. **Security-sensitive flags** - Optional `**Security-sensitive:** yes` per phase (forces an immediate 3-sample REVIEW majority vote — never deferred into a batch)
+12. **Review cadence** - `**Review cadence:** N` in the plan header (how many un-reviewed phases may accumulate before a batch REVIEW fires). Missing or unparseable → default to 3 and say so once
 
 **Required fields:** every phase must carry `**Model:**`, `**Gate:**`, and `**Depends on:**`. If any is missing, stop and tell the user to re-run `/code-foundations:plan` — plans are ephemeral per-feature artifacts and the planner always emits these fields; a plan without them wasn't produced by the pipeline. **If Test Coverage is missing:** default to "100% coverage" and inform user.
 
@@ -101,14 +102,18 @@ Every phase's `**Model:**` field is required (see LOAD). BUILD uses it directly;
 
 ### Gate Policy Detection
 
-Determine the gate level for each phase. This controls which sub-phases run. REVIEW runs on every phase except Minimal — tests passing is not sufficient grounds to skip it, because tests don't catch missed edge cases, gaps, or gotchas; REVIEW does. Rigor is non-uniform: Full adds the heavyweight extras (catch-up anchoring, security 3-sample) on top of REVIEW; Standard runs a single-sample REVIEW; only trivial Minimal work rides on tests alone.
+Determine the gate level for each phase. The gate controls two things: how much rigor the BUILD gets, and **whether REVIEW blocks the commit or is deferred into a batch**. Every phase is still reviewed — the question is only when.
 
-| Level | Sub-Phases | When |
-|---|---|---|
-| **Full** | BUILD → REVIEW → commit | High-risk work where errors cascade; the heavyweight tier — adds catch-up anchoring and is the home of security 3-sample REVIEW |
-| **Standard** | BUILD → REVIEW → commit | Medium work; a single-sample REVIEW still runs — tests alone don't surface missed edge cases or gaps |
-| **Minimal** | BUILD (minimal) → commit | Trivial docs/config work only; tests are the gate, no REVIEW, no design phase |
-| **Catch-up** | Batch REVIEW inserted before next Full phase | Prevents drift across accumulated Minimal phases (the only un-reviewed tier) |
+| Level | Sub-Phases | Review timing | When |
+|---|---|---|---|
+| **Full** | BUILD → REVIEW → commit | **Blocking** — commit waits for PASS | High-risk work where errors cascade; the heavyweight tier, and the home of security 3-sample REVIEW |
+| **Standard** | BUILD → commit | **Deferred** — covered by the next batch REVIEW | Medium work; tests gate the commit, the batch catches what tests can't (missed edge cases, gaps, gotchas) |
+| **Minimal** | BUILD (minimal) → commit | **Deferred** — same batch | Trivial docs/config work; no discovery phase |
+| **Batch** | REVIEW over all un-reviewed committed phases | — | Fires at the cadence, before any Full phase, and once before VERIFY |
+
+**Security-sensitive overrides the gate's timing.** A phase carrying `**Security-sensitive:** yes` reviews immediately (3-sample, before its commit) whatever its gate says. Security defects that sit un-reviewed across three more phases are exactly the ones that get expensive.
+
+**Why deferral is safe and blocking is not free.** The commit is a rollback boundary, not a correctness claim — a green suite is enough to earn one. Batching trades a small window of un-reviewed HEAD for reviewer context: a reviewer seeing three related phases at once catches cross-phase incoherence that three isolated per-phase reviews structurally cannot. The cost is real and worth naming: a batch FAIL means fixing forward on committed code instead of gating before commit (see Gate Failure Protocol → Batch Failures).
 
 **Resolution order** (first match wins):
 
@@ -118,6 +123,19 @@ Determine the gate level for each phase. This controls which sub-phases run. REV
 Skill presence does NOT affect the gate — every phase carries skills (see Skill Resolution), so skills cannot discriminate gate level.
 
 **State the resolved gate level when creating tasks:** "Phase N gate: [Full/Standard/Minimal] (reason: plan `**Gate:**` field | pipeline override)"
+
+### Review Cadence
+
+Gate is per phase; cadence is per plan. Read `**Review cadence:** N` from the plan header — how many deferred-review phases may accumulate before a batch REVIEW fires. **Default 3** when absent.
+
+| N | Behavior |
+|---|---|
+| 1 | Every Standard/Minimal phase reviews right after its commit — closest to blocking, one phase per batch |
+| 2–3 | The intended range. 3 is the default |
+| 4–5 | Looser. The ceiling is reviewer recall, not policy: a batch review must run the suite and verify every DW item across every covered phase, and per-item recall degrades as the item count climbs |
+| >5 or unparseable | Clamp to 5, say so once, continue |
+
+**State the cadence once at SETUP:** "Review cadence: N (batch REVIEW every N un-reviewed phases, before each Full phase, and before VERIFY)."
 
 ### Effort Alignment
 
@@ -133,7 +151,7 @@ BUILD-agent depth is derived from the phase's `**Model:**` — the same field th
 | Mismatch | Reads as | Ask |
 |---|---|---|
 | **haiku + Full gate** | mechanical effort on high-risk work | "Phase N is haiku (mechanical) but Full gate (high-risk). Raise the model, lower the gate, or proceed as-is?" |
-| **fable / opus + Minimal gate** | heavyweight effort on trivial, un-reviewed work | "Phase N is [fable/opus] (judgment-heavy) but Minimal gate (no REVIEW). Lower the model, raise the gate, or proceed as-is?" |
+| **fable / opus + Minimal gate** | heavyweight effort on work trivial enough to skip discovery | "Phase N is [fable/opus] (judgment-heavy) but Minimal gate (no discovery, deferred review). Lower the model, raise the gate, or proceed as-is?" |
 
 `sonnet` matches any gate and `Standard` matches any model — neither ever triggers the stop. **Proceed-as-is is always a valid answer** (the plan is the user's); the stop only surfaces the tension so it's a conscious choice, never silent. If the user adjusts the model or gate, apply it as a one-run override (announced like the gate/model resolutions) — a gate change re-enters Wave Derivation below with the new value. Run this check per phase; batch the questions if several phases mismatch.
 
@@ -145,7 +163,7 @@ Derive the execution order from the plan's dependency DAG, not from file order:
 2. **Co-scheduling rule** — two phases in the same layer share a wave only when ALL hold:
    - neither transitively depends on the other,
    - both declare `**File scope:**` and the globs are pairwise disjoint,
-   - **both gates are Standard or Minimal** (Full-gate phases always run alone — they're high-risk by definition, and serial execution keeps catch-up accounting well-defined),
+   - **both gates are Standard or Minimal, and neither phase is security-sensitive** (both of those review immediately and always run alone — high-risk by definition, and serial execution keeps the un-reviewed-set accounting well-defined),
    - the test suite does not use shared mutable resources (fixed ports, docker services, global test DBs, on-disk fixtures — evident from the test command or the plan's Notes). If it does, serialize: correct beats concurrent.
 
    (Seam consumption needs no separate check — a phase consuming another's Produces depends on it, which the dependency check already covers; the planner's CHECK enforces that invariant.)
@@ -158,18 +176,21 @@ Derive the execution order from the plan's dependency DAG, not from file order:
 
 For each phase N (using its resolved gate level and model):
 
-- **Full / Standard gate — 2 tasks:** `Phase N.1: BUILD - [phase name]` (description: "Discovery + design + implementation. Model: [from plan].") and `Phase N.2: REVIEW - [phase name]` (description: "Post-gate review. Model: [REVIEW model]. Must return PASS."), N.2 blockedBy N.1.
-- **Minimal gate — 1 task:** `Phase N.1: BUILD - [phase name]` (description notes "Implement from plan description (minimal gate)").
+- **Blocking-review phases — 2 tasks.** A phase reviews immediately when its gate is **Full** OR it carries `**Security-sensitive:** yes`. Create `Phase N.1: BUILD - [phase name]` (description: "Discovery + design + implementation. Model: [from plan].") and `Phase N.2: REVIEW - [phase name]` (description: "Blocking post-gate review. Model: [REVIEW model]. Must return PASS."), N.2 blockedBy N.1.
+- **Deferred-review phases — 1 task.** Standard and Minimal gates (absent a security flag) get only `Phase N.1: BUILD - [phase name]` (description notes the gate and "review deferred to batch"). The commit follows a green suite; the batch covers it later.
 - **Chaining follows the DAG:** each phase's BUILD task is blockedBy the last task of every phase it depends on — not the previous phase in file order. Same-wave phases share predecessors and no edges between each other.
-- **Catch-up review tasks are NOT created upfront** — they are inserted dynamically when the catch-up trigger fires (evaluated at wave boundaries, where the completed-phase order is total).
+- **Batch review tasks are NOT created upfront** — they are inserted dynamically when a batch trigger fires (evaluated at wave boundaries, where the completed-phase order is total).
 - **Orchestrator handles commits directly** after each phase's last task completes — no commit tasks.
 
-Example for a 4-phase plan (Full + two independent Standards + Full):
+Example for a 5-phase plan at cadence 3 (Standard, two independent Standards, Minimal, Full):
 ```
-Wave 1: Phase 1.1 BUILD → 1.2 REVIEW → commit
-Wave 2: Phase 2.1 BUILD ∥ Phase 3.1 BUILD (both blockedBy 1.2; disjoint File scopes)
-        → 2.2 REVIEW / 3.2 REVIEW as each BUILD finishes → integrate + commit in plan order
-Wave 3: Phase 4.1 BUILD (blockedBy 2.2 AND 3.2; catch-up check fires here) → 4.2 REVIEW → commit
+Wave 1: Phase 1.1 BUILD → commit                        (1 un-reviewed)
+Wave 2: Phase 2.1 BUILD ∥ Phase 3.1 BUILD (both blockedBy 1.1; disjoint File scopes)
+        → integrate + commit in plan order              (3 un-reviewed → cadence hit)
+        → BATCH REVIEW Phases 1-3 → PASS                (0 un-reviewed)
+Wave 3: Phase 4.1 BUILD (Minimal) → commit              (1 un-reviewed)
+Wave 4: batch check fires before the Full phase → BATCH REVIEW Phase 4 → PASS
+        → Phase 5.1 BUILD → 5.2 REVIEW (blocking) → commit
 ```
 
 ---
@@ -210,8 +231,10 @@ Serial flow, per task:
 4. Wait for completion
 5. If result is FAIL → do NOT mark completed → Gate Failure Protocol
 6. If success → TaskUpdate(task_id, status: "completed")
-   → If this is the phase's last task (REVIEW for Full/Standard, BUILD for Minimal): commit
-7. Proceed to next task
+   → If this is the phase's last task (REVIEW for blocking-review phases, BUILD for deferred ones): commit
+   → If the phase's review was deferred, add it to the un-reviewed set
+7. At the wave boundary, evaluate the batch trigger (see Batch REVIEW) before opening the next wave
+8. Proceed to next task
 ```
 
 ### Parallel Waves (2-3 phases)
@@ -231,26 +254,26 @@ When a wave holds multiple phases, isolation is what makes it sound: BUILD and R
      that phase's worktree. A SKIPped member counts as settled for step 8.
    - UPDATE_PLAN or BLOCKED from one member → let in-flight siblings finish, hold their
      worktrees uncommitted, then pause for the user.
-4. As each BUILD returns DONE: Standard members get their REVIEW dispatched into that phase's
-   worktree — same § REVIEW template with paths and commands rooted at the worktree, plus "run
-   all commands from <worktree-root>" (debiasing is unchanged: a different directory is not
-   intent-framing). Minimal members have no REVIEW — DONE with passing tests counts as PASSED.
-5. Integrate PASSED phases strictly in plan order — a plan-order-earlier phase that is still
-   failing holds later passers (the barrier applies to commits, not just wave opening; held
-   passers' worktrees simply wait unchanged — the step-7 integration run covers combined
+4. Every wave member is a deferred-review phase by construction — Full gates and
+   security-sensitive phases run alone, never in a wave. So DONE with a green suite is the
+   integration signal; no REVIEW is dispatched into a phase worktree.
+5. Integrate DONE phases strictly in plan order — a plan-order-earlier phase still working
+   holds later finishers (the barrier applies to commits, not just wave opening; held
+   finishers' worktrees simply wait unchanged — the step-7 integration run covers combined
    behavior):
      git cherry-pick -n <latest reported wip-sha> in the build worktree → real commit per
-     commit-format.md → execution-log entry → copy the phase's discovery/review artifacts into
+     commit-format.md → execution-log entry → copy the phase's discovery artifacts into
      the build worktree's .code-foundations/build/ → git worktree remove
    A cherry-pick conflict means the File scope declaration was violated: treat as a gate
    failure — drop that phase's WIP, re-dispatch its BUILD serially on top of current HEAD.
-6. FAILED phases: Gate Failure Protocol in their own worktree (see gate-failure-protocol.md
-   Wave Failures); sync the worktree with build HEAD before each retry REVIEW; fixes are
-   squashed into a fresh wip(phase-N) commit whose sha supersedes the old one.
+6. Every integrated member joins the un-reviewed set together (they landed in one wave), so
+   a wave can trip the cadence on its own. Evaluate the batch trigger at step 8, once the
+   wave has settled — never mid-integration, where the phase order isn't yet total.
 7. Wave integration: after the last member commits, run the full test suite once in the build
    worktree — members were green in isolation but never tested together. Red → gate failure
    attributed to the last-integrated member, fix forward.
-8. The next wave opens only when every member is committed, SKIPped, or escalated.
+8. The next wave opens only when every member is committed, SKIPped, or escalated — then
+   evaluate the batch trigger before opening it.
 ```
 
 ### Sub-Phase N.1: BUILD (Discovery + Design + Implementation)
@@ -264,7 +287,7 @@ TaskUpdate → in_progress, then dispatch the build agent. It combines discovery
 | Gate | Template | Discovery file |
 |------|----------|----------------|
 | Full | `§ FULL_BUILD` | Yes — `.code-foundations/build/<plan-name>-phase-N-discovery.md` |
-| Standard | `§ FULL_BUILD` | Yes — same template; both Full and Standard proceed to REVIEW |
+| Standard | `§ FULL_BUILD` | Yes — same template and same discovery rigor; only the review timing differs |
 | Minimal | `§ MINIMAL_BUILD` | No |
 
 **After BUILD returns:**
@@ -273,10 +296,12 @@ TaskUpdate → in_progress, then dispatch the build agent. It combines discovery
 3. If UPDATE_PLAN → pause and ask user: the phase's requested change plus the build agent's one-sentence reason, not its raw report
 4. If BLOCKED → do NOT mark completed → Gate Failure Protocol (BLOCKED is BUILD's failure status; the 3-retry cap applies)
 5. If DONE → TaskUpdate → completed
-6. If Minimal gate → commit now (see Commit After Phase)
-7. If Full or Standard gate → proceed to REVIEW
+6. If the phase's review is deferred (Standard or Minimal gate, no security flag) → commit now (see Commit After Phase) and add the phase to the un-reviewed set
+7. If the phase's review is blocking (Full gate, or `**Security-sensitive:** yes` at any gate) → proceed to REVIEW
 
-### Sub-Phase N.2: REVIEW (Post-Gate)
+### Sub-Phase N.2: REVIEW (Blocking — Full gate and security-sensitive phases only)
+
+This sub-phase exists only for phases whose review blocks the commit: **Full** gate, or any gate with `**Security-sensitive:** yes`. Standard and Minimal phases have no N.2 task — they are covered by Batch REVIEW below.
 
 REVIEW dispatches only after the phase's BUILD task is completed — reviewing a moving target produces evidence against code that no longer exists.
 
@@ -291,12 +316,26 @@ TaskUpdate → in_progress, then dispatch `code-foundations:post-gate-agent` wit
 2. If PASS (or 2-of-3 for security-sensitive) → TaskUpdate → completed → commit
 3. If FAIL → do NOT mark completed → Gate Failure Protocol
 
-### Catch-Up REVIEW (inserted dynamically)
+### Batch REVIEW (inserted dynamically)
 
-**Trigger:** evaluated at wave boundaries (where the completed-phase order is total, since Full phases always run alone): before a Full gate phase's BUILD — and once more before VERIFY, so trailing un-reviewed phases don't slip through — check whether 2+ committed phases carry the `Review: skipped (Minimal)` trailer since the last REVIEW. If yes, insert a catch-up review first using `§ CATCHUP_REVIEW` (model rule is in the template header). This prevents drift across accumulated Minimal phases — the only tier without per-phase REVIEW — without extra overhead. On PASS, append a dated `Covered by catch-up review` addendum line to each covered phase's execution-log entry.
+The primary review path for Standard and Minimal phases. It runs against **committed** code, so it is a fix-forward gate rather than a commit gate — that is the trade the cadence buys.
 
-- PASS → proceed to the Full phase's BUILD
-- FAIL → Gate Failure Protocol before proceeding
+**The un-reviewed set.** Track it across the build: every phase that commits with a deferred review joins it; a batch PASS empties it. Phases reviewed at their own gate (Full, security-sensitive) never enter it.
+
+**Triggers** — evaluated at wave boundaries, where the completed-phase order is total (Full phases always run alone, so no boundary splits a Full phase). Fire a batch REVIEW when any holds:
+
+| Trigger | Why |
+|---|---|
+| The un-reviewed set has reached the cadence N | The routine case |
+| The next phase to open has a **Full** gate | Full phases are high-risk; they should build on reviewed ground rather than on an un-reviewed stack |
+| VERIFY is next and the set is non-empty | The trailing sweep — no phase reaches the trust report unreviewed |
+
+Dispatch with `§ BATCH_REVIEW` from the dispatch templates (model rule is in the template header). Cover **every** phase in the un-reviewed set in one dispatch — the cross-phase coherence check is the point, and splitting it forfeits that.
+
+**After the batch:**
+
+- **PASS** → empty the un-reviewed set, append a dated `Covered by batch review (phases X–Y)` addendum line to each covered phase's execution-log entry, then proceed.
+- **FAIL** → Gate Failure Protocol → Batch Failures. The offending phases are already committed, so the fix lands as a forward commit, not a re-gated one. The set stays non-empty until a batch PASS clears it.
 
 ### Commit After Phase (Orchestrator Handles Directly)
 
@@ -316,6 +355,10 @@ When a REVIEW task returns FAIL or a BUILD task returns BLOCKED, **read `${CLAUD
 
 ## Phase 4: VERIFY (Full Test Suite)
 
+### Trailing Batch REVIEW (first — before anything else in VERIFY)
+
+If the un-reviewed set is non-empty, fire the trailing batch REVIEW now (see Batch REVIEW). VERIFY runs the suite; it does not review. An un-reviewed phase must not reach the trust report, because the report's whole claim is that a human can trust what the trailers say was verified.
+
 ### Load Skills
 
 1. `Skill(code-foundations:performance-optimization)` — catch obvious performance regressions (O(n²), N+1 queries, unnecessary allocations)
@@ -329,7 +372,7 @@ Verify against the plan's **Test Coverage** level: **100%** (unit tests for all 
 
 Execute each item from the plan's Test Plan section, then run a clean build and linter. No new warnings or lint errors — if uncertain whether a warning is pre-existing, disambiguate with `git stash && build && git stash pop`. Fix everything new before proceeding.
 
-**Suite re-run delta rule:** skip the redundant full-suite re-run iff a full-suite run already executed **in the build worktree** after the last integration (the final phase's REVIEW for serial builds, or the wave-integration run) AND no source has changed since — `git status` clean apart from the plan file and `.code-foundations/` artifacts (execution-log appends don't invalidate test evidence). Cite that run's output as the trust-report evidence. Anything else (final phase was Minimal, post-review fixes touched source) → run the suite once now. The Test Plan items, coverage check, and clean-build warning delta always run — no earlier step disambiguates pre-existing vs new warnings.
+**Suite re-run delta rule:** skip the redundant full-suite re-run iff a full-suite run already executed **in the build worktree** after the last integration (the trailing batch REVIEW, a final blocking REVIEW, or the wave-integration run) AND no source has changed since — `git status` clean apart from the plan file and `.code-foundations/` artifacts (execution-log appends don't invalidate test evidence). Cite that run's output as the trust-report evidence. Anything else (final phase was Minimal, post-review fixes touched source) → run the suite once now. The Test Plan items, coverage check, and clean-build warning delta always run — no earlier step disambiguates pre-existing vs new warnings.
 
 ### Verification Gate
 

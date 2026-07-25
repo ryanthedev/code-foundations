@@ -15,7 +15,7 @@ How `/code-foundations:plan` and `/code-foundations:build` chain together. Refer
 [Standard/Full pipeline (skill: planning), staged in place:                (Medium/Complex)
    Discover → Classify → Explore → Decompose → Detail → Cross-cut → Save → Check → Confirm → Handoff]
   ↓
-[Each phase gets **Model:**, **Gate:**, **Skills:**, **Depends on:**, **File scope:** — Gate drives build's gate policy, Depends on + File scope drive wave derivation]
+[Each phase gets **Model:**, **Gate:**, **Skills:**, **Depends on:**, **File scope:** — Gate drives build's gate policy, Depends on + File scope drive wave derivation; the header's **Review cadence:** sets batch-review frequency]
 [Save to .code-foundations/plans/YYYY-MM-DD-topic.md — Status: draft until the user confirms the presented plan, then ready]
   ↓
 [Drop thinking effort for the build run — the plan carries the reasoning (low for all-serial plans, default when any phase carries File scope)]
@@ -23,7 +23,8 @@ How `/code-foundations:plan` and `/code-foundations:build` chain together. Refer
 /code-foundations:build .code-foundations/plans/YYYY-MM-DD-topic.md
   ↓
 [Worktree Gate → creates .claude/worktrees/<slug>/]
-[Per-phase gated execution in worktree (BUILD → REVIEW per the phase's **Gate:**)]
+[Per-phase gated execution in worktree — the **Gate:** decides whether REVIEW blocks the commit
+ (Full, security-sensitive) or is deferred into a batch REVIEW every **Review cadence** phases]
 [Tests pass → orchestrator commits per phase]
 [Summary report with merge instructions]
 ```
@@ -90,7 +91,7 @@ Effort follows where the reasoning lives:
 
 - **Planning: high.** The plan is the highest-leverage artifact — decomposition, seam contracts, and gate/model assignment are judgment work. This is where deep thinking pays.
 - **Building: low for all-serial plans, default when any phase carries `**File scope:**`** (wave-eligible — the plan never stores waves; build derives them). The plan already contains the strategic reasoning; serial orchestration is dispatch work. Wave builds keep default effort because the orchestrator retains real judgment (integration failures, wave-failure handling). The subagents think in their own contexts either way — orchestrator effort doesn't cascade to them.
-- **Subagent depth (BUILD/REVIEW agents): derived from the phase, not the orchestrator.** The Agent tool has no `effort` parameter, so depth is steered by the wording-sensitive phrases below, injected by build's Effort Alignment (`commands/build.md`): BUILD agents get "Think carefully" unless the phase `**Model:**` is haiku (mechanical → "Answer directly"); REVIEW agents always get "Think carefully" — a reviewer that skims misses defects, mirroring the sonnet REVIEW floor. Build stops to ask the user only when a phase's `**Model:**` (effort) and `**Gate:**` (rigor) disagree — the effort doesn't match the risk.
+- **Subagent depth (BUILD/REVIEW agents): derived from the phase, not the orchestrator.** The Agent tool has no `effort` parameter, so depth is steered by the wording-sensitive phrases below, injected by build's Effort Alignment (`commands/build.md`): BUILD agents get "Think carefully" unless the phase `**Model:**` is haiku (mechanical → "Answer directly"); REVIEW agents always get "Think carefully" — a reviewer that skims misses defects, mirroring the sonnet REVIEW floor. This holds for batch REVIEW too, which carries more per-dispatch load than any single-phase review. Build stops to ask the user only when a phase's `**Model:**` (effort) and `**Gate:**` (rigor) disagree — the effort doesn't match the risk.
 
 In dispatch prompts, steer per-agent depth with the wording-sensitive phrases: encourage with "This task involves multi-step reasoning. Think carefully before responding."; suppress with "Answer directly without deliberating." — not with hand-written step plans.
 

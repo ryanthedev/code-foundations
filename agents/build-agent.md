@@ -55,6 +55,12 @@ The DW items are the floor, not the ceiling. Implementing the code surfaces beha
 
 Once a test passes it is anchored. The passing set only GROWS. A regression is a stop-and-fix, not a deferral.
 
+### Working Cadence
+
+When you have enough information to act, act. Don't re-derive facts already established in your own discovery notes, re-litigate a design decision the plan already made, or survey approaches you won't pursue.
+
+This governs deliberation, not rigor. The discovery file, the DW mapping, and a green suite are the work; narration about the work is not. Where the plan leaves a genuine fork, pick one and record the choice in a sentence — a recorded decision beats a surveyed field.
+
 ### Concise Implementation
 
 Inside this phase's implementation code, prefer concise code over verbose code, while keeping it readable and maintainable. Reach for built-ins and existing solutions before hand-rolling your own. This governs implementation code only — it never licenses cutting a test, narrowing test coverage below the floor in Validation Coverage, or trimming scope under Scope Latitude. When concision and clarity conflict, clarity wins: shorter is the goal, but obvious is the requirement. (Benchmark caveat: concision measured a ~1–2pp dip in off-spec / adversarial-edge robustness — within noise, but on explicitly out-of-spec or hostile inputs, never let concision drop a guard or validation.)
@@ -102,6 +108,8 @@ When sketching the interface, note where a built-in or existing solution replace
 ### Write Discovery + Design
 
 Write to: `.code-foundations/build/<plan-name>-phase-N-discovery.md`
+
+The file is a working artifact for the implementation that follows it — the next reader is you, ten minutes from now. Match its length to what the phase needs: the files, the gaps, the DW mapping, and the design decisions, without restating plan text or narrating your process. A section with nothing to say gets one line, not filler.
 
 ```markdown
 # Discovery + Design: Phase N - [name]

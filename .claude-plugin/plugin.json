@@ -1,7 +1,7 @@
 {
   "name": "code-foundations",
-  "version": "6.2.2",
-  "description": "19 software engineering skills from Code Complete, APOSD, GoF, and Clean Architecture, driving a research → plan → build workflow: per-phase gates (Full | Standard | Minimal), Fable/Sonnet 5 model ladder with prover-verifier review, wave-parallel phase execution in isolated worktrees, and orchestrated per-phase commits.",
+  "version": "6.3.0",
+  "description": "19 software engineering skills from Code Complete, APOSD, GoF, and Clean Architecture, driving a research → plan → build workflow: per-phase gates (Full | Standard | Minimal) that set review timing rather than review existence, batched cross-phase review on a configurable cadence, Fable/Sonnet 5 model ladder with prover-verifier review, wave-parallel phase execution in isolated worktrees, and orchestrated per-phase commits.",
   "author": {
     "name": "ryanthedev"
   },
