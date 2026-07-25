@@ -102,6 +102,10 @@ Corrections → update and re-confirm. If the response raises new open questions
 
    **Assign `**Gate:**` per phase** — build consumes this field verbatim (see `commands/build.md` resolution order) and stops on a plan that omits it, so always set it. Risk rules: **Full** for security/auth/payment work or a multi-file change introducing new cross-phase seams; **Minimal** for a docs-only or config-only change; **Standard** otherwise. A phase doing auth/crypto/secrets/deserialization/untrusted-input work also gets `**Security-sensitive:** yes` (triggers the 3-sample fable REVIEW during build) and, if it performs destructive or irreversible actions, a `**Rollback:**` line (compensating action, or "point of no return -- [mitigation]").
 
+   The gate decides review **timing**, not whether a review happens: Full and security-sensitive phases block their commit on a passing REVIEW, while Standard and Minimal phases commit on a green suite and get covered by a later batch REVIEW. Ask per phase whether a defect there would be cheaper to catch before the commit than a few phases later — cascading blast radius and security exposure are what earn a Full.
+
+   **Set `**Review cadence:**` in the header** — how many un-reviewed phases may accumulate before a batch REVIEW fires. **Default 3**, written explicitly; 1-2 when the phases are tightly coupled, 4-5 when they are genuinely independent. Build clamps above 5.
+
    **Assign `**Model:**` per phase** — **sonnet** is the default (Sonnet 5: fast, cheap, handles well-specified implementation work); **haiku** for purely mechanical phases (config edits, renames, doc moves); **fable** for judgment-heavy phases (novel architecture, security-sensitive design, cross-cutting refactors). **opus** stays a valid override — use it when fable is unavailable or when the user asks for it. Build resolves the REVIEW model by downgrading one tier, floored at sonnet (fable→sonnet, opus→sonnet, sonnet→sonnet) — REVIEW never runs on haiku (round-2 model-tier benchmark: haiku's planted-defect recall proved unreliable).
 
    **`**Depends on:**` and `**File scope:**`** feed build's wave derivation: phases with no dependency between them and disjoint file scopes run their BUILD agents in parallel. A phase without `File scope` never runs in parallel — omitting it is the opt-out.
@@ -117,6 +121,7 @@ Corrections → update and re-confirm. If the response raises new open questions
    **Created:** YYYY-MM-DD
    **Status:** draft
    **Complexity:** simple
+   **Review cadence:** 3
    ---
    ## Context
    [Problem statement from shared step 3]
@@ -159,7 +164,8 @@ Corrections → update and re-confirm. If the response raises new open questions
    - Dependencies: every phase has **Depends on:** and referenced phases exist; a phase
      consuming another's Produces depends on it; phases declared independent have
      disjoint **File scope:** globs
-   - Header: **Status:** is present and reads `draft` (step 7 flips it to `ready`)
+   - Header: **Status:** is present and reads `draft` (step 7 flips it to `ready`);
+     **Review cadence:** is present with a value of 1-5 fitting the plan's coupling
 
    Output: PASS or FINDINGS with specific fix recommendations.
    ```

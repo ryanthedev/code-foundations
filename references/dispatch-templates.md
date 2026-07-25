@@ -8,8 +8,8 @@ Subagent dispatch prompts used by the orchestrator (`commands/build.md`) when di
 |---------|----------|
 | `§ FULL_BUILD` | Full and Standard gate BUILD sub-phases |
 | `§ MINIMAL_BUILD` | Minimal gate BUILD sub-phases (no discovery) |
-| `§ REVIEW` | Full and Standard gate REVIEW sub-phases (post-gate-agent) |
-| `§ CATCHUP_REVIEW` | Batch review inserted before a Full phase when 2+ phases have run since the last REVIEW |
+| `§ REVIEW` | **Blocking** REVIEW — Full gate phases and security-sensitive phases at any gate |
+| `§ BATCH_REVIEW` | **Deferred** REVIEW — the primary review path for Standard and Minimal phases, covering the whole un-reviewed set in one dispatch |
 
 Keeping these here instead of inline in `build.md`:
 - Keeps the orchestrator's hot path lean
@@ -21,7 +21,7 @@ Keeping these here instead of inline in `build.md`:
 - `## Additional Skills` blocks: for EACH skill assigned to the phase, emit one `Skill(<plugin:name>)` line — this plugin's own skills as `Skill(code-foundations:<name>)`, skills from other installed plugins as `Skill(<plugin>:<name>)`. All assigned skills are real, model-invocable skills; the build subagent invokes them via the Skill tool (an explicit `Skill(...)` line in the dispatch prompt invokes the skill even though subagents don't inherit the register). The Skill tool loads the SKILL.md body, and each skill self-loads its own checklists via `${CLAUDE_SKILL_DIR}` once invoked — so emit NO separate checklist `Read()` lines. Do not Read-inject SKILL.md text; that was the old workaround for non-invocable skills.
 - **Skills propagate BUILD → REVIEW:** if the BUILD agent's `### Skills Loaded` output reports skills beyond the plan's assignment, add those as `Skill(<plugin:name>)` lines to the REVIEW dispatch's `## Additional Skills` block too. The reviewer needs the same skill context to verify against.
 - Test/typecheck/lint command placeholders → resolve from project config (package.json scripts, Makefile, Cargo.toml, etc.) — exact runnable commands, not descriptions.
-- **Wave mode (parallel phases only):** when a phase runs in its own phase worktree (build.md → Parallel Waves), every path in the prompt is rooted at that worktree, and the prompt gains two additions — for BUILD: "Work ONLY inside `<worktree-root>`; run all commands from there. End with exactly ONE commit: `wip(phase-N): <name>` — squash if you made more. Report the worktree path and wip sha in your output." For REVIEW: "Run all commands from `<worktree-root>`." Serial phases omit all of this.
+- **Wave mode (parallel phases only):** when a phase runs in its own phase worktree (build.md → Parallel Waves), every path in the prompt is rooted at that worktree and the BUILD prompt gains: "Work ONLY inside `<worktree-root>`; run all commands from there. End with exactly ONE commit: `wip(phase-N): <name>` — squash if you made more. Report the worktree path and wip sha in your output." Serial phases omit this. No REVIEW template needs a wave variant — wave members are deferred-review phases by construction, and their batch REVIEW runs later against the integrated build worktree.
 
 ---
 
@@ -93,6 +93,11 @@ Agent tool:
 
     ## Output Files
     - Discovery + Design: .code-foundations/build/<plan-name>-phase-N-discovery.md
+
+    Match the discovery file's length to what this phase actually needs. It is
+    a working artifact for the implementation that follows it, not a deliverable:
+    record the files, the gaps, the DW mapping, and the design decisions, and
+    skip filler sections, restated plan text, and summaries of your own process.
 ```
 
 ---
@@ -149,7 +154,7 @@ Agent tool:
 
 ## § REVIEW
 
-Use for **Full and Standard gate** REVIEW sub-phases. Always uses `code-foundations:post-gate-agent`.
+Use for **blocking** REVIEW sub-phases — Full gate phases, and security-sensitive phases at any gate. Standard and Minimal phases go through `§ BATCH_REVIEW` instead. Always uses `code-foundations:post-gate-agent`.
 
 **Debiasing rules (do not violate):** the reviewer must receive NO intent-framing. Do NOT include the plan's Context/problem statement, progress summaries ("Completed Phase…"), the discovery file, or any account of what the build agent did or intended. Requirements + files + commands only.
 
@@ -210,6 +215,18 @@ Agent tool:
     - Skill([plugin:name from plan -- this plugin's own skills as code-foundations:<name>])
     [repeat the Skill() line for each skill; also include skills from BUILD's "Skills Loaded" output not already listed]
 
+    ## Reporting bar
+    Report every issue you find, including ones you are uncertain about or
+    consider low-severity, each with a confidence level and an estimated
+    severity. Do not filter for importance at this stage — the verdict rules
+    are the filter, and they sort demonstrated defects (FAIL) from everything
+    else (Notes). It is better to surface a finding that lands in Notes than
+    to silently drop a real bug.
+
+    Match the review file's length to the evidence: cover every requirement
+    and every finding, and skip filler sections, restated requirements, and
+    summaries of what you are about to say.
+
     ## Output
     Write review to: [review path — `.code-foundations/build/<plan-name>-phase-N-review.md`,
     or `.code-foundations/build/<plan-name>-phase-N-review-sample-K.md` for
@@ -218,33 +235,48 @@ Agent tool:
 
 ---
 
-## § CATCHUP_REVIEW
+## § BATCH_REVIEW
 
-Inserted dynamically before a Full gate phase when 2+ phases have run since the last REVIEW. Batches verification across accumulated Minimal phases — the only tier without per-phase REVIEW. Same debiasing rules as § REVIEW: no plan Context, no progress narrative, no discovery files.
+The primary review path for Standard and Minimal phases. Inserted dynamically when a batch trigger fires (build.md → Batch REVIEW): the un-reviewed set reaches the cadence, a Full phase is about to open, or VERIFY is next. Covers **every** phase in the un-reviewed set in one dispatch — reviewing them together is what buys the cross-phase coherence check that per-phase reviews structurally cannot produce.
 
-**Model:** use the upcoming Full phase's resolved REVIEW model (its BUILD model downgraded one tier, floored at sonnet, per the orchestrator's Model Resolution). When fired before VERIFY (no upcoming Full phase), use the highest resolved REVIEW model among the covered phases.
+Same debiasing rules as § REVIEW: no plan Context, no progress narrative, no discovery files.
+
+**Model:** the highest resolved REVIEW model among the covered phases (each phase's BUILD model downgraded one tier, floored at sonnet, per the orchestrator's Model Resolution). When the batch fires ahead of a Full phase, take the higher of that value and the upcoming Full phase's resolved REVIEW model.
+
+**One structural difference from § REVIEW:** this review runs against **committed** code. Say nothing about that in the prompt — a reviewer told the code already shipped reviews it more leniently, and the whole point of the debiasing rules is that the reviewer knows nothing about the code's history. The orchestrator handles the consequences (fix-forward) on its side.
 
 ```
 Agent tool:
 - subagent_type: "code-foundations:post-gate-agent"
-- model: [upcoming Full phase's resolved REVIEW model]
-- description: "Catch-up REVIEW for Phases X-Y"
+- model: [highest resolved REVIEW model among covered phases]
+- description: "Batch REVIEW for Phases X-Y"
 - prompt: |
     This task involves multi-step reasoning. Think carefully before responding.
 
     Independently verify the implementations below against their requirements.
-    You did not write this code. Do NOT assume it is correct or complete.
-    Assume requirements may be unmet and bugs may be present; verify each item
-    from scratch against the actual code and executed test results. Do NOT
-    introduce requirements that are not listed here.
+    You did not write this code and have no information about how or why it was
+    written. Do NOT assume it is correct or complete. Assume requirements may be
+    unmet and bugs may be present; verify each item from scratch against the
+    actual code and executed test results. Do NOT introduce requirements that
+    are not listed here.
+
+    You are reviewing several phases at once. Verify each phase's requirements
+    on their own terms first, then check the phases against each other
+    (Cross-Phase Coherence below) — defects that live in the seams between
+    phases are the ones only a batch review is positioned to find.
 
     ## Phases to verify
-    [For each accumulated phase:]
+    [For each phase in the un-reviewed set, in plan order:]
     ### Phase X: [name]
     Requirements (fill the template per item; PASS requires execution evidence):
     - DW-X.1: [item]
       PREMISE: ___  EVIDENCE (file:line): ___  TRACE (input→output): ___  VERDICT: ___
     Files: [implementation + test file paths]
+
+    [if the phase has **Edge cases:** in the plan, include them here — same
+    verdict standing as the DW items, exactly as in § REVIEW:]
+    Edge cases (an unhandled case listed here is a FAIL, not a Note):
+    - [paste verbatim]
 
     ### Phase Y: [name]
     Requirements:
@@ -252,15 +284,36 @@ Agent tool:
       PREMISE: ___  EVIDENCE (file:line): ___  TRACE (input→output): ___  VERDICT: ___
     Files: [implementation + test file paths]
 
+    ## Test Coverage Level
+    [paste the plan's Test Coverage level, e.g. "100%"]
+
     ## How to run the suite
     [exact test command + typecheck/lint commands]
+    Run these directly via Bash and capture the output.
 
     ## Cross-Phase Coherence
-    Check that the accumulated phases work together:
+    Check that the covered phases work together:
     - No contradictions between phase outputs
     - No regressions introduced by later phases
     - Tests still pass for earlier phases' functionality
+    - Each phase uses the interfaces the earlier phases actually expose, not
+      the ones it assumes they expose
+
+    [if any covered phase has a **Skills:** field OR its BUILD agent reported
+    additional skills, include the union across all covered phases:]
+    ## Additional Skills
+    Invoke EVERY Skill() below BEFORE reviewing:
+    - Skill([plugin:name -- this plugin's own skills as code-foundations:<name>])
+
+    ## Reporting bar
+    Report every issue you find, including ones you are uncertain about or
+    consider low-severity, each with a confidence level and an estimated
+    severity. Do not filter for importance at this stage — the verdict rules
+    are the filter. Attribute each finding to the phase whose files it lives in.
+
+    Match the review file's length to the evidence: cover every requirement
+    and every finding, and skip filler sections and restated requirements.
 
     ## Output
-    Write review to: .code-foundations/build/<plan-name>-catchup-phases-X-Y-review.md
+    Write review to: .code-foundations/build/<plan-name>-batch-phases-X-Y-review.md
 ```

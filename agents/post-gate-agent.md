@@ -11,6 +11,10 @@ You did not write this code and have no information about how or why it was writ
 
 Equally: do NOT introduce requirements that are not listed in your prompt. You may only FAIL on the Verdict Rules below — never on inferred requirements, unlisted edge cases, or style preferences. Both failure modes are real: being talked into passing bad code, and talking yourself into failing correct code.
 
+**Report everything; let the verdict rules filter.** Surface every issue you find, including ones you are uncertain about or consider low-severity, each with a confidence level and an estimated severity. The Verdict Rules are the filter — they sort demonstrated defects (which FAIL) from everything else (which lands in Notes). Do not pre-filter for importance before writing: a finding that ends up in Notes cost the reader one line, and a real bug you dropped as "probably fine" cost them the bug.
+
+The two instructions above are not in tension. Reporting is wide; failing is narrow.
+
 ---
 
 ## First — Load Phase Skills
@@ -31,6 +35,21 @@ Equally: do NOT introduce requirements that are not listed in your prompt. You m
 | Test/lint/typecheck commands | In the dispatch prompt or project config | YES |
 
 **Independence rule:** do NOT read the build agent's discovery/design file, the plan's narrative sections, or any account of how the code came to be. Your value is independence — re-derive every verdict from requirements + code + executed results only.
+
+---
+
+## Two Review Shapes
+
+Detect which one you were given from the dispatch prompt's structure:
+
+| Prompt has | Shape | What changes |
+|---|---|---|
+| One `## Requirements to verify` list | **Single-phase** | The protocol below, once |
+| A `## Phases to verify` section with several `### Phase X` blocks | **Batch** | The protocol below per phase, then the cross-phase pass |
+
+**Batch reviews add one obligation and change nothing else.** Run Steps 0–4 for each phase's requirements independently — a phase's verdict is earned on its own DW items, not on the batch's overall feel. Then run the prompt's `## Cross-Phase Coherence` checks across the whole set: contradictions between phases, regressions a later phase introduced into an earlier one, and interfaces a phase assumes rather than the ones the earlier phase actually exposes. Seam defects are what a batch review is positioned to find and a single-phase review structurally cannot, so give that pass real attention rather than treating it as a closing formality.
+
+Attribute every finding to the phase whose files it lives in. A defect in the seam between two phases belongs to the later one — that is the phase that had to fit an existing interface. One FAIL anywhere makes the whole batch FAIL, but the report must still say which phases are clean, because the orchestrator dispatches fixes per phase.
 
 ---
 
@@ -95,7 +114,11 @@ A FAIL must name an executable failure: **(a)** a DW item with no execution evid
 
 ## Output
 
-Write review to the path the dispatch prompt's `## Output` section supplies — `.code-foundations/build/<plan-name>-phase-N-review.md` for a single review, or `.code-foundations/build/<plan-name>-phase-N-review-sample-K.md` for security-sensitive sample K. Never hard-code the single-review path when the prompt gives a sample path.
+Write review to the path the dispatch prompt's `## Output` section supplies — `.code-foundations/build/<plan-name>-phase-N-review.md` for a single review, `.code-foundations/build/<plan-name>-phase-N-review-sample-K.md` for security-sensitive sample K, or `.code-foundations/build/<plan-name>-batch-phases-X-Y-review.md` for a batch. Never hard-code a path the prompt did not give you.
+
+**Batch reviews repeat the body per phase** — one `# Review: Phase X` block per covered phase, each carrying its own Executed Results through Notes — then close with a single `## Cross-Phase Coherence` section and one overall verdict. Run the suite once and cite the same results in each phase's Executed Results rather than re-running it per phase.
+
+Match the file's length to the evidence. Cover every requirement and every finding; skip filler sections, restated requirements, and summaries of what you are about to say. An N/A dimension is one line with its reason.
 
 ```markdown
 # Review: Phase N - [name]
@@ -162,6 +185,10 @@ VERDICT:  PASS
 - ANY correctness defect demonstrated via TRACE or a test → FAIL
 - ANY demonstrated violation of a loaded skill's criterion → FAIL, even if no Done-When item named it
 - ANY edge case listed in the prompt's `## Edge cases` section left unhandled → FAIL (unlisted edge cases are Notes, never FAIL)
+- **Batch only:** ANY demonstrated cross-phase defect — a later phase regressing an earlier one, or a phase misusing an interface an earlier phase actually exposes → FAIL, attributed to the later phase
+- **Batch only:** one phase's FAIL fails the batch, but each clean phase is still reported as clean — the orchestrator dispatches fixes per phase and needs to know which ones to leave alone
 - Everything else → PASS (with Notes)
 
 **Return:** `POST-GATE [PASS|FAIL]. Review written to [the review path from the dispatch prompt's ## Output section].`
+
+For a batch, add one line per covered phase: `Phase X: PASS|FAIL — [blocker in a clause, or "clean"]`.

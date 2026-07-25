@@ -319,7 +319,21 @@ Build consumes the `**Gate:**` field verbatim — `Full`, `Standard`, or `Minima
 | Docs-only or config-only change | Minimal |
 | (none of the above) | Standard |
 
+**What the gate now decides is review *timing*, not review *existence*.** Every phase gets reviewed. Full-gate and security-sensitive phases block their commit on a passing REVIEW; Standard and Minimal phases commit on a green suite and are covered by a later batch REVIEW (build.md → Batch REVIEW). So the per-phase question is no longer "is this worth reviewing" — it is "would a defect here be cheaper to catch before the commit than three phases later." That is what pushes a phase to Full: cascading blast radius, a seam every later phase builds on, or security exposure.
+
 Skill presence does NOT decide the gate — every phase carries skills, so skills cannot discriminate gate level. Gate is keyed off the risk of the work itself, exactly as build resolves it.
+
+**Review cadence — one field in the plan header, not per phase:**
+
+Set `**Review cadence:** N` — how many un-reviewed phases may accumulate before a batch REVIEW fires. **Default 3; write it explicitly even when you take the default**, so the choice is visible to the user at CONFIRM instead of buried in build's fallback.
+
+| Signal in the plan | Cadence |
+|---|---|
+| Phases tightly coupled — a defect in one propagates fast through the others | 1–2 |
+| Ordinary mixed plan | 3 (default) |
+| Phases genuinely independent (disjoint `File scope`, few shared seams) | 4–5 |
+
+Above 5 build clamps it: a batch reviewer must verify every DW item across every covered phase, and per-item recall degrades as that list grows. The cadence is the one knob that trades review latency against reviewer context, so pick it from the plan's coupling, not from how risky the feature feels overall — per-phase risk is what `**Gate:**` is for.
 
 **Dependency + file-scope validation:**
 
@@ -343,6 +357,7 @@ Skills were matched at DECOMPOSE and refined during DETAIL. Validate the final s
 **Created:** YYYY-MM-DD
 **Status:** draft   <- flipped to `ready` at CONFIRM; build refuses a draft plan
 **Complexity:** [simple/medium/complex]
+**Review cadence:** 3   <- un-reviewed phases allowed before a batch REVIEW fires; 1-5
 ---
 ## Context
 [Problem statement from Step 1]
@@ -383,7 +398,7 @@ _To be filled during /code-foundations:build_
 
 ### Save
 
-The file was created at DECOMPOSE (`mkdir -p .code-foundations/plans` already done). Ensure every phase has `**Model:**`, `**Gate:**`, `**Skills:**`, and `**Depends on:**` populated, the header carries `**Status:** draft`, and the schema is complete — build hard-requires these fields and stops with "re-run /code-foundations:plan" when any is missing. **Do not commit** — the plan is a working document, not a deliverable. Building handles worktree visibility by copying the plan file after worktree creation.
+The file was created at DECOMPOSE (`mkdir -p .code-foundations/plans` already done). Ensure every phase has `**Model:**`, `**Gate:**`, `**Skills:**`, and `**Depends on:**` populated, the header carries `**Status:** draft` and `**Review cadence:**`, and the schema is complete — build hard-requires these fields and stops with "re-run /code-foundations:plan" when any is missing. **Do not commit** — the plan is a working document, not a deliverable. Building handles worktree visibility by copying the plan file after worktree creation.
 
 ---
 
@@ -410,7 +425,12 @@ Checklist:
   each skill name matches a real available skill in the available-skills register — internal or external (reject typos/nonexistent names),
   code-writing phases with `none` justify why no skill's triggers match
 - Gates: every phase has a Gate field populated (Full/Standard/Minimal), matching its risk
-  (Full for security/auth/payment or new cross-phase seams; Minimal for docs/config-only; Standard otherwise)
+  (Full for security/auth/payment or new cross-phase seams; Minimal for docs/config-only; Standard otherwise).
+  Full is what makes a review block its commit — flag any phase whose defects would cascade
+  into later phases but which is only Standard, and any Full phase whose risk doesn't justify
+  serializing the build around it
+- Review cadence: header carries **Review cadence:** with a value of 1-5, and it fits the plan's
+  coupling (tightly coupled phases -> 1-2; independent phases -> 4-5)
 - Models: every phase has Model field populated (fable/sonnet/haiku -- opus only as an
   explicit user-requested override; never omitted)
 - Dependencies: every phase has Depends on populated and referenced phases exist; a phase
@@ -429,7 +449,7 @@ After return: PASS -> proceed. FINDINGS -> fix; **structural fixes (phase bounda
 
 End the turn with the full plan summary rendered as markdown in conversation, closing with "Does this look right? Anything to add or change?" The user replies in their own words.
 
-**Shape:** one table for the phases (goal, model, gate, dependencies, skills — this is the part the user scans first), then a short bullet list below it — constraint → phase mapping, test coverage level, seams, CHECK results — one line per bullet, not a paragraph each. Summarize CHECK's outcome ("PASS" or "N findings, fixed"), never the verbatim finding text. If a seam or guardrail needs more than one line to state, it belongs in the plan file, not the summary; point to the phase instead of re-explaining it there. A doctrine deviation (e.g., skipping a re-CHECK after a fix) gets one sentence on what and why, then the ask — not a justification paragraph.
+**Shape:** one table for the phases (goal, model, gate, dependencies, skills — this is the part the user scans first), then a short bullet list below it — constraint → phase mapping, test coverage level, review cadence, seams, CHECK results — one line per bullet, not a paragraph each. The review-cadence bullet states it in plain terms ("Review cadence 3 — phases 1-3 commit on green tests, then get reviewed together; phase 5 blocks on its own review"), because it is the line that tells the user how much unreviewed code will exist at any moment. Summarize CHECK's outcome ("PASS" or "N findings, fixed"), never the verbatim finding text. If a seam or guardrail needs more than one line to state, it belongs in the plan file, not the summary; point to the phase instead of re-explaining it there. A doctrine deviation (e.g., skipping a re-CHECK after a fix) gets one sentence on what and why, then the ask — not a justification paragraph.
 
 Two rules make this checkpoint structural:
 

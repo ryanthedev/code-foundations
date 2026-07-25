@@ -17,8 +17,22 @@ Plan: .code-foundations/plans/[plan-file].md
 AI-Model: [model used]
 AI-Epistemic-Status: [tested|assumed|provisional]
 Gate-Policy: [Full|Standard|Minimal]
-Review: [pass|pass (3-sample)|fail->pass (N attempts)|skipped (Minimal)]"
+Review: [see the table below]"
 ```
+
+## The `Review:` Trailer
+
+The trailer records the review state **at the moment of the commit**, and for deferred phases that state is "not yet". It is never back-edited — a batch PASS is recorded in the execution log, not by rewriting the commit.
+
+| Value | When |
+|---|---|
+| `pass` | Blocking REVIEW returned PASS before this commit (Full gate) |
+| `pass (3-sample)` | Security-sensitive phase; majority PASS across three samples |
+| `fail->pass (N attempts)` | Blocking REVIEW failed N times, then passed, all before this commit |
+| `deferred (batch pending)` | Standard or Minimal phase committing on a green suite; a batch REVIEW will cover it |
+| `batch fail->pass (attempt K)` | A fix-forward commit answering batch review findings (see gate-failure-protocol.md → Batch Failures) |
+
+**Reading the history:** `deferred (batch pending)` on a phase commit does not mean the phase went unreviewed — it means the review is recorded elsewhere. The pairing evidence is the execution-log addendum line naming the batch that covered it, and the trust report resolves the two at REPORT time. A phase with a `deferred` trailer and no addendum is the one real anomaly to look for.
 
 ## Wave-Member Variant (parallel phases only)
 
@@ -48,10 +62,20 @@ Append to the plan file's `## Execution Log`:
 ```markdown
 ### Phase N: [Name] (Gate: [Full/Standard/Minimal])
 - [x] BUILD: Discovery + design + implementation (stub → implement → validate) complete
-- [x] REVIEW: Verification passed [or "SKIPPED — Minimal gate (tests are gate)"; a later catch-up PASS appends a dated "Covered by catch-up review" addendum line]
+- [x] REVIEW: [see the REVIEW line variants below]
 - [x] Committed
 Commit: [hash]
 Summary: [1 sentence — what this phase delivered and what state it left the codebase in]
 ```
+
+**REVIEW line variants:**
+
+| Phase | Line at commit time | Later addendum |
+|---|---|---|
+| Blocking (Full, or security-sensitive) | `Verification passed` | none |
+| Deferred (Standard, Minimal) | `DEFERRED — batch pending (tests green at commit)` | on batch PASS, append a dated `Covered by batch review YYYY-MM-DD (phases X–Y)` line |
+| Fix-forward commit | `Fixed batch review findings — [1 clause naming what]` | covered by the next batch PASS addendum like any other |
+
+The addendum is appended, never substituted for the original line — the pairing of "deferred here, covered there" is the audit trail, and collapsing it into a single "passed" loses the fact that the commit preceded the review.
 
 **The Summary line is critical for goal anchoring.** It feeds the `## Progress` block of subsequent subagent dispatch prompts, giving later phases context about what earlier phases accomplished. Write it for that audience.
