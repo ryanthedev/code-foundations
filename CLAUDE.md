@@ -157,7 +157,7 @@ separate: BUILD/REVIEW agents are steered by dispatch wording (the Agent tool ha
 derived from each phase's `Model`, REVIEW never below "think carefully"; build's Effort Alignment
 warns (never stops) when a phase's `Model` (effort) and `Gate` (rigor) disagree.
 
-Skills are **workflow-internal** (all 19 carry `user-invocable: false`; `planning` additionally keeps
+Skills are **workflow-internal** (all 20 carry `user-invocable: false`; `planning` additionally keeps
 `disable-model-invocation: true` so the model can't run the planning pipeline ad-hoc). They are
 hidden from the user's slash menu but ARE in the model's skill register — model-discoverable and
 invocable. Plan/build discover them (alongside external plugin skills) via the register — each
@@ -186,7 +186,8 @@ Some skills have a `references/` subdirectory (e.g. `gof-design-patterns/referen
 23 pattern files; `code-standards/references/` for section-templates.md). Every bundled file
 must be linked from SKILL.md or it is a dead orphan. The `hard-data.md` and `language-notes.md`
 patterns are not standard — they were removed during the 2026-06 audit (orphan files with
-proven drift).
+proven drift). Some skills bundle `scripts/` (executed or copied, never loaded into context), e.g.
+`lean-build/scripts/gate-skeleton.sh`; `lean-build` is the first skill with a `scripts/` folder.
 
 ## Key Concepts
 

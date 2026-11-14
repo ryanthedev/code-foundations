@@ -2,7 +2,7 @@
 
 **AI that codes like a senior engineer.** Checklists, quality gates, and verification built into every workflow.
 
-> **Active development** - Installed via the marketplace below (currently v6.6.0); no tagged GitHub releases yet. The build workflow and skills are benchmark-validated, but subagent orchestration is still being tuned — expect changes.
+> **Active development** - Installed via the marketplace below (currently v6.7.0); no tagged GitHub releases yet. The build workflow and skills are benchmark-validated, but subagent orchestration is still being tuned — expect changes.
 
 ---
 
@@ -126,6 +126,8 @@ Gate policy is adaptive, and what it adapts is review *timing* — every phase i
 Skills matched per phase at plan's DECOMPOSE step and validated at SAVE — gates load only those skills; each agent carries its own protocol. Independent Standard/Minimal phases (no dependency, disjoint `File scope`) build in parallel waves, each in its own worktree, integrated by cherry-pick in plan order.
 
 The system saves every artifact to `.code-foundations/build/`. Per-phase commits enable rollback.
+
+For builds run as many sessions on one machine, the `lean-build` skill covers gate design, disk and load limits, verifier tiers, and a speed review of an existing plan.
 
 ---
 

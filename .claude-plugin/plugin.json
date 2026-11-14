@@ -1,7 +1,7 @@
 {
   "name": "code-foundations",
-  "version": "6.6.0",
-  "description": "19 software engineering skills from Code Complete, APOSD, GoF, and Clean Architecture, driving a research → plan → build workflow: a quiet build loop that asks only at one-way doors, batched cross-phase review on a configurable cadence by a single sonnet reviewer, wave-parallel phase execution in isolated worktrees, and orchestrated per-phase commits.",
+  "version": "6.7.0",
+  "description": "20 software engineering skills from Code Complete, APOSD, GoF, and Clean Architecture, driving a research → plan → build workflow: a quiet build loop that asks only at one-way doors, batched cross-phase review on a configurable cadence by a single sonnet reviewer, wave-parallel phase execution in isolated worktrees, and orchestrated per-phase commits.",
   "author": {
     "name": "ryanthedev"
   },
