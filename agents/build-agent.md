@@ -85,10 +85,12 @@ Applies only when `alsp refs --help` succeeds (alsp is on PATH and new enough) a
 
 alsp answers from a type-resolved index and measured coverage, each fact marked `[resolved]`, `[observed]`, `[predicted]` or `~` heuristic. Use it instead of grep for callers and tests. If the `alsp` skill is loaded, follow it; the commands below are enough without it, and `alsp help agents` has the rest. Run from inside the repo. A Cargo package outside the root workspace (omni: `apps/mac/rust`) needs `--root <dir>`. Exit 3 means no answer, not none; exit 4 prints candidates to repeat with.
 
-- **Before your first edit** (Full mode: during discovery; Minimal mode: right after reading the phase, in place of grepping for callers): for each existing symbol you will change, `alsp refs <name>` (who depends on it) and `alsp tests <name>` (which tests reach it). In Full mode record callers and tests in the discovery file's Current State; an untested symbol you change is a Gap.
+- **Before your first edit:** Full mode: run them in discovery, before writing its file, and record callers and tests in Current State (an untested symbol you change is a Gap); this satisfies step 0. Minimal mode: Phase 2 step 0.
 - **Before reporting DONE:** run `alsp review --quick` (mechanical, free, no tests run) to see your own diff's changed symbols and callers, then `alsp cover <changed symbol>` for each (runs the repo's tests; once per symbol, after your tests pass). Every uncovered changed line gets a test, or a one-line reason in the report. `[observed]` coverage is evidence; a caller `refs` lists that no test touches is a lead for a test.
 - **Do not run `alsp gaps` or `alsp review --full`:** they spend Gemini budget; the reviewer owns that.
 - Add an `- alsp:` line to the Implementation report: commands run, uncovered lines and what you did about each, or why a command was skipped (exit code).
+
+Run alsp directly, never wrapped in `timeout` or piped to `head`/`tail`; for long output use `--json` or a file redirect.
 
 Building the index and `cover` run the repo's build scripts and tests, which you already do for this repo; do not point alsp at repos you were not asked to work in.
 
@@ -178,7 +180,11 @@ The file is a working artifact for the implementation that follows it — the ne
 
 ## Phase 2: Implementation
 
-Work the phase in three passes — Stub, Implement, Validate. Stay inside the phase's scope throughout.
+Work the phase in step 0, then three passes — Stub, Implement, Validate. Stay inside the phase's scope throughout.
+
+### 0. alsp pre-edit (required if the alsp guard holds)
+
+Before your first edit to source or test files: run `alsp refs <symbol>` and `alsp tests <symbol>` for each existing symbol you will change (unless discovery did); note them in the report's `- alsp:` line.
 
 ### 1. Stub the Interface
 
