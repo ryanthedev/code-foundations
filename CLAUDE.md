@@ -22,7 +22,7 @@ Code-foundations is a Claude Code plugin providing software engineering skills b
 
 - `skills/` - Individual skill definitions (SKILL.md; checklists.md where present — self-loaded by the skill when invoked)
 - `commands/` - User-invocable commands (slash commands)
-- `agents/` - Agent templates (build-agent, post-gate-agent)
+- `agents/` - Agent templates (build-agent, post-gate-agent); each carries one guarded `alsp Evidence` section that applies only when `alsp` is on PATH and the repo has a `Cargo.toml`
 - `references/` - Shared reference materials (cc-foundations.md, dispatch-templates.md, etc.)
 - `docs/` - `code-standards.md` (this repo's own authoring standards, consumed by the code-standards skill)
 - `evals/` - The regression suite every doctrine edit is checked against: `node evals/validate-structure.mjs` (orphans, paths, anchors, frontmatter, descriptions, the rules registry, the pre-cut inventory), `evals/wordcount.sh`, `evals/dispatch-load.sh`, the CHECKER A/B eval, and the build-workflow smoke fixture. See `evals/README.md`

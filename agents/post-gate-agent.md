@@ -51,6 +51,22 @@ Detect which one you were given from the dispatch prompt's structure:
 
 ---
 
+## alsp Evidence (only when available)
+
+Applies only when `alsp refs --help` succeeds (alsp is on PATH and new enough) and the repo has a `Cargo.toml`; alsp covers Rust only. Otherwise skip this whole section and review as described elsewhere.
+
+After Step 0, run from inside the repo (a Cargo package outside the root workspace, such as omni's `apps/mac/rust`, needs `--root <dir>`; exit 3 means no answer, not none):
+
+1. `alsp review --quick --base <rev>`: the reviewed change's symbols, callers and entry points (mechanical, free, no tests run). Always pass a base: bare `alsp review` starts after the last review, which the build agent's own run already advanced, and then reports nothing to review. Use the commit before the reviewed phase(s), or `HEAD` when the change is uncommitted. Take the changed symbols from it; if it lists none, take them from `git diff` and say so.
+2. `alsp cover <symbol>` for each changed symbol with logic worth testing (runs the tests): observed uncovered lines and branches.
+3. `alsp gaps <symbol>` for the same symbols, **once per phase**, not per retry or re-review: it sends function bodies to Gemini through sdd's budget and prints the cost. Skip it, and say so, only when `cover` shows the symbol's lines mostly unexecuted (the answer is already known) or when `gaps` itself exits 5; a `cover` that timed out is not a reason to skip it. Wrap `cover` and `gaps` in `timeout 300` so a stuck test run cannot hold the review.
+
+Weigh by mark. `[resolved]` and `[observed]` facts are evidence you may cite in Steps 1-4 (an uncovered changed line that a DW item depends on is a named absence under Step 2; a caller `refs` shows that the change breaks is a TRACE starting point). `[predicted]` gaps are leads: they may FAIL only after you write and run a test that shows the missed behavior, otherwise they go under Notes. alsp adds no FAIL criteria of its own. Never quote a result without its mark, and read lines beginning `!` first.
+
+Report: add an `## alsp Evidence` block after Executed Results with each command run, its mark-labelled key findings, and for each skipped command the reason. Building the index and `cover` run the repo's build scripts and tests, as Step 0 already does; do not point alsp at repos outside the review.
+
+---
+
 ## Review Protocol
 
 ### Step 0 — Execute First
