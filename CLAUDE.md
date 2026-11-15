@@ -8,23 +8,9 @@ Code-foundations is a Claude Code plugin providing software engineering skills b
 
 ## Architecture
 
-### Skill Families
-
-| Family | Prefix | Focus |
-|--------|--------|-------|
-| Code Complete | `cc-*` | Process rigor, metrics, checklists |
-| APOSD | `aposd-*` | Design philosophy, complexity reduction |
-| GoF Design Patterns | `gof-*` | 23 Gang of Four patterns, decision trees, structural recipes |
-| Clean Architecture | `ca-*` | System-level boundaries, SRP-by-actor, dependency direction |
-| Legacy Code | `welc-*` | Safely modifying untested code (conditional, invoked from cc-refactoring-guidance) |
-
 ### Directory Structure
 
-- `skills/` - Individual skill definitions (SKILL.md; checklists.md where present — self-loaded by the skill when invoked)
-- `commands/` - User-invocable commands (slash commands)
 - `agents/` - Agent templates (build-agent, post-gate-agent); each carries one guarded `alsp Evidence` section that applies only when `alsp` is on PATH and the repo has a `Cargo.toml`
-- `references/` - Shared reference materials (cc-foundations.md, dispatch-templates.md, etc.)
-- `docs/` - `code-standards.md` (this repo's own authoring standards, consumed by the code-standards skill)
 - `evals/` - The regression suite every doctrine edit is checked against: `node evals/validate-structure.mjs` (orphans, paths, anchors, frontmatter, descriptions, the rules registry, the pre-cut inventory), `evals/wordcount.sh`, `evals/dispatch-load.sh`, the CHECKER A/B eval, and the build-workflow smoke fixture. See `evals/README.md`
 
 ### Development Workflows
@@ -47,71 +33,6 @@ Three-stage pattern for feature development:
 | `/code-foundations:research` | Clarify what the user wants through facilitated conversation | Research doc in `.code-foundations/research/` |
 | `/code-foundations:plan` | Plan implementation with phases, models, and skills | Plan file in `.code-foundations/plans/` |
 | `/code-foundations:build` | Checklist-based execution | Working code + tests |
-
-**Full Flow:**
-```
-/code-foundations:research "I want to build a notification system"
-  → Facilitated conversation to clarify intent
-  → Progressive narrowing: purpose, actors, context, boundaries, needs, risks
-  → Save to .code-foundations/research/ with Status: draft
-  → Optional verification: grill (adversarial Q&A) + cold-read subagent
-    (fresh context, no intent-framing) → Status: confirmed
-
-        ↓ (when requirements are clear)
-
-/code-foundations:plan .code-foundations/research/<file>.md
-  → $ARGUMENTS: if a research-doc path is given, Read it and seed the problem statement
-  → Codebase scan (shared step, all tracks)
-  → Clarify intent (shared step, all tracks — gaps only if research doc provided)
-  → Problem statement confirmed (shared step, all tracks)
-  → [Quick: plan → check → present]
-  → [Standard/Full: classify → explore → detail → save → check → confirm]
-  → DECOMPOSE matches skills per phase against the available-skills register (internal + external), reading each skill's description
-  → SAVE emits per-phase **Model:** (sonnet | haiku), **Gate:** (Standard | Minimal | Full on request),
-    **Depends on:**, and optional **File scope:** (wave-parallelism opt-in), plus the plan-header
-    **Review cadence:** (default 3) and **Check-ins:** (quiet | checkpoints | per-phase, default checkpoints)
-  → Save to .code-foundations/plans/YYYY-MM-DD-<topic>.md with **Status:** draft
-  → Plan presented as end-turn conversation markdown; user confirms free-form → Status: ready
-
-        ↓ (after plan approval)
-
-/code-foundations:build .code-foundations/plans/<plan>.md
-  → Feature branch required; refuses plans whose Status isn't ready
-  → Waves derived from Depends on + File scope: independent Standard/Minimal phases
-    build in parallel (own phase worktrees), integrated by cherry-pick in plan order
-  → Model per phase from plan (sonnet default / haiku mechanical; fable or opus only on the
-    user's request); every REVIEW runs on sonnet, one reviewer
-  → Per-phase commits: after REVIEW passes (Full, security-sensitive) or on a green suite
-    (Standard, Minimal — review deferred to a batch every `Review cadence` phases)
-  → Quiet loop: agents settle what the plan leaves open and record it; only one-way doors
-    become questions, each holding just its phase; checkpoints adjust the remaining plan
-    (plan(adjust) commits) and message the user only when something changed or needs them
-  → VERIFY: trailing batch REVIEW if anything is un-reviewed, one suite on integrated HEAD (delta rule),
-    Test Plan items the suite doesn't cover, then the trust report (incl. Decided During Build)
-```
-
-**When to use each:**
-
-| Situation | Command |
-|-----------|---------|
-| "I have an idea but it's vague" / unclear requirements | `/code-foundations:research` |
-| Ready to plan full feature | `/code-foundations:plan` |
-| Plan exists, ready to implement | `/code-foundations:build` |
-
-**Quality Gates (per phase during /code-foundations:build):**
-```
-BUILD:   baseline discipline (DW→test traceability, stub → implement → validate, anchoring, scope clamp)
-         Skills listed in the phase are invoked via the Skill tool in the BUILD agent's
-         dispatch prompt (Skill(code-foundations:<name>) / Skill(<plugin>:<name>)); each
-         skill self-loads its own checklists.
-         (discovery + design → implementation: stub → implement → validate, in one agent)
-REVIEW:  debiased review protocol (execute-first, per-DW evidence + trace, anti-overcorrection)
-         Blocking for security-sensitive phases and Full gates (Full only on the user's request);
-         deferred into a batch REVIEW for Standard and Minimal, which fires every N phases
-         (Review cadence, default 3), before any Full phase, and at VERIFY if anything is un-reviewed
-COMMIT:  Orchestrator commits directly — after REVIEW passes for blocking phases,
-         on a green suite for deferred ones
-```
 
 **Gate policy:** each phase in the plan carries a `**Gate:**` field (Full | Standard | Minimal) —
 required, like `**Model:**`, `**Depends on:**`, and `**Skills:**`; build stops and asks for a re-plan when any
@@ -176,11 +97,6 @@ phase passes all gates including REVIEW PASS (Full gate).
 
 ## Skill File Structure
 
-```
-skills/<skill-name>/
-├── SKILL.md         # Main skill definition with YAML frontmatter (required)
-└── checklists.md    # The skill's ID'd checklist, self-loaded by the skill when invoked (where present)
-```
 
 Some skills have a `references/` subdirectory (e.g. `gof-design-patterns/references/` for the
 23 pattern files; `code-standards/references/` for section-templates.md). Every bundled file
@@ -189,31 +105,7 @@ patterns are not standard — they were removed during the 2026-06 audit (orphan
 proven drift). Some skills bundle `scripts/` (executed or copied, never loaded into context), e.g.
 `lean-build/scripts/gate-skeleton.sh`; `lean-build` is the first skill with a `scripts/` folder.
 
-## Key Concepts
-
-**APOSD Complexity Symptoms:**
-- Change amplification (simple change → many modifications)
-- Cognitive load (must know too much)
-- Unknown unknowns (worst)
-
-**CC Metrics:**
-- Cohesion (routine does ONE thing)
-- Coupling (minimized dependencies)
-- Parameters ≤7, Inheritance depth < 3
-
-**CC Skills (7 total):** cc-control-flow-quality, cc-debugging, cc-defensive-programming,
-cc-pseudocode-programming, cc-quality-practices, cc-refactoring-guidance, cc-routine-and-class-design.
-Two of them (cc-routine-and-class-design, cc-refactoring-guidance) read `references/cc-foundations.md` for the
-shared vocabulary (cohesion spectrum, coupling criteria, key metrics); the rest state their thresholds inline.
-
-- `cc-debugging` — scientific debugging: STABILIZE → LOCATE → HYPOTHESIZE → EXPERIMENT → FIX → TEST → SEARCH
-
 ## Publishing
-
-### Plugin Structure
-
-- `.claude-plugin/plugin.json` - Plugin manifest with name, version, description
-- Version follows semver (e.g., 6.4.0)
 
 ### Marketplace
 
@@ -223,9 +115,3 @@ Published to `ryanthedev/rtd-claude-inn` marketplace. Marketplace tracks `ref: m
 1. Bump version in `.claude-plugin/plugin.json`
 2. Commit and push to `origin/main`
 
-**Install commands:**
-```bash
-/plugin marketplace add ryanthedev/rtd-claude-inn
-/plugin install code-foundations@rtd
-/plugin update code-foundations@rtd
-```
