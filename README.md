@@ -2,7 +2,7 @@
 
 **AI that codes like a senior engineer.** Checklists, quality gates, and verification built into every workflow.
 
-> **Active development** - Installed via the marketplace below (currently v6.8.1); no tagged GitHub releases yet. The build workflow and skills are benchmark-validated, but subagent orchestration is still being tuned — expect changes.
+> **Active development** - Installed via the marketplace below (currently v6.8.2); no tagged GitHub releases yet. The build workflow and skills are benchmark-validated, but subagent orchestration is still being tuned — expect changes.
 
 ---
 
